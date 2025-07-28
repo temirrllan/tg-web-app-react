@@ -1,1 +1,16 @@
 @import "tailwindcss";
+.loading, .error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 18px;
+}
+
+.error {
+  color: #ff4444;
+}
+
+.loading {
+  color: #0088cc;
+}
