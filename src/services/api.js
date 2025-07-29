@@ -7,17 +7,26 @@ const api = axios.create({
     'Content-Type': 'application/json'
   }
 });
-
+// Сохраняем user_id после успешной авторизации
+export const setAuthUser = (user) => {
+  if (user && user.id) {
+    localStorage.setItem('user_id', user.id);
+  }
+};
 // Interceptor для добавления данных пользователя
 api.interceptors.request.use((config) => {
   const tg = window.Telegram?.WebApp;
   
   if (tg?.initData) {
-    // Отправляем initData для валидации на сервере
     config.headers['X-Telegram-Init-Data'] = tg.initData;
   } else {
-    // Для разработки используем тестовые данные
-    config.headers['X-Telegram-Init-Data'] = 'test_init_data';
+    config.headers['X-Telegram-Init-Data'] = 'development';
+  }
+  
+  // Добавляем user_id если есть
+  const userId = localStorage.getItem('user_id');
+  if (userId) {
+    config.headers['X-User-Id'] = userId;
   }
   
   return config;

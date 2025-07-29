@@ -8,8 +8,10 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriesError, setCategoriesError] = useState(null);
   
-  const [formData, setFormData] = useState({
+ const [formData, setFormData] = useState({
     title: '',
     goal: '',
     category_id: null,
@@ -24,12 +26,25 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
     loadCategories();
   }, []);
 
-  const loadCategories = async () => {
+const loadCategories = async () => {
     try {
+      setCategoriesLoading(true);
+      setCategoriesError(null);
+      console.log('Loading categories...');
+      
       const data = await habitService.getCategories();
-      setCategories(data.categories || []);
+      console.log('Categories loaded:', data);
+      
+      if (data.success && data.categories) {
+        setCategories(data.categories);
+      } else {
+        throw new Error('Invalid categories response');
+      }
     } catch (error) {
       console.error('Failed to load categories:', error);
+      setCategoriesError(error.message);
+    } finally {
+      setCategoriesLoading(false);
     }
   };
 
@@ -54,18 +69,34 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
       }));
     }
   };
-
-  const handleSubmit = async () => {
-    setLoading(true);
-    try {
-      await onSuccess(formData);
-      onClose();
-    } catch (error) {
-      console.error('Failed to create habit:', error);
-    } finally {
-      setLoading(false);
+const handleSubmit = async () => {
+  setLoading(true);
+  try {
+    // Преобразуем время в правильный формат для PostgreSQL
+    const dataToSubmit = {
+      ...formData,
+      reminder_time: formData.reminder_time ? `${formData.reminder_time}:00` : null
+    };
+    
+    console.log('Submitting habit:', dataToSubmit);
+    
+    await onSuccess(dataToSubmit);
+    onClose();
+  } catch (error) {
+    console.error('Failed to create habit:', error);
+    
+    // Проверяем, если это ошибка лимита
+    if (error.response?.status === 403 && error.response?.data?.showPremium) {
+      const { limit, current } = error.response.data;
+      alert(`You have reached the limit of ${limit} habits for free users.\n\nYou currently have ${current} active habits.\n\nPlease upgrade to Premium or delete an existing habit.`);
+    } else {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to create habit';
+      alert(`Error: ${errorMessage}`);
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
 
   const canProceed = () => {
     switch (step) {
@@ -138,7 +169,7 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
         );
 
       case 2:
-        if (formData.is_bad_habit) {
+         if (formData.is_bad_habit) {
           // Skip to submit for bad habits
           setStep(5);
           return null;
@@ -147,21 +178,43 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
         return (
           <div className="create-habit__step">
             <h3>Category</h3>
-            <div className="category-grid">
-              {categories.map(category => (
-                <button
-                  key={category.id}
-                  className={`category-item ${formData.category_id === category.id ? 'category-item--selected' : ''}`}
-                  onClick={() => handleInputChange('category_id', category.id)}
-                  style={{ backgroundColor: formData.category_id === category.id ? category.color : undefined }}
-                >
-                  <span className="category-item__icon">{category.icon}</span>
-                  <span className="category-item__name">{category.name}</span>
-                </button>
-              ))}
-            </div>
+            
+            {categoriesLoading && (
+              <div className="categories-loading">Loading categories...</div>
+            )}
+            
+            {categoriesError && (
+              <div className="categories-error">
+                <p>Failed to load categories</p>
+                <Button size="small" onClick={loadCategories}>Retry</Button>
+              </div>
+            )}
+            
+            {!categoriesLoading && !categoriesError && categories.length === 0 && (
+              <div className="categories-empty">No categories available</div>
+            )}
+            
+            {!categoriesLoading && !categoriesError && categories.length > 0 && (
+              <div className="category-grid">
+                {categories.map(category => (
+                  <button
+                    key={category.id}
+                    className={`category-item ${formData.category_id === category.id ? 'category-item--selected' : ''}`}
+                    onClick={() => handleInputChange('category_id', category.id)}
+                    style={{ 
+                      backgroundColor: formData.category_id === category.id ? category.color : undefined,
+                      borderColor: category.color
+                    }}
+                  >
+                    <span className="category-item__icon">{category.icon}</span>
+                    <span className="category-item__name">{category.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         );
+
 
       case 3:
         return (

@@ -1,0 +1,29 @@
+.subscription-banner {
+  background: var(--gray-100);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.subscription-banner--warning {
+  background: #FEF3C7;
+  border: 1px solid #F59E0B;
+}
+
+.subscription-banner__content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.subscription-banner__text {
+  font-size: 14px;
+  color: var(--gray-700);
+  margin: 0;
+}
+
+.subscription-banner--warning .subscription-banner__text {
+  color: #92400E;
+  font-weight: 500;
+}

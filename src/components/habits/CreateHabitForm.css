@@ -182,4 +182,31 @@
 
 .create-habit__footer button {
   flex: 1;
+}/* Состояния загрузки категорий */
+.categories-loading,
+.categories-error,
+.categories-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--gray-500);
+}
+
+.categories-error {
+  color: var(--danger-color);
+}
+
+.categories-error p {
+  margin-bottom: 16px;
+}
+
+/* Улучшаем стили категорий */
+.category-item {
+  border: 2px solid var(--gray-200);
+  transition: all 0.2s;
+}
+
+.category-item:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
