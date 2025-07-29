@@ -11,13 +11,17 @@ const api = axios.create({
 // Interceptor для добавления данных пользователя
 api.interceptors.request.use((config) => {
   const tg = window.Telegram?.WebApp;
-  if (tg?.initDataUnsafe?.user) {
-    // В продакшене будем отправлять initData для валидации
+  
+  if (tg?.initData) {
+    // Отправляем initData для валидации на сервере
     config.headers['X-Telegram-Init-Data'] = tg.initData;
+  } else {
+    // Для разработки используем тестовые данные
+    config.headers['X-Telegram-Init-Data'] = 'test_init_data';
   }
+  
   return config;
 });
-
 // Interceptor для обработки ошибок
 api.interceptors.response.use(
   (response) => response,
@@ -26,6 +30,12 @@ api.interceptors.response.use(
       // Можно показать модалку с предложением купить Premium
       console.log('Premium required');
     }
+    
+    if (error.response?.status === 401) {
+      console.error('Authentication failed');
+      // Можно перезагрузить страницу или показать ошибку
+    }
+    
     return Promise.reject(error);
   }
 );
