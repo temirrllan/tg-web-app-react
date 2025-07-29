@@ -5,19 +5,50 @@ export const useTelegram = () => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const tg = window.Telegram?.WebApp;
-    
-    if (tg) {
-      tg.ready();
-      tg.expand();
+    // Даем время на загрузку Telegram WebApp
+    const initTelegram = () => {
+      const tg = window.Telegram?.WebApp;
       
-      // Настройка UI
-      tg.setHeaderColor('#ffffff');
-      tg.setBackgroundColor('#f3f4f6');
+      if (tg) {
+        tg.ready();
+        tg.expand();
+        
+        // Настройка UI
+        tg.setHeaderColor('#ffffff');
+        tg.setBackgroundColor('#f3f4f6');
+        
+        setWebApp(tg);
+        
+        // Получаем данные пользователя
+        const tgUser = tg.initDataUnsafe?.user;
+        if (tgUser) {
+          setUser(tgUser);
+        }
+        
+        console.log('Telegram WebApp initialized:', {
+          version: tg.version,
+          platform: tg.platform,
+          user: tgUser
+        });
+      } else {
+        console.error('Telegram WebApp not found');
+      }
+    };
+
+    // Проверяем сразу
+    if (window.Telegram?.WebApp) {
+      initTelegram();
+    } else {
+      // Если нет, ждем загрузки
+      window.addEventListener('load', initTelegram);
       
-      setWebApp(tg);
-      setUser(tg.initDataUnsafe?.user);
+      // Также проверяем через небольшую задержку
+      setTimeout(initTelegram, 100);
     }
+
+    return () => {
+      window.removeEventListener('load', initTelegram);
+    };
   }, []);
 
   const showAlert = (message) => {
@@ -49,6 +80,7 @@ export const useTelegram = () => {
     user,
     showAlert,
     showConfirm,
-    close
+    close,
+    isReady: !!webApp && !!user
   };
 };

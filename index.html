@@ -3,9 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React</title>
-    <script src="https://telegram.org/js/telegram-web-app.js?58"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Habit Tracker</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+      // Отладочная информация
+      window.addEventListener('load', function() {
+        console.log('Page loaded');
+        console.log('Telegram WebApp:', window.Telegram?.WebApp);
+        if (window.Telegram?.WebApp) {
+          console.log('WebApp version:', window.Telegram.WebApp.version);
+          console.log('WebApp platform:', window.Telegram.WebApp.platform);
+          console.log('WebApp initData:', window.Telegram.WebApp.initData);
+          console.log('WebApp user:', window.Telegram.WebApp.initDataUnsafe?.user);
+        }
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>

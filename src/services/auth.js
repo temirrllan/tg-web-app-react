@@ -1,23 +1,25 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import api from './api';
 
 export const authenticateUser = async (initData, user) => {
   try {
-    const response = await fetch(`${API_URL}/api/auth/telegram`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        initData,
-        user
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Authentication failed');
+    // Если нет данных от Telegram, используем тестовые
+    if (!user) {
+      console.warn('No Telegram user data, using test data');
+      user = {
+        id: 123456789,
+        first_name: 'Test',
+        last_name: 'User',
+        username: 'testuser',
+        language_code: 'en'
+      };
     }
 
-    return await response.json();
+    const response = await api.post('/auth/telegram', {
+      initData: initData || 'test_init_data',
+      user
+    });
+
+    return response.data;
   } catch (error) {
     console.error('Auth error:', error);
     throw error;
