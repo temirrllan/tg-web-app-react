@@ -1,0 +1,185 @@
+.create-habit {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--gray-100);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.create-habit__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: white;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.create-habit__close {
+  background: none;
+  color: var(--primary-color);
+  font-size: 16px;
+  padding: 8px;
+}
+
+.create-habit__menu {
+  padding: 8px;
+  color: var(--gray-500);
+}
+
+.create-habit__content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.create-habit__step h3 {
+  font-size: 18px;
+  margin-bottom: 16px;
+  color: var(--gray-900);
+}
+
+.create-habit__hint {
+  font-size: 14px;
+  color: var(--gray-500);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+.create-habit__toggle {
+  margin-top: 24px;
+}
+
+.create-habit__toggle label {
+  display: block;
+}
+
+.create-habit__toggle span {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.toggle-wrapper {
+  display: flex;
+  gap: 8px;
+}
+
+/* Categories */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.category-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 8px;
+  background: white;
+  border: 2px solid var(--gray-200);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.category-item--selected {
+  border-color: var(--primary-color);
+  color: white;
+}
+
+.category-item__icon {
+  font-size: 24px;
+}
+
+.category-item__name {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Days selector */
+.days-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.day-button {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: white;
+  border: 2px solid var(--gray-200);
+  font-weight: 600;
+  color: var(--gray-600);
+  transition: all 0.2s;
+}
+
+.day-button--selected {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.schedule-type {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Reminder */
+.reminder-toggle {
+  margin-top: 16px;
+}
+
+.reminder-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Review */
+.review-summary {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.review-summary p {
+  margin-bottom: 12px;
+  color: var(--gray-700);
+}
+
+.review-summary strong {
+  color: var(--gray-900);
+}
+
+/* Footer */
+.create-habit__footer {
+  padding: 20px;
+  background: white;
+  border-top: 1px solid var(--gray-200);
+  display: flex;
+  gap: 12px;
+}
+
+.create-habit__footer button {
+  flex: 1;
+}

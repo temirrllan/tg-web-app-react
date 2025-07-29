@@ -1,0 +1,121 @@
+import React, { useState } from 'react';
+import Layout from '../components/layout/Layout';
+import Header from '../components/layout/Header';
+import HabitCard from '../components/habits/HabitCard';
+import EmptyState from '../components/habits/EmptyState';
+import CreateHabitForm from '../components/habits/CreateHabitForm';
+import Loader from '../components/common/Loader';
+import { useHabits } from '../hooks/useHabits';
+import { useTelegram } from '../hooks/useTelegram';
+import './Today.css';
+
+const Today = () => {
+  const { user } = useTelegram();
+  const { 
+    todayHabits, 
+    stats, 
+    phrase, 
+    loading, 
+    markHabit, 
+    unmarkHabit, 
+    createHabit 
+  } = useHabits();
+  
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+
+  const handleCreateHabit = async (habitData) => {
+    try {
+      await createHabit(habitData);
+      setShowCreateForm(false);
+    } catch (error) {
+      console.error('Failed to create habit:', error);
+    }
+  };
+
+  const getMotivationalMessage = () => {
+    if (stats.total === 0) return "Yes U Can!";
+    if (stats.completed === 0) return phrase.text || "Let's start!";
+    if (stats.completed === stats.total) return phrase.text || "Perfect day! 🎉";
+    return phrase.text || "Keep going!";
+  };
+
+  const getDayLabel = () => {
+    const today = new Date();
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return days[today.getDay()];
+  };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="today-loading">
+          <Loader size="large" />
+        </div>
+      </Layout>
+    );
+  }
+
+  return (
+    <>
+      <Layout>
+        <Header 
+          user={user} 
+          onProfileClick={() => setShowProfile(true)} 
+        />
+
+        <div className="today">
+          <div className="today__stats">
+            <h2 className="today__title">
+              Completed <span className="today__count">{stats.completed} out of {stats.total}</span> Habits
+            </h2>
+            <p className="today__subtitle">for today</p>
+          </div>
+
+          <div className="today__motivation">
+            {getMotivationalMessage()} {phrase.emoji}
+          </div>
+
+          <div className="today__days">
+            <div className="today__day today__day--active">
+              Today
+            </div>
+          </div>
+
+          {todayHabits.length === 0 ? (
+            <EmptyState onCreateClick={() => setShowCreateForm(true)} />
+          ) : (
+            <div className="today__habits">
+              {todayHabits.map(habit => (
+                <HabitCard
+                  key={habit.id}
+                  habit={habit}
+                  onMark={markHabit}
+                  onUnmark={unmarkHabit}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* FAB Button */}
+        <button 
+          className="fab"
+          onClick={() => setShowCreateForm(true)}
+        >
+          +
+        </button>
+      </Layout>
+
+      {/* Modals */}
+      {showCreateForm && (
+        <CreateHabitForm
+          onClose={() => setShowCreateForm(false)}
+          onSuccess={handleCreateHabit}
+        />
+      )}
+    </>
+  );
+};
+
+export default Today;

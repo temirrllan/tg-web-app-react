@@ -1,35 +1,35 @@
 import { useState, useEffect } from 'react';
-import './App.css';
-import Onboarding from './components/Onboarding';
 import { authenticateUser } from './services/auth';
+import { useTelegram } from './hooks/useTelegram';
+import Onboarding from './components/Onboarding';
+import Today from './pages/Today';
+import Profile from './pages/Profile';
+import Loader from './components/common/Loader';
+import './App.css';
 
 function App() {
+  const { user: tgUser, webApp } = useTelegram();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
     const initAuth = async () => {
       try {
-        // Проверяем, что мы в Telegram WebApp
-        if (window.Telegram?.WebApp) {
-          const tg = window.Telegram.WebApp;
-          tg.ready();
+        if (webApp && tgUser) {
+          const initData = webApp.initData;
+          const response = await authenticateUser(initData, tgUser);
           
-          const initData = tg.initData;
-          const user = tg.initDataUnsafe?.user;
-          
-          if (user) {
-            // Аутентифицируем пользователя
-            const response = await authenticateUser(initData, user);
-            
-            if (response.success) {
-              setUser(response.user);
-            } else {
-              setError('Ошибка аутентификации');
+          if (response.success) {
+            setUser(response.user);
+            // Показываем onboarding только новым пользователям
+            if (response.isNewUser) {
+              setShowOnboarding(true);
             }
           } else {
-            setError('Данные пользователя не найдены');
+            setError('Ошибка аутентификации');
           }
         } else {
           setError('Приложение должно быть открыто в Telegram');
@@ -42,21 +42,45 @@ function App() {
     };
 
     initAuth();
-  }, []);
+  }, [webApp, tgUser]);
 
   if (loading) {
-    return <div className="loading">Загрузка...</div>;
+    return (
+      <div className="app-loading">
+        <Loader size="large" />
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="error">Ошибка: {error}</div>;
+    return (
+      <div className="app-error">
+        <h2>Ошибка</h2>
+        <p>{error}</p>
+      </div>
+    );
   }
 
   if (!user) {
-    return <div className="error">Пользователь не авторизован</div>;
+    return (
+      <div className="app-error">
+        <h2>Пользователь не авторизован</h2>
+      </div>
+    );
   }
 
-  return <Onboarding user={user} />;
+  if (showOnboarding) {
+    return <Onboarding user={user} onComplete={() => setShowOnboarding(false)} />;
+  }
+
+  return (
+    <>
+      <Today />
+      {showProfile && (
+        <Profile onClose={() => setShowProfile(false)} />
+      )}
+    </>
+  );
 }
 
 export default App;

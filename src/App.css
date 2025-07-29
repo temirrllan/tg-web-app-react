@@ -14,3 +14,22 @@
 .loading {
   color: #0088cc;
 }
+.app-loading,
+.app-error {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  text-align: center;
+}
+
+.app-error h2 {
+  color: var(--danger-color);
+  margin-bottom: 12px;
+}
+
+.app-error p {
+  color: var(--gray-600);
+}

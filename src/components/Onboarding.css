@@ -1,40 +1,42 @@
 .onboarding {
-  padding: 20px;
-  text-align: center;
-}
-
-.onboarding h1 {
-  color: #0088cc;
-  margin-bottom: 20px;
-}
-
-.features {
+  min-height: 100vh;
   display: flex;
-  justify-content: space-around;
-  margin: 30px 0;
-  flex-wrap: wrap;
-}
-
-.feature {
-  background: #f5f5f5;
-  padding: 20px;
-  border-radius: 10px;
-  margin: 10px;
-  flex: 1;
-  min-width: 150px;
-}
-
-.start-button {
-  background: #0088cc;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  border: none;
-  padding: 15px 30px;
-  border-radius: 25px;
-  font-size: 18px;
-  cursor: pointer;
-  transition: background 0.3s;
 }
 
-.start-button:hover {
-  background: #0066aa;
+.onboarding__image {
+  width: 280px;
+  height: 280px;
+  margin-bottom: 40px;
+}
+
+.onboarding__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.onboarding__title {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  line-height: 1.3;
+}
+
+.onboarding__text {
+  font-size: 18px;
+  opacity: 0.9;
+  line-height: 1.5;
+  margin-bottom: 40px;
+}
+
+.onboarding__button {
+  max-width: 300px;
+  margin: 0 auto;
 }

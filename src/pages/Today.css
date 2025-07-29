@@ -1,0 +1,95 @@
+.today-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+}
+
+.today__stats {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.today__title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--gray-900);
+  line-height: 1.3;
+}
+
+.today__count {
+  color: var(--primary-color);
+}
+
+.today__subtitle {
+  font-size: 16px;
+  color: var(--gray-500);
+  margin-top: 4px;
+}
+
+.today__motivation {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.today__days {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  justify-content: center;
+}
+
+.today__day {
+  padding: 12px 24px;
+  border-radius: 20px;
+  font-weight: 600;
+  color: var(--gray-500);
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.today__day--active {
+  background: var(--success-color);
+  color: white;
+}
+
+.today__habits {
+  margin-bottom: 80px; /* Space for FAB */
+}
+
+/* FAB (Floating Action Button) */
+.fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--success-color);
+  color: white;
+  font-size: 32px;
+  font-weight: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s;
+  z-index: 100;
+}
+
+.fab:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.fab:active {
+  transform: scale(0.95);
+}
