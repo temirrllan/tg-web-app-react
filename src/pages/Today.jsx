@@ -72,12 +72,17 @@ const Today = () => {
           />
 
           <div className="px-4">
-            {/* Статистика */}
+            {/* Статистика - исправлено согласно макету */}
             <div className="text-center mb-5">
               <h1 className="text-[28px] font-bold text-black leading-tight">
-                Completed <span className="text-[28px]">{stats.completed} out of {stats.total}</span> Habits
+                Completed
               </h1>
               <p className="text-gray-400 text-[15px] mt-1 font-normal">for today</p>
+              <div className="mt-2">
+                <span className="text-[28px] font-bold text-black">
+                  {stats.completed} out of {stats.total} Habits
+                </span>
+              </div>
             </div>
 
             {/* Мотивационная фраза */}
@@ -92,14 +97,17 @@ const Today = () => {
               <button className="bg-[#66D964] text-white px-6 py-[14px] rounded-full font-semibold text-[16px]">
                 Today
               </button>
-              <button className="text-gray-400 px-5 py-[14px] font-medium text-[16px]">
+              <button className="bg-gray-200 text-gray-600 px-5 py-[14px] rounded-full font-medium text-[16px]">
+                Thu 17
+              </button>
+              <button className="bg-gray-200 text-gray-600 px-5 py-[14px] rounded-full font-medium text-[16px]">
                 Sat 19
               </button>
-              <button className="text-gray-400 px-5 py-[14px] font-medium text-[16px]">
+              <button className="bg-gray-200 text-gray-600 px-5 py-[14px] rounded-full font-medium text-[16px]">
                 Sun 20
               </button>
-              <button className="text-gray-400 px-5 py-[14px] font-medium text-[16px]">
-                Mon 21
+              <button className="bg-gray-200 text-gray-600 px-5 py-[14px] rounded-full font-medium text-[16px]">
+                Mon 2
               </button>
             </div>
 
@@ -119,6 +127,7 @@ const Today = () => {
                           habit={habit}
                           onMark={markHabit}
                           onUnmark={unmarkHabit}
+                          category="morning"
                         />
                       ))}
                     </div>
@@ -136,6 +145,7 @@ const Today = () => {
                           habit={habit}
                           onMark={markHabit}
                           onUnmark={unmarkHabit}
+                          category="afternoon"
                         />
                       ))}
                     </div>
@@ -153,6 +163,7 @@ const Today = () => {
                           habit={habit}
                           onMark={markHabit}
                           onUnmark={unmarkHabit}
+                          category="evening"
                         />
                       ))}
                     </div>
