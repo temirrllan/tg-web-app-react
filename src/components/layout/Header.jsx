@@ -1,30 +1,42 @@
 import React from 'react';
-import './Header.css';
 
 const Header = ({ user, onProfileClick }) => {
   return (
-    <header className="header">
-      <div className="header__user" onClick={onProfileClick}>
+    <div className="p-4">
+      <div 
+        className="bg-white rounded-2xl p-4 flex items-center gap-3 shadow-sm"
+        onClick={onProfileClick}
+      >
+        {/* Аватар */}
         {user?.photo_url ? (
           <img 
             src={user.photo_url} 
             alt={user.first_name} 
-            className="header__avatar"
+            className="w-12 h-12 rounded-full object-cover"
           />
         ) : (
-          <div className="header__avatar header__avatar--placeholder">
-            {user?.first_name?.[0] || '?'}
+          <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center">
+            <span className="text-white font-semibold text-lg">
+              {user?.first_name?.[0] || '?'}
+            </span>
           </div>
         )}
-        <div className="header__info">
-          <h1 className="header__name">{user?.first_name} {user?.last_name}</h1>
-          {user?.username && (
-            <p className="header__username">@{user.username}</p>
-          )}
+
+        {/* Имя пользователя */}
+        <div className="flex-1">
+          <h2 className="font-semibold text-black text-lg">
+            {user?.first_name} {user?.last_name}
+          </h2>
         </div>
-        <div className="header__arrow">›</div>
+
+        {/* Стрелка */}
+        <div className="text-gray-400">
+          <svg width="8" height="14" viewBox="0 0 8 14" fill="none">
+            <path d="M1 1L7 7L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
       </div>
-    </header>
+    </div>
   );
 };
 
