@@ -1,6 +1,6 @@
 import React from 'react';
 import './Onboarding.css';
-import illustration from '../../public/images/onboarding.png';
+import illustration from '../../public/images/onboarding.png'; // Проверь путь к картинке
 
 const Onboarding = ({ onComplete }) => {
   return (
