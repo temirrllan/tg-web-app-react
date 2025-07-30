@@ -41,10 +41,10 @@ body, #root, .container, .layout {
 }
 
 .onboarding__img {
-  width: 320px;
+  /* width: 320px;
   max-width: 95vw;
   height: auto;
-  display: block;
+  display: block; */
 }
 
 /* Белая карточка снизу */
