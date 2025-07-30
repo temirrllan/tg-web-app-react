@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
+import Button from '../common/Button';
 import { HABIT_STATUSES } from '../../utils/constants';
+import './HabitCard.css';
 
 const HabitCard = ({ habit, onMark, onUnmark }) => {
   const [loading, setLoading] = useState(false);
   
   const isCompleted = habit.today_status === HABIT_STATUSES.COMPLETED;
   const isFailed = habit.today_status === HABIT_STATUSES.FAILED;
+  const isSkipped = habit.today_status === HABIT_STATUSES.SKIPPED;
   
   const handleToggle = async () => {
     if (loading) return;
@@ -24,19 +27,83 @@ const HabitCard = ({ habit, onMark, onUnmark }) => {
     }
   };
 
-  return (
-    <div className="bg-white rounded-[20px] p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-      <div className="flex items-center">
-        {/* Иконка */}
-        <div className="w-[48px] h-[48px] bg-[#E8F4F9] rounded-[14px] flex items-center justify-center mr-3">
-          <span className="text-[24px]">{habit.icon || habit.category_icon || '🏃'}</span>
-        </div>
+  const handleFail = async () => {
+    if (loading) return;
+    
+    setLoading(true);
+    try {
+      await onMark(habit.id, HABIT_STATUSES.FAILED);
+    } catch (error) {
+      console.error('Failed to mark as failed:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        {/* Информация */}
-        <div className="flex-1">
-          <h3 className="font-semibold text-black text-[17px] mb-1">{habit.title}</h3>
-          <p className="text-gray-400 text-[14px]">Goal: {habit.goal}</p>
+  return (
+    <div className={`habit-card ${isCompleted ? 'habit-card--completed' : ''} ${isFailed ? 'habit-card--failed' : ''}`}>
+      <div className="habit-card__content">
+        <div className="habit-card__icon">
+          {habit.icon || habit.category_icon || '📌'}
         </div>
+        
+        <div className="habit-card__info">
+          <h3 className="habit-card__title">{habit.title}</h3>
+          {habit.goal && (
+            <p className="habit-card__goal">Goal: {habit.goal}</p>
+          )}
+          {habit.streak_current > 0 && (
+            <p className="habit-card__streak">🔥 {habit.streak_current} days</p>
+          )}
+        </div>
+      </div>
+
+      <div className="habit-card__actions">
+        {!isCompleted && !isFailed && !isSkipped && (
+          <>
+            <Button
+              variant="success"
+              size="medium"
+              onClick={handleToggle}
+              disabled={loading}
+            >
+              {loading ? '...' : '✓ Done'}
+            </Button>
+            {habit.is_bad_habit && (
+              <Button
+                variant="danger"
+                size="small"
+                onClick={handleFail}
+                disabled={loading}
+              >
+                ✗
+              </Button>
+            )}
+          </>
+        )}
+        
+        {isCompleted && (
+          <Button
+            variant="secondary"
+            size="medium"
+            onClick={handleToggle}
+            disabled={loading}
+          >
+            {loading ? '...' : '↶ Undone'}
+          </Button>
+        )}
+        
+        {isFailed && (
+          <div className="habit-card__status habit-card__status--failed">
+            Failed
+          </div>
+        )}
+        
+        {isSkipped && (
+          <div className="habit-card__status habit-card__status--skipped">
+            Skipped
+          </div>
+        )}
       </div>
     </div>
   );

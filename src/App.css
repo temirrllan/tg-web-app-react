@@ -1,3 +1,4 @@
+@import "tailwindcss";
 .loading, .error {
   display: flex;
   justify-content: center;
