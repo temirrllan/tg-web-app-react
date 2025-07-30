@@ -1,159 +1,147 @@
-/* --------------------------------------------------
-   Общие стили
--------------------------------------------------- */
+/* Reset */
 .onboarding {
+  font-family: 'Inter', sans-serif;
+  background-color: #F9F9F9;
+  color: #000;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  background: linear-gradient(to bottom, #5BA3D8, #4A90C8);
-  color: #fff;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  justify-content: space-between;
 }
 
-/* --------------------------------------------------
-   Header
--------------------------------------------------- */
+/* Header */
 .onboarding__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: 16px;
+  background: transparent;
 }
 
 .onboarding__btn {
   background: none;
   border: none;
   cursor: pointer;
+  font-size: 14px;
+  color: #333;
 }
 
 .onboarding__btn--text {
-  color: #fff;
-  font-size: 17px;
-  font-weight: 400;
+  font-weight: 500;
 }
 
-.onboarding__btn--icon {
-  padding: 4px;
+.onboarding__btn--icon svg {
+  fill: #000;
 }
 
+/* Title block */
 .onboarding__title {
   text-align: center;
 }
 
 .onboarding__title h1 {
   margin: 0;
-  font-size: 17px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
 }
 
 .onboarding__title p {
   margin: 0;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  color: #666;
 }
 
-/* --------------------------------------------------
-   Main Content
--------------------------------------------------- */
+/* Content */
 .onboarding__content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 0 24px;
-}
-
-.onboarding__illustration {
-  width: 100%;
-  max-width: 380px;
-  height: 380px;
-  margin-bottom: 32px;
+  padding: 0 16px;
+  text-align: center;
 }
 
 .onboarding__illustration img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+  max-width: 100%;
+  height: auto;
+  margin-top: 20px;
 }
 
 .onboarding__text {
-  text-align: center;
-  margin-bottom: 48px;
+  background-color: #fff;
+  margin-top: -20px;
+  padding: 24px 16px;
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
 }
 
 .onboarding__text h2 {
-  margin: 0;
-  font-size: 32px;
+  font-size: 20px;
   font-weight: 700;
-  line-height: 1.2;
+  margin-bottom: 12px;
 }
 
 .onboarding__text p {
-  margin: 0;
-  font-size: 18px;
-  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  color: #555;
   line-height: 1.5;
 }
 
-/* --------------------------------------------------
-   Footer
--------------------------------------------------- */
+/* Footer */
 .onboarding__footer {
-  padding: 0 24px 32px;
+  padding: 16px;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .onboarding__btn--primary {
-  width: 100%;
-  padding: 18px 0;
-  background-color: #7ED321;
+  background-color: #C6F23D;
   color: #000;
-  font-size: 17px;
   font-weight: 600;
-  border-radius: 16px;
+  font-size: 14px;
+  padding: 14px;
+  border-radius: 8px;
   border: none;
-  box-shadow: 0 4px 12px rgba(126, 211, 33, 0.3);
-  margin-bottom: 24px;
+  cursor: pointer;
+  transition: background 0.3s;
 }
 
-/* Tabs */
+.onboarding__btn--primary:hover {
+  background-color: #b1dd32;
+}
+
 .onboarding__tabs {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 32px;
+  justify-content: space-between;
 }
 
 .onboarding__tab {
+  flex: 1;
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.6);
-  padding: 8px;
-  border-radius: 9999px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  color: #999;
+  font-size: 12px;
+  text-align: center;
 }
 
 .onboarding__tab--active {
-  background-color: #007AFF;
-  color: #fff;
-  padding: 8px 20px;
+  color: #000;
+  font-weight: 600;
+}
+
+.onboarding__tab svg {
+  display: block;
+  margin: 0 auto 4px;
 }
 
 /* Home Indicator */
 .onboarding__home-indicator {
   display: flex;
   justify-content: center;
-  margin-top: 24px;
+  padding: 8px 0 4px;
 }
 
 .onboarding__home-indicator-bar {
-  width: 128px;  /* 8rem */
-  height: 4px;
-  background-color: rgba(255, 255, 255, 0.3);
-  border-radius: 9999px;
+  width: 120px;
+  height: 5px;
+  background: #ccc;
+  border-radius: 4px;
 }
