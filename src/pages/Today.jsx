@@ -34,7 +34,7 @@ const Today = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f5f5f5] flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <Loader size="large" />
       </div>
     );
@@ -64,8 +64,8 @@ const Today = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-[#f5f5f5]">
-        <div className="pb-20">
+      <div className="min-h-screen bg-gray-100">
+        <div className="pb-24">
           <Header 
             user={user} 
             onProfileClick={() => setShowProfile(true)} 
@@ -74,39 +74,44 @@ const Today = () => {
           <div className="px-4">
             {/* Статистика */}
             <div className="text-center mb-5">
-              <h1 className="text-2xl font-bold text-black">
-                Completed{' '}
-                <span className="text-2xl font-bold">
-                  {stats.completed} out of {stats.total}
-                </span>{' '}
-                Habits
+              <h1 className="text-[28px] font-bold text-black leading-tight">
+                Completed <span className="text-[28px]">{stats.completed} out of {stats.total}</span> Habits
               </h1>
-              <p className="text-gray-400 text-base mt-1">for today</p>
+              <p className="text-gray-400 text-[15px] mt-1 font-normal">for today</p>
             </div>
 
             {/* Мотивационная фраза */}
-            <div className="bg-white rounded-2xl p-5 text-center mb-5 shadow-sm">
-              <p className="text-xl font-semibold text-black">
-                {phrase.text || "Yes U Can!"} {phrase.emoji || "✨"}
+            <div className="bg-white rounded-[20px] px-5 py-[18px] text-center mb-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+              <p className="text-[19px] font-semibold text-black">
+                {phrase.text || "Yes U Can!"} {phrase.emoji || ""}
               </p>
             </div>
 
             {/* Переключатель дней */}
-            <div className="flex justify-center mb-6">
-              <button className="bg-[#4CAF50] text-white px-6 py-3 rounded-full font-semibold">
+            <div className="flex justify-center gap-3 mb-6">
+              <button className="bg-[#66D964] text-white px-6 py-[14px] rounded-full font-semibold text-[16px]">
                 Today
+              </button>
+              <button className="text-gray-400 px-5 py-[14px] font-medium text-[16px]">
+                Sat 19
+              </button>
+              <button className="text-gray-400 px-5 py-[14px] font-medium text-[16px]">
+                Sun 20
+              </button>
+              <button className="text-gray-400 px-5 py-[14px] font-medium text-[16px]">
+                Mon 21
               </button>
             </div>
 
-            {/* Привычки или Empty State */}
+            {/* Привычки */}
             {todayHabits.length === 0 ? (
               <EmptyState onCreateClick={() => setShowCreateForm(true)} />
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-7">
                 {/* Morning */}
                 {groupedHabits.morning.length > 0 && (
                   <div>
-                    <h2 className="text-lg font-bold text-black mb-3">Morning</h2>
+                    <h2 className="text-[18px] font-bold text-black mb-4">Morning</h2>
                     <div className="space-y-3">
                       {groupedHabits.morning.map(habit => (
                         <HabitCard
@@ -123,7 +128,7 @@ const Today = () => {
                 {/* Afternoon */}
                 {groupedHabits.afternoon.length > 0 && (
                   <div>
-                    <h2 className="text-lg font-bold text-black mb-3">Afternoon</h2>
+                    <h2 className="text-[18px] font-bold text-black mb-4">Afternoon</h2>
                     <div className="space-y-3">
                       {groupedHabits.afternoon.map(habit => (
                         <HabitCard
@@ -140,7 +145,7 @@ const Today = () => {
                 {/* Evening */}
                 {groupedHabits.evening.length > 0 && (
                   <div>
-                    <h2 className="text-lg font-bold text-black mb-3">Evening</h2>
+                    <h2 className="text-[18px] font-bold text-black mb-4">Evening</h2>
                     <div className="space-y-3">
                       {groupedHabits.evening.map(habit => (
                         <HabitCard
@@ -160,10 +165,10 @@ const Today = () => {
 
         {/* FAB */}
         <button 
-          className="fixed bottom-6 right-6 w-14 h-14 bg-[#4CAF50] rounded-full flex items-center justify-center shadow-lg"
+          className="fixed bottom-6 right-6 w-[60px] h-[60px] bg-[#66D964] rounded-full flex items-center justify-center shadow-[0_4px_12px_rgba(102,217,100,0.4)]"
           onClick={() => setShowCreateForm(true)}
         >
-          <span className="text-white text-3xl font-light">+</span>
+          <span className="text-white text-[32px] font-light leading-none mb-1">+</span>
         </button>
       </div>
 
