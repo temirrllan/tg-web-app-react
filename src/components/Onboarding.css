@@ -61,18 +61,6 @@ margin: -35px auto 0 auto;   padding: 48px 24px 32px 24px;
   z-index: 3;
   position: relative;
   min-height: 280px;
-}.onboarding__card {
-  width: 370px;
-  max-width: 96vw;
-  background: #fff;
-  border-radius: 40px 40px 0 0;
-  box-shadow: 0 4px 24px 0 rgba(0,0,0,0.08);
-  margin: -60px auto 0 auto;   /* !!! вот здесь отрицательный отступ */
-  padding: 48px 24px 32px 24px;
-  text-align: center;
-  z-index: 3;
-  position: relative;
-  min-height: 280px;
 }
 
 .onboarding__title {
