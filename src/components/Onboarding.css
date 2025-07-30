@@ -56,10 +56,10 @@ body, #root, .container, .layout {
   background: #fff;
   border-radius: 40px 40px 0 0;
   box-shadow: 0 4px 24px 0 rgba(0,0,0,0.08);
-margin: -80px auto 0 auto;   
+margin: -77px auto 0 auto;   
 padding: 35px 24px 32px 24px;
   text-align: center;
-  z-index: 3;
+  z-index: -5;
   position: relative;
   min-height: 280px;
 }
