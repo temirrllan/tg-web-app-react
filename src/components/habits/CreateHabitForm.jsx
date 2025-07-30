@@ -306,67 +306,58 @@ const handleSubmit = async () => {
   };
 
   return (
-<div className="fixed inset-0 bg-[#f5f5f5] z-50 flex flex-col">
-      <div className="bg-white p-4 flex items-center justify-between border-b border-gray-100">
-        <button           className="text-[#007AFF] text-base"
- onClick={onClose}>
+    <div className="create-habit">
+      <div className="create-habit__header">
+        <button className="create-habit__close" onClick={onClose}>
           Cancel
         </button>
-        <h2 className="text-base font-semibold">Habit Tracker</h2>
-<button className="text-gray-400">
-          •••
-        </button>      </div>
+        <h2>Habit Tracker</h2>
+        <div className="create-habit__menu">⋯</div>
+      </div>
 
-       <div className="flex-1 overflow-y-auto p-4">
+      <div className="create-habit__content">
         {renderStep()}
       </div>
 
-      <div className="bg-white border-t border-gray-100 p-4 flex gap-3">
+      <div className="create-habit__footer">
         {step > 1 && step < 5 && (
-         <button
+          <Button
+            variant="secondary"
             onClick={() => setStep(step - 1)}
-            className="flex-1 bg-gray-200 text-gray-700 py-4 rounded-2xl font-semibold"
           >
             Back
-          </button>
+          </Button>
         )}
         
         {step < 4 && !formData.is_bad_habit && (
-           <button
+          <Button
+            variant="primary"
             onClick={() => setStep(step + 1)}
             disabled={!canProceed()}
-            className={`flex-1 py-4 rounded-2xl font-semibold ${
-              canProceed() 
-                ? 'bg-[#007AFF] text-white' 
-                : 'bg-gray-200 text-gray-400'
-            }`}
           >
             Next
-          </button>
+          </Button>
         )}
         
         {(step === 4 || (step === 2 && formData.is_bad_habit)) && (
-         <button
+          <Button
+            variant="primary"
             onClick={() => setStep(5)}
             disabled={!canProceed()}
-            className={`flex-1 py-4 rounded-2xl font-semibold ${
-              canProceed() 
-                ? 'bg-[#007AFF] text-white' 
-                : 'bg-gray-200 text-gray-400'
-            }`}
           >
             Review
-          </button>
+          </Button>
         )}
         
         {step === 5 && (
-           <button
+          <Button
+            variant="primary"
             onClick={handleSubmit}
             disabled={loading}
-            className="w-full bg-gray-600 text-white py-4 rounded-2xl font-semibold"
+            fullWidth
           >
             {loading ? 'Creating...' : 'Create habit'}
-          </button>
+          </Button>
         )}
       </div>
     </div>

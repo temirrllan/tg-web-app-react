@@ -1,22 +1,27 @@
 import React from 'react';
+import Button from '../common/Button';
+import './EmptyState.css';
 
 const EmptyState = ({ onCreateClick }) => {
   return (
-    <div className="flex flex-col items-center justify-center py-20">
-      {/* Медведь */}
-      <div className="w-48 h-48 mb-8">
-        <img 
-          src="/images/bear.svg" 
-          alt="No habits" 
-          className="w-full h-full object-contain opacity-80"
-        />
+    <div className="empty-state">
+      <div className="empty-state__image">
+        <img src="/images/bear.svg" alt="No habits" />
       </div>
       
-      <h2 className="text-2xl font-bold text-black mb-3">No Habits Yet</h2>
-      <p className="text-gray-500 text-center text-base leading-relaxed mb-2">
-        All your habit will showed up here.<br />
+      <h2 className="empty-state__title">No Habits Yet</h2>
+      <p className="empty-state__text">
+        All your habits will show up here.<br />
         Tap to + to add a Habit.
       </p>
+      
+      <Button
+        variant="primary"
+        size="large"
+        onClick={onCreateClick}
+      >
+        Create First Habit
+      </Button>
     </div>
   );
 };

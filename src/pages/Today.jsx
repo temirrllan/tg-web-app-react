@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
+import Layout from '../components/layout/Layout';
 import Header from '../components/layout/Header';
 import HabitCard from '../components/habits/HabitCard';
 import EmptyState from '../components/habits/EmptyState';
 import CreateHabitForm from '../components/habits/CreateHabitForm';
-import Profile from './Profile';
 import Loader from '../components/common/Loader';
 import { useHabits } from '../hooks/useHabits';
 import { useTelegram } from '../hooks/useTelegram';
@@ -24,164 +24,119 @@ const Today = () => {
   const [showProfile, setShowProfile] = useState(false);
 
   const handleCreateHabit = async (habitData) => {
-    try {
-      await createHabit(habitData);
-      setShowCreateForm(false);
-    } catch (error) {
-      console.error('Failed to create habit:', error);
+  console.log('Submitting new habit:', habitData);
+  
+  try {
+    const result = await createHabit(habitData);
+    console.log('Habit created successfully:', result);
+    setShowCreateForm(false);
+  } catch (error) {
+    console.error('Failed to create habit:', error);
+    
+    // Показываем пользователю конкретную ошибку
+    const errorMessage = error.response?.data?.error || error.message || 'Failed to create habit';
+    
+    if (error.response?.data?.showPremium) {
+      alert('You have reached the limit of 3 habits for free users. Please upgrade to Premium.');
+    } else {
+      alert(`Error: ${errorMessage}`);
     }
+  }
+};
+
+  const getMotivationalMessage = () => {
+    if (stats.total === 0) return "Yes U Can!";
+    if (stats.completed === 0) return phrase.text || "Let's start!";
+    if (stats.completed === stats.total) return phrase.text || "Perfect day! 🎉";
+    return phrase.text || "Keep going!";
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <Loader size="large" />
-      </div>
+      <Layout>
+        <div className="flex items-center justify-center h-96">
+          <Loader size="large" />
+        </div>
+      </Layout>
     );
   }
 
-  // Группируем привычки по времени дня
-  const groupedHabits = {
-    morning: [],
-    afternoon: [],
-    evening: []
-  };
-
-  todayHabits.forEach(habit => {
-    if (habit.reminder_time) {
-      const hour = parseInt(habit.reminder_time.split(':')[0]);
-      if (hour < 12) {
-        groupedHabits.morning.push(habit);
-      } else if (hour < 18) {
-        groupedHabits.afternoon.push(habit);
-      } else {
-        groupedHabits.evening.push(habit);
-      }
-    } else {
-      groupedHabits.morning.push(habit);
-    }
-  });
-
   return (
     <>
-      <div className="min-h-screen bg-gray-100">
-        <div className="pb-24">
-          <Header 
-            user={user} 
-            onProfileClick={() => setShowProfile(true)} 
-          />
+      <Layout>
+        <Header 
+          user={user} 
+          onProfileClick={() => setShowProfile(true)} 
+        />
 
-          <div className="px-4">
-            {/* Статистика */}
-            <div className="text-center mb-5">
-              <h1 className="text-[28px] font-bold text-black leading-tight">
-                Completed <span className="text-[28px]">{stats.completed} out of {stats.total}</span> Habits
-              </h1>
-              <p className="text-gray-400 text-[15px] mt-1 font-normal">for today</p>
-            </div>
-
-            {/* Мотивационная фраза */}
-            <div className="bg-white rounded-[20px] px-5 py-[18px] text-center mb-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-              <p className="text-[19px] font-semibold text-black">
-                {phrase.text || "Yes U Can!"} {phrase.emoji || ""}
-              </p>
-            </div>
-
-            {/* Переключатель дней */}
-            <div className="flex justify-center gap-3 mb-6">
-              <button className="bg-[#66D964] text-white px-6 py-[14px] rounded-full font-semibold text-[16px]">
-                Today
-              </button>
-              <button className="text-gray-400 px-5 py-[14px] font-medium text-[16px]">
-                Sat 19
-              </button>
-              <button className="text-gray-400 px-5 py-[14px] font-medium text-[16px]">
-                Sun 20
-              </button>
-              <button className="text-gray-400 px-5 py-[14px] font-medium text-[16px]">
-                Mon 21
-              </button>
-            </div>
-
-            {/* Привычки */}
-            {todayHabits.length === 0 ? (
-              <EmptyState onCreateClick={() => setShowCreateForm(true)} />
-            ) : (
-              <div className="space-y-7">
-                {/* Morning */}
-                {groupedHabits.morning.length > 0 && (
-                  <div>
-                    <h2 className="text-[18px] font-bold text-black mb-4">Morning</h2>
-                    <div className="space-y-3">
-                      {groupedHabits.morning.map(habit => (
-                        <HabitCard
-                          key={habit.id}
-                          habit={habit}
-                          onMark={markHabit}
-                          onUnmark={unmarkHabit}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Afternoon */}
-                {groupedHabits.afternoon.length > 0 && (
-                  <div>
-                    <h2 className="text-[18px] font-bold text-black mb-4">Afternoon</h2>
-                    <div className="space-y-3">
-                      {groupedHabits.afternoon.map(habit => (
-                        <HabitCard
-                          key={habit.id}
-                          habit={habit}
-                          onMark={markHabit}
-                          onUnmark={unmarkHabit}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Evening */}
-                {groupedHabits.evening.length > 0 && (
-                  <div>
-                    <h2 className="text-[18px] font-bold text-black mb-4">Evening</h2>
-                    <div className="space-y-3">
-                      {groupedHabits.evening.map(habit => (
-                        <HabitCard
-                          key={habit.id}
-                          habit={habit}
-                          onMark={markHabit}
-                          onUnmark={unmarkHabit}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+        <div className="px-4 pb-20">
+          {/* Статистика */}
+          <div className="mt-4 mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">
+              Completed{' '}
+              <span className="text-green-600">
+                {stats.completed} out of {stats.total}
+              </span>{' '}
+              Habits
+            </h2>
+            <p className="text-sm text-gray-400 mt-1">for today</p>
           </div>
+
+          {/* Мотивация */}
+          <div className="mb-6">
+            <div className="inline-block px-4 py-2 border border-gray-200 rounded-lg shadow-sm text-gray-700 font-medium">
+              {getMotivationalMessage()} {phrase.emoji}
+            </div>
+          </div>
+
+          {/* Дни недели */}
+          <div className="flex space-x-2 overflow-x-auto mb-6 pb-1">
+            {/* Предыдущие дни, если нужны */}
+            {/* <div className="px-3 py-1 bg-gray-100 rounded-lg text-gray-500">Thu 17</div> */}
+            <div className="px-4 py-2 bg-green-200 text-green-800 rounded-lg font-medium flex-shrink-0">
+              Today
+            </div>
+            <div className="px-3 py-2 bg-gray-100 text-gray-500 rounded-lg flex-shrink-0">
+              Sat 19
+            </div>
+            <div className="px-3 py-2 bg-gray-100 text-gray-500 rounded-lg flex-shrink-0">
+              Sun 20
+            </div>
+            {/* ... */}
+          </div>
+
+          {/* Список привычек или пустое состояние */}
+          {todayHabits.length === 0 ? (
+            <EmptyState onCreateClick={() => setShowCreateForm(true)} />
+          ) : (
+            <div className="space-y-4">
+              {todayHabits.map(habit => (
+                <HabitCard
+                  key={habit.id}
+                  habit={habit}
+                  onMark={markHabit}
+                  onUnmark={unmarkHabit}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* FAB */}
-        <button 
-          className="fixed bottom-6 right-6 w-[60px] h-[60px] bg-[#66D964] rounded-full flex items-center justify-center shadow-[0_4px_12px_rgba(102,217,100,0.4)]"
+        {/* Плавающая кнопка «+» */}
+        <button
+          className="fixed bottom-6 right-6 w-14 h-14 bg-green-600 text-white text-3xl rounded-full shadow-lg flex items-center justify-center hover:bg-green-700 transition"
           onClick={() => setShowCreateForm(true)}
         >
-          <span className="text-white text-[32px] font-light leading-none mb-1">+</span>
+          +
         </button>
-      </div>
+      </Layout>
 
-      {/* Модальные окна */}
+      {/* Модалка создания привычки */}
       {showCreateForm && (
         <CreateHabitForm
           onClose={() => setShowCreateForm(false)}
           onSuccess={handleCreateHabit}
         />
-      )}
-
-      {showProfile && (
-        <Profile onClose={() => setShowProfile(false)} />
       )}
     </>
   );
