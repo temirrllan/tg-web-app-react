@@ -45,12 +45,7 @@ body, #root, .container, .layout {
 }
 
 .onboarding__img {
-  width: 100%;
-  width: 320px;       /* или нужный тебе размер */
-  height: auto;
-  display: block;
-  margin: 0;              /* обязательно сбросить! */
-  padding: 0;
+  
 }
 
 
