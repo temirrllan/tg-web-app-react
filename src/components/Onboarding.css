@@ -46,7 +46,7 @@ body, #root, .container, .layout {
 
 .onboarding__img {
   width: 100%;
-  max-width: 400px;       /* или нужный тебе размер */
+  width: 320px;       /* или нужный тебе размер */
   height: auto;
   display: block;
   margin: 0;              /* обязательно сбросить! */
@@ -56,7 +56,7 @@ body, #root, .container, .layout {
 
 .onboarding__card {
   width: 370px;
-  max-width: 96vw;
+  max-width: 100%;
   background: #fff;
   border-radius: 40px 40px 0 0;
   box-shadow: 0 4px 24px 0 rgba(0,0,0,0.08);
