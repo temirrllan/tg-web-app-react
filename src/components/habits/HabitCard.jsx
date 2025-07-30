@@ -1,28 +1,11 @@
 import React, { useState } from 'react';
 import { HABIT_STATUSES } from '../../utils/constants';
 
-const HabitCard = ({ habit, onMark, onUnmark, category = 'morning' }) => {
+const HabitCard = ({ habit, onMark, onUnmark }) => {
   const [loading, setLoading] = useState(false);
   
   const isCompleted = habit.today_status === HABIT_STATUSES.COMPLETED;
   const isFailed = habit.today_status === HABIT_STATUSES.FAILED;
-  
-  // Цвета для разных категорий согласно макету
-  const categoryColors = {
-    morning: 'bg-[#E8F4F9]', // Голубой для утренних привычек
-    afternoon: 'bg-[#F3E8FF]', // Фиолетовый для дневных привычек
-    evening: 'bg-[#FFE8F5]' // Розовый для вечерних привычек
-  };
-  
-  // Иконки для разных категорий
-  const getCategoryIcon = (habitTitle) => {
-    const title = habitTitle.toLowerCase();
-    if (title.includes('run') || title.includes('бег')) return '🏃';
-    if (title.includes('water') || title.includes('вода')) return '💧';
-    if (title.includes('read') || title.includes('читать')) return '📖';
-    if (title.includes('yoga') || title.includes('йога')) return '🧘';
-    return habit.icon || habit.category_icon || '🏃';
-  };
   
   const handleToggle = async () => {
     if (loading) return;
@@ -44,9 +27,9 @@ const HabitCard = ({ habit, onMark, onUnmark, category = 'morning' }) => {
   return (
     <div className="bg-white rounded-[20px] p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
       <div className="flex items-center">
-        {/* Иконка с цветом категории */}
-        <div className={`w-[48px] h-[48px] ${categoryColors[category]} rounded-[14px] flex items-center justify-center mr-3`}>
-          <span className="text-[24px]">{getCategoryIcon(habit.title)}</span>
+        {/* Иконка */}
+        <div className="w-[48px] h-[48px] bg-[#E8F4F9] rounded-[14px] flex items-center justify-center mr-3">
+          <span className="text-[24px]">{habit.icon || habit.category_icon || '🏃'}</span>
         </div>
 
         {/* Информация */}

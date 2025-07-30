@@ -23,15 +23,6 @@ export const useTelegram = () => {
         const tgUser = tg.initDataUnsafe?.user;
         if (tgUser) {
           setUser(tgUser);
-        } else {
-          // Моковые данные для демонстрации
-          setUser({
-            id: 123456789,
-            first_name: 'Logan',
-            last_name: 'Howlett',
-            photo_url: null, // Можно добавить URL фото
-            username: 'wolverine'
-          });
         }
         
         console.log('Telegram WebApp initialized:', {
@@ -41,14 +32,6 @@ export const useTelegram = () => {
         });
       } else {
         console.error('Telegram WebApp not found');
-        // Моковые данные для демонстрации
-        setUser({
-          id: 123456789,
-          first_name: 'Logan',
-          last_name: 'Howlett',
-          photo_url: null,
-          username: 'wolverine'
-        });
       }
     };
 

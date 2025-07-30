@@ -14,16 +14,16 @@ const Header = ({ user, onProfileClick }) => {
     <>
       {/* Telegram WebApp Header */}
       <div className="bg-white px-4 py-3 flex items-center justify-between">
-        <button className="text-[#007AFF] text-[17px] font-medium">Close</button>
+        <button className="text-[#007AFF] text-[17px]">Close</button>
         <div className="text-center">
-          <h1 className="text-[17px] font-bold text-black">Habit Tracker</h1>
+          <h1 className="text-[17px] font-semibold text-black">Habit Tracker</h1>
           <p className="text-[13px] text-gray-400">mini-app</p>
         </div>
-        <button className="w-8 h-8 bg-[#007AFF] rounded-full flex items-center justify-center">
-          <svg width="16" height="4" viewBox="0 0 16 4" fill="none">
-            <circle cx="2" cy="2" r="1.5" fill="white"/>
-            <circle cx="8" cy="2" r="1.5" fill="white"/>
-            <circle cx="14" cy="2" r="1.5" fill="white"/>
+        <button className="p-1">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <circle cx="4" cy="10" r="1.5" fill="#007AFF"/>
+            <circle cx="10" cy="10" r="1.5" fill="#007AFF"/>
+            <circle cx="16" cy="10" r="1.5" fill="#007AFF"/>
           </svg>
         </button>
       </div>
@@ -31,7 +31,7 @@ const Header = ({ user, onProfileClick }) => {
       {/* User Profile Card */}
       <div className="px-4 pt-3 pb-1">
         <div 
-          className="bg-white rounded-[16px] p-4 flex items-center shadow-[0_2px_8px_rgba(0,0,0,0.04)] cursor-pointer"
+          className="bg-white rounded-[16px] p-4 flex items-center shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
           onClick={onProfileClick}
         >
           {/* Аватар */}
@@ -57,7 +57,7 @@ const Header = ({ user, onProfileClick }) => {
           </div>
 
           {/* Стрелка */}
-          <div className="text-gray-400">
+          <div className="text-gray-300">
             <svg width="8" height="14" viewBox="0 0 8 14" fill="none">
               <path d="M1 1L7 7L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>

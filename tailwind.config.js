@@ -11,6 +11,9 @@ export default {
         'habit-blue': '#007AFF',
         'habit-gray': '#8E8E93',
         'habit-bg': '#F2F2F7',
+      },
+      fontFamily: {
+        'sf': ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif']
       }
     },
   },
