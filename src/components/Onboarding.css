@@ -5,61 +5,70 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding-bottom: 40px;
-  font-family: 'Inter', Arial, sans-serif;
+  width: 100vw;
+  box-sizing: border-box;
 }
 
-.onboarding__illustration {
-  width: 280px;
-  margin-top: 32px;
-}
-
-.onboarding__illustration img {
+/* Верхняя часть с иллюстрацией */
+.onboarding__top {
   width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+  margin-bottom: -60px;
+  z-index: 2;
+  position: relative;
+}
+
+.onboarding__img {
+  width: 320px;
+  max-width: 95vw;
   height: auto;
   display: block;
+  /* Без рамки! */
 }
 
-.onboarding__text {
+/* Белая карточка */
+.onboarding__card {
+  width: 370px;
+  max-width: 96vw;
   background: #fff;
-  border-radius: 32px 32px 0 0;
-  box-shadow: 0 0 16px 0 rgba(0,0,0,0.06);
-  margin-top: -40px;
-  padding: 40px 24px 24px 24px;
-  width: 340px;
+  border-radius: 40px 40px 0 0;
+  box-shadow: 0 4px 24px 0 rgba(0,0,0,0.08);
+  margin: 0 auto;
+  padding: 48px 24px 32px 24px;
   text-align: center;
+  z-index: 3;
+  position: relative;
+  min-height: 280px;
 }
 
-.onboarding__text h2 {
+.onboarding__title {
   font-size: 28px;
   font-weight: 700;
-  color: #202124;
-  margin: 0 0 20px 0;
+  color: #222;
+  margin: 0 0 22px 0;
   line-height: 1.2;
   letter-spacing: -0.02em;
 }
 
-.onboarding__text p {
+.onboarding__desc {
   font-size: 16px;
   color: #454545;
-  margin: 0 0 28px 0;
+  margin: 0 0 36px 0;
   line-height: 1.5;
   font-weight: 400;
 }
 
 .onboarding__btn {
-  display: block;
-  margin: 0 auto;
-  margin-top: -16px;
+  width: 100%;
   background: #b6e65d;
-  color: #202124;
+  color: #222;
   font-size: 18px;
   font-weight: 700;
   border: none;
   border-radius: 10px;
-  padding: 16px 0;
-  width: 90%;
-  max-width: 320px;
+  padding: 18px 0;
   cursor: pointer;
   box-shadow: 0 2px 12px rgba(0,0,0,0.03);
   transition: background 0.2s;
@@ -67,4 +76,9 @@
 
 .onboarding__btn:hover {
   background: #a5db45;
+}
+
+/* Скрываем футер и ник, если они были */
+.onboarding__footer, .onboarding__tabs, .onboarding__home-indicator, .onboarding__home-indicator-bar {
+  display: none !important;
 }
