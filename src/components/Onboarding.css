@@ -1,9 +1,9 @@
-/* Сброс стилей у всех родителей и самой страницы для edge-to-edge */
+/* Гарантированный сброс для edge-to-edge */
 body, #root, .container, .layout {
   padding: 0 !important;
   margin: 0 !important;
   background: #5392D4 !important;
-  max-width: 100vw !important;
+  max-width: 100% !important;
   min-height: 100vh;
   box-sizing: border-box;
 }
@@ -16,7 +16,7 @@ body, #root, .container, .layout {
 .onboarding {
   margin: 0 !important;
   padding: 0 !important;
-  width: 100vw;
+  width: 100% !important;  /* <---- КЛЮЧ! Только 100%, не 100vw */
   min-height: 100vh;
   background: #5392D4;
   display: flex;
@@ -35,7 +35,7 @@ body, #root, .container, .layout {
   display: flex;
   justify-content: center;
   margin-top: 32px;
-  margin-bottom: -64px; /* чтобы белый блок "накрывал" часть картинки */
+  margin-bottom: -64px;
   z-index: 2;
   position: relative;
 }
@@ -98,7 +98,6 @@ body, #root, .container, .layout {
   background: #a5db45;
 }
 
-/* Убираем все футеры, вкладки и лишние элементы, если вдруг остались */
 .onboarding__footer, .onboarding__tabs, .onboarding__home-indicator, .onboarding__home-indicator-bar {
   display: none !important;
 }
