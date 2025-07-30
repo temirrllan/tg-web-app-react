@@ -6,7 +6,7 @@ const EmptyState = ({ onCreateClick }) => {
   return (
     <div className="empty-state">
       <div className="empty-state__image">
-        <img src="/images/bear.svg" alt="No habits" />
+        <img src="/images/Lazy_Bear.png" alt="No habits" />
       </div>
       
       <h2 className="empty-state__title">No Habits Yet</h2>
