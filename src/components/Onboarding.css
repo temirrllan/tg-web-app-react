@@ -16,7 +16,7 @@ body, #root, .container, .layout {
 .onboarding {
   margin: 0 !important;
   padding: 0 !important;
-  width: 100% !important;  /* <---- КЛЮЧ! Только 100%, не 100vw */
+  width: 100% !important;
   min-height: 100vh;
   background: #5392D4;
   display: flex;
@@ -24,37 +24,55 @@ body, #root, .container, .layout {
   align-items: center;
   justify-content: flex-start;
   position: relative;
-  left: 0;
-  top: 0;
-  z-index: 1;
 }
 
-/* Верхняя часть с иллюстрацией */
 .onboarding__top {
   width: 100%;
   display: flex;
   justify-content: center;
-  margin-top: 32px;
-  margin-bottom: -64px;
+  margin-top: 0;           /* убираем верхний отступ! */
+  margin-bottom: 0;        /* убираем нижний отступ! */
+  z-index: 2;
+  position: relative;
+}.onboarding__top {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 0;           /* убираем верхний отступ! */
+  margin-bottom: 0;        /* убираем нижний отступ! */
   z-index: 2;
   position: relative;
 }
 
 .onboarding__img {
-  /* width: 320px;
-  max-width: 95vw;
+  width: 100%;
+  max-width: 400px;       /* или нужный тебе размер */
   height: auto;
-  display: block; */
+  display: block;
+  margin: 0;              /* обязательно сбросить! */
+  padding: 0;
 }
 
-/* Белая карточка снизу */
+
 .onboarding__card {
   width: 370px;
   max-width: 96vw;
   background: #fff;
   border-radius: 40px 40px 0 0;
   box-shadow: 0 4px 24px 0 rgba(0,0,0,0.08);
-  margin: 0 auto;
+  margin: -60px auto 0 auto;   /* !!! вот здесь отрицательный отступ */
+  padding: 48px 24px 32px 24px;
+  text-align: center;
+  z-index: 3;
+  position: relative;
+  min-height: 280px;
+}.onboarding__card {
+  width: 370px;
+  max-width: 96vw;
+  background: #fff;
+  border-radius: 40px 40px 0 0;
+  box-shadow: 0 4px 24px 0 rgba(0,0,0,0.08);
+  margin: -60px auto 0 auto;   /* !!! вот здесь отрицательный отступ */
   padding: 48px 24px 32px 24px;
   text-align: center;
   z-index: 3;
@@ -100,4 +118,11 @@ body, #root, .container, .layout {
 
 .onboarding__footer, .onboarding__tabs, .onboarding__home-indicator, .onboarding__home-indicator-bar {
   display: none !important;
+}
+@media (max-width: 430px) {
+  .onboarding__card {
+    width: 98vw;
+    padding-left: 6vw;
+    padding-right: 6vw;
+  }
 }
