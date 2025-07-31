@@ -1,44 +1,50 @@
 .onboarding {
-  background: #5392D4;
   min-height: 100vh;
-  width: 100vw;
+  background: #5392D4;
   padding: 0;
   margin: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  box-sizing: border-box;
-  position: relative;
+  width: 100vw;
 }
 
-.onboarding__hero {
+.onboarding__top {
   width: 100vw;
-  min-height: 350px;
-  height: 48vw;
-  max-height: 400px;
-  background: #5392D4 url('../../public/images/onboarding.png') no-repeat center top;
-  background-size: cover;
-  border-radius: 0 0 44px 44px;
   position: relative;
-  z-index: 1;
-  margin-bottom: -70px; /* Карточка зайдёт наверх */
   overflow: hidden;
 }
 
+.onboarding__img {
+  width: 100vw;
+  min-height: 270px;
+  max-height: 380px;
+  object-fit: cover;
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
+.onboarding__wave {
+  position: absolute;
+  left: 0;
+  bottom: -1px; /* максимально плотно к нижнему краю картинки */
+  width: 100%;
+  height: 60px;
+  z-index: 2;
+  pointer-events: none;
+  line-height: 0;
+}
+
 .onboarding__card {
-  width: 96vw;
-  max-width: 380px;
-  margin: 0 auto;
+  position: relative;
+  z-index: 3;
   background: #fff;
-  border-radius: 40px;
+  width: 96vw;
+  max-width: 370px;
+  margin: 0 auto;
+  margin-top: -30px; /* чтобы заходило на волну/облака */
+  border-radius: 0 0 32px 32px;
   box-shadow: 0 4px 24px 0 rgba(0,0,0,0.09);
   padding: 48px 24px 32px 24px;
   text-align: center;
-  position: relative;
-  z-index: 2;
-  min-height: 260px;
-  top: -44px;
-  /* делаем аккуратное перекрытие */
 }
 
 .onboarding__title {
@@ -46,7 +52,7 @@
   font-weight: 700;
   color: #222;
   margin: 0 0 20px 0;
-  line-height: 1.22;
+  line-height: 1.2;
 }
 
 .onboarding__desc {
@@ -76,19 +82,14 @@
   background: #a5db45;
 }
 
-@media (max-width: 480px) {
-  .onboarding__hero {
+@media (max-width: 430px) {
+  .onboarding__img {
     min-height: 210px;
-    height: 42vw;
-    max-height: 240px;
-    border-radius: 0 0 32px 32px;
-    margin-bottom: -40px;
   }
   .onboarding__card {
     padding-left: 4vw;
     padding-right: 4vw;
     min-height: 210px;
-    border-radius: 26px;
-    top: -26px;
+    border-radius: 0 0 22px 22px;
   }
 }
