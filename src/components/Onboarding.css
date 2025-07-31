@@ -1,59 +1,94 @@
-.onboarding__top {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  margin-top: 0;
-  z-index: 2;
-  position: relative;
-  /* Немного пространства сверху для иллюстрации */
-  padding-top: 36px;
-}
-
-.onboarding__img {
-  width: 350px;
-  max-width: 92vw;
-  height: auto;
+.onboarding {
+  background: #5392D4;
+  min-height: 100vh;
+  width: 100vw;
+  padding: 0;
   margin: 0;
-  display: block;
-  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  box-sizing: border-box;
   position: relative;
 }
 
-.onboarding__wave {
-  width: 100%;
+.onboarding__hero {
+  width: 100vw;
+  min-height: 350px;
+  height: 48vw;
+  max-height: 400px;
+  background: #5392D4 url('../../public/images/onboarding.png') no-repeat center top;
+  background-size: cover;
+  border-radius: 0 0 44px 44px;
   position: relative;
-  top: -40px; /* Двигаем дугу вверх, чтобы перекрывала */
-  z-index: 2;
-  line-height: 0;
-  pointer-events: none;
+  z-index: 1;
+  margin-bottom: -70px; /* Карточка зайдёт наверх */
+  overflow: hidden;
 }
 
 .onboarding__card {
-  width: 370px;
-  max-width: 100vw;
+  width: 96vw;
+  max-width: 380px;
+  margin: 0 auto;
   background: #fff;
-  border-radius: 40px 40px 0 0;
-  box-shadow: 0 4px 24px 0 rgba(0,0,0,0.08);
-  margin: -60px auto 0 auto; /* чуть больше перекрытия */
+  border-radius: 40px;
+  box-shadow: 0 4px 24px 0 rgba(0,0,0,0.09);
   padding: 48px 24px 32px 24px;
   text-align: center;
-  z-index: 4;
   position: relative;
-  min-height: 280px;
+  z-index: 2;
+  min-height: 260px;
+  top: -44px;
+  /* делаем аккуратное перекрытие */
 }
 
-@media (max-width: 430px) {
-  .onboarding__img {
-    width: 92vw;
-    max-width: 380px;
+.onboarding__title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #222;
+  margin: 0 0 20px 0;
+  line-height: 1.22;
+}
+
+.onboarding__desc {
+  font-size: 16px;
+  color: #454545;
+  margin: 0 0 32px 0;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.onboarding__btn {
+  width: 100%;
+  background: #b6e65d;
+  color: #222;
+  font-size: 18px;
+  font-weight: 700;
+  border: none;
+  border-radius: 10px;
+  padding: 16px 0;
+  cursor: pointer;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+  transition: background 0.2s;
+  margin-top: 8px;
+}
+
+.onboarding__btn:hover {
+  background: #a5db45;
+}
+
+@media (max-width: 480px) {
+  .onboarding__hero {
+    min-height: 210px;
+    height: 42vw;
+    max-height: 240px;
+    border-radius: 0 0 32px 32px;
+    margin-bottom: -40px;
   }
   .onboarding__card {
-    width: 98vw;
     padding-left: 4vw;
     padding-right: 4vw;
-    min-height: 220px;
-  }
-  .onboarding__wave {
-    top: -24px;
+    min-height: 210px;
+    border-radius: 26px;
+    top: -26px;
   }
 }
