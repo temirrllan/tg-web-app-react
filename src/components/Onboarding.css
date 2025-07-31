@@ -59,7 +59,7 @@ body, #root, .container, .layout {
 margin: -77px auto 0 auto;   
 padding: 48px 24px 32px 24px;
   text-align: center;
-  z-index: 35;
+  z-index: 3;
   position: relative;
   min-height: 280px;
 }
