@@ -1,0 +1,163 @@
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram WebApp Test</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f0f0;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            margin: 20px auto;
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            background: #000;
+            padding: 10px;
+        }
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            border-radius: 30px;
+            overflow: hidden;
+            position: relative;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .info {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0051D5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="info">
+            <h2>Telegram WebApp Test Environment</h2>
+            <p>Тестирование Habit Tracker локально</p>
+            <button onclick="openApp()">Открыть приложение</button>
+            <button onclick="clearData()">Очистить данные</button>
+        </div>
+        
+        <div class="phone-frame" id="phone-frame" style="display: none;">
+            <div class="phone-screen">
+                <iframe id="app-frame"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Эмулируем Telegram WebApp окружение
+        window.Telegram = {
+            WebApp: {
+                initData: 'test_init_data',
+                initDataUnsafe: {
+                    user: {
+                        id: 1313126991,
+                        first_name: 'temirrlllan',
+                        last_name: '',
+                        username: 'kimjjk',
+                        language_code: 'ru',
+                        is_premium: false
+                    }
+                },
+                version: '6.0',
+                platform: 'web',
+                themeParams: {
+                    bg_color: '#ffffff',
+                    text_color: '#000000',
+                    hint_color: '#999999',
+                    link_color: '#007AFF',
+                    button_color: '#007AFF',
+                    button_text_color: '#ffffff'
+                },
+                isExpanded: false,
+                viewportHeight: window.innerHeight,
+                viewportStableHeight: window.innerHeight,
+                ready: function() {
+                    console.log('Telegram WebApp is ready');
+                },
+                expand: function() {
+                    this.isExpanded = true;
+                    console.log('WebApp expanded');
+                },
+                close: function() {
+                    console.log('WebApp closed');
+                    document.getElementById('phone-frame').style.display = 'none';
+                },
+                showAlert: function(message) {
+                    alert(message);
+                },
+                showConfirm: function(message, callback) {
+                    const result = confirm(message);
+                    if (callback) callback(result);
+                },
+                setHeaderColor: function(color) {
+                    console.log('Header color set to:', color);
+                },
+                setBackgroundColor: function(color) {
+                    console.log('Background color set to:', color);
+                    document.getElementById('app-frame').style.backgroundColor = color;
+                },
+                HapticFeedback: {
+                    impactOccurred: function(style) {
+                        console.log('Haptic feedback:', style);
+                        if (navigator.vibrate) {
+                            navigator.vibrate(10);
+                        }
+                    }
+                }
+            }
+        };
+
+        function openApp() {
+            const phoneFrame = document.getElementById('phone-frame');
+            const appFrame = document.getElementById('app-frame');
+            
+            phoneFrame.style.display = 'block';
+            appFrame.src = 'http://localhost:5173';
+            
+            // Передаем Telegram объект в iframe
+            appFrame.onload = function() {
+                appFrame.contentWindow.Telegram = window.Telegram;
+            };
+        }
+
+        function clearData() {
+            localStorage.clear();
+            sessionStorage.clear();
+            alert('Данные очищены! Обновите приложение.');
+        }
+    </script>
+</body>
+</html>

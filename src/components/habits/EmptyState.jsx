@@ -1,12 +1,12 @@
 import React from 'react';
 import Button from '../common/Button';
 import './EmptyState.css';
-
-const EmptyState = ({ onCreateClick }) => {
+import bear3 from '../../../public/images/bear3.svg?url';
+const EmptyState = () => {
   return (
     <div className="empty-state">
       <div className="empty-state__image">
-        <img src="/images/bear.svg" alt="No habits" />
+        <img src={bear3} alt="No habits" />
       </div>
       
       <h2 className="empty-state__title">No Habits Yet</h2>
@@ -15,13 +15,7 @@ const EmptyState = ({ onCreateClick }) => {
         Tap to + to add a Habit.
       </p>
       
-      <Button
-        variant="primary"
-        size="large"
-        onClick={onCreateClick}
-      >
-        Create First Habit
-      </Button>
+      
     </div>
   );
 };
