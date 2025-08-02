@@ -8,8 +8,27 @@
 .today__stats {
   text-align: center;
   margin-bottom: 20px;
+  
 }
-
+.today__container{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 24px;
+  color: #1D1D1F;
+  font-size: bold ;
+  margin-bottom: 13px;
+}
+.today__container2{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 700;
+  /* font-size: 24px; */
+  color: #1D1D1F;
+  font-size: bold;
+}
 .today__title {
   font-size: 24px;
   font-weight: 700;
@@ -22,28 +41,31 @@
 }
 
 .today__subtitle {
-  font-size: 16px;
-  color: var(--gray-500);
+  font-size: 24px;
+  color: #C3C3C3;
   margin-top: 4px;
 }
 
 .today__motivation {
+  max-width: 200px;
   background: white;
   border-radius: 16px;
-  padding: 20px;
+  padding: 13px 20px;
   text-align: center;
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--gray-800);
-  margin-bottom: 20px;
+
+  font-size: 16px;
+  font-weight: 700;
+  color: #1D1D1F;
+  /* margin-bottom: 20px; */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .today__days {
   display: flex;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 0px;
   justify-content: center;
+  margin-bottom: 26px;
 }
 
 .today__day {
@@ -92,4 +114,25 @@
 
 .fab:active {
   transform: scale(0.95);
+}
+
+/* Контейнер для привычек с правильными отступами */
+.habits-section {
+  padding: 0 16px;
+}
+
+.habits-section-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #000000;
+  margin: 0 0 12px 0;
+}
+
+.habits-list {
+  margin-bottom: 24px;
+}
+
+/* Убираем стандартные отступы */
+* {
+  -webkit-tap-highlight-color: transparent;
 }
