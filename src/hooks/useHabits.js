@@ -2,6 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { habitService } from '../services/habits';
 import { vibrate } from '../utils/helpers';
 
+// Вынесем отображение ошибок в отдельную функцию, вместо alert лучше использовать кастомные уведомления (пока alert)
+const handleError = (error, setError) => {
+  const message = error?.response?.data?.error || error.message || 'Unknown error';
+  setError(message);
+  alert(`Error: ${message}`);
+};
+
 export const useHabits = () => {
   const [habits, setHabits] = useState([]);
   const [todayHabits, setTodayHabits] = useState([]);
@@ -10,76 +17,76 @@ export const useHabits = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Загрузка привычек на сегодня
   const loadTodayHabits = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const data = await habitService.getTodayHabits();
       setTodayHabits(data.habits || []);
       setStats(data.stats || { completed: 0, total: 0 });
       setPhrase(data.phrase || { text: '', emoji: '' });
     } catch (err) {
-      setError(err.message);
+      handleError(err, setError);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Загрузка всех привычек
   const loadAllHabits = useCallback(async () => {
     try {
+      setError(null);
       const data = await habitService.getAllHabits();
       setHabits(data.habits || []);
     } catch (err) {
-      setError(err.message);
+      handleError(err, setError);
     }
   }, []);
 
-  // Отметка привычки
   const markHabit = useCallback(async (habitId, status = 'completed') => {
     try {
       vibrate();
+      setError(null);
       await habitService.markHabit(habitId, status);
-      await loadTodayHabits(); // Перезагружаем данные
+      await loadTodayHabits();
     } catch (err) {
-      setError(err.message);
+      handleError(err, setError);
       throw err;
     }
   }, [loadTodayHabits]);
 
-  // Отмена отметки
   const unmarkHabit = useCallback(async (habitId) => {
     try {
       vibrate();
+      setError(null);
       await habitService.unmarkHabit(habitId);
       await loadTodayHabits();
     } catch (err) {
-      setError(err.message);
+      handleError(err, setError);
       throw err;
     }
   }, [loadTodayHabits]);
 
-  // Создание привычки
   const createHabit = useCallback(async (habitData) => {
     try {
+      setError(null);
       const result = await habitService.createHabit(habitData);
       await loadAllHabits();
       await loadTodayHabits();
       return result;
     } catch (err) {
-      setError(err.message);
+      handleError(err, setError);
       throw err;
     }
   }, [loadAllHabits, loadTodayHabits]);
 
-  // Удаление привычки
   const deleteHabit = useCallback(async (habitId) => {
     try {
+      setError(null);
       await habitService.deleteHabit(habitId);
       await loadAllHabits();
       await loadTodayHabits();
     } catch (err) {
-      setError(err.message);
+      handleError(err, setError);
       throw err;
     }
   }, [loadAllHabits, loadTodayHabits]);

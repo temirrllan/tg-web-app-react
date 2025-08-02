@@ -6,6 +6,7 @@ import Today from './pages/Today';
 import Profile from './pages/Profile';
 import Loader from './components/common/Loader';
 import './App.css';
+import { useLocalization } from './hooks/useLocalization';
 
 function App() {
   const { user: tgUser, webApp, isReady } = useTelegram();
@@ -14,32 +15,29 @@ function App() {
   const [error, setError] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-
+  // Передаем язык Telegram пользователя в локализацию
+  const { language, dictionary, switchLanguage } = useLocalization(tgUser?.language_code);
   useEffect(() => {
     const initAuth = async () => {
       try {
-        // Ждем пока Telegram WebApp будет готов
-        if (!isReady) {
-          console.log('Waiting for Telegram WebApp...');
-          return;
-        }
+        if (!isReady) return;
 
-        console.log('Authenticating with:', { tgUser, initData: webApp.initData });
+        const initData = webApp.initData || '';
+        if (!initData) throw new Error('No Telegram initData available');
 
-        const initData = webApp.initData || 'test_init_data';
         const response = await authenticateUser(initData, tgUser);
-        
+
         if (response.success) {
           setUser(response.user);
           if (response.isNewUser) {
             setShowOnboarding(true);
           }
         } else {
-          setError('Ошибка аутентификации');
+          setError('Authentication failed');
         }
       } catch (err) {
         console.error('Auth error:', err);
-        setError(err.message || 'Ошибка подключения к серверу');
+        setError(err.message || 'Server connection error');
       } finally {
         setLoading(false);
       }
@@ -48,10 +46,9 @@ function App() {
     if (isReady) {
       initAuth();
     } else {
-      // Устанавливаем таймер для повторной проверки
       const timer = setTimeout(() => {
         if (!isReady) {
-          setError('Не удалось загрузить Telegram WebApp. Попробуйте обновить страницу.');
+          setError('Failed to load Telegram WebApp. Please refresh the page.');
           setLoading(false);
         }
       }, 3000);
@@ -60,13 +57,12 @@ function App() {
     }
   }, [webApp, tgUser, isReady]);
 
-  // Показываем загрузку пока ждем Telegram
   if (loading || !isReady) {
     return (
       <div className="app-loading">
         <Loader size="large" />
         <p style={{ marginTop: '20px', color: '#666' }}>
-          Загрузка Telegram Web App...
+          Loading Telegram Web App...
         </p>
       </div>
     );
@@ -75,11 +71,9 @@ function App() {
   if (error) {
     return (
       <div className="app-error">
-        <h2>Ошибка</h2>
+        <h2>Error</h2>
         <p>{error}</p>
-        <button onClick={() => window.location.reload()}>
-          Обновить
-        </button>
+        <button onClick={() => window.location.reload()}>Reload</button>
       </div>
     );
   }
@@ -87,21 +81,21 @@ function App() {
   if (!user) {
     return (
       <div className="app-error">
-        <h2>Пользователь не авторизован</h2>
-        <p>Попробуйте перезапустить приложение</p>
+        <h2>{dictionary['userNotAuthorized'] || 'User not authorized'}</h2>
+        <p>{dictionary['tryRestart'] || 'Try restarting the app'}</p>
       </div>
     );
   }
 
   if (showOnboarding) {
-    return <Onboarding user={user} onComplete={() => setShowOnboarding(false)} />;
+    return <Onboarding user={user} onComplete={() => setShowOnboarding(false)} dictionary={dictionary} />;
   }
 
   return (
     <>
-      <Today />
+      <Today dictionary={dictionary} />
       {showProfile && (
-        <Profile onClose={() => setShowProfile(false)} />
+        <Profile onClose={() => setShowProfile(false)} dictionary={dictionary} switchLanguage={switchLanguage} />
       )}
     </>
   );
