@@ -8,7 +8,7 @@ import Loader from './components/common/Loader';
 import './App.css';
 
 function App() {
-  const { user: tgUser, webApp, isReady } = useTelegram();
+  const { user: tgUser, webApp, isReady, isLoading } = useTelegram();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -18,16 +18,22 @@ function App() {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        // Ждем пока Telegram WebApp будет готов
-        if (!isReady) {
-          console.log('Waiting for Telegram WebApp...');
+        // В production обязательно должны быть данные от Telegram
+        const isProduction = window.location.hostname !== 'localhost';
+        
+        if (isProduction && !webApp?.initData) {
+          setError('Приложение должно быть открыто через Telegram');
+          setLoading(false);
           return;
         }
 
-        console.log('Authenticating with:', { tgUser, initData: webApp.initData });
+        console.log('Authenticating with:', { 
+          tgUser, 
+          hasInitData: !!webApp?.initData,
+          environment: isProduction ? 'production' : 'development'
+        });
 
-        const initData = webApp.initData || 'test_init_data';
-        const response = await authenticateUser(initData, tgUser);
+        const response = await authenticateUser(webApp.initData, tgUser);
         
         if (response.success) {
           setUser(response.user);
@@ -45,28 +51,29 @@ function App() {
       }
     };
 
-    if (isReady) {
+    // Ждем загрузки Telegram WebApp
+    if (!isLoading && isReady) {
       initAuth();
-    } else {
-      // Устанавливаем таймер для повторной проверки
-      const timer = setTimeout(() => {
-        if (!isReady) {
-          setError('Не удалось загрузить Telegram WebApp. Попробуйте обновить страницу.');
-          setLoading(false);
-        }
-      }, 3000);
-
-      return () => clearTimeout(timer);
+    } else if (!isLoading && !isReady) {
+      // Telegram не загрузился
+      const isProduction = window.location.hostname !== 'localhost';
+      if (isProduction) {
+        setError('Пожалуйста, откройте приложение через Telegram бота');
+      } else {
+        // Development mode
+        initAuth();
+      }
+      setLoading(false);
     }
-  }, [webApp, tgUser, isReady]);
+  }, [webApp, tgUser, isReady, isLoading]);
 
-  // Показываем загрузку пока ждем Telegram
-  if (loading || !isReady) {
+  // Показываем загрузку
+  if (loading || isLoading) {
     return (
       <div className="app-loading">
         <Loader size="large" />
         <p style={{ marginTop: '20px', color: '#666' }}>
-          Загрузка Telegram Web App...
+          Загрузка Habit Tracker...
         </p>
       </div>
     );
@@ -77,9 +84,11 @@ function App() {
       <div className="app-error">
         <h2>Ошибка</h2>
         <p>{error}</p>
-        <button onClick={() => window.location.reload()}>
-          Обновить
-        </button>
+        {window.location.hostname === 'localhost' && (
+          <button onClick={() => window.location.reload()}>
+            Обновить
+          </button>
+        )}
       </div>
     );
   }
@@ -87,8 +96,8 @@ function App() {
   if (!user) {
     return (
       <div className="app-error">
-        <h2>Пользователь не авторизован</h2>
-        <p>Попробуйте перезапустить приложение</p>
+        <h2>Необходима авторизация</h2>
+        <p>Откройте приложение через Telegram бота</p>
       </div>
     );
   }

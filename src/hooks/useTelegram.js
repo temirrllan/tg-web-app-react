@@ -1,16 +1,18 @@
-
+// src/hooks/useTelegram.js
 import { useEffect, useState } from 'react';
 
 export const useTelegram = () => {
   const [webApp, setWebApp] = useState(null);
   const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Даем время на загрузку Telegram WebApp
     const initTelegram = () => {
       const tg = window.Telegram?.WebApp;
+      const isProduction = window.location.hostname !== 'localhost';
       
       if (tg) {
+        // Production mode - используем реальный Telegram WebApp
         tg.ready();
         tg.expand();
         
@@ -29,50 +31,95 @@ export const useTelegram = () => {
         console.log('Telegram WebApp initialized:', {
           version: tg.version,
           platform: tg.platform,
-          user: tgUser
+          hasUser: !!tgUser,
+          hasInitData: !!tg.initData
         });
+        
+        setIsLoading(false);
+      } else if (!isProduction) {
+        // Development mode - эмулируем Telegram WebApp
+        console.warn('🚧 Development mode: Telegram WebApp emulated');
+        
+        const mockWebApp = {
+          initData: 'test_init_data',
+          initDataUnsafe: {
+            user: {
+              id: 123456789,
+              first_name: 'Test',
+              last_name: 'User',
+              username: 'testuser',
+              language_code: 'en'
+            }
+          },
+          ready: () => console.log('Mock WebApp ready'),
+          expand: () => console.log('Mock WebApp expanded'),
+          close: () => console.log('Mock WebApp closed'),
+          showAlert: (msg) => alert(msg),
+          showConfirm: (msg, cb) => cb(confirm(msg)),
+          setHeaderColor: () => {},
+          setBackgroundColor: () => {},
+          HapticFeedback: {
+            impactOccurred: () => console.log('Mock haptic feedback')
+          }
+        };
+        
+        setWebApp(mockWebApp);
+        setUser(mockWebApp.initDataUnsafe.user);
+        setIsLoading(false);
       } else {
-        console.error('Telegram WebApp not found');
+        // Production mode - Telegram WebApp не найден
+        console.error('❌ Telegram WebApp not found in production');
+        setIsLoading(false);
       }
     };
 
-    // Проверяем сразу
+    // Для production ждем загрузку Telegram WebApp
     if (window.Telegram?.WebApp) {
       initTelegram();
     } else {
-      // Если нет, ждем загрузки
-      window.addEventListener('load', initTelegram);
+      const isProduction = window.location.hostname !== 'localhost';
       
-      // Также проверяем через небольшую задержку
-      setTimeout(initTelegram, 100);
+      if (isProduction) {
+        // В production ждем до 3 секунд
+        let attempts = 0;
+        const checkInterval = setInterval(() => {
+          attempts++;
+          if (window.Telegram?.WebApp) {
+            clearInterval(checkInterval);
+            initTelegram();
+          } else if (attempts > 30) { // 30 * 100ms = 3 seconds
+            clearInterval(checkInterval);
+            console.error('Telegram WebApp failed to load');
+            setIsLoading(false);
+          }
+        }, 100);
+      } else {
+        // В development сразу используем mock
+        setTimeout(initTelegram, 100);
+      }
     }
-
-    return () => {
-      window.removeEventListener('load', initTelegram);
-    };
   }, []);
 
   const showAlert = (message) => {
-    if (webApp) {
-      webApp.showAlert(message);
-    } else {
-      alert(message);
-    }
+    webApp?.showAlert?.(message) || alert(message);
   };
 
   const showConfirm = (message) => {
-    if (webApp) {
+    if (webApp?.showConfirm) {
       return new Promise((resolve) => {
         webApp.showConfirm(message, resolve);
       });
-    } else {
-      return Promise.resolve(confirm(message));
     }
+    return Promise.resolve(confirm(message));
   };
 
   const close = () => {
-    if (webApp) {
-      webApp.close();
+    webApp?.close?.();
+  };
+
+  const vibrate = () => {
+    if (webApp?.HapticFeedback) {
+      webApp.HapticFeedback.impactOccurred('light');
     }
   };
 
@@ -82,6 +129,8 @@ export const useTelegram = () => {
     showAlert,
     showConfirm,
     close,
-    isReady: !!webApp && !!user
+    vibrate,
+    isReady: !!webApp && !!user,
+    isLoading
   };
 };

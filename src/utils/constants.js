@@ -1,4 +1,5 @@
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+export const IS_PRODUCTION = window.location.hostname !== 'localhost';
 
 export const HABIT_STATUSES = {
   PENDING: 'pending',
