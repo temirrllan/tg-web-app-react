@@ -4,7 +4,6 @@
   padding: 0;
   margin: 0;
   width: 100vw;
-  
 }
 
 .onboarding__top {
@@ -15,9 +14,8 @@
 
 .onboarding__img {
   width: 100vw;
-  min-height: 100%;
-  /* min-height: 270px; */
-  /* max-height: 380px; */
+  min-height: 270px;
+  max-height: 380px;
   object-fit: cover;
   display: block;
   margin: 0;

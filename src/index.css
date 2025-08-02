@@ -1,8 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap');
-
 :root {
   --primary-color: #0088cc;
-  --success-color: #A7D96C;
+  --success-color: #10b981;
   --danger-color: #ef4444;
   --warning-color: #f59e0b;
   --gray-100: #f3f4f6;
@@ -15,18 +13,14 @@
   --gray-800: #1f2937;
   --gray-900: #111827;
   
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-overflow-y: auto;
-  scrollbar-width: none; 
+
   color-scheme: light;
   color: var(--gray-900);
   background-color: var(--gray-100);
-    font-family: "Space Grotesk", sans-serif;
 
- overflow-y: scroll;         /* Скролл остаётся */
-  scrollbar-width: none;      /* Firefox */
-  -ms-overflow-style: none; 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -119,40 +113,4 @@ input:focus, textarea:focus, select:focus {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--gray-500);
-}
-
-
-/* ... существующие стили ... */
-
-/* Отключаем выделение текста при свайпе */
-.habit-card {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-}
-
-/* Плавная анимация для индикаторов */
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-.swipe-indicator {
-  animation: pulse 1s ease-in-out infinite;
-}
-/* Скрыть визуальный скроллбар (Chrome, Safari, Edge) */
-::-webkit-scrollbar {
-  width: 0 !important;
-  height: 0 !important;
-  background: transparent;
-  display: none;
 }

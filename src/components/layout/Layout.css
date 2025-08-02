@@ -1,5 +1,5 @@
 .layout {
   min-height: 100vh;
-  /* background: var(--gray-100); */
+  background: var(--gray-100);
   padding: 16px 0;
 }

@@ -1,224 +1,90 @@
-.habit-card-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-  margin-bottom: 12px;
-  height: 80px;
-}
-
-/* Основная карточка */
 .habit-card {
-  position: relative;
-  width: 100%;
-  background: #FFFFFF;
-  border-radius: 20px;
+  background: white;
+  border-radius: 16px;
   padding: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  cursor: grab;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
-  z-index: 2;
-  transition: transform 0s;
-}
-
-.habit-card.animating {
-  transition: transform 0.3s ease-out;
-}
-
-.habit-card.completed {
-  background: #E8F5E9;
-}
-
-.habit-card.failed {
-  background: #FFEBEE;
-}
-
-.habit-card:active {
-  cursor: grabbing;
-}
-
-.habit-card-content {
+  margin-bottom: 12px;
   display: flex;
   align-items: center;
-  height: 100%;
-  position: relative;
+  justify-content: space-between;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-/* Иконка привычки */
-.habit-icon {
+.habit-card--completed {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 1px solid var(--success-color);
+}
+
+.habit-card--failed {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border: 1px solid var(--danger-color);
+}
+
+.habit-card__content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.habit-card__icon {
   width: 48px;
   height: 48px;
-  background: #E8F4F9;
-  border-radius: 14px;
+  background: var(--gray-100);
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 12px;
-  flex-shrink: 0;
-  transition: background-color 0.3s ease;
-}
-
-.habit-icon.completed {
-  background: #34C759;
-}
-
-.habit-icon.failed {
-  background: #FF3B30;
-}
-
-.habit-emoji {
   font-size: 24px;
 }
 
-/* Информация о привычке */
-.habit-info {
+.habit-card--completed .habit-card__icon {
+  background: var(--success-color);
+  color: white;
+}
+
+.habit-card__info {
   flex: 1;
-  min-width: 0;
 }
 
-.habit-title {
-  font-size: 17px;
+.habit-card__title {
+  font-size: 16px;
   font-weight: 600;
-  color: #000000;
-  margin: 0 0 4px 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: var(--gray-900);
+  margin-bottom: 4px;
 }
 
-.habit-goal {
+.habit-card__goal {
   font-size: 14px;
-  color: #8E8E93;
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: var(--gray-500);
+  margin-bottom: 4px;
 }
 
-/* Индикатор статуса */
-.status-indicator {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+.habit-card__streak {
+  font-size: 12px;
+  color: var(--warning-color);
+  font-weight: 500;
+}
+
+.habit-card__actions {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  color: white;
-}
-
-.status-indicator.completed {
-  background: #34C759;
-}
-
-.status-indicator.failed {
-  background: #FF3B30;
-}
-
-/* Кнопка Done */
-.done-button {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 100px;
-  background: #34C759;
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 2px;
-  opacity: 0;
-  transform: scale(0.8);
-  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
-  z-index: 1;
-  box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
-}
-
-.done-button.visible {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.done-checkmark {
-  color: white;
-  font-size: 24px;
-  font-weight: bold;
-  line-height: 1;
-}
-
-.done-text {
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-/* Кнопка Undone/Failed */
-.undone-button {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 120px;
-  background: #546E7A;
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   gap: 8px;
-  opacity: 0;
-  transform: scale(0.8);
-  transition: opacity 0.2s ease-out, transform 0.2s ease-out, background-color 0.2s ease-out;
-  z-index: 1;
-  box-shadow: 0 2px 8px rgba(84, 110, 122, 0.3);
+  align-items: center;
 }
 
-.undone-button.failed-variant {
-  background: #FF3B30;
-  box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3);
-}
-
-.undone-button.visible {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.undone-icon {
-  color: white;
-  font-size: 20px;
-  font-weight: bold;
-}
-
-.undone-text {
-  color: white;
+.habit-card__status {
+  padding: 8px 16px;
+  border-radius: 8px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
-/* Анимация появления */
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.habit-card__status--failed {
+  background: var(--danger-color);
+  color: white;
 }
 
-.habit-card {
-  animation: slideIn 0.3s ease-out;
-}
-
-/* Отключаем выделение текста при свайпе */
-.habit-card * {
-  user-select: none;
-  -webkit-user-select: none;
+.habit-card__status--skipped {
+  background: var(--gray-400);
+  color: white;
 }
