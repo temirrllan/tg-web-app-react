@@ -11,7 +11,7 @@ const api = axios.create({
 
 // Сохраняем user_id после успешной авторизации
 export const setAuthUser = (user) => {
-  if (user && user.id) {
+  if (user && user.id) {  
     localStorage.setItem('user_id', user.id);
   }
 };
