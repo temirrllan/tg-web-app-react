@@ -17,9 +17,11 @@ const SwipeHint = ({ show, onClose }) => {
   if (!show) return null;
 
   return (
-    <div className={`fixed top-20 left-4 right-4 bg-black/80 text-white rounded-xl p-4 z-50 transition-opacity duration-300 ${
-      isVisible ? 'opacity-100' : 'opacity-0'
-    }`}>
+    <div
+      className={`fixed top-20 left-4 right-4 bg-black/80 text-white rounded-xl p-4 z-50 transition-opacity duration-300 ${
+        isVisible ? 'opacity-100' : 'opacity-0'
+      }`}
+    >
       <div className="flex items-center justify-center gap-4">
         <div className="flex items-center gap-2">
           <span className="text-2xl">👈</span>

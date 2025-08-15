@@ -38,28 +38,16 @@ export const habitService = {
   },
 
   // Отметить выполнение
- markHabit: async (id, status = 'completed', date = null) => {
-    // Если дата не указана, используем сегодня
+  markHabit: async (id, status = 'completed', date = null) => {
     const markDate = date || new Date().toISOString().split('T')[0];
-    
-    console.log('Marking habit:', { id, status, date: markDate });
-    
-    const response = await api.post(`/habits/${id}/mark`, { 
-      status, 
-      date: markDate 
-    });
+    const response = await api.post(`/habits/${id}/mark`, { status, date: markDate });
     return response.data;
   },
 
   // Отменить отметку
   unmarkHabit: async (id, date = null) => {
-    // Если дата не указана, используем сегодня
     const unmarkDate = date || new Date().toISOString().split('T')[0];
-    
-    console.log('Unmarking habit:', { id, date: unmarkDate });
-    
-    const params = `?date=${unmarkDate}`;
-    const response = await api.delete(`/habits/${id}/mark${params}`);
+    const response = await api.delete(`/habits/${id}/mark`, { params: { date: unmarkDate } });
     return response.data;
   }
 };

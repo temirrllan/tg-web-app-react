@@ -1,11 +1,11 @@
 import React from 'react';
-import Layout from '../components/layout/Layout';
-import Button from '../components/common/Button';
-import { useTelegram } from '../hooks/useTelegram';
 import './Profile.css';
 
 const Profile = ({ onClose }) => {
-  const { user, close } = useTelegram();
+  // user берём из Telegram WebApp на самом экране Today,
+  // здесь не нужен хук, чтобы избежать двойной инициализации
+  const tg = window.Telegram?.WebApp;
+  const user = tg?.initDataUnsafe?.user;
 
   const menuItems = [
     { id: 'subscription', label: 'Subscription', value: 'Free', icon: '›' },
@@ -32,9 +32,9 @@ const Profile = ({ onClose }) => {
       <div className="profile__content">
         <div className="profile__user">
           {user?.photo_url ? (
-            <img 
-              src={user.photo_url} 
-              alt={user.first_name} 
+            <img
+              src={user.photo_url}
+              alt={user.first_name}
               className="profile__avatar"
             />
           ) : (

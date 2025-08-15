@@ -4,19 +4,18 @@ import './SubscriptionBanner.css';
 
 const SubscriptionBanner = ({ currentHabits, limit, onUpgrade }) => {
   const isAtLimit = currentHabits >= limit;
-  
+
   return (
     <div className={`subscription-banner ${isAtLimit ? 'subscription-banner--warning' : ''}`}>
       <div className="subscription-banner__content">
         <p className="subscription-banner__text">
-          {isAtLimit 
+          {isAtLimit
             ? `You've reached the limit of ${limit} habits for free users`
-            : `${currentHabits} of ${limit} habits used (Free plan)`
-          }
+            : `${currentHabits} of ${limit} habits used (Free plan)`}
         </p>
         {isAtLimit && (
-          <Button 
-            size="small" 
+          <Button
+            size="small"
             variant="primary"
             onClick={onUpgrade}
           >

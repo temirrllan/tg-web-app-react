@@ -14,17 +14,9 @@ export const getYesterdayDate = () => {
   return yesterday.toISOString().split('T')[0];
 };
 
-export const isToday = (date) => {
-  return date === getTodayDate();
-};
-
-export const isYesterday = (date) => {
-  return date === getYesterdayDate();
-};
-
-export const canMarkDate = (date) => {
-  return isToday(date) || isYesterday(date);
-};
+export const isToday = (date) => date === getTodayDate();
+export const isYesterday = (date) => date === getYesterdayDate();
+export const canMarkDate = (date) => isToday(date) || isYesterday(date);
 
 export const vibrate = (pattern = 10) => {
   if (window.Telegram?.WebApp?.HapticFeedback) {
