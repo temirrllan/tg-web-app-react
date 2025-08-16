@@ -1,53 +1,64 @@
+// tg-web-app-react/src/services/habits.js
 import api from './api';
 
 export const habitService = {
-  // Получить все категории
+  // Категории
   getCategories: async () => {
-    const response = await api.get('/categories');
-    return response.data;
+    const { data } = await api.get('/categories');
+    return data;
   },
 
-  // Получить все привычки
+  // Все привычки пользователя
   getAllHabits: async () => {
-    const response = await api.get('/habits');
-    return response.data;
+    const { data } = await api.get('/habits');
+    return data;
   },
 
-  // Получить привычки на сегодня
+  // Привычки на сегодня (с бэкенда)
   getTodayHabits: async () => {
-    const response = await api.get('/habits/today');
-    return response.data;
+    const { data } = await api.get('/habits/today');
+    return data;
   },
 
   // Создать привычку
   createHabit: async (habitData) => {
-    const response = await api.post('/habits', habitData);
-    return response.data;
+    const { data } = await api.post('/habits', habitData);
+    return data;
   },
 
   // Обновить привычку
   updateHabit: async (id, updates) => {
-    const response = await api.patch(`/habits/${id}`, updates);
-    return response.data;
+    const { data } = await api.patch(`/habits/${id}`, updates);
+    return data;
   },
 
   // Удалить привычку
   deleteHabit: async (id) => {
-    const response = await api.delete(`/habits/${id}`);
-    return response.data;
+    const { data } = await api.delete(`/habits/${id}`);
+    return data;
   },
 
-  // Отметить выполнение
+  // Отметить выполнение/провал
   markHabit: async (id, status = 'completed', date = null) => {
     const markDate = date || new Date().toISOString().split('T')[0];
-    const response = await api.post(`/habits/${id}/mark`, { status, date: markDate });
-    return response.data;
+    console.log('Marking habit:', { id, status, date: markDate });
+
+    const { data } = await api.post(`/habits/${id}/mark`, {
+      status,
+      date: markDate,
+    });
+    return data;
   },
 
-  // Отменить отметку
+  // Снять отметку
   unmarkHabit: async (id, date = null) => {
     const unmarkDate = date || new Date().toISOString().split('T')[0];
-    const response = await api.delete(`/habits/${id}/mark`, { params: { date: unmarkDate } });
-    return response.data;
-  }
+    console.log('Unmarking habit:', { id, date: unmarkDate });
+
+    // Через params — корректно для axios.delete
+    const { data } = await api.delete(`/habits/${id}/mark`, {
+      params: { date: unmarkDate },
+    });
+    return data;
+  },
 };

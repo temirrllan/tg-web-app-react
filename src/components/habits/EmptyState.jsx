@@ -1,5 +1,4 @@
 import React from 'react';
-import Button from '../common/Button';
 import './EmptyState.css';
 import bear3 from '../../../public/images/bear3.svg?url';
 const EmptyState = () => {

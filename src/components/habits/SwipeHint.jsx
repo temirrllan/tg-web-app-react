@@ -1,17 +1,20 @@
+// tg-web-app-react/src/components/habits/SwipeHint.jsx
 import React, { useEffect, useState } from 'react';
 
 const SwipeHint = ({ show, onClose }) => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    if (show) {
-      setIsVisible(true);
-      const timer = setTimeout(() => {
-        setIsVisible(false);
-        setTimeout(onClose, 300);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
+    if (!show) return;
+    setIsVisible(true);
+
+    const timer = setTimeout(() => {
+      setIsVisible(false);
+      const hideTimer = setTimeout(() => onClose?.(), 300);
+      return () => clearTimeout(hideTimer);
+    }, 3000);
+
+    return () => clearTimeout(timer);
   }, [show, onClose]);
 
   if (!show) return null;
@@ -27,7 +30,7 @@ const SwipeHint = ({ show, onClose }) => {
           <span className="text-2xl">👈</span>
           <span className="text-sm">Swipe left to complete</span>
         </div>
-        <div className="w-px h-6 bg-white/30"></div>
+        <div className="w-px h-6 bg-white/30" />
         <div className="flex items-center gap-2">
           <span className="text-sm">Swipe right to undo</span>
           <span className="text-2xl">👉</span>

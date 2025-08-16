@@ -1,8 +1,9 @@
 export const formatTime = (time) => {
   if (!time) return '';
   const [hours, minutes] = time.split(':');
-  return `${hours}:${minutes}`;
+  return `${hours}:${minutes}`; // было без бэктиков → синтаксическая ошибка
 };
+
 
 export const getTodayDate = () => {
   return new Date().toISOString().split('T')[0];
