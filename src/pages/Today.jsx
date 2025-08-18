@@ -67,7 +67,26 @@ const [showSwipeHint, setShowSwipeHint] = useState(false);
       </Layout>
     );
   }
-
+// Показываем подсказку при первом открытии или после создания первой привычки
+useEffect(() => {
+  const hasSeenHint = localStorage.getItem('hasSeenSwipeHint');
+  const hintsShownCount = parseInt(localStorage.getItem('hintsShownCount') || '0');
+  
+  // Показываем подсказку если:
+  // 1. Никогда не видели И есть привычки
+  // 2. Только что создали первую привычку
+  // 3. Показали меньше 3 раз (для новых пользователей)
+  if (todayHabits.length > 0) {
+    if (!hasSeenHint || (todayHabits.length === 1 && hintsShownCount < 2)) {
+      setTimeout(() => {
+        setShowSwipeHint(true);
+        localStorage.setItem('hasSeenSwipeHint', 'true');
+        localStorage.setItem('hintsShownCount', String(hintsShownCount + 1));
+        console.log('Swipe hint shown, count:', hintsShownCount + 1);
+      }, 1000);
+    }
+  }
+}, [todayHabits.length]);
   return (
     <>
       <Layout>
@@ -117,6 +136,16 @@ const [showSwipeHint, setShowSwipeHint] = useState(false);
         <button className="fab" onClick={() => setShowCreateForm(true)}>
           +
         </button>
+        {/* Help Button */}
+{todayHabits.length > 0 && (
+  <button 
+    className="help-button" 
+    onClick={() => setShowSwipeHint(true)}
+    aria-label="Show help"
+  >
+    ?
+  </button>
+)}
       </Layout>
 
       {/* Modals */}
