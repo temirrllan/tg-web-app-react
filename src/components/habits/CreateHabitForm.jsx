@@ -10,7 +10,7 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
   
   // Состояния для выпадающих меню
   const [showRepeatDropdown, setShowRepeatDropdown] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showTimeDropdown, setShowTimeDropdown] = useState(false);
   
   // Refs для обработки кликов вне элементов
   const repeatRef = useRef(null);
@@ -30,11 +30,6 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
     is_bad_habit: false
   });
 
-  // State для time picker
-  const [selectedHour, setSelectedHour] = useState('09');
-  const [selectedMinute, setSelectedMinute] = useState('00');
-  const [selectedPeriod, setSelectedPeriod] = useState('AM');
-
   useEffect(() => {
     loadCategories();
   }, []);
@@ -46,16 +41,13 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
         setShowRepeatDropdown(false);
       }
       if (timeRef.current && !timeRef.current.contains(event.target)) {
-        if (showTimePicker) {
-          handleTimeConfirm();
-        }
-        setShowTimePicker(false);
+        setShowTimeDropdown(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showTimePicker, selectedHour, selectedMinute, selectedPeriod]);
+  }, []);
 
   // Анимация появления блока дней
   useEffect(() => {
@@ -109,42 +101,35 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
 
   const handleRepeatSelect = (type) => {
     if (type === 'weekly') {
-      // Every Week = все дни
+      // Every Week = каждый день
       setFormData(prev => ({
         ...prev,
         schedule_type: 'weekly',
         schedule_days: [1, 2, 3, 4, 5, 6, 7]
       }));
     } else if (type === 'daily') {
-      // Every Day = выбранные дни (показываем селектор)
+      // Every Day = показываем селектор дней, автоматически выбираем все дни
       setFormData(prev => ({
         ...prev,
         schedule_type: 'daily',
-        schedule_days: prev.schedule_days.length === 7 ? [1, 2, 3, 4, 5] : prev.schedule_days
+        schedule_days: [1, 2, 3, 4, 5, 6, 7] // Все дни выбраны по умолчанию
       }));
     }
     setShowRepeatDropdown(false);
   };
 
-  const handleTimeConfirm = () => {
-    // Конвертируем в 24-часовой формат для backend
-    let hour = parseInt(selectedHour);
-    if (selectedPeriod === 'PM' && hour !== 12) hour += 12;
-    if (selectedPeriod === 'AM' && hour === 12) hour = 0;
-    
-    const time = `${hour.toString().padStart(2, '0')}:${selectedMinute}`;
+  const handleTimeSelect = (time) => {
     handleInputChange('reminder_time', time);
+    setShowTimeDropdown(false);
   };
 
-  const formatTimeDisplay = () => {
-    if (!formData.reminder_time) return 'Select time';
-    
-    const [hours, minutes] = formData.reminder_time.split(':');
+  const formatTime = (time) => {
+    if (!time) return 'Select time';
+    const [hours, minutes] = time.split(':');
     const hour = parseInt(hours);
-    const period = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-    
-    return `${displayHour}:${minutes} ${period}`;
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
   };
 
   const getRepeatLabel = () => {
@@ -174,10 +159,6 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
       setLoading(false);
     }
   };
-
-  // Генерация часов и минут для picker
-  const hours = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0'));
-  const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
 
   const isFormValid = () => {
     return formData.title.trim() && 
@@ -224,26 +205,28 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
             </label>
           </div>
 
-          {/* Category - только для good habits */}
+          {/* Category - только для good habits - ГОРИЗОНТАЛЬНЫЙ СКРОЛЛ */}
           {!formData.is_bad_habit && (
             <div className="form-section">
               <span className="form-label-title">Category</span>
               {!categoriesLoading && categories.length > 0 && (
-                <div className="category-grid">
-                  {categories.slice(0, 6).map(category => (
-                    <button
-                      key={category.id}
-                      className={`category-item ${formData.category_id === category.id ? 'category-item--selected' : ''}`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleInputChange('category_id', category.id);
-                      }}
-                      type="button"
-                    >
-                      <div className="category-item__icon">{category.icon}</div>
-                      <span className="category-item__name">{category.name}</span>
-                    </button>
-                  ))}
+                <div className="category-scroll-container">
+                  <div className="category-scroll">
+                    {categories.map(category => (
+                      <button
+                        key={category.id}
+                        className={`category-item ${formData.category_id === category.id ? 'category-item--selected' : ''}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleInputChange('category_id', category.id);
+                        }}
+                        type="button"
+                      >
+                        <div className="category-item__icon">{category.icon}</div>
+                        <span className="category-item__name">{category.name}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -279,8 +262,11 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
                 <span className="form-label-title">Repeat</span>
                 <button
                   type="button"
-                  className="form-dropdown-button"
-                  onClick={() => setShowRepeatDropdown(!showRepeatDropdown)}
+                  className="dropdown-button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowRepeatDropdown(!showRepeatDropdown);
+                  }}
                 >
                   {getRepeatLabel()}
                 </button>
@@ -290,14 +276,22 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
                     <button
                       type="button"
                       className="dropdown-item"
-                      onClick={() => handleRepeatSelect('daily')}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleRepeatSelect('daily');
+                      }}
                     >
                       Every Day
                     </button>
                     <button
                       type="button"
                       className="dropdown-item"
-                      onClick={() => handleRepeatSelect('weekly')}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleRepeatSelect('weekly');
+                      }}
                     >
                       Every Week
                     </button>
@@ -305,65 +299,63 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
                 )}
               </div>
 
-              {/* Ping me */}
+              {/* Reminder time - СТАРЫЙ ДИЗАЙН С ПРАВИЛЬНЫМ ФУНКЦИОНАЛОМ */}
               <div className="form-section" ref={timeRef}>
                 <span className="form-label-title">Ping me</span>
                 <button
                   type="button"
-                  className="form-dropdown-button"
-                  onClick={() => setShowTimePicker(!showTimePicker)}
+                  className="dropdown-button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowTimeDropdown(!showTimeDropdown);
+                  }}
                 >
-                  {formatTimeDisplay()}
+                  {formatTime(formData.reminder_time)}
                 </button>
                 
-                {showTimePicker && (
-                  <div className="time-picker">
-                    <div className="time-picker__columns">
-                      {/* Hours column */}
-                      <div className="time-picker__column">
-                        <div className="time-picker__scroll">
-                          {hours.map(hour => (
-                            <div
-                              key={hour}
-                              className={`time-picker__item ${selectedHour === hour ? 'time-picker__item--selected' : ''}`}
-                              onClick={() => setSelectedHour(hour)}
-                            >
-                              {parseInt(hour)}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      
-                      {/* Minutes column */}
-                      <div className="time-picker__column">
-                        <div className="time-picker__scroll">
-                          {minutes.map(minute => (
-                            <div
-                              key={minute}
-                              className={`time-picker__item ${selectedMinute === minute ? 'time-picker__item--selected' : ''}`}
-                              onClick={() => setSelectedMinute(minute)}
-                            >
-                              {minute}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      
-                      {/* AM/PM column */}
-                      <div className="time-picker__column time-picker__column--period">
-                        <div
-                          className={`time-picker__item ${selectedPeriod === 'AM' ? 'time-picker__item--selected' : ''}`}
-                          onClick={() => setSelectedPeriod('AM')}
-                        >
-                          AM
-                        </div>
-                        <div
-                          className={`time-picker__item ${selectedPeriod === 'PM' ? 'time-picker__item--selected' : ''}`}
-                          onClick={() => setSelectedPeriod('PM')}
-                        >
-                          PM
-                        </div>
-                      </div>
+                {showTimeDropdown && (
+                  <div className="time-picker-dropdown">
+                    <div className="time-picker-header">
+                      <span>Select time</span>
+                      <button 
+                        type="button" 
+                        className="time-picker-close"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setShowTimeDropdown(false);
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <input
+                      type="time"
+                      value={formData.reminder_time}
+                      onChange={(e) => {
+                        handleInputChange('reminder_time', e.target.value);
+                        // НЕ закрываем dropdown при выборе времени
+                      }}
+                      className="time-picker-input"
+                      autoFocus
+                    />
+                    <div className="time-picker-preset">
+                      <button type="button" onClick={(e) => {
+                        e.preventDefault();
+                        handleInputChange('reminder_time', '09:00');
+                      }}>9:00 AM</button>
+                      <button type="button" onClick={(e) => {
+                        e.preventDefault();
+                        handleInputChange('reminder_time', '12:00');
+                      }}>12:00 PM</button>
+                      <button type="button" onClick={(e) => {
+                        e.preventDefault();
+                        handleInputChange('reminder_time', '18:00');
+                      }}>6:00 PM</button>
+                      <button type="button" onClick={(e) => {
+                        e.preventDefault();
+                        handleInputChange('reminder_time', '21:00');
+                      }}>9:00 PM</button>
                     </div>
                   </div>
                 )}
@@ -371,31 +363,33 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
             </>
           )}
 
-          {/* Bad habit toggle */}
+          {/* Bad habit toggle - СТАРЫЙ ДИЗАЙН */}
           <div className="form-section">
-            <div className="bad-habit-section">
+            <div className="bad-habit-toggle">
               <div className="bad-habit-label">
                 <span className="form-label-title">Bad habit 😈</span>
               </div>
               <div className="toggle-buttons">
                 <button
                   type="button"
-                  className={`toggle-button ${!formData.is_bad_habit ? '' : 'toggle-button--inactive'}`}
-                  onClick={() => handleInputChange('is_bad_habit', true)}
-                >
-                  Yes
-                </button>
-                <button
-                  type="button"
-                  className={`toggle-button ${formData.is_bad_habit ? '' : 'toggle-button--active'}`}
+                  className={`toggle-button ${!formData.is_bad_habit ? 'toggle-button--active' : ''}`}
                   onClick={() => handleInputChange('is_bad_habit', false)}
                 >
                   No
                 </button>
+                <button
+                  type="button"
+                  className={`toggle-button ${formData.is_bad_habit ? 'toggle-button--active' : ''}`}
+                  onClick={() => handleInputChange('is_bad_habit', true)}
+                >
+                  Yes
+                </button>
               </div>
             </div>
             <p className="form-hint">
-              Helping text for explaining about bad habit switcher.
+              {formData.is_bad_habit 
+                ? 'For bad habits, you only need to set name and goal.'
+                : 'Helping text for explaining about good habits.'}
             </p>
           </div>
         </div>

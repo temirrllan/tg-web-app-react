@@ -81,6 +81,24 @@
 }
 
 /* Categories */
+.category-scroll-container {
+  margin-top: 12px;
+  margin-left: -16px;
+  margin-right: -16px;
+  padding: 0 16px;
+}
+.category-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.category-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 .category-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -93,15 +111,16 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 16px 8px;
+  padding: 16px;
   background: white;
   border: 2px solid transparent;
   border-radius: 16px;
   cursor: pointer;
   transition: all 0.2s;
-  min-height: 100px;
-  position: relative;
+  min-width: 100px;
+  flex-shrink: 0;
 }
+
 
 .category-item--selected {
   border-color: #007AFF;
@@ -112,7 +131,6 @@
   font-size: 36px;
   margin-bottom: 8px;
 }
-
 .category-item__name {
   font-size: 14px;
   font-weight: 500;
@@ -181,6 +199,22 @@
 }
 
 /* Dropdown menu */
+.dropdown-button {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 17px;
+  border: 1px solid #C6C6C8;
+  border-radius: 10px;
+  background: #FFFFFF;
+  color: #000;
+  text-align: center;
+  font-weight: 400;
+  cursor: pointer;
+  position: relative;
+}
+.dropdown-button:active {
+  background: #F2F2F7;
+}
 .dropdown-menu {
   position: absolute;
   top: calc(100% + 8px);
@@ -215,6 +249,40 @@
 }
 
 /* iOS Style Time Picker */
+.time-picker-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 16px;
+  z-index: 1000;
+}
+.time-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.time-picker-header span {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.time-picker-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #8E8E93;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .time-picker {
   position: absolute;
   top: calc(100% + 8px);
@@ -227,7 +295,33 @@
   z-index: 1000;
   max-height: 280px;
 }
+.time-picker-input {
+  width: 100%;
+  padding: 12px;
+  font-size: 17px;
+  border: 1px solid #E5E5EA;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
 
+.time-picker-preset {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.time-picker-preset button {
+  padding: 10px;
+  background: #F2F2F7;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.time-picker-preset button:active {
+  background: #E5E5EA;
+}
 .time-picker__columns {
   display: flex;
   height: 240px;
@@ -295,6 +389,44 @@
   margin-bottom: 8px;
 }
 
+/* Bad habit toggle - СТАРЫЙ СТИЛЬ */
+.bad-habit-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.bad-habit-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle-buttons {
+  display: flex;
+  gap: 0;
+  background: #F2F2F7;
+  border-radius: 9px;
+  padding: 2px;
+}
+
+.toggle-button {
+  padding: 6px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  color: #000;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toggle-button--active {
+  background: #007AFF;
+  color: white;
+}
 .bad-habit-label {
   display: flex;
   align-items: center;
