@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'; 
-import Button from '../common/Button';
+import React, { useState, useEffect, useRef } from 'react';
 import { habitService } from '../../services/habits';
 import { DAYS_OF_WEEK } from '../../utils/constants';
 import './CreateHabitForm.css';
@@ -8,29 +7,33 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
-  const [categoriesError, setCategoriesError] = useState(null);
   
   // Состояния для выпадающих меню
-  const [showScheduleDropdown, setShowScheduleDropdown] = useState(false);
-  const [showTimeDropdown, setShowTimeDropdown] = useState(false);
-  
-  // Debug
-  console.log('Dropdown states:', { showScheduleDropdown, showTimeDropdown });
+  const [showRepeatDropdown, setShowRepeatDropdown] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
   
   // Refs для обработки кликов вне элементов
-  const scheduleRef = useRef(null);
+  const repeatRef = useRef(null);
   const timeRef = useRef(null);
+  
+  // Состояние для анимации появления блока "On which days"
+  const [showDaysAnimation, setShowDaysAnimation] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
     goal: '',
     category_id: null,
-    schedule_type: 'daily',
-    schedule_days: [1, 2, 3, 4, 5, 6, 7],
+    schedule_type: 'weekly', // По умолчанию "Every Week" (каждый день)
+    schedule_days: [1, 2, 3, 4, 5, 6, 7], // Все дни по умолчанию
     reminder_time: '',
     reminder_enabled: true,
     is_bad_habit: false
   });
+
+  // State для time picker
+  const [selectedHour, setSelectedHour] = useState('09');
+  const [selectedMinute, setSelectedMinute] = useState('00');
+  const [selectedPeriod, setSelectedPeriod] = useState('AM');
 
   useEffect(() => {
     loadCategories();
@@ -39,34 +42,42 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
   // Закрытие dropdown при клике вне
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (scheduleRef.current && !scheduleRef.current.contains(event.target)) {
-        setShowScheduleDropdown(false);
+      if (repeatRef.current && !repeatRef.current.contains(event.target)) {
+        setShowRepeatDropdown(false);
       }
       if (timeRef.current && !timeRef.current.contains(event.target)) {
-        setShowTimeDropdown(false);
+        if (showTimePicker) {
+          handleTimeConfirm();
+        }
+        setShowTimePicker(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [showTimePicker, selectedHour, selectedMinute, selectedPeriod]);
+
+  // Анимация появления блока дней
+  useEffect(() => {
+    if (formData.schedule_type === 'daily') {
+      setTimeout(() => setShowDaysAnimation(true), 50);
+    } else {
+      setShowDaysAnimation(false);
+    }
+  }, [formData.schedule_type]);
 
   const loadCategories = async () => {
     try {
       setCategoriesLoading(true);
-      setCategoriesError(null);
       const data = await habitService.getCategories();
       if (data.success && data.categories) {
-        // Убираем дубликаты
         const uniqueCategories = Array.from(
           new Map(data.categories.map(cat => [cat.id, cat])).values()
         );
         setCategories(uniqueCategories);
-      } else {
-        throw new Error('Invalid categories response');
       }
     } catch (error) {
-      setCategoriesError(error.message);
+      console.error('Failed to load categories:', error);
     } finally {
       setCategoriesLoading(false);
     }
@@ -82,7 +93,6 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
   const handleDayToggle = (dayId) => {
     const days = [...formData.schedule_days];
     if (days.includes(dayId)) {
-      // Не даем убрать все дни
       if (days.length > 1) {
         setFormData(prev => ({
           ...prev,
@@ -97,50 +107,59 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
     }
   };
 
-  const handleScheduleSelect = (type) => {
-    if (type === 'daily') {
-      setFormData(prev => ({
-        ...prev,
-        schedule_type: 'daily',
-        schedule_days: [1, 2, 3, 4, 5, 6, 7]
-      }));
-    } else if (type === 'weekdays') {
+  const handleRepeatSelect = (type) => {
+    if (type === 'weekly') {
+      // Every Week = все дни
       setFormData(prev => ({
         ...prev,
         schedule_type: 'weekly',
-        schedule_days: [1, 2, 3, 4, 5]
+        schedule_days: [1, 2, 3, 4, 5, 6, 7]
+      }));
+    } else if (type === 'daily') {
+      // Every Day = выбранные дни (показываем селектор)
+      setFormData(prev => ({
+        ...prev,
+        schedule_type: 'daily',
+        schedule_days: prev.schedule_days.length === 7 ? [1, 2, 3, 4, 5] : prev.schedule_days
       }));
     }
-    setShowScheduleDropdown(false);
+    setShowRepeatDropdown(false);
   };
 
-  const handleTimeSelect = (time) => {
+  const handleTimeConfirm = () => {
+    // Конвертируем в 24-часовой формат для backend
+    let hour = parseInt(selectedHour);
+    if (selectedPeriod === 'PM' && hour !== 12) hour += 12;
+    if (selectedPeriod === 'AM' && hour === 12) hour = 0;
+    
+    const time = `${hour.toString().padStart(2, '0')}:${selectedMinute}`;
     handleInputChange('reminder_time', time);
-    setShowTimeDropdown(false);
   };
 
-  const formatTime = (time) => {
-    if (!time) return 'Select time';
-    const [hours, minutes] = time.split(':');
+  const formatTimeDisplay = () => {
+    if (!formData.reminder_time) return 'Select time';
+    
+    const [hours, minutes] = formData.reminder_time.split(':');
     const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 || 12;
-    return `${displayHour}:${minutes} ${ampm}`;
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    
+    return `${displayHour}:${minutes} ${period}`;
   };
 
-  const getScheduleLabel = () => {
-    if (formData.schedule_type === 'daily') {
-      return 'Every Day';
-    } else if (formData.schedule_days.length === 5 && 
-               formData.schedule_days.every(d => d >= 1 && d <= 5)) {
-      return 'Weekdays';
-    } else {
-      return 'Selected Days';
-    }
+  const getRepeatLabel = () => {
+    return formData.schedule_type === 'weekly' ? 'Every Week' : 'Every Day';
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Валидация для "Every Day" - должен быть выбран хотя бы один день
+    if (formData.schedule_type === 'daily' && formData.schedule_days.length === 0) {
+      alert('Please select at least one day');
+      return;
+    }
+    
     setLoading(true);
     try {
       const dataToSubmit = {
@@ -156,19 +175,19 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
     }
   };
 
+  // Генерация часов и минут для picker
+  const hours = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0'));
+  const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
+
+  const isFormValid = () => {
+    return formData.title.trim() && 
+           formData.goal.trim() && 
+           (!formData.is_bad_habit ? formData.category_id : true) &&
+           (formData.schedule_type === 'weekly' || formData.schedule_days.length > 0);
+  };
+
   return (
     <div className="create-habit">
-      <div className="create-habit__header">
-        <button className="create-habit__close" onClick={onClose}>
-          Cancel
-        </button>
-        <div className="create-habit__header-title">
-          <h2>Habit Tracker</h2>
-          <span className="create-habit__subtitle">mini-app</span>
-        </div>
-        <button className="create-habit__menu">⋯</button>
-      </div>
-
       <form className="create-habit__form" onSubmit={handleSubmit}>
         <div className="create-habit__content">
           {/* Habit name */}
@@ -209,26 +228,19 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
           {!formData.is_bad_habit && (
             <div className="form-section">
               <span className="form-label-title">Category</span>
-              {categoriesLoading && (
-                <div className="categories-loading">Loading categories...</div>
-              )}
-              {!categoriesLoading && !categoriesError && categories.length > 0 && (
+              {!categoriesLoading && categories.length > 0 && (
                 <div className="category-grid">
                   {categories.slice(0, 6).map(category => (
                     <button
                       key={category.id}
-                      className={`category-item${formData.category_id === category.id ? ' category-item--selected' : ''}`}
-                      onClick={(e) => { 
-                        e.preventDefault(); 
-                        handleInputChange('category_id', category.id); 
-                      }}
-                      style={{ 
-                        backgroundColor: formData.category_id === category.id ? category.color : undefined,
-                        borderColor: formData.category_id === category.id ? category.color : 'transparent'
+                      className={`category-item ${formData.category_id === category.id ? 'category-item--selected' : ''}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleInputChange('category_id', category.id);
                       }}
                       type="button"
                     >
-                      <span className="category-item__icon">{category.icon}</span>
+                      <div className="category-item__icon">{category.icon}</div>
                       <span className="category-item__name">{category.name}</span>
                     </button>
                   ))}
@@ -237,138 +249,121 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
             </div>
           )}
 
-          {/* Schedule - Only for good habits */}
+          {/* Schedule blocks - только для good habits */}
           {!formData.is_bad_habit && (
             <>
-              {/* Days selector */}
-              <div className="form-section">
-                <span className="form-label-title">On which days?</span>
-                <div className="days-selector">
-                  {DAYS_OF_WEEK.map(day => (
-                    <button
-                      key={day.id}
-                      className={`day-button${formData.schedule_days.includes(day.id) ? ' day-button--selected' : ''}`}
-                      onClick={(e) => { 
-                        e.preventDefault(); 
-                        handleDayToggle(day.id); 
-                      }}
-                      type="button"
-                    >
-                      {day.short}
-                    </button>
-                  ))}
+              {/* On which days - показываем только для "Every Day" */}
+              {formData.schedule_type === 'daily' && (
+                <div className={`form-section days-section ${showDaysAnimation ? 'days-section--visible' : ''}`}>
+                  <span className="form-label-title">On which days?</span>
+                  <div className="days-selector">
+                    {DAYS_OF_WEEK.map(day => (
+                      <button
+                        key={day.id}
+                        className={`day-button ${formData.schedule_days.includes(day.id) ? 'day-button--selected' : ''}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleDayToggle(day.id);
+                        }}
+                        type="button"
+                      >
+                        {day.short}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Repeat dropdown */}
-              <div className="form-section" ref={scheduleRef}>
+              {/* Repeat */}
+              <div className="form-section" ref={repeatRef}>
                 <span className="form-label-title">Repeat</span>
                 <button
                   type="button"
-                  className="dropdown-button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    console.log('Schedule dropdown clicked');
-                    setShowScheduleDropdown(!showScheduleDropdown);
-                  }}
+                  className="form-dropdown-button"
+                  onClick={() => setShowRepeatDropdown(!showRepeatDropdown)}
                 >
-                  {getScheduleLabel()}
+                  {getRepeatLabel()}
                 </button>
                 
-                {showScheduleDropdown && (
+                {showRepeatDropdown && (
                   <div className="dropdown-menu">
                     <button
                       type="button"
                       className="dropdown-item"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleScheduleSelect('daily');
-                      }}
+                      onClick={() => handleRepeatSelect('daily')}
                     >
                       Every Day
                     </button>
                     <button
                       type="button"
                       className="dropdown-item"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleScheduleSelect('weekdays');
-                      }}
+                      onClick={() => handleRepeatSelect('weekly')}
                     >
                       Every Week
-                    </button>
-                    <button
-                      type="button"
-                      className="dropdown-item"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setShowScheduleDropdown(false);
-                      }}
-                    >
-                      Every Month
                     </button>
                   </div>
                 )}
               </div>
 
-              {/* Reminder time */}
+              {/* Ping me */}
               <div className="form-section" ref={timeRef}>
                 <span className="form-label-title">Ping me</span>
                 <button
                   type="button"
-                  className="dropdown-button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    console.log('Time dropdown clicked');
-                    setShowTimeDropdown(!showTimeDropdown);
-                  }}
+                  className="form-dropdown-button"
+                  onClick={() => setShowTimePicker(!showTimePicker)}
                 >
-                  {formatTime(formData.reminder_time)}
+                  {formatTimeDisplay()}
                 </button>
                 
-                {showTimeDropdown && (
-                  <div className="time-picker-dropdown">
-                    <div className="time-picker-header">
-                      <span>Select time</span>
-                      <button 
-                        type="button" 
-                        className="time-picker-close"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setShowTimeDropdown(false);
-                        }}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                    <input
-                      type="time"
-                      value={formData.reminder_time}
-                      onChange={(e) => handleTimeSelect(e.target.value)}
-                      className="time-picker-input"
-                      autoFocus
-                    />
-                    <div className="time-picker-preset">
-                      <button type="button" onClick={(e) => {
-                        e.preventDefault();
-                        handleTimeSelect('09:00');
-                      }}>9:00 AM</button>
-                      <button type="button" onClick={(e) => {
-                        e.preventDefault();
-                        handleTimeSelect('12:00');
-                      }}>12:00 PM</button>
-                      <button type="button" onClick={(e) => {
-                        e.preventDefault();
-                        handleTimeSelect('18:00');
-                      }}>6:00 PM</button>
-                      <button type="button" onClick={(e) => {
-                        e.preventDefault();
-                        handleTimeSelect('21:00');
-                      }}>9:00 PM</button>
+                {showTimePicker && (
+                  <div className="time-picker">
+                    <div className="time-picker__columns">
+                      {/* Hours column */}
+                      <div className="time-picker__column">
+                        <div className="time-picker__scroll">
+                          {hours.map(hour => (
+                            <div
+                              key={hour}
+                              className={`time-picker__item ${selectedHour === hour ? 'time-picker__item--selected' : ''}`}
+                              onClick={() => setSelectedHour(hour)}
+                            >
+                              {parseInt(hour)}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Minutes column */}
+                      <div className="time-picker__column">
+                        <div className="time-picker__scroll">
+                          {minutes.map(minute => (
+                            <div
+                              key={minute}
+                              className={`time-picker__item ${selectedMinute === minute ? 'time-picker__item--selected' : ''}`}
+                              onClick={() => setSelectedMinute(minute)}
+                            >
+                              {minute}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* AM/PM column */}
+                      <div className="time-picker__column time-picker__column--period">
+                        <div
+                          className={`time-picker__item ${selectedPeriod === 'AM' ? 'time-picker__item--selected' : ''}`}
+                          onClick={() => setSelectedPeriod('AM')}
+                        >
+                          AM
+                        </div>
+                        <div
+                          className={`time-picker__item ${selectedPeriod === 'PM' ? 'time-picker__item--selected' : ''}`}
+                          onClick={() => setSelectedPeriod('PM')}
+                        >
+                          PM
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -378,31 +373,29 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
 
           {/* Bad habit toggle */}
           <div className="form-section">
-            <div className="bad-habit-toggle">
+            <div className="bad-habit-section">
               <div className="bad-habit-label">
                 <span className="form-label-title">Bad habit 😈</span>
               </div>
               <div className="toggle-buttons">
                 <button
                   type="button"
-                  className={`toggle-button ${!formData.is_bad_habit ? 'toggle-button--active' : ''}`}
-                  onClick={() => handleInputChange('is_bad_habit', false)}
-                >
-                  No
-                </button>
-                <button
-                  type="button"
-                  className={`toggle-button ${formData.is_bad_habit ? 'toggle-button--active' : ''}`}
+                  className={`toggle-button ${!formData.is_bad_habit ? '' : 'toggle-button--inactive'}`}
                   onClick={() => handleInputChange('is_bad_habit', true)}
                 >
                   Yes
                 </button>
+                <button
+                  type="button"
+                  className={`toggle-button ${formData.is_bad_habit ? '' : 'toggle-button--active'}`}
+                  onClick={() => handleInputChange('is_bad_habit', false)}
+                >
+                  No
+                </button>
               </div>
             </div>
             <p className="form-hint">
-              {formData.is_bad_habit 
-                ? 'For bad habits, you only need to set name and goal.'
-                : 'Helping text for explaining about good habits.'}
+              Helping text for explaining about bad habit switcher.
             </p>
           </div>
         </div>
@@ -412,7 +405,7 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
           <button
             type="submit"
             className="submit-button"
-            disabled={loading || !formData.title.trim() || !formData.goal.trim() || (!formData.is_bad_habit && !formData.category_id)}
+            disabled={loading || !isFormValid()}
           >
             {loading ? 'Creating...' : 'Create habit'}
           </button>

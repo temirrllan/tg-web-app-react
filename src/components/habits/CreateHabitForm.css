@@ -1,60 +1,11 @@
-
-
 .create-habit {
   position: fixed;
   inset: 0;
-  background: #F3F4F6;
+  background: #F2F2F7;
   z-index: 1000;
   display: flex;
   flex-direction: column;
   animation: slideUp 0.3s ease-out;
-}
-
-/* Header */
-.create-habit__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  background: white;
-  position: relative;
-}
-
-.create-habit__close {
-  background: none;
-  color: #007AFF;
-  font-size: 17px;
-  padding: 0;
-  font-weight: 400;
-}
-
-.create-habit__header-title {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-}
-
-.create-habit__header-title h2 {
-  font-size: 17px;
-  font-weight: 600;
-  margin: 0;
-  color: #000;
-}
-
-.create-habit__subtitle {
-  font-size: 11px;
-  color: #8E8E93;
-  font-weight: 400;
-}
-
-.create-habit__menu {
-  background: none;
-  color: #007AFF;
-  font-size: 22px;
-  padding: 0;
-  line-height: 1;
 }
 
 /* Form */
@@ -67,13 +18,13 @@
 
 .create-habit__content {
   flex: 1;
-  padding: 24px 16px;
+  padding: 44px 16px 24px;
   overflow-y: auto;
 }
 
 /* Form sections */
 .form-section {
-  margin-bottom: 24px;
+  margin-bottom: 32px;
   position: relative;
 }
 
@@ -86,21 +37,22 @@
   font-size: 17px;
   font-weight: 600;
   color: #000;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 /* Inputs */
 .form-input,
 .form-textarea {
   width: 100%;
-  padding: 12px 16px;
+  padding: 17px 16px;
   font-size: 17px;
-  border: 1px solid #C6C6C8;
-  border-radius: 10px;
+  border: none;
+  border-radius: 12px;
   background: #FFFFFF;
   color: #000;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
   -webkit-appearance: none;
+  transition: all 0.2s;
 }
 
 .form-input::placeholder,
@@ -111,18 +63,19 @@
 .form-input:focus,
 .form-textarea:focus {
   outline: none;
-  border-color: #007AFF;
+  box-shadow: 0 0 0 2px #007AFF;
 }
 
 .form-textarea {
   resize: none;
-  min-height: 88px;
+  min-height: 100px;
+  line-height: 1.4;
 }
 
 /* Hints */
 .form-hint {
   font-size: 13px;
-  color: #000;
+  color: #6E6E73;
   line-height: 18px;
   margin-top: 8px;
 }
@@ -141,31 +94,47 @@
   align-items: center;
   justify-content: center;
   padding: 16px 8px;
-  background: #F2F2F7;
+  background: white;
   border: 2px solid transparent;
-  border-radius: 12px;
+  border-radius: 16px;
   cursor: pointer;
   transition: all 0.2s;
-  min-height: 88px;
+  min-height: 100px;
+  position: relative;
 }
 
 .category-item--selected {
-  background-color: var(--category-color);
-  color: white;
+  border-color: #007AFF;
+  background: #E8F4FD;
 }
 
 .category-item__icon {
-  font-size: 32px;
-  margin-bottom: 4px;
+  font-size: 36px;
+  margin-bottom: 8px;
 }
 
 .category-item__name {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   text-align: center;
+  color: #000;
 }
 
-/* Days selector */
+/* Days selector with animation */
+.days-section {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: all 0.3s ease-out;
+  margin-bottom: 0;
+}
+
+.days-section--visible {
+  max-height: 150px;
+  opacity: 1;
+  margin-bottom: 32px;
+}
+
 .days-selector {
   display: flex;
   gap: 8px;
@@ -175,9 +144,9 @@
 
 .day-button {
   flex: 1;
-  height: 44px;
-  border-radius: 10px;
-  border: 2px solid #E5E5EA;
+  height: 52px;
+  border-radius: 12px;
+  border: none;
   background: white;
   color: #000;
   font-weight: 600;
@@ -189,37 +158,37 @@
 .day-button--selected {
   background: #007AFF;
   color: white;
-  border-color: #007AFF;
 }
 
 /* Dropdown buttons */
-.dropdown-button {
+.form-dropdown-button {
   width: 100%;
-  padding: 12px 16px;
+  padding: 17px 16px;
   font-size: 17px;
-  border: 1px solid #C6C6C8;
-  border-radius: 10px;
+  border: none;
+  border-radius: 12px;
   background: #FFFFFF;
   color: #000;
   text-align: center;
   font-weight: 400;
   cursor: pointer;
   position: relative;
+  transition: all 0.2s;
 }
 
-.dropdown-button:active {
-  background: #F2F2F7;
+.form-dropdown-button:active {
+  background: #E5E5EA;
 }
 
 /* Dropdown menu */
 .dropdown-menu {
   position: absolute;
-  top: calc(100% + 4px);
+  top: calc(100% + 8px);
   left: 0;
   right: 0;
   background: white;
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
   overflow: hidden;
   z-index: 1000;
 }
@@ -228,12 +197,13 @@
   width: 100%;
   padding: 16px;
   font-size: 17px;
-  text-align: left;
+  text-align: center;
   background: none;
   border: none;
   border-bottom: 1px solid #E5E5EA;
   cursor: pointer;
   transition: background 0.1s;
+  color: #007AFF;
 }
 
 .dropdown-item:last-child {
@@ -244,74 +214,81 @@
   background: #F2F2F7;
 }
 
-/* Time picker dropdown */
-.time-picker-dropdown {
+/* iOS Style Time Picker */
+.time-picker {
   position: absolute;
-  top: calc(100% + 4px);
+  top: calc(100% + 8px);
   left: 0;
   right: 0;
   background: white;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
   padding: 16px;
   z-index: 1000;
+  max-height: 280px;
 }
 
-.time-picker-header {
+.time-picker__columns {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
+  height: 240px;
+  position: relative;
 }
 
-.time-picker-header span {
-  font-size: 17px;
-  font-weight: 600;
+.time-picker__columns::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 40px;
+  transform: translateY(-50%);
+  background: rgba(0, 122, 255, 0.1);
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 1;
 }
 
-.time-picker-close {
-  background: none;
-  border: none;
-  font-size: 20px;
-  color: #8E8E93;
-  padding: 0;
-  width: 24px;
-  height: 24px;
+.time-picker__column {
+  flex: 1;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  position: relative;
+}
+
+.time-picker__column::-webkit-scrollbar {
+  display: none;
+}
+
+.time-picker__column--period {
+  flex: 0.7;
+}
+
+.time-picker__scroll {
+  padding: 100px 0;
+}
+
+.time-picker__item {
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.time-picker-input {
-  width: 100%;
-  padding: 12px;
-  font-size: 17px;
-  border: 1px solid #E5E5EA;
-  border-radius: 8px;
-  margin-bottom: 12px;
-}
-
-.time-picker-preset {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-}
-
-.time-picker-preset button {
-  padding: 10px;
-  background: #F2F2F7;
-  border: none;
-  border-radius: 8px;
-  font-size: 15px;
+  font-size: 20px;
+  color: #8E8E93;
   cursor: pointer;
+  scroll-snap-align: center;
+  transition: all 0.2s;
 }
 
-.time-picker-preset button:active {
-  background: #E5E5EA;
+.time-picker__item--selected {
+  color: #000;
+  font-weight: 600;
+  font-size: 22px;
 }
 
 /* Bad habit toggle */
-.bad-habit-toggle {
+.bad-habit-section {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -326,19 +303,19 @@
 
 .toggle-buttons {
   display: flex;
-  gap: 0;
-  background: #F2F2F7;
-  border-radius: 9px;
+  background: white;
+  border-radius: 12px;
   padding: 2px;
+  gap: 0;
 }
 
 .toggle-button {
-  padding: 6px 20px;
-  font-size: 13px;
-  font-weight: 500;
+  padding: 10px 32px;
+  font-size: 15px;
+  font-weight: 600;
   background: transparent;
   border: none;
-  border-radius: 7px;
+  border-radius: 10px;
   color: #000;
   cursor: pointer;
   transition: all 0.2s;
@@ -349,24 +326,28 @@
   color: white;
 }
 
+.toggle-button--inactive {
+  color: #8E8E93;
+}
+
 /* Footer */
 .form-footer {
   padding: 16px;
-  background: white;
+  background: #F2F2F7;
   border-top: 1px solid #E5E5EA;
 }
 
 .submit-button {
   width: 100%;
-  padding: 14px;
+  padding: 17px;
   font-size: 17px;
   font-weight: 600;
   background: #C8C8CD;
   color: white;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
 
 .submit-button:not(:disabled) {
@@ -375,15 +356,7 @@
 
 .submit-button:disabled {
   cursor: not-allowed;
-}
-
-/* Loading states */
-.categories-loading,
-.categories-error {
-  text-align: center;
-  padding: 24px;
-  color: #8E8E93;
-  font-size: 15px;
+  opacity: 0.6;
 }
 
 /* Animation */
