@@ -1,39 +1,71 @@
-// tg-web-app-react/src/components/habits/SwipeHint.jsx
 import React, { useEffect, useState } from 'react';
+import './SwipeHint.css';
 
 const SwipeHint = ({ show, onClose }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const [isHiding, setIsHiding] = useState(false);
 
   useEffect(() => {
     if (!show) return;
+    
+    // Показываем подсказку
     setIsVisible(true);
+    setIsHiding(false);
 
-    const timer = setTimeout(() => {
-      setIsVisible(false);
-      const hideTimer = setTimeout(() => onClose?.(), 300);
-      return () => clearTimeout(hideTimer);
-    }, 3000);
+    // Автоматически скрываем через 4 секунды
+    const hideTimer = setTimeout(() => {
+      setIsHiding(true);
+      setTimeout(() => {
+        setIsVisible(false);
+        onClose?.();
+      }, 300);
+    }, 4000);
 
-    return () => clearTimeout(timer);
+    return () => clearTimeout(hideTimer);
   }, [show, onClose]);
 
-  if (!show) return null;
+  const handleOverlayClick = () => {
+    setIsHiding(true);
+    setTimeout(() => {
+      setIsVisible(false);
+      onClose?.();
+    }, 300);
+  };
+
+  if (!show || !isVisible) return null;
 
   return (
-    <div
-      className={`fixed top-20 left-4 right-4 bg-black/80 text-white rounded-xl p-4 z-50 transition-opacity duration-300 ${
-        isVisible ? 'opacity-100' : 'opacity-0'
-      }`}
+    <div 
+      className={`swipe-hint-overlay ${isHiding ? 'swipe-hint-overlay--hiding' : ''}`}
+      onClick={handleOverlayClick}
     >
-      <div className="flex items-center justify-center gap-4">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">👈</span>
-          <span className="text-sm">Swipe left to complete</span>
+      <div className="swipe-hint" onClick={(e) => e.stopPropagation()}>
+        <h3 className="swipe-hint__title">Quick Actions</h3>
+        
+        <div className="swipe-hint__content">
+          <div className="swipe-hint__item">
+            <div className="swipe-hint__arrow swipe-hint__arrow--left">
+              ←
+            </div>
+            <div className="swipe-hint__text">
+              <strong>Swipe left</strong> to mark habit as completed
+            </div>
+          </div>
+          
+          <div className="swipe-hint__item">
+            <div className="swipe-hint__arrow swipe-hint__arrow--right">
+              →
+            </div>
+            <div className="swipe-hint__text">
+              <strong>Swipe right</strong> to undo or mark as failed
+            </div>
+          </div>
         </div>
-        <div className="w-px h-6 bg-white/30" />
-        <div className="flex items-center gap-2">
-          <span className="text-sm">Swipe right to undo</span>
-          <span className="text-2xl">👉</span>
+        
+        <div className="swipe-hint__progress">
+          <div className="swipe-hint__dot swipe-hint__dot--active"></div>
+          <div className="swipe-hint__dot"></div>
+          <div className="swipe-hint__dot"></div>
         </div>
       </div>
     </div>

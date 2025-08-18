@@ -128,8 +128,10 @@ const HabitCard = ({ habit, onMark, onUnmark }) => {
           </div>
           
           <div className="habit-info">
-            <h3 className="habit-title">{habit.title}</h3>
-            <p className="habit-goal">Goal: {habit.goal}</p>
+<h3 className="habit-title">
+  {habit.is_bad_habit && '😈 '}
+  {habit.title}
+</h3>            <p className="habit-goal">Goal: {habit.goal}</p>
           </div>
 
           {/* Индикатор статуса */}
