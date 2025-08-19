@@ -82,7 +82,8 @@ const HabitCard = ({ habit, onMark, onUnmark }) => {
     },
     trackMouse: true,
     trackTouch: true,
-    preventDefaultTouchmoveEvent: true,
+    preventDefaultTouchmoveEvent: false,
+    
   });
 
   // Показываем кнопки в зависимости от направления свайпа
