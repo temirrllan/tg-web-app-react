@@ -6,10 +6,14 @@
   align-items: center;
   margin-bottom: 12px;
   height: 80px;
+  overscroll-behavior: contain;
 }
 
 /* Основная карточка */
 .habit-card {
+  touch-action: pan-y;
+  -ms-touch-action: pan-y;
+  will-change: transform;
   position: relative;
   width: 100%;
   background: #FFFFFF;
