@@ -142,7 +142,6 @@ const HabitCard = ({ habit, onMark, onUnmark }) => {
           )}
         </div>
       </div>
-
       {/* Кнопка Done справа */}
       <div 
         className={`done-button ${showDoneButton ? 'visible' : ''}`}
