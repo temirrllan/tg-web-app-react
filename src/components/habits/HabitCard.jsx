@@ -80,10 +80,8 @@ const HabitCard = ({ habit, onMark, onUnmark }) => {
         setSwipeOffset(0);
       }
     },
-     preventDefaultTouchmoveEvent: true,
-  trackTouch: true,
-  trackMouse: true,
-    
+    trackMouse: true,
+    preventDefaultTouchmoveEvent: true,
   });
 
   // Показываем кнопки в зависимости от направления свайпа
@@ -122,7 +120,6 @@ const HabitCard = ({ habit, onMark, onUnmark }) => {
         className={`habit-card ${getCardState()} ${isAnimating ? 'animating' : ''}`}
         style={{
           transform: `translateX(${swipeOffset}px)`,
-          touchAction: 'pan-y',
         }}
       >
         <div className="habit-card-content">

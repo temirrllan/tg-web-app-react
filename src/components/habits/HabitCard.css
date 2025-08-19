@@ -6,7 +6,6 @@
   align-items: center;
   margin-bottom: 12px;
   height: 80px;
-  touch-action: pan-y;
 }
 
 /* Основная карточка */
@@ -23,7 +22,6 @@
   -webkit-touch-callout: none;
   z-index: 2;
   transition: transform 0s;
-  touch-action: pan-y; 
 }
 
 .habit-card.animating {
