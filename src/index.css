@@ -38,18 +38,28 @@ overflow-y: auto;
   margin: 0;
   padding: 0;
 }
+.today__habits {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
   overflow-x: hidden;
+  touch-action: pan-y pinch-zoom;
+  overscroll-behavior-y: contain;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
 }
 
 #root {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  height: 100%;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 button {
@@ -59,7 +69,9 @@ button {
   font-size: inherit;
   transition: all 0.2s;
 }
-
+html {
+  touch-action: manipulation;
+}
 button:active {
   transform: scale(0.98);
 }

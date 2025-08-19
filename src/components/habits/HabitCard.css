@@ -6,8 +6,27 @@
   align-items: center;
   margin-bottom: 12px;
   height: 80px;
+  touch-action: pan-y; /* Разрешаем только вертикальный скролл */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
-
+/* Оптимизация для мобильных */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari specific */
+  .habit-card-container {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .habit-card {
+    -webkit-transform: translateX(0);
+    -webkit-transition: -webkit-transform 0.3s ease-out;
+  }
+  
+  .habit-card.touching {
+    -webkit-transition: none !important;
+  }
+}
 /* Основная карточка */
 .habit-card {
   position: relative;
@@ -21,11 +40,19 @@
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   z-index: 2;
-  transition: transform 0s;
+  will-change: transform; /* Оптимизация производительности */
+  transition: transform 0.3s ease-out;
+}
+.habit-card.touching {
+  transition: none !important; /* Убираем transition при касании */
 }
 
 .habit-card.animating {
   transition: transform 0.3s ease-out;
+}
+.habit-card.completed,
+.habit-card.failed {
+  opacity: 0.9;
 }
 
 .habit-card.completed {
@@ -216,11 +243,14 @@
 }
 
 .habit-card {
-  animation: slideIn 0.3s ease-out;
+  pointer-events: auto;
 }
 
 /* Отключаем выделение текста при свайпе */
 .habit-card * {
   user-select: none;
   -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  pointer-events: none;
 }
