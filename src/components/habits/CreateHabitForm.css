@@ -111,35 +111,35 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 12px;
+  padding: 16px;
+  background: white;
   border: 2px solid transparent;
-  border-radius: 14px;
+  border-radius: 16px;
   cursor: pointer;
   transition: all 0.2s;
-  min-width: 85px;
-  max-width: 85px;
-  height: 85px;
+  min-width: 100px;
   flex-shrink: 0;
 }
 
+
 .category-item--selected {
-  border-color: #000 !important;
-  transform: scale(1.05);
+  border-color: #007AFF;
+  background: #E8F4FD;
 }
 
 .category-item__icon {
-  font-size: 28px;
-  margin-bottom: 4px;
+  font-size: 36px;
+  margin-bottom: 8px;
 }
 .category-item__name {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   text-align: center;
   color: #000;
 }
 
 /* Days selector with animation */
-/* .days-section {
+.days-section {
   max-height: 0;
   overflow: hidden;
   opacity: 0;
@@ -176,7 +176,7 @@
 .day-button--selected {
   background: #007AFF;
   color: white;
-} */
+}
 
 /* Dropdown buttons */
 .form-dropdown-button {
@@ -270,22 +270,7 @@
   font-size: 17px;
   font-weight: 600;
 }
-.time-picker-done {
-  background: none;
-  border: none;
-  font-size: 17px;
-  color: #007AFF;
-  font-weight: 500;
-  padding: 0;
-  cursor: pointer;
-}
-.time-picker-input {
-  width: 100%;
-  padding: 12px;
-  font-size: 17px;
-  border: 1px solid #E5E5EA;
-  border-radius: 8px;
-}
+
 .time-picker-close {
   background: none;
   border: none;

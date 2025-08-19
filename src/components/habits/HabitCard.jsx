@@ -48,46 +48,41 @@ const HabitCard = ({ habit, onMark, onUnmark }) => {
     }
   };
 
-  // Найдите строку с useSwipeable (около строки 44) и замените параметры:
-
-const handlers = useSwipeable({
-  onSwiping: (eventData) => {
-    if (loading || isAnimating) return;
-    
-    const { deltaX } = eventData;
-    const limitedDelta = Math.max(-MAX_SWIPE, Math.min(MAX_SWIPE, deltaX));
-    setSwipeOffset(limitedDelta);
-  },
-  onSwipedLeft: () => {
-    if (loading || isAnimating) return;
-    
-    if (Math.abs(swipeOffset) >= SWIPE_THRESHOLD) {
-      handleSwipeComplete('left');
-    } else {
-      setSwipeOffset(0);
-    }
-  },
-  onSwipedRight: () => {
-    if (loading || isAnimating) return;
-    
-    if (swipeOffset >= SWIPE_THRESHOLD) {
-      handleSwipeComplete('right');
-    } else {
-      setSwipeOffset(0);
-    }
-  },
-  onSwiped: () => {
-    if (Math.abs(swipeOffset) < SWIPE_THRESHOLD) {
-      setSwipeOffset(0);
-    }
-  },
-  // Важные параметры для мобильных устройств
-  trackMouse: true,
-  trackTouch: true,
-  delta: 10, // Минимальное расстояние для начала свайпа
-  preventDefaultTouchmoveEvent: false, // Изменено на false для мобильных
-  rotationAngle: 0,
-});
+  const handlers = useSwipeable({
+    onSwiping: (eventData) => {
+      if (loading || isAnimating) return;
+      
+      const { deltaX } = eventData;
+      // Теперь можно свайпать в обе стороны всегда
+      const limitedDelta = Math.max(-MAX_SWIPE, Math.min(MAX_SWIPE, deltaX));
+      setSwipeOffset(limitedDelta);
+    },
+    onSwipedLeft: () => {
+      if (loading || isAnimating) return;
+      
+      if (Math.abs(swipeOffset) >= SWIPE_THRESHOLD) {
+        handleSwipeComplete('left');
+      } else {
+        setSwipeOffset(0);
+      }
+    },
+    onSwipedRight: () => {
+      if (loading || isAnimating) return;
+      
+      if (swipeOffset >= SWIPE_THRESHOLD) {
+        handleSwipeComplete('right');
+      } else {
+        setSwipeOffset(0);
+      }
+    },
+    onSwiped: () => {
+      if (Math.abs(swipeOffset) < SWIPE_THRESHOLD) {
+        setSwipeOffset(0);
+      }
+    },
+    trackMouse: true,
+    preventDefaultTouchmoveEvent: true,
+  });
 
   // Показываем кнопки в зависимости от направления свайпа
   const showDoneButton = swipeOffset < -20;
