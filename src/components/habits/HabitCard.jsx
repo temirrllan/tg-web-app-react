@@ -81,7 +81,7 @@ const HabitCard = ({ habit, onMark, onUnmark }) => {
       }
     },
     trackMouse: true,
-    // preventDefaultTouchmoveEvent: true,
+    preventDefaultTouchmoveEvent: true,
     preventScrollOnSwipe: true,
     touchEventOptions: { passive: false },
     delta: 8,
