@@ -81,6 +81,7 @@ const HabitCard = ({ habit, onMark, onUnmark }) => {
       }
     },
     trackMouse: true,
+    trackTouch: true,
     preventDefaultTouchmoveEvent: true,
   });
 
