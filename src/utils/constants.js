@@ -7,7 +7,13 @@ export const HABIT_STATUSES = {
   FAILED: 'failed',
   SKIPPED: 'skipped'
 };
-
+// Для удобства добавим лейблы
+export const STATUS_LABELS = {
+  [HABIT_STATUSES.PENDING]: 'Pending',
+  [HABIT_STATUSES.COMPLETED]: 'Done',
+  [HABIT_STATUSES.FAILED]: 'Undone', 
+  [HABIT_STATUSES.SKIPPED]: 'Skipped'
+};
 export const DAYS_OF_WEEK = [
   { id: 1, short: 'Mon', full: 'Monday', ru: 'Пн' },
   { id: 2, short: 'Tue', full: 'Tuesday', ru: 'Вт' },

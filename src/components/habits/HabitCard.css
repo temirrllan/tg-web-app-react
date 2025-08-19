@@ -169,7 +169,115 @@
   z-index: 1;
   box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
 }
+/* ... существующие стили ... */
 
+/* Универсальная кнопка для свайпа */
+.swipe-action-button {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 2px;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+  z-index: 1;
+}
+
+.swipe-action-button.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.swipe-action-icon {
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.swipe-action-text {
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Стили для разных кнопок */
+.done-button {
+  background: #34C759;
+  box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
+}
+
+.undone-button {
+  background: #FF3B30;
+  box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3);
+}
+
+.skip-button {
+  background: #FF9500;
+  box-shadow: 0 2px 8px rgba(255, 149, 0, 0.3);
+}
+
+/* Состояния карточки */
+.habit-card.completed {
+  background: #E8F5E9;
+}
+
+.habit-card.failed {
+  background: #FFEBEE;
+}
+
+.habit-card.skipped {
+  background: #FFF3E0;
+}
+
+/* Индикаторы статуса */
+.status-indicator {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+}
+
+.status-indicator.completed {
+  background: #34C759;
+}
+
+.status-indicator.failed {
+  background: #FF3B30;
+}
+
+.status-indicator.skipped {
+  background: #FF9500;
+}
+
+/* Иконка привычки */
+.habit-icon.completed {
+  background: #34C759;
+}
+
+.habit-icon.failed {
+  background: #FF3B30;
+}
+
+.habit-icon.skipped {
+  background: #FF9500;
+}
+
+/* ... остальные стили ... */
 .done-button.visible {
   opacity: 1;
   transform: scale(1);
@@ -254,3 +362,4 @@
   -ms-user-select: none;
   pointer-events: none;
 }
+

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSwipeable } from 'react-swipeable';
-import { HABIT_STATUSES } from '../../utils/constants';
+import { HABIT_STATUSES, STATUS_LABELS } from '../../utils/constants';
 import './HabitCard.css';
 
 const HabitCard = ({ habit, onMark, onUnmark }) => {
@@ -10,8 +10,11 @@ const HabitCard = ({ habit, onMark, onUnmark }) => {
   const [isTouching, setIsTouching] = useState(false);
   const cardRef = useRef(null);
   
-  const isCompleted = habit.today_status === HABIT_STATUSES.COMPLETED;
-  const isFailed = habit.today_status === HABIT_STATUSES.FAILED;
+  const currentStatus = habit.today_status || HABIT_STATUSES.PENDING;
+  const isCompleted = currentStatus === HABIT_STATUSES.COMPLETED;
+  const isFailed = currentStatus === HABIT_STATUSES.FAILED;
+  const isSkipped = currentStatus === HABIT_STATUSES.SKIPPED;
+  const isPending = currentStatus === HABIT_STATUSES.PENDING;
   
   const SWIPE_THRESHOLD = 80;
   const MAX_SWIPE = 120;
@@ -21,44 +24,68 @@ const HabitCard = ({ habit, onMark, onUnmark }) => {
     setSwipeOffset(0);
   }, [habit.today_status]);
 
+  const getNextStatusLeft = () => {
+    // Свайп влево (к Done)
+    switch(currentStatus) {
+      case HABIT_STATUSES.PENDING:
+      case HABIT_STATUSES.SKIPPED:
+        return HABIT_STATUSES.COMPLETED;
+      case HABIT_STATUSES.FAILED:
+        return HABIT_STATUSES.SKIPPED;
+      case HABIT_STATUSES.COMPLETED:
+        return null; // Нельзя свайпнуть влево из Done
+      default:
+        return null;
+    }
+  };
+
+  const getNextStatusRight = () => {
+    // Свайп вправо (к Undone)
+    switch(currentStatus) {
+      case HABIT_STATUSES.PENDING:
+      case HABIT_STATUSES.SKIPPED:
+        return HABIT_STATUSES.FAILED;
+      case HABIT_STATUSES.COMPLETED:
+        return HABIT_STATUSES.SKIPPED;
+      case HABIT_STATUSES.FAILED:
+        return null; // Нельзя свайпнуть вправо из Undone
+      default:
+        return null;
+    }
+  };
+
   const handleSwipeComplete = async (direction) => {
     if (loading) return;
     
-    // Блокировка повторных действий
-    if (direction === 'left' && isCompleted) {
-      // Уже выполнено, блокируем повторный свайп влево
-      setSwipeOffset(0);
-      return;
+    let nextStatus = null;
+    
+    if (direction === 'left') {
+      nextStatus = getNextStatusLeft();
+    } else if (direction === 'right') {
+      nextStatus = getNextStatusRight();
     }
     
-    if (direction === 'right' && (isFailed || !isCompleted)) {
-      // Уже провалено или не выполнено, блокируем повторный свайп вправо
-      if (isFailed) {
-        setSwipeOffset(0);
-        return;
-      }
+    if (!nextStatus) {
+      // Если нет следующего статуса, просто сбрасываем свайп
+      setSwipeOffset(0);
+      return;
     }
     
     setLoading(true);
     setIsAnimating(true);
     
     try {
-      if (direction === 'left') {
-        // Свайп влево - отмечаем как выполненное
-        await onMark(habit.id, HABIT_STATUSES.COMPLETED);
-        if (window.Telegram?.WebApp?.HapticFeedback) {
-          window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-        }
-      } else if (direction === 'right') {
-        // Свайп вправо - отмена или провал
-        if (isCompleted) {
-          await onUnmark(habit.id);
-        } else {
-          await onMark(habit.id, HABIT_STATUSES.FAILED);
-        }
-        if (window.Telegram?.WebApp?.HapticFeedback) {
-          window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-        }
+      // Отправляем новый статус на сервер
+      if (nextStatus === HABIT_STATUSES.PENDING) {
+        // Если возвращаемся в pending, используем unmark
+        await onUnmark(habit.id);
+      } else {
+        // Для всех остальных статусов используем mark
+        await onMark(habit.id, nextStatus);
+      }
+      
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
       }
     } catch (error) {
       console.error('Failed to update habit:', error);
@@ -75,13 +102,13 @@ const HabitCard = ({ habit, onMark, onUnmark }) => {
       
       const { deltaX, dir } = eventData;
       
-      // Блокировка свайпа для уже выполненных/проваленных задач
-      if (dir === 'Left' && isCompleted) {
-        return; // Блокируем свайп влево если уже выполнено
+      // Проверяем, можем ли свайпать в эту сторону
+      if (dir === 'Left' && !getNextStatusLeft()) {
+        return; // Блокируем свайп влево если нет следующего статуса
       }
       
-      if (dir === 'Right' && isFailed) {
-        return; // Блокируем свайп вправо если уже провалено
+      if (dir === 'Right' && !getNextStatusRight()) {
+        return; // Блокируем свайп вправо если нет следующего статуса
       }
       
       const limitedDelta = Math.max(-MAX_SWIPE, Math.min(MAX_SWIPE, deltaX));
@@ -89,7 +116,7 @@ const HabitCard = ({ habit, onMark, onUnmark }) => {
       setIsTouching(true);
     },
     onSwipedLeft: () => {
-      if (loading || isAnimating || isCompleted) {
+      if (loading || isAnimating || !getNextStatusLeft()) {
         setSwipeOffset(0);
         setIsTouching(false);
         return;
@@ -103,7 +130,7 @@ const HabitCard = ({ habit, onMark, onUnmark }) => {
       setIsTouching(false);
     },
     onSwipedRight: () => {
-      if (loading || isAnimating || isFailed) {
+      if (loading || isAnimating || !getNextStatusRight()) {
         setSwipeOffset(0);
         setIsTouching(false);
         return;
@@ -128,44 +155,96 @@ const HabitCard = ({ habit, onMark, onUnmark }) => {
         setSwipeOffset(0);
       }
     },
-    // Важные параметры для мобильных устройств
     trackMouse: true,
     trackTouch: true,
-    delta: 6, // Минимальное расстояние для начала свайпа
-    preventScrollOnSwipe: true, // Предотвращаем скролл при свайпе
+    delta: 6,
+    preventScrollOnSwipe: true,
     rotationAngle: 0,
     swipeDuration: 500,
-    touchEventOptions: { passive: false }, // Важно для iOS
+    touchEventOptions: { passive: false },
   });
 
-  // Показываем кнопки в зависимости от направления свайпа
-  const showDoneButton = swipeOffset < -20 && !isCompleted;
-  const showUndoneButton = swipeOffset > 20 && !isFailed;
+  // Показываем кнопки в зависимости от направления свайпа и текущего статуса
+  const showLeftButton = swipeOffset < -20 && getNextStatusLeft();
+  const showRightButton = swipeOffset > 20 && getNextStatusRight();
+
+  // Определяем какую кнопку показывать слева
+  const getLeftButtonInfo = () => {
+    const nextStatus = getNextStatusLeft();
+    if (!nextStatus) return null;
+    
+    switch(nextStatus) {
+      case HABIT_STATUSES.COMPLETED:
+        return { icon: '✓', text: 'Done', className: 'done-button' };
+      case HABIT_STATUSES.SKIPPED:
+        return { icon: '⟳', text: 'Skip', className: 'skip-button' };
+      default:
+        return null;
+    }
+  };
+
+  // Определяем какую кнопку показывать справа
+  const getRightButtonInfo = () => {
+    const nextStatus = getNextStatusRight();
+    if (!nextStatus) return null;
+    
+    switch(nextStatus) {
+      case HABIT_STATUSES.FAILED:
+        return { icon: '✗', text: 'Undone', className: 'undone-button' };
+      case HABIT_STATUSES.SKIPPED:
+        return { icon: '⟳', text: 'Skip', className: 'skip-button' };
+      default:
+        return null;
+    }
+  };
+
+  const leftButton = getLeftButtonInfo();
+  const rightButton = getRightButtonInfo();
 
   // Определяем визуальное состояние карточки
   const getCardState = () => {
-    if (isCompleted) return 'completed';
-    if (isFailed) return 'failed';
-    return '';
+    switch(currentStatus) {
+      case HABIT_STATUSES.COMPLETED:
+        return 'completed';
+      case HABIT_STATUSES.FAILED:
+        return 'failed';
+      case HABIT_STATUSES.SKIPPED:
+        return 'skipped';
+      default:
+        return '';
+    }
+  };
+
+  // Получаем иконку статуса
+  const getStatusIcon = () => {
+    switch(currentStatus) {
+      case HABIT_STATUSES.COMPLETED:
+        return '✓';
+      case HABIT_STATUSES.FAILED:
+        return '✗';
+      case HABIT_STATUSES.SKIPPED:
+        return '⟳';
+      default:
+        return null;
+    }
   };
 
   return (
     <div className="habit-card-container">
-      {/* Кнопка Undone/Failed слева */}
-      <div 
-        className={`undone-button ${showUndoneButton ? 'visible' : ''} ${!isCompleted ? 'failed-variant' : ''}`}
-        style={{
-          opacity: showUndoneButton ? Math.min(swipeOffset / SWIPE_THRESHOLD, 1) : 0,
-          transform: `scale(${showUndoneButton ? Math.min(swipeOffset / SWIPE_THRESHOLD, 1) : 0.8})`
-        }}
-      >
-        <span className="undone-icon">
-          {isCompleted ? '⟲' : '✗'}
-        </span>
-        <span className="undone-text">
-          {isCompleted ? 'Undone' : 'Failed'}
-        </span>
-      </div>
+      {/* Кнопка справа (для свайпа вправо) */}
+      {rightButton && (
+        <div 
+          className={`swipe-action-button ${rightButton.className} ${showRightButton ? 'visible' : ''}`}
+          style={{
+            left: 0,
+            opacity: showRightButton ? Math.min(swipeOffset / SWIPE_THRESHOLD, 1) : 0,
+            transform: `scale(${showRightButton ? Math.min(swipeOffset / SWIPE_THRESHOLD, 1) : 0.8})`
+          }}
+        >
+          <span className="swipe-action-icon">{rightButton.icon}</span>
+          <span className="swipe-action-text">{rightButton.text}</span>
+        </div>
+      )}
 
       {/* Основная карточка */}
       <div 
@@ -191,25 +270,28 @@ const HabitCard = ({ habit, onMark, onUnmark }) => {
           </div>
 
           {/* Индикатор статуса */}
-          {(isCompleted || isFailed) && (
+          {!isPending && (
             <div className={`status-indicator ${getCardState()}`}>
-              {isCompleted ? '✓' : '✗'}
+              {getStatusIcon()}
             </div>
           )}
         </div>
       </div>
 
-      {/* Кнопка Done справа */}
-      <div 
-        className={`done-button ${showDoneButton ? 'visible' : ''}`}
-        style={{
-          opacity: showDoneButton ? Math.min(Math.abs(swipeOffset) / SWIPE_THRESHOLD, 1) : 0,
-          transform: `scale(${showDoneButton ? Math.min(Math.abs(swipeOffset) / SWIPE_THRESHOLD, 1) : 0.8})`
-        }}
-      >
-        <span className="done-checkmark">✓</span>
-        <span className="done-text">Done</span>
-      </div>
+      {/* Кнопка слева (для свайпа влево) */}
+      {leftButton && (
+        <div 
+          className={`swipe-action-button ${leftButton.className} ${showLeftButton ? 'visible' : ''}`}
+          style={{
+            right: 0,
+            opacity: showLeftButton ? Math.min(Math.abs(swipeOffset) / SWIPE_THRESHOLD, 1) : 0,
+            transform: `scale(${showLeftButton ? Math.min(Math.abs(swipeOffset) / SWIPE_THRESHOLD, 1) : 0.8})`
+          }}
+        >
+          <span className="swipe-action-icon">{leftButton.icon}</span>
+          <span className="swipe-action-text">{leftButton.text}</span>
+        </div>
+      )}
     </div>
   );
 };
