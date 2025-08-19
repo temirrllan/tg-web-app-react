@@ -26,13 +26,22 @@ const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
 
   const handleCreateHabit = async (habitData) => {
-    try {
-      await createHabit(habitData);
-      setShowCreateForm(false);
-    } catch (error) {
-      console.error("Failed to create habit:", error);
+  try {
+    // Запоминаем количество привычек до создания
+    const currentCount = todayHabits.length;
+    
+    await createHabit(habitData);
+    setShowCreateForm(false);
+    
+    // Если это была первая привычка, сбрасываем флаг для показа подсказки
+    if (currentCount === 0) {
+      localStorage.removeItem('hasSeenSwipeHint');
+      console.log('First habit created, hint will be shown');
     }
-  };
+  } catch (error) {
+    console.error("Failed to create habit:", error);
+  }
+};
 
   const getMotivationalMessage = () => {
     if (stats.total === 0) return "Yes U Can!";
@@ -48,16 +57,27 @@ const [showSwipeHint, setShowSwipeHint] = useState(false);
     return days[today.getDay()];
   };
   // Показываем подсказку при первом открытии
-  useEffect(() => {
-    const hasSeenHint = localStorage.getItem('hasSeenSwipeHint');
-    if (!hasSeenHint && todayHabits.length > 0) {
+  // Показываем подсказку при первом запуске или после создания первой привычки
+useEffect(() => {
+  const hasSeenHint = localStorage.getItem('hasSeenSwipeHint');
+  const previousHabitsCount = parseInt(localStorage.getItem('previousHabitsCount') || '0');
+  
+  if (todayHabits.length > 0) {
+    // Показываем если:
+    // 1. Никогда не видели подсказку (первый запуск)
+    // 2. Только что создали первую привычку (было 0, стало 1)
+    if (!hasSeenHint || (previousHabitsCount === 0 && todayHabits.length === 1)) {
       setTimeout(() => {
         setShowSwipeHint(true);
         localStorage.setItem('hasSeenSwipeHint', 'true');
         console.log('Swipe hint shown');
       }, 1000);
     }
-  }, [todayHabits.length]);
+    
+    // Сохраняем текущее количество привычек для следующей проверки
+    localStorage.setItem('previousHabitsCount', String(todayHabits.length));
+  }
+}, [todayHabits.length]);
   if (loading) {
     return (
       <Layout>
@@ -67,26 +87,7 @@ const [showSwipeHint, setShowSwipeHint] = useState(false);
       </Layout>
     );
   }
-// Показываем подсказку при первом открытии или после создания первой привычки
-useEffect(() => {
-  const hasSeenHint = localStorage.getItem('hasSeenSwipeHint');
-  const hintsShownCount = parseInt(localStorage.getItem('hintsShownCount') || '0');
-  
-  // Показываем подсказку если:
-  // 1. Никогда не видели И есть привычки
-  // 2. Только что создали первую привычку
-  // 3. Показали меньше 3 раз (для новых пользователей)
-  if (todayHabits.length > 0) {
-    if (!hasSeenHint || (todayHabits.length === 1 && hintsShownCount < 2)) {
-      setTimeout(() => {
-        setShowSwipeHint(true);
-        localStorage.setItem('hasSeenSwipeHint', 'true');
-        localStorage.setItem('hintsShownCount', String(hintsShownCount + 1));
-        console.log('Swipe hint shown, count:', hintsShownCount + 1);
-      }, 1000);
-    }
-  }
-}, [todayHabits.length]);
+
   return (
     <>
       <Layout>
@@ -136,16 +137,6 @@ useEffect(() => {
         <button className="fab" onClick={() => setShowCreateForm(true)}>
           +
         </button>
-        {/* Help Button */}
-{todayHabits.length > 0 && (
-  <button 
-    className="help-button" 
-    onClick={() => setShowSwipeHint(true)}
-    aria-label="Show help"
-  >
-    ?
-  </button>
-)}
       </Layout>
 
       {/* Modals */}
