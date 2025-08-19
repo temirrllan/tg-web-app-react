@@ -80,9 +80,9 @@ const HabitCard = ({ habit, onMark, onUnmark }) => {
         setSwipeOffset(0);
       }
     },
-    trackMouse: true,
-    trackTouch: true,
-    preventDefaultTouchmoveEvent: false,
+     preventDefaultTouchmoveEvent: true,
+  trackTouch: true,
+  trackMouse: true,
     
   });
 
@@ -122,6 +122,7 @@ const HabitCard = ({ habit, onMark, onUnmark }) => {
         className={`habit-card ${getCardState()} ${isAnimating ? 'animating' : ''}`}
         style={{
           transform: `translateX(${swipeOffset}px)`,
+          touchAction: 'pan-y',
         }}
       >
         <div className="habit-card-content">
