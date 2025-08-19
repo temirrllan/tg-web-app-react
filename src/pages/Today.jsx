@@ -58,26 +58,26 @@ const [showSwipeHint, setShowSwipeHint] = useState(false);
   };
   // Показываем подсказку при первом открытии
   // Показываем подсказку при первом запуске или после создания первой привычки
-useEffect(() => {
-  const hasSeenHint = localStorage.getItem('hasSeenSwipeHint');
-  const previousHabitsCount = parseInt(localStorage.getItem('previousHabitsCount') || '0');
+// useEffect(() => {
+//   const hasSeenHint = localStorage.getItem('hasSeenSwipeHint');
+//   const previousHabitsCount = parseInt(localStorage.getItem('previousHabitsCount') || '0');
   
-  if (todayHabits.length > 0) {
-    // Показываем если:
-    // 1. Никогда не видели подсказку (первый запуск)
-    // 2. Только что создали первую привычку (было 0, стало 1)
-    if (!hasSeenHint || (previousHabitsCount === 0 && todayHabits.length === 1)) {
-      setTimeout(() => {
-        setShowSwipeHint(true);
-        localStorage.setItem('hasSeenSwipeHint', 'true');
-        console.log('Swipe hint shown');
-      }, 1000);
-    }
+//   if (todayHabits.length > 0) {
+//     // Показываем если:
+//     // 1. Никогда не видели подсказку (первый запуск)
+//     // 2. Только что создали первую привычку (было 0, стало 1)
+//     if (!hasSeenHint || (previousHabitsCount === 0 && todayHabits.length === 1)) {
+//       setTimeout(() => {
+//         setShowSwipeHint(true);
+//         localStorage.setItem('hasSeenSwipeHint', 'true');
+//         console.log('Swipe hint shown');
+//       }, 1000);
+//     }
     
-    // Сохраняем текущее количество привычек для следующей проверки
-    localStorage.setItem('previousHabitsCount', String(todayHabits.length));
-  }
-}, [todayHabits.length]);
+//     // Сохраняем текущее количество привычек для следующей проверки
+//     localStorage.setItem('previousHabitsCount', String(todayHabits.length));
+//   }
+// }, [todayHabits.length]);
   if (loading) {
     return (
       <Layout>
