@@ -156,5 +156,4 @@ const HabitCard = ({ habit, onMark, onUnmark }) => {
     </div>
   );
 };
-
 export default HabitCard;
