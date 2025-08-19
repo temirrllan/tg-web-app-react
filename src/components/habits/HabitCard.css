@@ -6,10 +6,18 @@
   align-items: center;
   margin-bottom: 12px;
   height: 80px;
+  touch-action: pan-y pinch-zoom;
+  
 }
-
+.habit-card-container,
+.habit-card {
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
 /* Основная карточка */
 .habit-card {
+  touch-action: pan-y pinch-zoom;
   position: relative;
   width: 100%;
   background: #FFFFFF;

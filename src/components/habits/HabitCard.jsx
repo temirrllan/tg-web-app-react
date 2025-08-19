@@ -48,6 +48,8 @@ const HabitCard = ({ habit, onMark, onUnmark }) => {
     }
   };
 
+  // Найдите строку с useSwipeable (около строки 44) и замените параметры:
+
 const handlers = useSwipeable({
   onSwiping: (eventData) => {
     if (loading || isAnimating) return;
@@ -79,10 +81,12 @@ const handlers = useSwipeable({
       setSwipeOffset(0);
     }
   },
+  // Важные параметры для мобильных устройств
   trackMouse: true,
-  trackTouch: true, // Добавляем поддержку тач-событий
-  preventScrollOnSwipe: true, // Предотвращаем скролл при свайпе
+  trackTouch: true,
   delta: 10, // Минимальное расстояние для начала свайпа
+  preventDefaultTouchmoveEvent: false, // Изменено на false для мобильных
+  rotationAngle: 0,
 });
 
   // Показываем кнопки в зависимости от направления свайпа
