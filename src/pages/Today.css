@@ -138,3 +138,28 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* ... существующие стили ... */
+
+.today__readonly-notice {
+  background: #FEF3C7;
+  color: #92400E;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.today__habits-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+/* Убираем старый стиль для дней */
+.today__days {
+  display: none;
+}

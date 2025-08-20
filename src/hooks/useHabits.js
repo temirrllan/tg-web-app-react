@@ -45,7 +45,16 @@ const loadTodayHabits = useCallback(async () => {
       setError(err.message);
     }
   }, []);
-
+// Добавьте в хук useHabits
+const loadHabitsForDate = useCallback(async (date) => {
+  try {
+    const response = await habitService.getHabitsForDate(date);
+    return response.habits || [];
+  } catch (err) {
+    console.error('Failed to load habits for date:', err);
+    return [];
+  }
+}, []);
   // Отметка привычки
  // Отметка привычки
 const markHabit = useCallback(async (habitId, status = 'completed') => {
@@ -113,6 +122,7 @@ const createHabit = useCallback(async (habitData) => {
     unmarkHabit,
     createHabit,
     deleteHabit,
+    loadHabitsForDate,
     refresh: loadTodayHabits
   };
 };

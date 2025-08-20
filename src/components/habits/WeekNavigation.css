@@ -1,0 +1,86 @@
+.week-navigation {
+  margin: 0 -16px;
+  padding: 0 16px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.week-navigation::-webkit-scrollbar {
+  display: none;
+}
+
+.week-navigation__scroll {
+  display: flex;
+  gap: 8px;
+  padding: 4px 0;
+  min-width: min-content;
+}
+
+.week-navigation__day {
+  position: relative;
+  padding: 12px 20px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 15px;
+  color: #6B7280;
+  background: white;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: fit-content;
+}
+
+.week-navigation__day:hover {
+  background: #F9FAFB;
+}
+
+.week-navigation__day--active {
+  background: #A7D96C;
+  color: white;
+  border-color: #A7D96C;
+}
+
+.week-navigation__day--today {
+  font-weight: 700;
+  color: #111827;
+}
+
+.week-navigation__day--today:not(.week-navigation__day--active) {
+  border-color: #E5E7EB;
+}
+
+.week-navigation__day--yesterday {
+  color: #374151;
+}
+
+.week-navigation__day--readonly {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.week-navigation__day--readonly:hover {
+  background: white;
+}
+
+.week-navigation__day-label {
+  display: block;
+}
+
+.week-navigation__day-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  font-size: 10px;
+  background: #FEF3C7;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

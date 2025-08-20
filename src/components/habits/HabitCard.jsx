@@ -3,7 +3,7 @@ import { useSwipeable } from 'react-swipeable';
 import { HABIT_STATUSES, STATUS_LABELS } from '../../utils/constants';
 import './HabitCard.css';
 
-const HabitCard = ({ habit, onMark, onUnmark }) => {
+const HabitCard = ({ habit, onMark, onUnmark, readOnly = false }) => {
   const [loading, setLoading] = useState(false);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -98,7 +98,7 @@ const HabitCard = ({ habit, onMark, onUnmark }) => {
 
   const handlers = useSwipeable({
     onSwiping: (eventData) => {
-      if (loading || isAnimating) return;
+      if (loading || isAnimating || readOnly) return;
       
       const { deltaX, dir } = eventData;
       
@@ -209,7 +209,7 @@ const HabitCard = ({ habit, onMark, onUnmark }) => {
       case HABIT_STATUSES.FAILED:
         return 'failed';
       case HABIT_STATUSES.SKIPPED:
-        return 'skipped';
+        return '';
       default:
         return '';
     }
