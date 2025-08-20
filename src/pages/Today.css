@@ -180,6 +180,15 @@
   margin-bottom: 80px;
   padding: 0;
 }
+.today__readonly-notice {
+  background: #FEF3C7;
+  color: #92400E;
+  padding: 10px 14px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  text-align: center;
+}
 
 .status-indicator.completed {
   background: #34C759;
