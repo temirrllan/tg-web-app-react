@@ -5,27 +5,19 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
   const scrollRef = useRef(null);
   const todayRef = useRef(null);
   
-  // Получаем дни недели относительно сегодня
-  const getDaysOfWeek = () => {
+  // Получаем дни относительно сегодня (показываем окно в 7 дней с Today в центре)
+  const getDaysAroundToday = () => {
     const days = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // Получаем начало недели (понедельник)
-    const currentDay = today.getDay();
-    const monday = new Date(today);
-    const daysToMonday = currentDay === 0 ? -6 : 1 - currentDay;
-    monday.setDate(today.getDate() + daysToMonday);
-    
-    // Генерируем 7 дней недели
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(monday);
-      date.setDate(monday.getDate() + i);
+    // Показываем 3 дня до и 3 дня после сегодня
+    for (let i = -3; i <= 3; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
       
-      const isToday = date.toDateString() === today.toDateString();
-      const yesterday = new Date(today);
-      yesterday.setDate(today.getDate() - 1);
-      const isYesterday = date.toDateString() === yesterday.toDateString();
+      const isToday = i === 0;
+      const isYesterday = i === -1;
       
       days.push({
         date: date,
@@ -33,8 +25,8 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
         dayNumber: date.getDate(),
         isToday: isToday,
         isYesterday: isYesterday,
-        isPast: date < yesterday,
-        isFuture: date > today,
+        isPast: i < -1,
+        isFuture: i > 0,
         isEditable: isToday || isYesterday,
         dateString: date.toISOString().split('T')[0]
       });
@@ -43,24 +35,26 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
     return days;
   };
   
-  const days = getDaysOfWeek();
+  const days = getDaysAroundToday();
   
-  // Автоматический скролл к сегодняшнему дню при загрузке
+  // Автоматический скролл к Today при загрузке
   useEffect(() => {
     if (todayRef.current && scrollRef.current) {
       setTimeout(() => {
-        todayRef.current.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
-          inline: 'center'
-        });
+        const container = scrollRef.current;
+        const todayElement = todayRef.current;
+        const containerWidth = container.offsetWidth;
+        const todayWidth = todayElement.offsetWidth;
+        const todayLeft = todayElement.offsetLeft;
+        
+        // Центрируем Today
+        container.scrollLeft = todayLeft - (containerWidth / 2) + (todayWidth / 2);
       }, 100);
     }
   }, []);
   
   const formatDayLabel = (day) => {
     if (day.isToday) return 'Today';
-    if (day.isYesterday) return 'Yesterday';
     return `${day.dayName} ${day.dayNumber}`;
   };
   
@@ -71,7 +65,7 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
   return (
     <div className="week-navigation" ref={scrollRef}>
       <div className="week-navigation__scroll">
-        {days.map((day, index) => (
+        {days.map((day) => (
           <button
             key={day.dateString}
             ref={day.isToday ? todayRef : null}
@@ -80,18 +74,11 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
             } ${
               day.isToday ? 'week-navigation__day--today' : ''
             } ${
-              day.isYesterday ? 'week-navigation__day--yesterday' : ''
-            } ${
-              !day.isEditable ? 'week-navigation__day--readonly' : ''
+              !day.isEditable && !day.isFuture ? 'week-navigation__day--past' : ''
             }`}
             onClick={() => handleDayClick(day)}
           >
-            <span className="week-navigation__day-label">
-              {formatDayLabel(day)}
-            </span>
-            {day.isEditable && (
-              <span className="week-navigation__day-badge">✏️</span>
-            )}
+            {formatDayLabel(day)}
           </button>
         ))}
       </div>

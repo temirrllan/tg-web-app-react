@@ -6,6 +6,7 @@
   scrollbar-width: none;
   -ms-overflow-style: none;
   -webkit-overflow-scrolling: touch;
+  position: relative;
 }
 
 .week-navigation::-webkit-scrollbar {
@@ -14,29 +15,30 @@
 
 .week-navigation__scroll {
   display: flex;
-  gap: 8px;
-  padding: 4px 0;
+  gap: 12px;
+  padding: 4px 16px;
   min-width: min-content;
 }
 
 .week-navigation__day {
-  position: relative;
-  padding: 12px 20px;
-  border-radius: 20px;
-  font-weight: 600;
-  font-size: 15px;
-  color: #6B7280;
-  background: white;
-  border: 2px solid transparent;
+  padding: 10px 24px;
+  border-radius: 24px;
+  font-weight: 500;
+  font-size: 17px;
+  color: #8E8E93;
+  background: transparent;
+  border: none;
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
   flex-shrink: 0;
-  min-width: fit-content;
 }
 
-.week-navigation__day:hover {
-  background: #F9FAFB;
+
+.week-navigation__day--active {
+  background: #A7D96C;
+  color: white;
+  font-weight: 600;
 }
 
 .week-navigation__day--active {
@@ -49,10 +51,13 @@
   font-weight: 700;
   color: #111827;
 }
-
-.week-navigation__day--today:not(.week-navigation__day--active) {
-  border-color: #E5E7EB;
+.week-navigation__day--past {
+  opacity: 0.5;
 }
+.week-navigation__day--today:not(.week-navigation__day--active) {
+  color: #000;
+}
+
 
 .week-navigation__day--yesterday {
   color: #374151;

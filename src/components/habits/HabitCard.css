@@ -1,70 +1,37 @@
-
-
 .habit-card-container {
   position: relative;
   display: flex;
   align-items: center;
   margin-bottom: 12px;
-  height: 80px;
-  touch-action: pan-y; /* Разрешаем только вертикальный скролл */
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
+  height: 72px; /* Уменьшаем высоту */
 }
-/* Оптимизация для мобильных */
-@supports (-webkit-touch-callout: none) {
-  /* iOS Safari specific */
-  .habit-card-container {
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  .habit-card {
-    -webkit-transform: translateX(0);
-    -webkit-transition: -webkit-transform 0.3s ease-out;
-  }
-  
-  .habit-card.touching {
-    -webkit-transition: none !important;
-  }
-}
-/* Основная карточка */
+
 .habit-card {
   position: relative;
   width: 100%;
-  background: #FFFFFF;
-  border-radius: 20px;
-  padding: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  background: #F2F2F7;
+  border-radius: 16px;
+  padding: 14px 16px;
+  box-shadow: none; /* Убираем тень для соответствия макету */
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   z-index: 2;
-  will-change: transform; /* Оптимизация производительности */
+  will-change: transform;
   transition: transform 0.3s ease-out;
-}
-.habit-card.touching {
-  transition: none !important; /* Убираем transition при касании */
-}
-
-.habit-card.animating {
-  transition: transform 0.3s ease-out;
-}
-.habit-card.completed,
-.habit-card.failed {
-  opacity: 0.9;
 }
 
 .habit-card.completed {
-  background: #E8F5E9;
+  background: #D4EDDA;
 }
 
 .habit-card.failed {
-  background: #FFEBEE;
+  background: #F8D7DA;
 }
 
-.habit-card:active {
-  cursor: grabbing;
+.habit-card.skipped {
+  background: #F2F2F7; /* Остается без изменений для skipped */
 }
 
 .habit-card-content {
@@ -74,12 +41,11 @@
   position: relative;
 }
 
-/* Иконка привычки */
 .habit-icon {
-  width: 48px;
-  height: 48px;
-  background: #E8F4F9;
-  border-radius: 14px;
+  width: 44px;
+  height: 44px;
+  background: white;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -97,10 +63,9 @@
 }
 
 .habit-emoji {
-  font-size: 24px;
+  font-size: 22px;
 }
 
-/* Информация о привычке */
 .habit-info {
   flex: 1;
   min-width: 0;
@@ -110,256 +75,17 @@
   font-size: 17px;
   font-weight: 600;
   color: #000000;
-  margin: 0 0 4px 0;
+  margin: 0 0 2px 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .habit-goal {
-  font-size: 14px;
+  font-size: 15px;
   color: #8E8E93;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-/* Индикатор статуса */
-.status-indicator {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  color: white;
-}
-
-.status-indicator.completed {
-  background: #34C759;
-}
-
-.status-indicator.failed {
-  background: #FF3B30;
-}
-
-/* Кнопка Done */
-.done-button {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 100px;
-  background: #34C759;
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 2px;
-  opacity: 0;
-  transform: scale(0.8);
-  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
-  z-index: 1;
-  box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
-}
-/* ... существующие стили ... */
-
-/* Универсальная кнопка для свайпа */
-.swipe-action-button {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 100px;
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 2px;
-  opacity: 0;
-  transform: scale(0.8);
-  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
-  z-index: 1;
-}
-
-.swipe-action-button.visible {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.swipe-action-icon {
-  color: white;
-  font-size: 24px;
-  font-weight: bold;
-  line-height: 1;
-}
-
-.swipe-action-text {
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-/* Стили для разных кнопок */
-.done-button {
-  background: #34C759;
-  box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
-}
-
-.undone-button {
-  background: #FF3B30;
-  box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3);
-}
-
-.skip-button {
-  background: #FF9500;
-  box-shadow: 0 2px 8px rgba(255, 149, 0, 0.3);
-}
-
-/* Состояния карточки */
-.habit-card.completed {
-  background: #E8F5E9;
-}
-
-.habit-card.failed {
-  background: #FFEBEE;
-}
-
-.habit-card.skipped {
-  background: #FFF3E0;
-}
-
-/* Индикаторы статуса */
-.status-indicator {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  color: white;
-}
-
-.status-indicator.completed {
-  background: #34C759;
-}
-
-.status-indicator.failed {
-  background: #FF3B30;
-}
-
-.status-indicator.skipped {
-  background: #FF9500;
-}
-
-/* Иконка привычки */
-.habit-icon.completed {
-  background: #34C759;
-}
-
-.habit-icon.failed {
-  background: #FF3B30;
-}
-
-.habit-icon.skipped {
-  background: #FF9500;
-}
-
-/* ... остальные стили ... */
-.done-button.visible {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.done-checkmark {
-  color: white;
-  font-size: 24px;
-  font-weight: bold;
-  line-height: 1;
-}
-
-.done-text {
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-/* Кнопка Undone/Failed */
-.undone-button {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 120px;
-  background: #546E7A;
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  opacity: 0;
-  transform: scale(0.8);
-  transition: opacity 0.2s ease-out, transform 0.2s ease-out, background-color 0.2s ease-out;
-  z-index: 1;
-  box-shadow: 0 2px 8px rgba(84, 110, 122, 0.3);
-}
-
-.undone-button.failed-variant {
-  background: #FF3B30;
-  box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3);
-}
-
-.undone-button.visible {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.undone-icon {
-  color: white;
-  font-size: 20px;
-  font-weight: bold;
-}
-
-.undone-text {
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-/* Анимация появления */
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.habit-card {
-  pointer-events: auto;
-}
-
-/* Отключаем выделение текста при свайпе */
-.habit-card * {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  pointer-events: none;
-}
-

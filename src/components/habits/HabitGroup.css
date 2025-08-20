@@ -1,0 +1,16 @@
+.habit-group {
+  margin-bottom: 32px;
+}
+
+.habit-group__title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #000;
+  margin: 0 0 16px 4px;
+}
+
+.habit-group__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

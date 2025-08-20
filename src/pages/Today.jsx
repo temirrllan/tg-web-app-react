@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import Layout from "../components/layout/Layout";
 import Header from "../components/layout/Header";
-import HabitCard from "../components/habits/HabitCard";
+import HabitGroup from "../components/habits/HabitGroup";
 import EmptyState from "../components/habits/EmptyState";
 import CreateHabitForm from "../components/habits/CreateHabitForm";
 import WeekNavigation from "../components/habits/WeekNavigation";
@@ -21,56 +21,47 @@ const Today = () => {
     markHabit,
     unmarkHabit,
     createHabit,
-    loadHabitsForDate,
   } = useHabits();
   
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split('T')[0]
   );
   const [isEditableDate, setIsEditableDate] = useState(true);
-  const [dateHabits, setDateHabits] = useState([]);
-  const [dateLoading, setDateLoading] = useState(false);
 
-  // Обработчик выбора даты
-  const handleDateSelect = async (date, isEditable) => {
+  // Группируем привычки по времени дня на основе reminder_time
+  const groupedHabits = useMemo(() => {
+    const groups = {
+      morning: [],
+      afternoon: [],
+      evening: []
+    };
+    
+    todayHabits.forEach(habit => {
+      if (habit.reminder_time) {
+        const hour = parseInt(habit.reminder_time.split(':')[0]);
+        if (hour < 12) {
+          groups.morning.push(habit);
+        } else if (hour < 18) {
+          groups.afternoon.push(habit);
+        } else {
+          groups.evening.push(habit);
+        }
+      } else {
+        // Если время не указано, добавляем в утро
+        groups.morning.push(habit);
+      }
+    });
+    
+    return groups;
+  }, [todayHabits]);
+
+  const handleDateSelect = (date, isEditable) => {
     setSelectedDate(date);
     setIsEditableDate(isEditable);
-    
-    const today = new Date().toISOString().split('T')[0];
-    
-    if (date === today) {
-      // Если выбран сегодня, используем уже загруженные данные
-      setDateHabits(todayHabits);
-    } else {
-      // Загружаем привычки для выбранной даты
-      setDateLoading(true);
-      try {
-        // Здесь нужно добавить метод в useHabits для загрузки привычек по дате
-        // Пока используем моковые данные
-        const habitsForDate = await loadHabitsForDate?.(date) || todayHabits.map(h => ({
-          ...h,
-          today_status: 'pending' // Сбрасываем статус для прошлых дней
-        }));
-        setDateHabits(habitsForDate);
-      } catch (error) {
-        console.error('Failed to load habits for date:', error);
-        setDateHabits([]);
-      } finally {
-        setDateLoading(false);
-      }
-    }
+    // Здесь можно добавить загрузку привычек для выбранной даты
   };
-
-  // При изменении todayHabits обновляем dateHabits если выбран сегодня
-  useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
-    if (selectedDate === today) {
-      setDateHabits(todayHabits);
-    }
-  }, [todayHabits, selectedDate]);
 
   const handleCreateHabit = async (habitData) => {
     try {
@@ -98,18 +89,17 @@ const Today = () => {
 
   const getDateLabel = () => {
     const today = new Date().toISOString().split('T')[0];
+    if (selectedDate === today) return 'for today';
+    
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
-    
-    if (selectedDate === today) return 'for today';
-    if (selectedDate === yesterdayStr) return 'for yesterday';
+    if (selectedDate === yesterday.toISOString().split('T')[0]) return 'for yesterday';
     
     const date = new Date(selectedDate);
-    return `for ${date.toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' })}`;
+    return `for ${date.toLocaleDateString('en', { month: 'short', day: 'numeric' })}`;
   };
 
-  // Показываем подсказку при первом запуске или после создания первой привычки
+  // Показываем подсказку при первом запуске
   useEffect(() => {
     const hasSeenHint = localStorage.getItem('hasSeenSwipeHint');
     const previousHabitsCount = parseInt(localStorage.getItem('previousHabitsCount') || '0');
@@ -119,30 +109,12 @@ const Today = () => {
         setTimeout(() => {
           setShowSwipeHint(true);
           localStorage.setItem('hasSeenSwipeHint', 'true');
-          console.log('Swipe hint shown');
         }, 1000);
       }
       
       localStorage.setItem('previousHabitsCount', String(todayHabits.length));
     }
   }, [todayHabits.length, isEditableDate]);
-
-  // Обработчики свайпов с учетом редактируемости
-  const handleMark = async (habitId, status) => {
-    if (!isEditableDate) {
-      console.log('Cannot edit habits for this date');
-      return;
-    }
-    await markHabit(habitId, status, selectedDate);
-  };
-
-  const handleUnmark = async (habitId) => {
-    if (!isEditableDate) {
-      console.log('Cannot edit habits for this date');
-      return;
-    }
-    await unmarkHabit(habitId, selectedDate);
-  };
 
   if (loading) {
     return (
@@ -153,8 +125,6 @@ const Today = () => {
       </Layout>
     );
   }
-
-  const displayHabits = dateLoading ? [] : dateHabits;
 
   return (
     <>
@@ -185,27 +155,35 @@ const Today = () => {
 
           {!isEditableDate && (
             <div className="today__readonly-notice">
-              <span>📅 View only mode - you can edit only today and yesterday</span>
+              <span>📅 View only - you can edit only today and yesterday</span>
             </div>
           )}
 
-          {dateLoading ? (
-            <div className="today__habits-loading">
-              <Loader size="medium" />
-            </div>
-          ) : displayHabits.length === 0 ? (
-            <EmptyState onCreateClick={() => setShowCreateForm(true)} />
+          {todayHabits.length === 0 ? (
+            <EmptyState />
           ) : (
             <div className="today__habits">
-              {displayHabits.map((habit) => (
-                <HabitCard
-                  key={habit.id}
-                  habit={habit}
-                  onMark={isEditableDate ? handleMark : undefined}
-                  onUnmark={isEditableDate ? handleUnmark : undefined}
-                  readOnly={!isEditableDate}
-                />
-              ))}
+              <HabitGroup 
+                title="Morning"
+                habits={groupedHabits.morning}
+                onMark={isEditableDate ? markHabit : undefined}
+                onUnmark={isEditableDate ? unmarkHabit : undefined}
+                readOnly={!isEditableDate}
+              />
+              <HabitGroup 
+                title="Afternoon"
+                habits={groupedHabits.afternoon}
+                onMark={isEditableDate ? markHabit : undefined}
+                onUnmark={isEditableDate ? unmarkHabit : undefined}
+                readOnly={!isEditableDate}
+              />
+              <HabitGroup 
+                title="Evening"
+                habits={groupedHabits.evening}
+                onMark={isEditableDate ? markHabit : undefined}
+                onUnmark={isEditableDate ? unmarkHabit : undefined}
+                readOnly={!isEditableDate}
+              />
             </div>
           )}
         </div>
