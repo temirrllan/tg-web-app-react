@@ -5,10 +5,11 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
   const scrollRef = useRef(null);
   const todayRef = useRef(null);
   
-  // Получаем дни относительно сегодня (показываем окно в 7 дней с Today в центре)
+  // Получаем дни относительно сегодня
   const getDaysAroundToday = () => {
     const days = [];
     const today = new Date();
+    // Сбрасываем время для корректного сравнения дат
     today.setHours(0, 0, 0, 0);
     
     // Показываем 3 дня до и 3 дня после сегодня
@@ -16,19 +17,22 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
       
+      // Форматируем дату в строку для сравнения
+      const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      
       const isToday = i === 0;
       const isYesterday = i === -1;
       
       days.push({
         date: date,
-        dayName: date.toLocaleDateString('en', { weekday: 'short' }),
+        dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
         dayNumber: date.getDate(),
         isToday: isToday,
         isYesterday: isYesterday,
         isPast: i < -1,
         isFuture: i > 0,
         isEditable: isToday || isYesterday,
-        dateString: date.toISOString().split('T')[0]
+        dateString: dateString
       });
     }
     
@@ -55,10 +59,12 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
   
   const formatDayLabel = (day) => {
     if (day.isToday) return 'Today';
+    if (day.isYesterday) return 'Yesterday';
     return `${day.dayName} ${day.dayNumber}`;
   };
   
   const handleDayClick = (day) => {
+    console.log('Selected date:', day.dateString, 'Is Today:', day.isToday);
     onDateSelect(day.dateString, day.isEditable);
   };
   
@@ -74,7 +80,11 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
             } ${
               day.isToday ? 'week-navigation__day--today' : ''
             } ${
+              day.isYesterday ? 'week-navigation__day--yesterday' : ''
+            } ${
               !day.isEditable && !day.isFuture ? 'week-navigation__day--past' : ''
+            } ${
+              day.isFuture ? 'week-navigation__day--future' : ''
             }`}
             onClick={() => handleDayClick(day)}
           >

@@ -29,8 +29,22 @@ const Today = () => {
   const [showProfile, setShowProfile] = useState(false);
   
   // Всегда инициализируем с сегодняшней датой
-  const getTodayDate = () => new Date().toISOString().split('T')[0];
-  
+  const getTodayDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }; 
+   // Функция для получения вчерашней даты
+  const getYesterdayDate = () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const year = yesterday.getFullYear();
+    const month = String(yesterday.getMonth() + 1).padStart(2, '0');
+    const day = String(yesterday.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
   const [isEditableDate, setIsEditableDate] = useState(true);
   const [dateHabits, setDateHabits] = useState([]);
@@ -39,17 +53,17 @@ const Today = () => {
 
   // Обработчик выбора даты
   const handleDateSelect = async (date, isEditable) => {
+    console.log('handleDateSelect:', date, 'isEditable:', isEditable);
     setSelectedDate(date);
     setIsEditableDate(isEditable);
     
-    const today = getTodayDate();
+    const todayStr = getTodayDate();
     
-    if (date === today) {
-      // Если выбран сегодня, используем уже загруженные данные
+    if (date === todayStr) {
       setDateHabits(todayHabits);
       setDateStats(stats);
     } else {
-      // Загружаем привычки для выбранной даты
+      // Загрузка для других дат
       setDateLoading(true);
       try {
         const result = await loadHabitsForDate?.(date);
@@ -57,10 +71,9 @@ const Today = () => {
           setDateHabits(result.habits || []);
           setDateStats(result.stats || { completed: 0, total: result.habits?.length || 0 });
         } else {
-          // Если нет метода загрузки, показываем те же привычки но со сброшенными статусами
           setDateHabits(todayHabits.map(h => ({
             ...h,
-            today_status: 'pending' // Сбрасываем статус для других дней
+            today_status: 'pending'
           })));
           setDateStats({ completed: 0, total: todayHabits.length });
         }
@@ -115,23 +128,29 @@ const Today = () => {
     return phrase.text || "Keep going!";
   };
 
-  const getDateLabel = () => {
-    const today = getTodayDate();
+   const getDateLabel = () => {
+    const todayStr = getTodayDate();
+    const yesterdayStr = getYesterdayDate();
     
-    if (selectedDate === today) {
+    console.log('Selected:', selectedDate, 'Today:', todayStr, 'Yesterday:', yesterdayStr);
+    
+    if (selectedDate === todayStr) {
       return 'for today';
     }
-    
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
     
     if (selectedDate === yesterdayStr) {
       return 'for yesterday';
     }
     
-    const date = new Date(selectedDate + 'T12:00:00'); // Добавляем время для корректного парсинга
-    return `for ${date.toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' })}`;
+    // Для других дат
+    const [year, month, day] = selectedDate.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    
+    return `for ${date.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      month: 'short', 
+      day: 'numeric' 
+    })}`;
   };
 
   // Показываем подсказку при первом запуске или после создания первой привычки
