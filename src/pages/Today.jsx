@@ -50,6 +50,22 @@ const Today = () => {
   const [dateHabits, setDateHabits] = useState([]);
   const [dateLoading, setDateLoading] = useState(false);
   const [dateStats, setDateStats] = useState({ completed: 0, total: 0 });
+// Фильтруем привычки по выбранному дню недели
+  const getHabitsForDate = useMemo(() => {
+    const date = new Date(selectedDate + 'T12:00:00');
+    const dayOfWeek = date.getDay() || 7; // 0 (Sunday) = 7
+    
+    return (habits) => {
+      return habits.filter(habit => {
+        // Если у привычки нет расписания по дням, показываем всегда
+        if (!habit.schedule_days || habit.schedule_days.length === 0) {
+          return true;
+        }
+        // Проверяем, входит ли текущий день в расписание привычки
+        return habit.schedule_days.includes(dayOfWeek);
+      });
+    };
+  }, [selectedDate]);
 
   // Обработчик выбора даты
   const handleDateSelect = async (date, isEditable) => {
@@ -60,22 +76,34 @@ const Today = () => {
     const todayStr = getTodayDate();
     
     if (date === todayStr) {
-      setDateHabits(todayHabits);
-      setDateStats(stats);
+      const filteredHabits = getHabitsForDate(todayHabits);
+      setDateHabits(filteredHabits);
+      
+      const completedCount = filteredHabits.filter(h => h.today_status === 'completed').length;
+      setDateStats({ 
+        completed: completedCount, 
+        total: filteredHabits.length 
+      });
     } else {
-      // Загрузка для других дат
       setDateLoading(true);
       try {
         const result = await loadHabitsForDate?.(date);
         if (result) {
-          setDateHabits(result.habits || []);
-          setDateStats(result.stats || { completed: 0, total: result.habits?.length || 0 });
+          const filteredHabits = getHabitsForDate(result.habits || []);
+          setDateHabits(filteredHabits);
+          
+          const completedCount = filteredHabits.filter(h => h.today_status === 'completed').length;
+          setDateStats({ 
+            completed: completedCount, 
+            total: filteredHabits.length 
+          });
         } else {
-          setDateHabits(todayHabits.map(h => ({
+          const filteredHabits = getHabitsForDate(todayHabits.map(h => ({
             ...h,
             today_status: 'pending'
           })));
-          setDateStats({ completed: 0, total: todayHabits.length });
+          setDateHabits(filteredHabits);
+          setDateStats({ completed: 0, total: filteredHabits.length });
         }
       } catch (error) {
         console.error('Failed to load habits for date:', error);
@@ -91,15 +119,27 @@ const Today = () => {
   useEffect(() => {
     const today = getTodayDate();
     if (selectedDate === today) {
-      setDateHabits(todayHabits);
-      setDateStats(stats);
+      const filteredHabits = getHabitsForDate(todayHabits);
+      setDateHabits(filteredHabits);
+      
+      const completedCount = filteredHabits.filter(h => h.today_status === 'completed').length;
+      setDateStats({ 
+        completed: completedCount, 
+        total: filteredHabits.length 
+      });
     }
-  }, [todayHabits, stats, selectedDate]);
+  }, [todayHabits, selectedDate, getHabitsForDate]);
 
   // Инициализация при загрузке
   useEffect(() => {
-    setDateHabits(todayHabits);
-    setDateStats(stats);
+    const filteredHabits = getHabitsForDate(todayHabits);
+    setDateHabits(filteredHabits);
+    
+    const completedCount = filteredHabits.filter(h => h.today_status === 'completed').length;
+    setDateStats({ 
+      completed: completedCount, 
+      total: filteredHabits.length 
+    });
   }, []);
 
   const handleCreateHabit = async (habitData) => {
@@ -119,7 +159,7 @@ const Today = () => {
   };
 
   const getMotivationalMessage = () => {
-    const currentStats = selectedDate === getTodayDate() ? stats : dateStats;
+    const currentStats = selectedDate === getTodayDate() ? dateStats : dateStats;
     
     if (currentStats.total === 0) return "Yes U Can!";
     if (currentStats.completed === 0) return phrase.text || "Let's start!";
@@ -132,8 +172,6 @@ const Today = () => {
     const todayStr = getTodayDate();
     const yesterdayStr = getYesterdayDate();
     
-    console.log('Selected:', selectedDate, 'Today:', todayStr, 'Yesterday:', yesterdayStr);
-    
     if (selectedDate === todayStr) {
       return 'for today';
     }
@@ -142,7 +180,6 @@ const Today = () => {
       return 'for yesterday';
     }
     
-    // Для других дат
     const [year, month, day] = selectedDate.split('-');
     const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
     
@@ -197,9 +234,11 @@ const Today = () => {
       </Layout>
     );
   }
-
+if (showProfile) {
+    return <Profile onClose={() => setShowProfile(false)} />;
+  }
   const displayHabits = dateLoading ? [] : dateHabits;
-  const displayStats = selectedDate === getTodayDate() ? stats : dateStats;
+  const displayStats = dateStats;
 
   return (
     <>

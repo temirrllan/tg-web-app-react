@@ -16,7 +16,7 @@ const HabitCard = ({ habit, onMark, onUnmark, readOnly = false }) => {
   const isSkipped = currentStatus === HABIT_STATUSES.SKIPPED;
   const isPending = currentStatus === HABIT_STATUSES.PENDING;
   
-  const SWIPE_THRESHOLD = 80;
+  const SWIPE_THRESHOLD = 60;
   const MAX_SWIPE = 120;
 
   // Сброс offset при изменении статуса
@@ -55,7 +55,7 @@ const HabitCard = ({ habit, onMark, onUnmark, readOnly = false }) => {
   };
 
   const handleSwipeComplete = async (direction) => {
-    if (loading) return;
+    if (loading || readOnly) return;
     
     let nextStatus = null;
     
@@ -116,9 +116,10 @@ const HabitCard = ({ habit, onMark, onUnmark, readOnly = false }) => {
       setIsTouching(true);
     },
     onSwipedLeft: () => {
+      setIsTouching(false);
       if (loading || isAnimating || !getNextStatusLeft()) {
         setSwipeOffset(0);
-        setIsTouching(false);
+        // setIsTouching(false);
         return;
       }
       
@@ -127,12 +128,13 @@ const HabitCard = ({ habit, onMark, onUnmark, readOnly = false }) => {
       } else {
         setSwipeOffset(0);
       }
-      setIsTouching(false);
+      // setIsTouching(false);
     },
     onSwipedRight: () => {
+      setIsTouching(false);
       if (loading || isAnimating || !getNextStatusRight()) {
         setSwipeOffset(0);
-        setIsTouching(false);
+        // setIsTouching(false);
         return;
       }
       
@@ -141,14 +143,14 @@ const HabitCard = ({ habit, onMark, onUnmark, readOnly = false }) => {
       } else {
         setSwipeOffset(0);
       }
-      setIsTouching(false);
+      // setIsTouching(false);
     },
-    onSwiped: () => {
-      if (Math.abs(swipeOffset) < SWIPE_THRESHOLD) {
-        setSwipeOffset(0);
-      }
-      setIsTouching(false);
-    },
+    // onSwiped: () => {
+    //   if (Math.abs(swipeOffset) < SWIPE_THRESHOLD) {
+    //     setSwipeOffset(0);
+    //   }
+    //   setIsTouching(false);
+    // },
     onTouchEndOrOnMouseUp: () => {
       setIsTouching(false);
       if (Math.abs(swipeOffset) < SWIPE_THRESHOLD) {
@@ -157,7 +159,7 @@ const HabitCard = ({ habit, onMark, onUnmark, readOnly = false }) => {
     },
     trackMouse: true,
     trackTouch: true,
-    delta: 6,
+    delta: 10,
     preventScrollOnSwipe: true,
     rotationAngle: 0,
     swipeDuration: 500,

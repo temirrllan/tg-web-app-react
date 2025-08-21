@@ -206,11 +206,16 @@
   border: 1px solid #C6C6C8;
   border-radius: 10px;
   background: #FFFFFF;
-  color: #000;
+  color: #8E8E93;
   text-align: center;
   font-weight: 400;
   cursor: pointer;
   position: relative;
+  transition: all 0.2s;
+}
+.dropdown-button.active {
+  color: #000;
+  border-color: #007AFF;
 }
 .dropdown-button:active {
   background: #F2F2F7;

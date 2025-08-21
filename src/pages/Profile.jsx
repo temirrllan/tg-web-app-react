@@ -2,10 +2,12 @@ import React from 'react';
 import './Profile.css';
 
 const Profile = ({ onClose }) => {
-  // user берём из Telegram WebApp на самом экране Today,
-  // здесь не нужен хук, чтобы избежать двойной инициализации
   const tg = window.Telegram?.WebApp;
-  const user = tg?.initDataUnsafe?.user;
+  const user = tg?.initDataUnsafe?.user || {
+    first_name: 'Test',
+    last_name: 'User',
+    username: 'testuser'
+  };
 
   const menuItems = [
     { id: 'subscription', label: 'Subscription', value: 'Free', icon: '›' },
@@ -19,14 +21,53 @@ const Profile = ({ onClose }) => {
     { id: 'payment', label: 'Payment Policy', icon: '›' },
   ];
 
+  const handleMenuClick = (itemId) => {
+    console.log('Menu item clicked:', itemId);
+    // Здесь можно добавить логику для каждого пункта меню
+    switch(itemId) {
+      case 'subscription':
+        // Открыть страницу подписки
+        break;
+      case 'settings':
+        // Открыть настройки
+        break;
+      case 'support':
+        // Открыть поддержку
+        if (tg) {
+          tg.openLink('https://t.me/your_support_bot');
+        }
+        break;
+      case 'terms':
+        if (tg) {
+          tg.openLink('https://yoursite.com/terms');
+        }
+        break;
+      case 'privacy':
+        if (tg) {
+          tg.openLink('https://yoursite.com/privacy');
+        }
+        break;
+      case 'payment':
+        if (tg) {
+          tg.openLink('https://yoursite.com/payment-policy');
+        }
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <div className="profile">
       <div className="profile__header">
         <button className="profile__close" onClick={onClose}>
-          Cancel
+          Close
         </button>
-        <h2>Habit Tracker</h2>
-        <div className="profile__menu">⋯</div>
+        <div className="profile__title">
+          <h2>Habit Tracker</h2>
+          <span className="profile__subtitle">mini-app</span>
+        </div>
+        <button className="profile__menu">⋯</button>
       </div>
 
       <div className="profile__content">
@@ -42,7 +83,9 @@ const Profile = ({ onClose }) => {
               {user?.first_name?.[0] || '?'}
             </div>
           )}
-          <h3 className="profile__name">{user?.first_name} {user?.last_name}</h3>
+          <h3 className="profile__name">
+            {user?.first_name} {user?.last_name}
+          </h3>
           {user?.username && (
             <p className="profile__username">@{user.username}</p>
           )}
@@ -50,8 +93,15 @@ const Profile = ({ onClose }) => {
 
         <div className="profile__section">
           {menuItems.map(item => (
-            <button key={item.id} className="profile__item">
-              <span className="profile__item-label">{item.label}</span>
+            <button 
+              key={item.id} 
+              className="profile__item"
+              onClick={() => handleMenuClick(item.id)}
+            >
+              <div className="profile__item-left">
+                <span className="profile__item-icon">⚪</span>
+                <span className="profile__item-label">{item.label}</span>
+              </div>
               <span className="profile__item-value">
                 {item.value && <span className="profile__item-badge">{item.value}</span>}
                 {item.icon}
@@ -62,7 +112,11 @@ const Profile = ({ onClose }) => {
 
         <div className="profile__section">
           {legalItems.map(item => (
-            <button key={item.id} className="profile__item">
+            <button 
+              key={item.id} 
+              className="profile__item"
+              onClick={() => handleMenuClick(item.id)}
+            >
               <span className="profile__item-label">{item.label}</span>
               <span className="profile__item-value">{item.icon}</span>
             </button>
@@ -71,7 +125,7 @@ const Profile = ({ onClose }) => {
 
         <div className="profile__version">
           <p>App Version</p>
-          <p>v1.0.0</p>
+          <p>v1.20.6-00-kz.2L - v1.20.11B</p>
         </div>
       </div>
     </div>
