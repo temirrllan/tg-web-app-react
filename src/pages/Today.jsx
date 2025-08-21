@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo  } from "react";
 import Layout from "../components/layout/Layout";
 import Header from "../components/layout/Header";
 import HabitCard from "../components/habits/HabitCard";
