@@ -10,6 +10,7 @@ import { useHabits } from "../hooks/useHabits";
 import { useTelegram } from "../hooks/useTelegram";
 import "./Today.css";
 import SwipeHint from '../components/habits/SwipeHint';
+import Profile from "./Profile";
 
 const Today = () => {
   const { user } = useTelegram();
