@@ -240,13 +240,21 @@
 
 /* Стили для разных кнопок */
 .done-button {
-  background: #34C759;
-  box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
+  background: #A7D96C;
+  display: flex;
+ align-items: center;
+ justify-content: space-between;
+  /* box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3); */
+  color: #1D1D1F;
 }
 
 .undone-button {
-  background: #FF3B30;
-  box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3);
+  background: #456486;
+  /* box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3); */
+  display: flex;
+ align-items: center;
+ justify-content: space-between;
+ color: #FFFFFF;
 }
 
 .skip-button {
