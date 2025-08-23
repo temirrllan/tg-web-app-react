@@ -198,6 +198,10 @@
 /* Стили для разных кнопок действий */
 .done-button {
  background: #34C759;
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ 
  box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
 }
 
