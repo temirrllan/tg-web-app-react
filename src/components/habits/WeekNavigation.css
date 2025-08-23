@@ -15,7 +15,7 @@
 
 .week-navigation__scroll {
   display: flex;
-  gap: 12px;
+  gap: 6px;
   padding: 4px 16px;
   min-width: min-content;
 }

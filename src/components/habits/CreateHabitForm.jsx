@@ -372,7 +372,7 @@ const getTimeLabel = () => {
                </div>
              )}
               {/* Reminder time - СТАРЫЙ ДИЗАЙН С ПРАВИЛЬНЫМ ФУНКЦИОНАЛОМ */}
-             <div className="form-section" ref={timeRef}>
+             <div className="form-section-row" ref={timeRef}>
                <span className="form-label-title">Ping me</span>
                <button
                  type="button"
@@ -441,7 +441,7 @@ const getTimeLabel = () => {
            <p className="form-hint">
              {formData.is_bad_habit 
                ? 'For bad habits, you only need to set name and goal.'
-               : 'Helping text for explaining about good habits.'}
+               : 'Helping text for explaining about bad habit switcher.'}
            </p>
          </div>
        </div>
