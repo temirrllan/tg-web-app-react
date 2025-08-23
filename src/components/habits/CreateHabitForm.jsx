@@ -221,7 +221,7 @@ const getTimeLabel = () => {
           <div className="form-section">
             <label className="form-label">
               <span className="form-label-title">Goal</span>
-              <textarea
+              <input
                 className="form-textarea"
                 placeholder="What's your motivation?"
                 value={formData.goal}
