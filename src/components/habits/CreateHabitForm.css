@@ -27,7 +27,14 @@
   margin-bottom: 16px;
   position: relative;
 }
-
+.form-section-row{
+  margin-bottom: 16px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  
+}
 .form-label {
   display: block;
 }

@@ -290,7 +290,7 @@ const getTimeLabel = () => {
               )} */}
 
               {/* Repeat */}
-              <div className="form-section" ref={repeatRef}>
+              <div className="form-section-row" ref={repeatRef}>
                 <span className="form-label-title">Repeat</span>
                 <button
                   type="button"
