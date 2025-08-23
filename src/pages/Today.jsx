@@ -77,34 +77,26 @@ const Today = () => {
     const todayStr = getTodayDate();
     
     if (date === todayStr) {
-      const filteredHabits = getHabitsForDate(todayHabits);
-      setDateHabits(filteredHabits);
-      
-      const completedCount = filteredHabits.filter(h => h.today_status === 'completed').length;
-      setDateStats({ 
-        completed: completedCount, 
-        total: filteredHabits.length 
-      });
+      // Для сегодня используем уже загруженные привычки
+      setDateHabits(todayHabits);
+      setDateStats(stats);
     } else {
+      // Загружаем привычки для выбранной даты
       setDateLoading(true);
       try {
-        const result = await loadHabitsForDate?.(date);
+        const result = await loadHabitsForDate(date);
         if (result) {
-          const filteredHabits = getHabitsForDate(result.habits || []);
-          setDateHabits(filteredHabits);
+          setDateHabits(result.habits || []);
+          setDateStats(result.stats || { completed: 0, total: result.habits?.length || 0 });
           
-          const completedCount = filteredHabits.filter(h => h.today_status === 'completed').length;
-          setDateStats({ 
-            completed: completedCount, 
-            total: filteredHabits.length 
+          console.log('Loaded habits for selected date:', {
+            date,
+            habitsCount: result.habits?.length,
+            habits: result.habits?.map(h => ({
+              title: h.title,
+              schedule_days: h.schedule_days
+            }))
           });
-        } else {
-          const filteredHabits = getHabitsForDate(todayHabits.map(h => ({
-            ...h,
-            today_status: 'pending'
-          })));
-          setDateHabits(filteredHabits);
-          setDateStats({ completed: 0, total: filteredHabits.length });
         }
       } catch (error) {
         console.error('Failed to load habits for date:', error);
@@ -120,33 +112,22 @@ const Today = () => {
   useEffect(() => {
     const today = getTodayDate();
     if (selectedDate === today) {
-      const filteredHabits = getHabitsForDate(todayHabits);
-      setDateHabits(filteredHabits);
-      
-      const completedCount = filteredHabits.filter(h => h.today_status === 'completed').length;
-      setDateStats({ 
-        completed: completedCount, 
-        total: filteredHabits.length 
-      });
+      setDateHabits(todayHabits);
+      setDateStats(stats);
     }
-  }, [todayHabits, selectedDate, getHabitsForDate]);
+  }, [todayHabits, stats, selectedDate]);
 
   // Инициализация при загрузке
   useEffect(() => {
-    const filteredHabits = getHabitsForDate(todayHabits);
-    setDateHabits(filteredHabits);
-    
-    const completedCount = filteredHabits.filter(h => h.today_status === 'completed').length;
-    setDateStats({ 
-      completed: completedCount, 
-      total: filteredHabits.length 
-    });
-  }, []);
+    setDateHabits(todayHabits);
+    setDateStats(stats);
+  }, [todayHabits, stats]);
 
   const handleCreateHabit = async (habitData) => {
     try {
       const currentCount = todayHabits.length;
       
+      console.log('Creating new habit:', habitData);
       await createHabit(habitData);
       setShowCreateForm(false);
       
@@ -159,8 +140,8 @@ const Today = () => {
     }
   };
 
-  const getMotivationalMessage = () => {
-    const currentStats = selectedDate === getTodayDate() ? dateStats : dateStats;
+ const getMotivationalMessage = () => {
+    const currentStats = selectedDate === getTodayDate() ? stats : dateStats;
     
     if (currentStats.total === 0) return "Yes U Can!";
     if (currentStats.completed === 0) return phrase.text || "Let's start!";
@@ -169,7 +150,8 @@ const Today = () => {
     return phrase.text || "Keep going!";
   };
 
-   const getDateLabel = () => {
+
+  const getDateLabel = () => {
     const todayStr = getTodayDate();
     const yesterdayStr = getYesterdayDate();
     
@@ -191,6 +173,7 @@ const Today = () => {
     })}`;
   };
 
+
   // Показываем подсказку при первом запуске или после создания первой привычки
   useEffect(() => {
     const hasSeenHint = localStorage.getItem('hasSeenSwipeHint');
@@ -201,7 +184,6 @@ const Today = () => {
         setTimeout(() => {
           setShowSwipeHint(true);
           localStorage.setItem('hasSeenSwipeHint', 'true');
-          console.log('Swipe hint shown');
         }, 1000);
       }
       

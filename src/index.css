@@ -168,3 +168,51 @@ input:focus, textarea:focus, select:focus {
   background: transparent;
   display: none;
 }
+
+/* Специальные стили для мобильных устройств */
+@media (hover: none) and (pointer: coarse) {
+  /* Это мобильное устройство */
+  
+  .habit-card-container {
+    /* Разрешаем только вертикальный скролл страницы */
+    touch-action: pan-y;
+  }
+  
+  .habit-card {
+    /* Убираем задержку касания на iOS */
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Оптимизация для плавности */
+  .today__habits {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  
+  /* Предотвращаем зум при двойном тапе */
+  button,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
+  }
+}
+
+/* Фикс для корректной работы свайпов */
+.swipeable {
+  touch-action: pan-y !important;
+}
+
+/* Убираем возможность выделения текста на мобильных */
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* Фикс для iOS Safari */
+@supports (-webkit-overflow-scrolling: touch) {
+  .habit-card-wrapper {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+}

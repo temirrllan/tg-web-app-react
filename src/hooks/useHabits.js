@@ -20,16 +20,39 @@ export const useHabits = () => {
         ? data
         : (data?.habits || data?.items || data?.today || []);
 
-      const normalizedStats = data?.stats || { 
-        completed: normalizedHabits.filter(h => h.today_status === 'completed').length, 
-        total: normalizedHabits.length 
+      // Фильтруем привычки по текущему дню недели
+      const today = new Date();
+      const currentDayOfWeek = today.getDay() || 7; // 0 (Sunday) = 7
+      
+      const filteredHabits = normalizedHabits.filter(habit => {
+        // Если нет расписания, показываем всегда
+        if (!habit.schedule_days || habit.schedule_days.length === 0) {
+          return true;
+        }
+        // Проверяем, входит ли сегодняшний день в расписание
+        return habit.schedule_days.includes(currentDayOfWeek);
+      });
+
+      const normalizedStats = {
+        completed: filteredHabits.filter(h => h.today_status === 'completed').length,
+        total: filteredHabits.length
       };
       const normalizedPhrase = data?.phrase || { text: '', emoji: '' };
 
-      setTodayHabits(normalizedHabits);
+      setTodayHabits(filteredHabits);
       setStats(normalizedStats);
       setPhrase(normalizedPhrase);
       setError(null);
+      
+      console.log('Loaded habits for today:', {
+        dayOfWeek: currentDayOfWeek,
+        totalHabits: normalizedHabits.length,
+        filteredHabits: filteredHabits.length,
+        habits: filteredHabits.map(h => ({
+          title: h.title,
+          schedule_days: h.schedule_days
+        }))
+      });
     } catch (err) {
       console.error('loadTodayHabits error:', err);
       setError(err.message || 'Failed to load today habits');
@@ -41,30 +64,59 @@ export const useHabits = () => {
   // Загрузка привычек для конкретной даты
   const loadHabitsForDate = useCallback(async (date) => {
     try {
-      // Если есть метод на бэкенде
+      const targetDate = new Date(date + 'T12:00:00');
+      const dayOfWeek = targetDate.getDay() || 7; // 0 (Sunday) = 7
+      
+      console.log('Loading habits for date:', {
+        date,
+        dayOfWeek,
+        dayName: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][targetDate.getDay()]
+      });
+
+      // Если есть метод на бэкенде для получения привычек по дате
       if (habitService.getHabitsForDate) {
         const data = await habitService.getHabitsForDate(date);
         const habits = data?.habits || [];
+        
+        // Фильтруем по дню недели
+        const filteredHabits = habits.filter(habit => {
+          if (!habit.schedule_days || habit.schedule_days.length === 0) {
+            return true;
+          }
+          return habit.schedule_days.includes(dayOfWeek);
+        });
+        
         const stats = {
-          completed: habits.filter(h => h.today_status === 'completed').length,
-          total: habits.length
+          completed: filteredHabits.filter(h => h.today_status === 'completed').length,
+          total: filteredHabits.length
         };
-        return { habits, stats };
+        
+        return { habits: filteredHabits, stats };
       }
       
-      // Иначе возвращаем привычки без статусов
+      // Иначе используем сегодняшние привычки, но фильтруем по дню
+      const allHabits = await habitService.getAllHabits();
+      const habitsData = allHabits?.habits || [];
+      
+      const filteredHabits = habitsData.filter(habit => {
+        if (!habit.schedule_days || habit.schedule_days.length === 0) {
+          return true;
+        }
+        return habit.schedule_days.includes(dayOfWeek);
+      }).map(h => ({
+        ...h,
+        today_status: 'pending' // Сбрасываем статус для других дней
+      }));
+      
       return {
-        habits: todayHabits.map(h => ({
-          ...h,
-          today_status: 'pending'
-        })),
-        stats: { completed: 0, total: todayHabits.length }
+        habits: filteredHabits,
+        stats: { completed: 0, total: filteredHabits.length }
       };
     } catch (err) {
       console.error('loadHabitsForDate error:', err);
       throw err;
     }
-  }, [todayHabits]);
+  }, []);
 
   // Загрузка всех привычек
   const loadAllHabits = useCallback(async () => {
@@ -113,6 +165,7 @@ export const useHabits = () => {
   // Создание привычки
   const createHabit = useCallback(async (habitData) => {
     try {
+      console.log('Creating habit with data:', habitData);
       const result = await habitService.createHabit(habitData);
       await loadTodayHabits();
       await loadAllHabits();
