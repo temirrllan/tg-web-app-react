@@ -243,7 +243,8 @@
   background: #A7D96C;
   display: flex;
  align-items: center;
- justify-content: space-between;
+ /* justify-content: space-between; */
+ flex-direction: row;
   /* box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3); */
   color: #1D1D1F;
 }
@@ -253,7 +254,8 @@
   /* box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3); */
   display: flex;
  align-items: center;
- justify-content: space-between;
+ flex-direction: row;
+ /* justify-content: space-between; */
  color: #FFFFFF;
 }
 
