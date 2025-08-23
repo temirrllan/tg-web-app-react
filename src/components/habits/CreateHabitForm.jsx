@@ -372,7 +372,7 @@ const getTimeLabel = () => {
                </div>
              )}
               {/* Reminder time - СТАРЫЙ ДИЗАЙН С ПРАВИЛЬНЫМ ФУНКЦИОНАЛОМ */}
-             <div className="form-section-row" ref={timeRef}>
+             <div className="form-section-row2" ref={timeRef}>
                <span className="form-label-title">Ping me</span>
                <button
                  type="button"

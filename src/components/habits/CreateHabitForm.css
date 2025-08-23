@@ -33,6 +33,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 124px;
+}
+.form-section-row2{
+  margin-bottom: 16px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 118px;
 }
 .form-label {
@@ -124,7 +132,7 @@
   border-radius: 16px;
   cursor: pointer;
   transition: all 0.2s;
-  min-width: 100px;
+  /* min-width: 100px; */
   flex-shrink: 0;
 }
 
