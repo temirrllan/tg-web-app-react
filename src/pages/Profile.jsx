@@ -1,5 +1,7 @@
 import React from 'react';
 import './Profile.css';
+import Subscription from './Subscription';
+  const [showSubscription, setShowSubscription] = useState(false);
 
 const Profile = ({ onClose }) => {
   const tg = window.Telegram?.WebApp;
@@ -26,7 +28,7 @@ const Profile = ({ onClose }) => {
     // Здесь можно добавить логику для каждого пункта меню
     switch(itemId) {
       case 'subscription':
-        // Открыть страницу подписки
+         setShowSubscription(true);
         break;
       case 'settings':
         // Открыть настройки
@@ -56,7 +58,9 @@ const Profile = ({ onClose }) => {
         break;
     }
   };
-
+ if (showSubscription) {
+    return <Subscription onClose={() => setShowSubscription(false)} />;
+  } 
   return (
     <div className="profile">
       <div className="profile__header">
