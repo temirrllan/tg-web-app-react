@@ -1,96 +1,160 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './WeekNavigation.css';
 
 const WeekNavigation = ({ selectedDate, onDateSelect }) => {
-  const scrollRef = useRef(null);
-  const todayRef = useRef(null);
+  const [weekDates, setWeekDates] = useState([]);
+  const scrollContainerRef = useRef(null);
   
-  // Получаем дни относительно сегодня
-  const getDaysAroundToday = () => {
-    const days = [];
-    const today = new Date();
-    // Сбрасываем время для корректного сравнения дат
-    today.setHours(0, 0, 0, 0);
-    
-    // Показываем 3 дня до и 3 дня после сегодня
-    for (let i = -3; i <= 3; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
-      
-      // Форматируем дату в строку для сравнения
-      const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-      
-      const isToday = i === 0;
-      const isYesterday = i === -1;
-      
-      days.push({
-        date: date,
-        dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
-        dayNumber: date.getDate(),
-        isToday: isToday,
-        isYesterday: isYesterday,
-        isPast: i < -1,
-        isFuture: i > 0,
-        isEditable: isToday || isYesterday,
-        dateString: dateString
-      });
-    }
-    
-    return days;
+  // Получаем начало недели (понедельник)
+  const getWeekStart = (date) => {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Корректировка для воскресенья
+    return new Date(d.setDate(diff));
   };
   
-  const days = getDaysAroundToday();
-  
-  // Автоматический скролл к Today при загрузке
-  useEffect(() => {
-    if (todayRef.current && scrollRef.current) {
-      setTimeout(() => {
-        const container = scrollRef.current;
-        const todayElement = todayRef.current;
-        const containerWidth = container.offsetWidth;
-        const todayWidth = todayElement.offsetWidth;
-        const todayLeft = todayElement.offsetLeft;
-        
-        // Центрируем Today
-        container.scrollLeft = todayLeft - (containerWidth / 2) + (todayWidth / 2);
-      }, 100);
+  // Генерируем даты текущей недели
+  const generateWeekDates = () => {
+    const today = new Date();
+    const weekStart = getWeekStart(today);
+    const dates = [];
+    
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(weekStart);
+      date.setDate(weekStart.getDate() + i);
+      dates.push(date);
     }
+    
+    return dates;
+  };
+  
+  // Форматирование даты для отображения
+  const formatDate = (date) => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const dateStr = date.toISOString().split('T')[0];
+    const todayStr = today.toISOString().split('T')[0];
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    
+    if (dateStr === todayStr) return 'Today';
+    if (dateStr === yesterdayStr) return 'Yesterday';
+    if (dateStr === tomorrowStr) return 'Tomorrow';
+    
+    return date.toLocaleDateString('en-US', { weekday: 'short' });
+  };
+  
+  // Форматирование числа месяца
+  const formatDay = (date) => {
+    return date.getDate();
+  };
+  
+  // Проверка, можно ли редактировать день
+  const isEditableDate = (date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const compareDate = new Date(date);
+    compareDate.setHours(0, 0, 0, 0);
+    
+    return compareDate >= yesterday && compareDate <= today;
+  };
+  
+  // Проверка, является ли день будущим
+  const isFutureDate = (date) => {
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    return date > today;
+  };
+  
+  // Инициализация недели
+  useEffect(() => {
+    const dates = generateWeekDates();
+    setWeekDates(dates);
+    
+    // Обновляем неделю при наступлении нового понедельника
+    const checkNewWeek = setInterval(() => {
+      const today = new Date();
+      if (today.getDay() === 1 && today.getHours() === 0 && today.getMinutes() === 0) {
+        const newDates = generateWeekDates();
+        setWeekDates(newDates);
+      }
+    }, 60000); // Проверяем каждую минуту
+    
+    return () => clearInterval(checkNewWeek);
   }, []);
   
-  const formatDayLabel = (day) => {
-    if (day.isToday) return 'Today';
-    if (day.isYesterday) return 'Yesterday';
-    return `${day.dayName} ${day.dayNumber}`;
+  // Автоскролл к сегодняшнему дню при загрузке
+  useEffect(() => {
+    if (scrollContainerRef.current && weekDates.length > 0) {
+      const today = new Date();
+      const todayIndex = weekDates.findIndex(d => 
+        d.toISOString().split('T')[0] === today.toISOString().split('T')[0]
+      );
+      
+      if (todayIndex !== -1) {
+        const dayElement = scrollContainerRef.current.children[0]?.children[todayIndex];
+        if (dayElement) {
+          setTimeout(() => {
+            dayElement.scrollIntoView({ 
+              behavior: 'smooth', 
+              inline: 'center',
+              block: 'nearest'
+            });
+          }, 100);
+        }
+      }
+    }
+  }, [weekDates]);
+  
+  const handleDateClick = (date) => {
+    const dateStr = date.toISOString().split('T')[0];
+    const isEditable = isEditableDate(date);
+    onDateSelect(dateStr, isEditable);
   };
   
-  const handleDayClick = (day) => {
-    console.log('Selected date:', day.dateString, 'Is Today:', day.isToday);
-    onDateSelect(day.dateString, day.isEditable);
+  const isDateSelected = (date) => {
+    return date.toISOString().split('T')[0] === selectedDate;
+  };
+  
+  const isToday = (date) => {
+    const today = new Date();
+    return date.toISOString().split('T')[0] === today.toISOString().split('T')[0];
   };
   
   return (
-    <div className="week-navigation" ref={scrollRef}>
-      <div className="week-navigation__scroll">
-        {days.map((day) => (
-          <button
-            key={day.dateString}
-            ref={day.isToday ? todayRef : null}
-            className={`week-navigation__day ${
-              selectedDate === day.dateString ? 'week-navigation__day--active' : ''
-            } ${
-              day.isToday ? 'week-navigation__day--today' : ''
-            } ${
-              day.isYesterday ? 'week-navigation__day--yesterday' : ''
-            } ${
-              !day.isEditable && !day.isFuture ? 'week-navigation__day--past' : ''
-            } ${
-              day.isFuture ? 'week-navigation__day--future' : ''
-            }`}
-            onClick={() => handleDayClick(day)}
-          >
-            {formatDayLabel(day)}
-          </button>
-        ))}
+    <div className="week-navigation">
+      <div className="week-navigation__container" ref={scrollContainerRef}>
+        <div className="week-navigation__scroll">
+          {weekDates.map((date, index) => {
+            const isSelected = isDateSelected(date);
+            const isTodayDate = isToday(date);
+            const isEditable = isEditableDate(date);
+            const isFuture = isFutureDate(date);
+            
+            return (
+              <button
+                key={index}
+                className={`week-navigation__day ${isSelected ? 'selected' : ''} ${isTodayDate ? 'today' : ''} ${!isEditable && !isFuture ? 'disabled' : ''} ${isFuture ? 'future' : ''}`}
+                onClick={() => handleDateClick(date)}
+                disabled={isFuture}
+              >
+                <span className="week-navigation__day-name">
+                  {formatDate(date)}
+                </span>
+                <span className="week-navigation__day-number">
+                  {formatDay(date)}
+                </span>
+                {isTodayDate && <span className="week-navigation__today-dot"></span>}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

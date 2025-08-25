@@ -1,7 +1,8 @@
 import React from 'react';
 import './Profile.css';
-
+import { useNavigation } from '../hooks/useNavigation';
 const Profile = ({ onClose }) => {
+  useNavigation(onClose);
   const tg = window.Telegram?.WebApp;
   const user = tg?.initDataUnsafe?.user || {
     first_name: 'Test',

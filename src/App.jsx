@@ -14,7 +14,19 @@ function App() {
   const [error, setError] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-
+const { tg } = useTelegram();
+useEffect(() => {
+    if (tg) {
+      // Расширяем приложение на весь экран
+      tg.expand();
+      
+      // Включаем кнопку закрытия по умолчанию
+      tg.enableClosingConfirmation();
+      
+      // Готовность приложения
+      tg.ready();
+    }
+  }, [tg]);
   useEffect(() => {
     const initAuth = async () => {
       try {

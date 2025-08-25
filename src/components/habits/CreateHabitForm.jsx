@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { habitService } from '../../services/habits';
 import { DAYS_OF_WEEK } from '../../utils/constants';
 import './CreateHabitForm.css';
+import { useNavigation } from '../../hooks/useNavigation';
 
 const CreateHabitForm = ({ onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
@@ -16,7 +17,8 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
   // Refs для обработки кликов вне элементов
   const repeatRef = useRef(null);
   const timeRef = useRef(null);
-  
+    useNavigation(onClose);
+
   // Состояние для анимации появления блока "On which days"
   const [showDaysAnimation, setShowDaysAnimation] = useState(false);
 
