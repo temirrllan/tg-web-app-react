@@ -8,25 +8,32 @@ import Loader from './components/common/Loader';
 import './App.css';
 
 function App() {
-  const { user: tgUser, webApp, isReady, isLoading } = useTelegram();
+  const { tg, user: tgUser, webApp, isReady, isLoading } = useTelegram();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-const { tg } = useTelegram();
-useEffect(() => {
+
+  // Инициализация Telegram WebApp
+  useEffect(() => {
     if (tg) {
       // Расширяем приложение на весь экран
       tg.expand();
       
-      // Включаем кнопку закрытия по умолчанию
-      tg.enableClosingConfirmation();
+      // НЕ включаем enableClosingConfirmation здесь, чтобы не показывалась кнопка Cancel
+      // tg.enableClosingConfirmation(); // Убираем эту строку
       
       // Готовность приложения
       tg.ready();
+      
+      // Скрываем BackButton по умолчанию (будет показан только на вложенных страницах)
+      if (tg.BackButton) {
+        tg.BackButton.hide();
+      }
     }
   }, [tg]);
+
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -45,7 +52,7 @@ useEffect(() => {
           environment: isProduction ? 'production' : 'development'
         });
 
-        const response = await authenticateUser(webApp.initData, tgUser);
+        const response = await authenticateUser(webApp?.initData, tgUser);
         
         if (response.success) {
           setUser(response.user);
