@@ -10,77 +10,106 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
     const d = new Date(date);
     const day = d.getDay();
     const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Корректировка для воскресенья
-    return new Date(d.setDate(diff));
+    const weekStart = new Date(d.setDate(diff));
+    weekStart.setHours(12, 0, 0, 0); // Устанавливаем полдень для избежания проблем с часовыми поясами
+    return weekStart;
   };
   
   // Генерируем даты текущей недели
   const generateWeekDates = () => {
     const today = new Date();
+    today.setHours(12, 0, 0, 0); // Устанавливаем полдень
     const weekStart = getWeekStart(today);
     const dates = [];
     
     for (let i = 0; i < 7; i++) {
       const date = new Date(weekStart);
       date.setDate(weekStart.getDate() + i);
+      date.setHours(12, 0, 0, 0); // Устанавливаем полдень для каждой даты
       dates.push(date);
     }
     
     return dates;
   };
   
+  // Форматирование даты в строку YYYY-MM-DD
+  const formatDateString = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
   // Форматирование даты для отображения
   const formatDate = (date) => {
     const today = new Date();
+    today.setHours(12, 0, 0, 0);
+    
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
+    
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     
-    const dateStr = date.toISOString().split('T')[0];
-    const todayStr = today.toISOString().split('T')[0];
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
-    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    const compareDate = new Date(date);
+    compareDate.setHours(12, 0, 0, 0);
+    
+    // Сравниваем даты по строковому представлению
+    const dateStr = formatDateString(compareDate);
+    const todayStr = formatDateString(today);
+    const yesterdayStr = formatDateString(yesterday);
+    const tomorrowStr = formatDateString(tomorrow);
     
     if (dateStr === todayStr) return 'Today';
     if (dateStr === yesterdayStr) return 'Yesterday';
     if (dateStr === tomorrowStr) return 'Tomorrow';
     
     // Для остальных дней показываем день недели и число
-    const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-    const dayNumber = date.getDate();
+    const dayName = compareDate.toLocaleDateString('en-US', { weekday: 'short' });
+    const dayNumber = compareDate.getDate();
     return `${dayName} ${dayNumber}`;
   };
   
   // Проверка, можно ли редактировать день (только сегодня и вчера)
   const isEditableDate = (date) => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setHours(12, 0, 0, 0);
+    
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
+    
     const compareDate = new Date(date);
-    compareDate.setHours(0, 0, 0, 0);
+    compareDate.setHours(12, 0, 0, 0);
+    
+    const dateStr = formatDateString(compareDate);
+    const todayStr = formatDateString(today);
+    const yesterdayStr = formatDateString(yesterday);
     
     // Можно редактировать только сегодня и вчера
-    return compareDate.getTime() === today.getTime() || 
-           compareDate.getTime() === yesterday.getTime();
+    return dateStr === todayStr || dateStr === yesterdayStr;
   };
   
   // Проверка, является ли день будущим
   const isFutureDate = (date) => {
     const today = new Date();
-    today.setHours(23, 59, 59, 999);
-    return date > today;
+    today.setHours(12, 0, 0, 0);
+    
+    const compareDate = new Date(date);
+    compareDate.setHours(12, 0, 0, 0);
+    
+    return compareDate > today;
   };
   
   // Проверка, является ли день прошедшим (кроме вчера)
   const isPastDate = (date) => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setHours(12, 0, 0, 0);
+    
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    yesterday.setHours(0, 0, 0, 0);
+    
     const compareDate = new Date(date);
-    compareDate.setHours(0, 0, 0, 0);
+    compareDate.setHours(12, 0, 0, 0);
     
     // Прошедшие дни - это все дни до вчерашнего (не включая вчера)
     return compareDate < yesterday;
@@ -109,8 +138,11 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
   useEffect(() => {
     if (scrollContainerRef.current && weekDates.length > 0) {
       const today = new Date();
+      today.setHours(12, 0, 0, 0);
+      const todayStr = formatDateString(today);
+      
       const todayIndex = weekDates.findIndex(d => 
-        d.toISOString().split('T')[0] === today.toISOString().split('T')[0]
+        formatDateString(d) === todayStr
       );
       
       if (todayIndex !== -1) {
@@ -130,7 +162,7 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
   }, [weekDates]);
   
   const handleDateClick = (date) => {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = formatDateString(date);
     const isEditable = isEditableDate(date);
     
     console.log('Date selected:', dateStr, 'Editable:', isEditable);
@@ -140,18 +172,21 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
   };
   
   const isDateSelected = (date) => {
-    return date.toISOString().split('T')[0] === selectedDate;
+    return formatDateString(date) === selectedDate;
   };
   
   const isToday = (date) => {
     const today = new Date();
-    return date.toISOString().split('T')[0] === today.toISOString().split('T')[0];
+    today.setHours(12, 0, 0, 0);
+    return formatDateString(date) === formatDateString(today);
   };
   
   const isYesterday = (date) => {
-    const yesterday = new Date();
+    const today = new Date();
+    today.setHours(12, 0, 0, 0);
+    const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    return date.toISOString().split('T')[0] === yesterday.toISOString().split('T')[0];
+    return formatDateString(date) === formatDateString(yesterday);
   };
   
   // Получение классов для стилизации
@@ -180,6 +215,20 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
     
     return classes.join(' ');
   };
+  
+  // Для отладки - выводим текущие даты
+  useEffect(() => {
+    if (weekDates.length > 0) {
+      console.log('Week dates:', weekDates.map(d => ({
+        date: formatDateString(d),
+        display: formatDate(d),
+        isToday: isToday(d),
+        isYesterday: isYesterday(d),
+        isFuture: isFutureDate(d),
+        isPast: isPastDate(d)
+      })));
+    }
+  }, [weekDates]);
   
   return (
     <div className="week-navigation">
