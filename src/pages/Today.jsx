@@ -60,31 +60,19 @@ const Today = () => {
     
     const todayStr = getTodayDate();
     
-    // Проверяем, не является ли дата будущей
-    const selectedDateTime = new Date(date + 'T12:00:00');
-    const now = new Date();
-    now.setHours(23, 59, 59, 999);
-    const isFuture = selectedDateTime > now;
-    
-    if (isFuture) {
-      // Для будущих дат показываем пустой список
-      setDateHabits([]);
-      setDateStats({ completed: 0, total: 0 });
-      setDateLoading(false);
-      return;
-    }
-    
     if (date === todayStr) {
       // Для сегодня используем уже загруженные привычки
       setDateHabits(todayHabits);
       setDateStats(stats);
     } else {
-      // Загружаем привычки для выбранной даты (включая прошедшие дни)
+      // Загружаем привычки для выбранной даты
+      // Загружаем для ЛЮБОГО дня недели, включая будущие
       setDateLoading(true);
       try {
         const result = await loadHabitsForDate(date);
         if (result) {
           setDateHabits(result.habits || []);
+          // Для будущих дней статистика всегда 0
           setDateStats(result.stats || { completed: 0, total: result.habits?.length || 0 });
           
           console.log('Loaded habits for selected date:', {
@@ -125,6 +113,15 @@ const Today = () => {
       console.log('Creating new habit:', habitData);
       await createHabit(habitData);
       setShowCreateForm(false);
+      
+      // После создания привычки перезагружаем привычки для текущей даты
+      if (selectedDate !== getTodayDate()) {
+        const result = await loadHabitsForDate(selectedDate);
+        if (result) {
+          setDateHabits(result.habits || []);
+          setDateStats(result.stats || { completed: 0, total: result.habits?.length || 0 });
+        }
+      }
       
       if (currentCount === 0) {
         localStorage.removeItem('hasSeenSwipeHint');
@@ -168,12 +165,35 @@ const Today = () => {
     return `for ${weekday} ${dayNumber}`;
   };
 
-  // Проверка, является ли дата будущей
-  const isFutureDate = (dateStr) => {
-    const date = new Date(dateStr + 'T12:00:00');
+  // Проверка, является ли дата в пределах текущей недели
+  const isCurrentWeekDate = (dateStr) => {
+    const [year, month, day] = dateStr.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 12, 0, 0);
     const today = new Date();
-    today.setHours(23, 59, 59, 999);
-    return date > today;
+    today.setHours(12, 0, 0, 0);
+    
+    // Получаем начало недели (понедельник)
+    const getWeekStart = (d) => {
+      const day = d.getDay();
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+      const weekStart = new Date(d.setDate(diff));
+      weekStart.setHours(0, 0, 0, 0);
+      return weekStart;
+    };
+    
+    // Получаем конец недели (воскресенье)
+    const getWeekEnd = (d) => {
+      const weekStart = getWeekStart(new Date(d));
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      weekEnd.setHours(23, 59, 59, 999);
+      return weekEnd;
+    };
+    
+    const weekStart = getWeekStart(new Date(today));
+    const weekEnd = getWeekEnd(new Date(today));
+    
+    return date >= weekStart && date <= weekEnd;
   };
 
   // Показываем подсказку при первом запуске
@@ -227,6 +247,9 @@ const Today = () => {
   const displayHabits = dateLoading ? [] : dateHabits;
   const displayStats = selectedDate === getTodayDate() ? stats : dateStats;
 
+  // Определяем, нужно ли показывать уведомление о режиме просмотра
+  const showReadOnlyNotice = !isEditableDate && isCurrentWeekDate(selectedDate);
+
   return (
     <>
       <Layout>
@@ -254,12 +277,10 @@ const Today = () => {
             onDateSelect={handleDateSelect}
           />
 
-          {!isEditableDate && (
+          {showReadOnlyNotice && (
             <div className="today__readonly-notice">
               <span>
-                📅 {isFutureDate(selectedDate) 
-                  ? 'Cannot view future habits' 
-                  : 'View only mode - you can mark habits only for today and yesterday'}
+                📅 View only mode - you can mark habits only for today and yesterday
               </span>
             </div>
           )}
@@ -267,12 +288,6 @@ const Today = () => {
           {dateLoading ? (
             <div className="today__habits-loading">
               <Loader size="medium" />
-            </div>
-          ) : isFutureDate(selectedDate) ? (
-            <div className="today__habits">
-              <p style={{ textAlign: 'center', color: '#8E8E93', padding: '40px 20px' }}>
-                Habits for future dates will appear when the day comes
-              </p>
             </div>
           ) : displayHabits.length === 0 ? (
             <EmptyState onCreateClick={() => setShowCreateForm(true)} />
