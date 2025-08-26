@@ -13,6 +13,17 @@
   display: none;
 }
 
+.week-navigation__container {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.week-navigation__container::-webkit-scrollbar {
+  display: none;
+}
+
 .week-navigation__scroll {
   display: flex;
   gap: 6px;
@@ -32,50 +43,84 @@
   transition: all 0.2s;
   white-space: nowrap;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
 }
 
-
-.week-navigation__day--active {
+/* Активный выбранный день */
+.week-navigation__day.selected {
   background: #A7D96C;
   color: white;
   font-weight: 600;
 }
 
-.week-navigation__day--active {
-  background: #A7D96C;
-  color: white;
-  border-color: #A7D96C;
-}
-
-.week-navigation__day--today {
+/* Сегодняшний день */
+.week-navigation__day.today {
   font-weight: 700;
   color: #111827;
 }
-.week-navigation__day--past {
-  opacity: 0.5;
-}
-.week-navigation__day--today:not(.week-navigation__day--active) {
+
+.week-navigation__day.today:not(.selected) {
   color: #000;
 }
 
-
-.week-navigation__day--yesterday {
+/* Вчерашний день - используем для yesterday */
+.week-navigation__day-name:contains("Yesterday") {
   color: #374151;
 }
 
-.week-navigation__day--readonly {
-  opacity: 0.7;
+/* Прошедшие дни (disabled) */
+.week-navigation__day.disabled {
+  opacity: 0.5;
   cursor: default;
 }
 
-.week-navigation__day--readonly:hover {
+.week-navigation__day.disabled:hover {
+  background: transparent;
+}
+
+/* Будущие дни */
+.week-navigation__day.future {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.week-navigation__day.future:hover {
+  background: transparent;
+}
+
+/* Элементы внутри кнопки дня */
+.week-navigation__day-name {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.week-navigation__day-number {
+  display: block;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* Точка для обозначения сегодня */
+.week-navigation__today-dot {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  background: #A7D96C;
+  border-radius: 50%;
+}
+
+.week-navigation__day.selected .week-navigation__today-dot {
   background: white;
 }
 
-.week-navigation__day-label {
-  display: block;
-}
-
+/* Badge если понадобится в будущем */
 .week-navigation__day-badge {
   position: absolute;
   top: -4px;
