@@ -1,16 +1,16 @@
-import React, { useEffect, useState, useMemo  } from "react";
+import React, { useEffect, useState } from "react";
 import Layout from "../components/layout/Layout";
 import Header from "../components/layout/Header";
 import HabitCard from "../components/habits/HabitCard";
 import EmptyState from "../components/habits/EmptyState";
 import CreateHabitForm from "../components/habits/CreateHabitForm";
 import WeekNavigation from "../components/habits/WeekNavigation";
+import Profile from "./Profile";
 import Loader from "../components/common/Loader";
 import { useHabits } from "../hooks/useHabits";
 import { useTelegram } from "../hooks/useTelegram";
 import "./Today.css";
 import SwipeHint from '../components/habits/SwipeHint';
-import Profile from "./Profile";
 
 const Today = () => {
   const { user } = useTelegram();
@@ -29,15 +29,14 @@ const Today = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   
-  // Всегда инициализируем с сегодняшней датой
   const getTodayDate = () => {
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
-  }; 
-   // Функция для получения вчерашней даты
+  };
+  
   const getYesterdayDate = () => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
@@ -46,27 +45,12 @@ const Today = () => {
     const day = String(yesterday.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
+  
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
   const [isEditableDate, setIsEditableDate] = useState(true);
   const [dateHabits, setDateHabits] = useState([]);
   const [dateLoading, setDateLoading] = useState(false);
   const [dateStats, setDateStats] = useState({ completed: 0, total: 0 });
-// Фильтруем привычки по выбранному дню недели
-  const getHabitsForDate = useMemo(() => {
-    const date = new Date(selectedDate + 'T12:00:00');
-    const dayOfWeek = date.getDay() || 7; // 0 (Sunday) = 7
-    
-    return (habits) => {
-      return habits.filter(habit => {
-        // Если у привычки нет расписания по дням, показываем всегда
-        if (!habit.schedule_days || habit.schedule_days.length === 0) {
-          return true;
-        }
-        // Проверяем, входит ли текущий день в расписание привычки
-        return habit.schedule_days.includes(dayOfWeek);
-      });
-    };
-  }, [selectedDate]);
 
   // Обработчик выбора даты
   const handleDateSelect = async (date, isEditable) => {
@@ -76,12 +60,26 @@ const Today = () => {
     
     const todayStr = getTodayDate();
     
+    // Проверяем, не является ли дата будущей
+    const selectedDateTime = new Date(date + 'T12:00:00');
+    const now = new Date();
+    now.setHours(23, 59, 59, 999);
+    const isFuture = selectedDateTime > now;
+    
+    if (isFuture) {
+      // Для будущих дат показываем пустой список
+      setDateHabits([]);
+      setDateStats({ completed: 0, total: 0 });
+      setDateLoading(false);
+      return;
+    }
+    
     if (date === todayStr) {
       // Для сегодня используем уже загруженные привычки
       setDateHabits(todayHabits);
       setDateStats(stats);
     } else {
-      // Загружаем привычки для выбранной даты
+      // Загружаем привычки для выбранной даты (включая прошедшие дни)
       setDateLoading(true);
       try {
         const result = await loadHabitsForDate(date);
@@ -91,11 +89,8 @@ const Today = () => {
           
           console.log('Loaded habits for selected date:', {
             date,
+            isEditable,
             habitsCount: result.habits?.length,
-            habits: result.habits?.map(h => ({
-              title: h.title,
-              schedule_days: h.schedule_days
-            }))
           });
         }
       } catch (error) {
@@ -140,7 +135,7 @@ const Today = () => {
     }
   };
 
- const getMotivationalMessage = () => {
+  const getMotivationalMessage = () => {
     const currentStats = selectedDate === getTodayDate() ? stats : dateStats;
     
     if (currentStats.total === 0) return "Yes U Can!";
@@ -149,7 +144,6 @@ const Today = () => {
       return phrase.text || "Perfect day! 🎉";
     return phrase.text || "Keep going!";
   };
-
 
   const getDateLabel = () => {
     const todayStr = getTodayDate();
@@ -163,18 +157,26 @@ const Today = () => {
       return 'for yesterday';
     }
     
+    // Парсим дату
     const [year, month, day] = selectedDate.split('-');
     const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
     
-    return `for ${date.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      month: 'short', 
-      day: 'numeric' 
-    })}`;
+    // Форматируем как "Wed 27"
+    const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
+    const dayNumber = date.getDate();
+    
+    return `for ${weekday} ${dayNumber}`;
   };
 
+  // Проверка, является ли дата будущей
+  const isFutureDate = (dateStr) => {
+    const date = new Date(dateStr + 'T12:00:00');
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    return date > today;
+  };
 
-  // Показываем подсказку при первом запуске или после создания первой привычки
+  // Показываем подсказку при первом запуске
   useEffect(() => {
     const hasSeenHint = localStorage.getItem('hasSeenSwipeHint');
     const previousHabitsCount = parseInt(localStorage.getItem('previousHabitsCount') || '0');
@@ -217,11 +219,13 @@ const Today = () => {
       </Layout>
     );
   }
-if (showProfile) {
+
+  if (showProfile) {
     return <Profile onClose={() => setShowProfile(false)} />;
   }
+
   const displayHabits = dateLoading ? [] : dateHabits;
-  const displayStats = dateStats;
+  const displayStats = selectedDate === getTodayDate() ? stats : dateStats;
 
   return (
     <>
@@ -252,13 +256,23 @@ if (showProfile) {
 
           {!isEditableDate && (
             <div className="today__readonly-notice">
-              <span>📅 View only mode - you can edit only today and yesterday</span>
+              <span>
+                📅 {isFutureDate(selectedDate) 
+                  ? 'Cannot view future habits' 
+                  : 'View only mode - you can mark habits only for today and yesterday'}
+              </span>
             </div>
           )}
 
           {dateLoading ? (
             <div className="today__habits-loading">
               <Loader size="medium" />
+            </div>
+          ) : isFutureDate(selectedDate) ? (
+            <div className="today__habits">
+              <p style={{ textAlign: 'center', color: '#8E8E93', padding: '40px 20px' }}>
+                Habits for future dates will appear when the day comes
+              </p>
             </div>
           ) : displayHabits.length === 0 ? (
             <EmptyState onCreateClick={() => setShowCreateForm(true)} />
@@ -282,13 +296,11 @@ if (showProfile) {
           onClose={() => setShowSwipeHint(false)} 
         />
         
-        {/* FAB Button */}
         <button className="fab" onClick={() => setShowCreateForm(true)}>
           +
         </button>
       </Layout>
 
-      {/* Modals */}
       {showCreateForm && (
         <CreateHabitForm
           onClose={() => setShowCreateForm(false)}
