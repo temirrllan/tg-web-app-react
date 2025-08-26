@@ -9,7 +9,7 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
   const getWeekStart = (date) => {
     const d = new Date(date);
     const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Корректировка для воскресенья
     return new Date(d.setDate(diff));
   };
   
@@ -53,7 +53,7 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
     return date.getDate();
   };
   
-  // Проверка, можно ли редактировать день (только сегодня и вчера)
+  // Проверка, можно ли редактировать день
   const isEditableDate = (date) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -62,9 +62,7 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
     const compareDate = new Date(date);
     compareDate.setHours(0, 0, 0, 0);
     
-    // Можно редактировать только сегодня и вчера
-    return compareDate.getTime() === today.getTime() || 
-           compareDate.getTime() === yesterday.getTime();
+    return compareDate >= yesterday && compareDate <= today;
   };
   
   // Проверка, является ли день будущим
@@ -72,20 +70,6 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
     const today = new Date();
     today.setHours(23, 59, 59, 999);
     return date > today;
-  };
-  
-  // Проверка, является ли день прошедшим (кроме вчера)
-  const isPastDate = (date) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    yesterday.setHours(0, 0, 0, 0);
-    const compareDate = new Date(date);
-    compareDate.setHours(0, 0, 0, 0);
-    
-    // Прошедшие дни - это все дни до вчерашнего (не включая вчера)
-    return compareDate < yesterday;
   };
   
   // Инициализация недели
@@ -100,7 +84,7 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
         const newDates = generateWeekDates();
         setWeekDates(newDates);
       }
-    }, 60000);
+    }, 60000); // Проверяем каждую минуту
     
     return () => clearInterval(checkNewWeek);
   }, []);
@@ -114,7 +98,7 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
       );
       
       if (todayIndex !== -1) {
-        const dayElement = scrollContainerRef.current.children[todayIndex];
+        const dayElement = scrollContainerRef.current.children[0]?.children[todayIndex];
         if (dayElement) {
           setTimeout(() => {
             dayElement.scrollIntoView({ 
@@ -129,11 +113,8 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
   }, [weekDates]);
   
   const handleDateClick = (date) => {
-    // Не блокируем клик для будущих дней - просто показываем без возможности редактирования
     const dateStr = date.toISOString().split('T')[0];
     const isEditable = isEditableDate(date);
-    
-    // Передаем дату и флаг возможности редактирования
     onDateSelect(dateStr, isEditable);
   };
   
@@ -146,46 +127,34 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
     return date.toISOString().split('T')[0] === today.toISOString().split('T')[0];
   };
   
-  const isYesterday = (date) => {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    return date.toISOString().split('T')[0] === yesterday.toISOString().split('T')[0];
-  };
-  
   return (
     <div className="week-navigation">
-      <div className="week-navigation__scroll" ref={scrollContainerRef}>
-        {weekDates.map((date, index) => {
-          const isSelected = isDateSelected(date);
-          const isTodayDate = isToday(date);
-          const isYesterdayDate = isYesterday(date);
-          const isFuture = isFutureDate(date);
-          const isPast = isPastDate(date);
-          const isEditable = isEditableDate(date);
-          
-          // Формируем классы для стилизации
-          const classNames = [
-            'week-navigation__day',
-            isSelected && 'week-navigation__day--active',
-            isTodayDate && 'week-navigation__day--today',
-            isYesterdayDate && 'week-navigation__day--yesterday',
-            isPast && 'week-navigation__day--past',
-            !isEditable && 'week-navigation__day--readonly'
-          ].filter(Boolean).join(' ');
-          
-          return (
-            <button
-              key={index}
-              className={classNames}
-              onClick={() => handleDateClick(date)}
-              // Не блокируем кнопку - просто передаем флаг редактирования
-            >
-              <span className="week-navigation__day-label">
-                {formatDate(date)} {formatDay(date)}
-              </span>
-            </button>
-          );
-        })}
+      <div className="week-navigation__container" ref={scrollContainerRef}>
+        <div className="week-navigation__scroll">
+          {weekDates.map((date, index) => {
+            const isSelected = isDateSelected(date);
+            const isTodayDate = isToday(date);
+            const isEditable = isEditableDate(date);
+            const isFuture = isFutureDate(date);
+            
+            return (
+              <button
+                key={index}
+                className={`week-navigation__day ${isSelected ? 'selected' : ''} ${isTodayDate ? 'today' : ''} ${!isEditable && !isFuture ? 'disabled' : ''} ${isFuture ? 'future' : ''}`}
+                onClick={() => handleDateClick(date)}
+                disabled={isFuture}
+              >
+                <span className="week-navigation__day-name">
+                  {formatDate(date)}
+                </span>
+                <span className="week-navigation__day-number">
+                  {formatDay(date)}
+                </span>
+                {isTodayDate && <span className="week-navigation__today-dot"></span>}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
