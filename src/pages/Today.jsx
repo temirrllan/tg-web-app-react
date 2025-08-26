@@ -69,44 +69,56 @@ const Today = () => {
   }, [selectedDate]);
 
   // Обработчик выбора даты
-  const handleDateSelect = async (date, isEditable) => {
-    console.log('handleDateSelect:', date, 'isEditable:', isEditable);
-    setSelectedDate(date);
-    setIsEditableDate(isEditable);
-    
-    const todayStr = getTodayDate();
-    
-    if (date === todayStr) {
-      // Для сегодня используем уже загруженные привычки
-      setDateHabits(todayHabits);
-      setDateStats(stats);
-    } else {
-      // Загружаем привычки для выбранной даты
-      setDateLoading(true);
-      try {
-        const result = await loadHabitsForDate(date);
-        if (result) {
-          setDateHabits(result.habits || []);
-          setDateStats(result.stats || { completed: 0, total: result.habits?.length || 0 });
-          
-          console.log('Loaded habits for selected date:', {
-            date,
-            habitsCount: result.habits?.length,
-            habits: result.habits?.map(h => ({
-              title: h.title,
-              schedule_days: h.schedule_days
-            }))
-          });
-        }
-      } catch (error) {
-        console.error('Failed to load habits for date:', error);
-        setDateHabits([]);
-        setDateStats({ completed: 0, total: 0 });
-      } finally {
-        setDateLoading(false);
+// Обработчик выбора даты
+const handleDateSelect = async (date, isEditable) => {
+  console.log('handleDateSelect:', date, 'isEditable:', isEditable);
+  setSelectedDate(date);
+  setIsEditableDate(isEditable);
+  
+  const todayStr = getTodayDate();
+  
+  // Проверяем, не является ли дата будущей
+  const selectedDateTime = new Date(date + 'T12:00:00');
+  const now = new Date();
+  now.setHours(23, 59, 59, 999);
+  const isFuture = selectedDateTime > now;
+  
+  if (isFuture) {
+    // Для будущих дат показываем пустой список
+    setDateHabits([]);
+    setDateStats({ completed: 0, total: 0 });
+    setDateLoading(false);
+    return;
+  }
+  
+  if (date === todayStr) {
+    // Для сегодня используем уже загруженные привычки
+    setDateHabits(todayHabits);
+    setDateStats(stats);
+  } else {
+    // Загружаем привычки для выбранной даты (включая прошедшие дни)
+    setDateLoading(true);
+    try {
+      const result = await loadHabitsForDate(date);
+      if (result) {
+        setDateHabits(result.habits || []);
+        setDateStats(result.stats || { completed: 0, total: result.habits?.length || 0 });
+        
+        console.log('Loaded habits for selected date:', {
+          date,
+          isEditable,
+          habitsCount: result.habits?.length,
+        });
       }
+    } catch (error) {
+      console.error('Failed to load habits for date:', error);
+      setDateHabits([]);
+      setDateStats({ completed: 0, total: 0 });
+    } finally {
+      setDateLoading(false);
     }
-  };
+  }
+};
 
   // При изменении todayHabits обновляем dateHabits если выбран сегодня
   useEffect(() => {
@@ -222,7 +234,12 @@ if (showProfile) {
   }
   const displayHabits = dateLoading ? [] : dateHabits;
   const displayStats = dateStats;
-
+const isFutureDate = (dateStr) => {
+  const date = new Date(dateStr + 'T12:00:00');
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+  return date > today;
+};
   return (
     <>
       <Layout>
@@ -250,11 +267,14 @@ if (showProfile) {
             onDateSelect={handleDateSelect}
           />
 
-          {!isEditableDate && (
-            <div className="today__readonly-notice">
-              <span>📅 View only mode - you can edit only today and yesterday</span>
-            </div>
-          )}
+{/* Обновленное уведомление */}
+{!isEditableDate && (
+  <div className="today__readonly-notice">
+    <span>
+      📅 View only mode - you can mark habits only for today and yesterday
+    </span>
+  </div>
+)}
 
           {dateLoading ? (
             <div className="today__habits-loading">
