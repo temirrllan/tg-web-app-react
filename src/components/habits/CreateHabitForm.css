@@ -41,7 +41,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 118px;
+  gap: 100px;
 }
 .form-label {
   display: block;
