@@ -103,7 +103,11 @@
   font-size: 18px;
   font-weight: 600;
 }
-
+.week-navigation__day--active {
+  background: #A7D96C;
+  color: white;
+  font-weight: 600;
+}
 /* Точка для обозначения сегодня */
 .week-navigation__today-dot {
   position: absolute;

@@ -178,11 +178,11 @@ const handleDateSelect = async (date, isEditable) => {
     const [year, month, day] = selectedDate.split('-');
     const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
     
-    return `for ${date.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      month: 'short', 
-      day: 'numeric' 
-    })}`;
+    // Форматируем как "Wed 27"
+  const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
+  const dayNumber = date.getDate();
+  
+  return `for ${weekday} ${dayNumber}`;
   };
 
 
