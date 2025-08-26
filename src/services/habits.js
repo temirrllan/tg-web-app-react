@@ -1,4 +1,3 @@
-// tg-web-app-react/src/services/habits.js
 import api from './api';
 
 export const habitService = {
@@ -11,16 +10,33 @@ export const habitService = {
   // Все привычки пользователя
   getAllHabits: async () => {
     const { data } = await api.get('/habits');
-    console.log('All habits from API:', data);
+    console.log('All habits from API:', {
+      success: data.success,
+      count: data.habits?.length,
+      habits: data.habits?.map(h => ({
+        id: h.id,
+        title: h.title,
+        schedule_days: h.schedule_days,
+        schedule_type: h.schedule_type,
+        is_active: h.is_active
+      }))
+    });
     return data;
   },
 
   // Привычки на сегодня (с бэкенда)
   getTodayHabits: async () => {
     const { data } = await api.get('/habits/today');
+    const today = new Date();
+    const dayOfWeek = today.getDay() || 7;
+    
     console.log('Today habits from API:', {
+      today: today.toISOString().split('T')[0],
+      dayOfWeek: dayOfWeek,
+      dayName: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][today.getDay()],
       count: data?.habits?.length || 0,
       habits: data?.habits?.map(h => ({
+        id: h.id,
         title: h.title,
         schedule_days: h.schedule_days,
         today_status: h.today_status
@@ -37,16 +53,31 @@ export const habitService = {
       return data;
     } catch (error) {
       // Если endpoint не существует, возвращаем null
-      console.log('getHabitsForDate not implemented on backend');
+      console.log('getHabitsForDate not implemented on backend, will filter on frontend');
       return null;
     }
   },
 
   // Создать привычку
   createHabit: async (habitData) => {
-    console.log('Creating habit with data:', habitData);
+    console.log('Creating habit with data:', {
+      ...habitData,
+      schedule_days: habitData.schedule_days,
+      schedule_type: habitData.schedule_type
+    });
+    
     const { data } = await api.post('/habits', habitData);
-    console.log('Created habit response:', data);
+    
+    console.log('Created habit response:', {
+      success: data.success,
+      habit: {
+        id: data.habit?.id,
+        title: data.habit?.title,
+        schedule_days: data.habit?.schedule_days,
+        schedule_type: data.habit?.schedule_type
+      }
+    });
+    
     return data;
   },
 
