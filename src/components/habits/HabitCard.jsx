@@ -230,18 +230,18 @@ const HabitCard = ({ habit, onMark, onUnmark, readOnly = false }) => {
   return (
     <div className="habit-card-container">
       {rightButton && (
-        <div 
-          className={`swipe-action-button ${rightButton.className} ${showRightButton ? 'visible' : ''}`}
-          style={{
-            left: 0,
-            opacity: showRightButton ? Math.min(swipeOffset / SWIPE_THRESHOLD, 1) : 0,
-            transform: `scale(${showRightButton ? Math.min(swipeOffset / SWIPE_THRESHOLD, 1) : 0.8})`
-          }}
-        >
-          <span className="swipe-action-icon">{rightButton.icon}</span>
-          <span className="swipe-action-text">{rightButton.text}</span>
-        </div>
-      )}
+  <div 
+    className={`swipe-action-button ${rightButton.className} ${showRightButton ? 'visible' : ''}`}
+    style={{
+      left: 0,
+      opacity: showRightButton ? Math.min(swipeOffset / SWIPE_THRESHOLD, 1) : 0,
+      transform: `scale(${showRightButton ? Math.min(swipeOffset / SWIPE_THRESHOLD, 1) : 0.8})`
+    }}
+  >
+    <span className="swipe-action-icon">{rightButton.icon}</span>
+    <span className="swipe-action-text">{rightButton.text}</span>
+  </div>
+)}
 
       <div 
         ref={cardRef}
@@ -280,18 +280,18 @@ const HabitCard = ({ habit, onMark, onUnmark, readOnly = false }) => {
       </div>
 
       {leftButton && (
-        <div 
-          className={`swipe-action-button ${leftButton.className} ${showLeftButton ? 'visible' : ''}`}
-          style={{
-            right: 0,
-            opacity: showLeftButton ? Math.min(Math.abs(swipeOffset) / SWIPE_THRESHOLD, 1) : 0,
-            transform: `scale(${showLeftButton ? Math.min(Math.abs(swipeOffset) / SWIPE_THRESHOLD, 1) : 0.8})`
-          }}
-        >
-          <span className="swipe-action-icon">{leftButton.icon}</span>
-          <span className="swipe-action-text">{leftButton.text}</span>
-        </div>
-      )}
+  <div 
+    className={`swipe-action-button ${leftButton.className} ${showLeftButton ? 'visible' : ''}`}
+    style={{
+      right: 0,
+      opacity: showLeftButton ? Math.min(Math.abs(swipeOffset) / SWIPE_THRESHOLD, 1) : 0,
+      transform: `scale(${showLeftButton ? Math.min(Math.abs(swipeOffset) / SWIPE_THRESHOLD, 1) : 0.8})`
+    }}
+  >
+    <span className="swipe-action-icon">{leftButton.icon}</span>
+    <span className="swipe-action-text">{leftButton.text}</span>
+  </div>
+)}
     </div>
   );
 };
