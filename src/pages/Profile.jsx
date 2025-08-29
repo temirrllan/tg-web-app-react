@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './Profile.css';
 import { useNavigation } from '../hooks/useNavigation';
+
 const Profile = ({ onClose }) => {
   useNavigation(onClose);
+  const [cacheCleared, setCacheCleared] = useState(false);
+  
   const tg = window.Telegram?.WebApp;
   const user = tg?.initDataUnsafe?.user || {
     first_name: 'Test',
@@ -14,6 +17,7 @@ const Profile = ({ onClose }) => {
     { id: 'subscription', label: 'Subscription', value: 'Free', icon: '›' },
     { id: 'settings', label: 'Settings', icon: '›' },
     { id: 'support', label: 'Support', icon: '›' },
+    { id: 'clear-cache', label: 'Clear Cache', icon: '🧹' }, // Добавляем пункт очистки кэша
   ];
 
   const legalItems = [
@@ -22,10 +26,52 @@ const Profile = ({ onClose }) => {
     { id: 'payment', label: 'Payment Policy', icon: '›' },
   ];
 
+  const clearAppCache = () => {
+    try {
+      // Сохраняем важные данные
+      const userId = localStorage.getItem('user_id');
+      const hasSeenHint = localStorage.getItem('hasSeenSwipeHint');
+      
+      // Очищаем localStorage
+      localStorage.clear();
+      
+      // Восстанавливаем важные данные
+      if (userId) localStorage.setItem('user_id', userId);
+      if (hasSeenHint) localStorage.setItem('hasSeenSwipeHint', hasSeenHint);
+      
+      // Устанавливаем флаг для очистки кэша привычек
+      localStorage.setItem('clearHabitCache', 'true');
+      
+      // Очищаем sessionStorage
+      sessionStorage.clear();
+      
+      setCacheCleared(true);
+      
+      // Показываем уведомление через Telegram
+      if (tg?.showAlert) {
+        tg.showAlert('Cache cleared successfully! The app will reload now.', () => {
+          window.location.reload();
+        });
+      } else {
+        // Для разработки
+        alert('Cache cleared successfully! The app will reload now.');
+        setTimeout(() => window.location.reload(), 1000);
+      }
+    } catch (error) {
+      console.error('Error clearing cache:', error);
+      if (tg?.showAlert) {
+        tg.showAlert('Error clearing cache. Please try again.');
+      }
+    }
+  };
+
   const handleMenuClick = (itemId) => {
     console.log('Menu item clicked:', itemId);
-    // Здесь можно добавить логику для каждого пункта меню
+    
     switch(itemId) {
+      case 'clear-cache':
+        clearAppCache();
+        break;
       case 'subscription':
         // Открыть страницу подписки
         break;
@@ -60,7 +106,16 @@ const Profile = ({ onClose }) => {
 
   return (
     <div className="profile">
-      
+      <div className="profile__header">
+        <button className="profile__close" onClick={onClose}>
+          Close
+        </button>
+        <div className="profile__title">
+          <h2>Habit Tracker</h2>
+          <span className="profile__subtitle">mini-app</span>
+        </div>
+        <button className="profile__menu">⋯</button>
+      </div>
 
       <div className="profile__content">
         <div className="profile__user">
@@ -89,14 +144,17 @@ const Profile = ({ onClose }) => {
               key={item.id} 
               className="profile__item"
               onClick={() => handleMenuClick(item.id)}
+              disabled={item.id === 'clear-cache' && cacheCleared}
             >
               <div className="profile__item-left">
-                <span className="profile__item-icon">⚪</span>
-                <span className="profile__item-label">{item.label}</span>
+                <span className="profile__item-icon">{item.id === 'clear-cache' ? item.icon : '⚪'}</span>
+                <span className="profile__item-label">
+                  {item.id === 'clear-cache' && cacheCleared ? 'Cache Cleared ✓' : item.label}
+                </span>
               </div>
               <span className="profile__item-value">
                 {item.value && <span className="profile__item-badge">{item.value}</span>}
-                {item.icon}
+                {item.id !== 'clear-cache' && item.icon}
               </span>
             </button>
           ))}

@@ -23,8 +23,18 @@ const Today = () => {
     unmarkHabit,
     createHabit,
     loadHabitsForDate,
+    clearCache
   } = useHabits();
-  
+  // Для отладки - очищаем кэш при монтировании если есть проблемы
+useEffect(() => {
+  // Проверяем, нужно ли очистить кэш
+  const shouldClearCache = localStorage.getItem('clearHabitCache');
+  if (shouldClearCache === 'true') {
+    console.log('Clearing cache on mount');
+    clearCache();
+    localStorage.removeItem('clearHabitCache');
+  }
+}, [clearCache]);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showProfile, setShowProfile] = useState(false);

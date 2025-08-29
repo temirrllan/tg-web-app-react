@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { HABIT_STATUSES } from '../../utils/constants';
 import './HabitCard.css';
 
-const HabitCard = ({ habit, onMark, onUnmark, readOnly = false }) => {
+const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false }) => {
   const [loading, setLoading] = useState(false);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -294,6 +294,13 @@ const HabitCard = ({ habit, onMark, onUnmark, readOnly = false }) => {
 )}
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Функция сравнения для memo
+  return (
+    prevProps.habit.id === nextProps.habit.id &&
+    prevProps.habit.today_status === nextProps.habit.today_status &&
+    prevProps.readOnly === nextProps.readOnly
+  );
+});
 
 export default HabitCard;
