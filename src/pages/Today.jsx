@@ -214,21 +214,50 @@ const Today = () => {
   }, [dateHabits.length, isEditableDate]);
 
   // Обработчики свайпов с учетом даты
-  const handleMark = async (habitId, status) => {
-    if (!isEditableDate) {
-      console.log('Cannot edit habits for this date');
-      return;
+  // Обработчики свайпов с учетом даты
+const handleMark = async (habitId, status) => {
+  if (!isEditableDate) {
+    console.log('Cannot edit habits for this date');
+    return;
+  }
+  
+  console.log('Marking habit:', { habitId, status, date: selectedDate });
+  
+  try {
+    // Передаем выбранную дату
+    const result = await markHabit(habitId, status, selectedDate);
+    
+    // Обновляем локальное состояние привычек для выбранной даты
+    if (result && result.habits) {
+      setDateHabits(result.habits);
+      setDateStats(result.stats || { completed: 0, total: result.habits.length });
     }
-    await markHabit(habitId, status, selectedDate);
-  };
+  } catch (error) {
+    console.error('Error marking habit:', error);
+  }
+};
 
   const handleUnmark = async (habitId) => {
-    if (!isEditableDate) {
-      console.log('Cannot edit habits for this date');
-      return;
+  if (!isEditableDate) {
+    console.log('Cannot edit habits for this date');
+    return;
+  }
+  
+  console.log('Unmarking habit:', { habitId, date: selectedDate });
+  
+  try {
+    // Передаем выбранную дату
+    const result = await unmarkHabit(habitId, selectedDate);
+    
+    // Обновляем локальное состояние привычек для выбранной даты
+    if (result && result.habits) {
+      setDateHabits(result.habits);
+      setDateStats(result.stats || { completed: 0, total: result.habits.length });
     }
-    await unmarkHabit(habitId, selectedDate);
-  };
+  } catch (error) {
+    console.error('Error unmarking habit:', error);
+  }
+};
 
   if (loading) {
     return (

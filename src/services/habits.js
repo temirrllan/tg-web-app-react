@@ -45,16 +45,29 @@ export const habitService = {
     return data;
   },
 
-  // Получить привычки для конкретной даты
+  // Получить привычки для конкретной даты с их статусами
   getHabitsForDate: async (date) => {
     try {
+      // Пытаемся получить с бэкенда
       const { data } = await api.get(`/habits/date/${date}`);
-      console.log(`Habits for date ${date}:`, data);
+      console.log(`Habits for date ${date} from backend:`, data);
       return data;
     } catch (error) {
       // Если endpoint не существует, возвращаем null
       console.log('getHabitsForDate not implemented on backend, will filter on frontend');
       return null;
+    }
+  },
+
+  // Получить статусы привычек для конкретной даты
+  getHabitMarksForDate: async (date) => {
+    try {
+      const { data } = await api.get(`/habits/marks/${date}`);
+      console.log(`Marks for date ${date}:`, data);
+      return data.marks || {};
+    } catch (error) {
+      console.log('getHabitMarksForDate error:', error);
+      return {};
     }
   },
 
@@ -93,26 +106,38 @@ export const habitService = {
     return data;
   },
 
-  // Отметить выполнение/провал
+  // Отметить выполнение/провал с указанием даты
   markHabit: async (id, status = 'completed', date = null) => {
     const markDate = date || new Date().toISOString().split('T')[0];
-    console.log('Marking habit:', { id, status, date: markDate });
+    console.log('Marking habit:', { 
+      id, 
+      status, 
+      date: markDate,
+      requestBody: { status, date: markDate }
+    });
 
     const { data } = await api.post(`/habits/${id}/mark`, {
       status,
       date: markDate,
     });
+    
+    console.log('Mark habit response:', data);
     return data;
   },
 
-  // Снять отметку
+  // Снять отметку с указанием даты
   unmarkHabit: async (id, date = null) => {
     const unmarkDate = date || new Date().toISOString().split('T')[0];
-    console.log('Unmarking habit:', { id, date: unmarkDate });
-
-    const { data } = await api.delete(`/habits/${id}/mark`, {
-      params: { date: unmarkDate },
+    console.log('Unmarking habit:', { 
+      id, 
+      date: unmarkDate,
+      requestUrl: `/habits/${id}/mark?date=${unmarkDate}`
     });
+
+    // Передаем дату в query параметрах для DELETE запроса
+    const { data } = await api.delete(`/habits/${id}/mark?date=${unmarkDate}`);
+    
+    console.log('Unmark habit response:', data);
     return data;
   },
 };

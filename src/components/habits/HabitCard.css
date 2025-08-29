@@ -205,7 +205,10 @@
   /* box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3); */
   color: #1D1D1F;
 }
-
+.done-button .swipe-action-icon,
+.done-button .swipe-action-text {
+  color: #1D1D1F;
+}
 .undone-button {
   background: #456486;
   /* box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3); */
