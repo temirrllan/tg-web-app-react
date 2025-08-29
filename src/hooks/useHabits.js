@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { habitService } from '../services/habits';
 import { vibrate } from '../utils/helpers';
 
@@ -9,10 +9,6 @@ export const useHabits = () => {
   const [phrase, setPhrase] = useState({ text: '', emoji: '' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  // Используем useRef для кэша чтобы избежать лишних рендеров
-  const habitStatusCacheRef = useRef({});
-  const loadingDatesRef = useRef(new Set());
 
   // Загрузка привычек на сегодня
   const loadTodayHabits = useCallback(async () => {
@@ -35,14 +31,6 @@ export const useHabits = () => {
       setTodayHabits(normalizedHabits);
       setStats(normalizedStats);
       setPhrase(normalizedPhrase);
-      
-      // Обновляем кэш для сегодня
-      const today = new Date().toISOString().split('T')[0];
-      normalizedHabits.forEach(h => {
-        const cacheKey = `${today}#${h.id}`;
-        habitStatusCacheRef.current[cacheKey] = h.today_status || 'pending';
-      });
-      
       setError(null);
     } catch (err) {
       console.error('loadTodayHabits error:', err);
@@ -52,89 +40,20 @@ export const useHabits = () => {
     }
   }, []);
 
-  // Загрузка привычек для конкретной даты
+  // Загрузка привычек для конкретной даты - всегда загружаем с сервера
   const loadHabitsForDate = useCallback(async (date) => {
-    // Предотвращаем множественные загрузки для одной даты
-    if (loadingDatesRef.current.has(date)) {
-      console.log(`Already loading habits for ${date}, skipping...`);
-      return null;
-    }
-    
-    loadingDatesRef.current.add(date);
-    
     try {
-      const [year, month, day] = date.split('-');
-      const targetDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 12, 0, 0);
-      const dayOfWeek = targetDate.getDay() || 7;
+      console.log(`Loading habits for ${date} from server`);
       
-      console.log(`Loading habits for ${date}, day ${dayOfWeek}`);
-
-      // Получаем все привычки пользователя (можно закэшировать)
-      const allHabitsData = await habitService.getAllHabits();
-      const allHabits = allHabitsData?.habits || [];
+      // Всегда загружаем актуальные данные с сервера
+      const result = await habitService.getHabitsForDate(date);
       
-      // Фильтруем привычки для выбранного дня
-      const filteredHabits = allHabits.filter(habit => {
-        if (!habit.schedule_days || habit.schedule_days.length === 0) {
-          return true;
-        }
-        
-        if (habit.schedule_days.length === 7) {
-          return true;
-        }
-        
-        return habit.schedule_days.includes(dayOfWeek);
-      });
+      console.log(`Loaded ${result.habits?.length || 0} habits for ${date}`);
       
-      console.log(`Found ${filteredHabits.length} habits for ${date}`);
-      
-      // Загружаем статусы с сервера для прошлых дней
-      const today = new Date().toISOString().split('T')[0];
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split('T')[0];
-      
-      // Для сегодня и вчера пытаемся загрузить актуальные статусы
-      if (date === today || date === yesterdayStr) {
-        try {
-          const marks = await habitService.getHabitMarksForDate(date);
-          if (marks) {
-            Object.entries(marks).forEach(([habitId, status]) => {
-              const cacheKey = `${date}#${habitId}`;
-              habitStatusCacheRef.current[cacheKey] = status;
-            });
-          }
-        } catch (error) {
-          console.log(`Could not load marks for ${date}, using cache`);
-        }
-      }
-      
-      // Применяем статусы из кэша
-      const habitsWithStatus = filteredHabits.map(h => {
-        const cacheKey = `${date}#${h.id}`;
-        const cachedStatus = habitStatusCacheRef.current[cacheKey] || 'pending';
-        
-        return {
-          ...h,
-          today_status: cachedStatus,
-          status_date: date
-        };
-      });
-      
-      const completedCount = habitsWithStatus.filter(h => h.today_status === 'completed').length;
-      
-      return {
-        habits: habitsWithStatus,
-        stats: { 
-          completed: completedCount,
-          total: habitsWithStatus.length 
-        }
-      };
+      return result;
     } catch (err) {
       console.error('loadHabitsForDate error:', err);
-      throw err;
-    } finally {
-      loadingDatesRef.current.delete(date);
+      return { habits: [], stats: { completed: 0, total: 0 } };
     }
   }, []);
 
@@ -156,10 +75,6 @@ export const useHabits = () => {
       const markDate = date || new Date().toISOString().split('T')[0];
       console.log(`Marking habit ${habitId} as ${status} for ${markDate}`);
       
-      // Сразу обновляем кэш для мгновенного отклика
-      const cacheKey = `${markDate}#${habitId}`;
-      habitStatusCacheRef.current[cacheKey] = status;
-      
       // Отправляем запрос на сервер
       await habitService.markHabit(habitId, status, markDate);
       
@@ -172,10 +87,6 @@ export const useHabits = () => {
       // Возвращаем обновленные данные для выбранной даты
       return await loadHabitsForDate(markDate);
     } catch (err) {
-      // Откатываем изменения в кэше при ошибке
-      const cacheKey = `${date}#${habitId}`;
-      delete habitStatusCacheRef.current[cacheKey];
-      
       console.error('markHabit error:', err);
       setError(err.message || 'Failed to mark habit');
       throw err;
@@ -190,10 +101,6 @@ export const useHabits = () => {
       const unmarkDate = date || new Date().toISOString().split('T')[0];
       console.log(`Unmarking habit ${habitId} for ${unmarkDate}`);
       
-      // Сразу обновляем кэш
-      const cacheKey = `${unmarkDate}#${habitId}`;
-      habitStatusCacheRef.current[cacheKey] = 'pending';
-      
       // Отправляем запрос на сервер
       await habitService.unmarkHabit(habitId, unmarkDate);
       
@@ -206,10 +113,6 @@ export const useHabits = () => {
       // Возвращаем обновленные данные для выбранной даты
       return await loadHabitsForDate(unmarkDate);
     } catch (err) {
-      // Откатываем изменения в кэше при ошибке
-      const cacheKey = `${date}#${habitId}`;
-      delete habitStatusCacheRef.current[cacheKey];
-      
       console.error('unmarkHabit error:', err);
       setError(err.message || 'Failed to unmark habit');
       throw err;
@@ -237,13 +140,6 @@ export const useHabits = () => {
     try {
       await habitService.deleteHabit(habitId);
       
-      // Очищаем кэш для этой привычки
-      Object.keys(habitStatusCacheRef.current).forEach(key => {
-        if (key.endsWith(`#${habitId}`)) {
-          delete habitStatusCacheRef.current[key];
-        }
-      });
-      
       await loadAllHabits();
       await loadTodayHabits();
     } catch (err) {
@@ -252,25 +148,18 @@ export const useHabits = () => {
     }
   }, [loadAllHabits, loadTodayHabits]);
 
-  // Очистка кэша
+  // Очистка кэша (теперь просто перезагружает данные)
   const clearCache = useCallback(() => {
-    console.log('Clearing habit status cache');
-    habitStatusCacheRef.current = {};
-    loadingDatesRef.current.clear();
-  }, []);
-
-  // Проверка флага очистки кэша при монтировании
-  useEffect(() => {
-    const shouldClearCache = localStorage.getItem('clearHabitCache');
-    if (shouldClearCache === 'true') {
-      console.log('Clearing cache on mount');
-      clearCache();
-      localStorage.removeItem('clearHabitCache');
-    }
-    
+    console.log('Refreshing all data from server');
     loadTodayHabits();
     loadAllHabits();
-  }, []); // Запускаем только при монтировании
+  }, [loadTodayHabits, loadAllHabits]);
+
+  // Загрузка при монтировании
+  useEffect(() => {
+    loadTodayHabits();
+    loadAllHabits();
+  }, []);
 
   return {
     habits,

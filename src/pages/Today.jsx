@@ -63,43 +63,44 @@ useEffect(() => {
   const [dateStats, setDateStats] = useState({ completed: 0, total: 0 });
 
   // Обработчик выбора даты
-  const handleDateSelect = async (date, isEditable) => {
-    console.log('handleDateSelect:', date, 'isEditable:', isEditable);
-    setSelectedDate(date);
-    setIsEditableDate(isEditable);
-    
-    const todayStr = getTodayDate();
-    
+ // Обработчик выбора даты
+const handleDateSelect = async (date, isEditable) => {
+  console.log('handleDateSelect:', date, 'isEditable:', isEditable);
+  setSelectedDate(date);
+  setIsEditableDate(isEditable);
+  
+  const todayStr = getTodayDate();
+  
+  // Всегда загружаем привычки с сервера для любой даты
+  setDateLoading(true);
+  try {
     if (date === todayStr) {
-      // Для сегодня используем уже загруженные привычки
+      // Для сегодня используем специальный метод
+      await refresh(); // Перезагружаем сегодняшние привычки
       setDateHabits(todayHabits);
       setDateStats(stats);
     } else {
-      // Загружаем привычки для выбранной даты
-      // Загружаем для ЛЮБОГО дня недели, включая будущие
-      setDateLoading(true);
-      try {
-        const result = await loadHabitsForDate(date);
-        if (result) {
-          setDateHabits(result.habits || []);
-          // Для будущих дней статистика всегда 0
-          setDateStats(result.stats || { completed: 0, total: result.habits?.length || 0 });
-          
-          console.log('Loaded habits for selected date:', {
-            date,
-            isEditable,
-            habitsCount: result.habits?.length,
-          });
-        }
-      } catch (error) {
-        console.error('Failed to load habits for date:', error);
-        setDateHabits([]);
-        setDateStats({ completed: 0, total: 0 });
-      } finally {
-        setDateLoading(false);
+      // Для остальных дней загружаем с сервера
+      const result = await loadHabitsForDate(date);
+      if (result) {
+        setDateHabits(result.habits || []);
+        setDateStats(result.stats || { completed: 0, total: 0 });
+        
+        console.log('Loaded habits from server:', {
+          date,
+          habitsCount: result.habits?.length,
+          stats: result.stats
+        });
       }
     }
-  };
+  } catch (error) {
+    console.error('Failed to load habits for date:', error);
+    setDateHabits([]);
+    setDateStats({ completed: 0, total: 0 });
+  } finally {
+    setDateLoading(false);
+  }
+};
 
   // При изменении todayHabits обновляем dateHabits если выбран сегодня
   useEffect(() => {
