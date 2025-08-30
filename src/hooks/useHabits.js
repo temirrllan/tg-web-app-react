@@ -20,7 +20,15 @@ export const useHabits = () => {
         ? data
         : (data?.habits || []);
 
-      console.log('Today habits loaded:', normalizedHabits.length);
+      console.log('Today habits loaded:', {
+        count: normalizedHabits.length,
+        date: new Date().toISOString().split('T')[0],
+        statuses: normalizedHabits.map(h => ({
+          id: h.id,
+          title: h.title,
+          status: h.today_status
+        }))
+      });
 
       const normalizedStats = data?.stats || { 
         completed: normalizedHabits.filter(h => h.today_status === 'completed').length, 
@@ -48,7 +56,13 @@ export const useHabits = () => {
       // Всегда загружаем актуальные данные с сервера
       const result = await habitService.getHabitsForDate(date);
       
-      console.log(`Loaded ${result.habits?.length || 0} habits for ${date}`);
+      console.log(`Loaded ${result.habits?.length || 0} habits for ${date}:`, {
+        statuses: result.habits?.map(h => ({
+          id: h.id,
+          title: h.title,
+          status: h.today_status
+        }))
+      });
       
       return result;
     } catch (err) {
@@ -67,57 +81,65 @@ export const useHabits = () => {
     }
   }, []);
 
-  // Отметка привычки с указанием даты
-  const markHabit = useCallback(async (habitId, status = 'completed', date = null) => {
+  // Отметка привычки с ОБЯЗАТЕЛЬНЫМ указанием даты
+  const markHabit = useCallback(async (habitId, status = 'completed', date) => {
     try {
       vibrate();
       
-      const markDate = date || new Date().toISOString().split('T')[0];
-      console.log(`Marking habit ${habitId} as ${status} for ${markDate}`);
+      // Дата обязательна
+      if (!date) {
+        throw new Error('Date is required for marking habit');
+      }
       
-      // Отправляем запрос на сервер
-      await habitService.markHabit(habitId, status, markDate);
+      console.log(`Marking habit ${habitId} as ${status} for date ${date}`);
+      
+      // Отправляем запрос на сервер с конкретной датой
+      await habitService.markHabit(habitId, status, date);
       
       // Если отмечаем сегодня, перезагружаем сегодняшние привычки
       const today = new Date().toISOString().split('T')[0];
-      if (markDate === today) {
+      if (date === today) {
+        console.log('Reloading today habits after marking');
         await loadTodayHabits();
       }
       
-      // Возвращаем обновленные данные для выбранной даты
-      return await loadHabitsForDate(markDate);
+      // Не возвращаем результат здесь, пусть компонент сам перезагрузит данные
     } catch (err) {
       console.error('markHabit error:', err);
       setError(err.message || 'Failed to mark habit');
       throw err;
     }
-  }, [loadTodayHabits, loadHabitsForDate]);
+  }, [loadTodayHabits]);
 
-  // Отмена отметки с указанием даты
-  const unmarkHabit = useCallback(async (habitId, date = null) => {
+  // Отмена отметки с ОБЯЗАТЕЛЬНЫМ указанием даты
+  const unmarkHabit = useCallback(async (habitId, date) => {
     try {
       vibrate();
       
-      const unmarkDate = date || new Date().toISOString().split('T')[0];
-      console.log(`Unmarking habit ${habitId} for ${unmarkDate}`);
+      // Дата обязательна
+      if (!date) {
+        throw new Error('Date is required for unmarking habit');
+      }
       
-      // Отправляем запрос на сервер
-      await habitService.unmarkHabit(habitId, unmarkDate);
+      console.log(`Unmarking habit ${habitId} for date ${date}`);
+      
+      // Отправляем запрос на сервер с конкретной датой
+      await habitService.unmarkHabit(habitId, date);
       
       // Если отменяем сегодня, перезагружаем сегодняшние привычки
       const today = new Date().toISOString().split('T')[0];
-      if (unmarkDate === today) {
+      if (date === today) {
+        console.log('Reloading today habits after unmarking');
         await loadTodayHabits();
       }
       
-      // Возвращаем обновленные данные для выбранной даты
-      return await loadHabitsForDate(unmarkDate);
+      // Не возвращаем результат здесь, пусть компонент сам перезагрузит данные
     } catch (err) {
       console.error('unmarkHabit error:', err);
       setError(err.message || 'Failed to unmark habit');
       throw err;
     }
-  }, [loadTodayHabits, loadHabitsForDate]);
+  }, [loadTodayHabits]);
 
   // Создание привычки
   const createHabit = useCallback(async (habitData) => {
