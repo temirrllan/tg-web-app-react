@@ -7,7 +7,7 @@ export const habitService = {
     return data;
   },
 
-  // Все привычки пользователя
+  // Все привычки пользователя (без статусов)
   getAllHabits: async () => {
     const { data } = await api.get('/habits');
     console.log('All habits from API:', {
@@ -17,17 +17,15 @@ export const habitService = {
     return data;
   },
 
-  // Привычки на сегодня с их статусами
+  // Привычки на сегодня с их статусами для сегодняшнего дня
   getTodayHabits: async () => {
     const { data } = await api.get('/habits/today');
     const today = new Date();
-    const dayOfWeek = today.getDay() || 7;
     
     console.log('Today habits from API:', {
-      today: today.toISOString().split('T')[0],
-      dayOfWeek: dayOfWeek,
+      date: today.toISOString().split('T')[0],
       count: data?.habits?.length || 0,
-      habits: data?.habits?.map(h => ({
+      statuses: data?.habits?.map(h => ({
         id: h.id,
         title: h.title,
         today_status: h.today_status
@@ -36,67 +34,34 @@ export const habitService = {
     return data;
   },
 
-  // Получить привычки для конкретной даты с их статусами
+  // Получить привычки для конкретной даты с их статусами для этой даты
   getHabitsForDate: async (date) => {
     try {
-      // Сначала получаем все привычки
-      const allHabitsResponse = await api.get('/habits');
-      const allHabits = allHabitsResponse.data?.habits || [];
+      console.log(`Getting habits for date ${date}`);
       
-      // Определяем день недели для фильтрации
-      const [year, month, day] = date.split('-');
-      const targetDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 12, 0, 0);
-      const dayOfWeek = targetDate.getDay() || 7;
+      // Используем новый эндпоинт который возвращает привычки со статусами для конкретной даты
+      const { data } = await api.get(`/habits/date/${date}`);
       
-      // Фильтруем привычки по дню недели
-      const filteredHabits = allHabits.filter(habit => {
-        if (!habit.schedule_days || habit.schedule_days.length === 0) {
-          return true;
-        }
-        if (habit.schedule_days.length === 7) {
-          return true;
-        }
-        return habit.schedule_days.includes(dayOfWeek);
+      console.log(`Habits for ${date}:`, {
+        count: data.habits?.length,
+        statuses: data.habits?.map(h => ({
+          id: h.id,
+          title: h.title,
+          today_status: h.today_status
+        }))
       });
       
-      // Получаем статусы для конкретной даты
-      const marksResponse = await api.get(`/habits/marks?date=${date}`);
-      const marks = marksResponse.data?.marks || [];
-      
-      console.log(`Marks for ${date}:`, marks);
-      
-      // Создаем мапу статусов
-      const statusMap = {};
-      marks.forEach(mark => {
-        if (mark.habit_id && mark.status) {
-          statusMap[mark.habit_id] = mark.status;
-        }
-      });
-      
-      // Применяем статусы к привычкам
-      const habitsWithStatus = filteredHabits.map(habit => ({
-        ...habit,
-        today_status: statusMap[habit.id] || 'pending',
-        status_date: date
-      }));
-      
-      const completedCount = habitsWithStatus.filter(h => h.today_status === 'completed').length;
-      
-      return {
-        habits: habitsWithStatus,
-        stats: {
-          completed: completedCount,
-          total: habitsWithStatus.length
-        }
-      };
+      return data;
     } catch (error) {
       console.error('getHabitsForDate error:', error);
       
-      // Fallback - возвращаем привычки без статусов
+      // Fallback - получаем привычки и отметки отдельно
       try {
-        const allHabitsResponse = await api.get('/habits');
-        const allHabits = allHabitsResponse.data?.habits || [];
+        // Получаем все привычки
+        const habitsResponse = await api.get('/habits');
+        const allHabits = habitsResponse.data?.habits || [];
         
+        // Фильтруем по дню недели
         const [year, month, day] = date.split('-');
         const targetDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 12, 0, 0);
         const dayOfWeek = targetDate.getDay() || 7;
@@ -107,18 +72,47 @@ export const habitService = {
           return habit.schedule_days.includes(dayOfWeek);
         });
         
-        const habitsWithStatus = filteredHabits.map(habit => ({
-          ...habit,
-          today_status: 'pending',
-          status_date: date
-        }));
-        
-        return {
-          habits: habitsWithStatus,
-          stats: { completed: 0, total: habitsWithStatus.length }
-        };
+        // Получаем отметки для этой даты
+        try {
+          const marksResponse = await api.get(`/habits/marks?date=${date}`);
+          const marks = marksResponse.data?.marks || [];
+          
+          // Создаем мапу статусов
+          const statusMap = {};
+          marks.forEach(mark => {
+            statusMap[mark.habit_id] = mark.status;
+          });
+          
+          // Применяем статусы
+          const habitsWithStatus = filteredHabits.map(h => ({
+            ...h,
+            today_status: statusMap[h.id] || 'pending'
+          }));
+          
+          const completedCount = habitsWithStatus.filter(h => h.today_status === 'completed').length;
+          
+          return {
+            habits: habitsWithStatus,
+            stats: {
+              completed: completedCount,
+              total: habitsWithStatus.length
+            }
+          };
+        } catch (marksError) {
+          console.log('Could not load marks, returning habits without statuses');
+          
+          const habitsWithStatus = filteredHabits.map(h => ({
+            ...h,
+            today_status: 'pending'
+          }));
+          
+          return {
+            habits: habitsWithStatus,
+            stats: { completed: 0, total: habitsWithStatus.length }
+          };
+        }
       } catch (fallbackError) {
-        console.error('Fallback also failed:', fallbackError);
+        console.error('Complete failure:', fallbackError);
         return { habits: [], stats: { completed: 0, total: 0 } };
       }
     }
@@ -127,11 +121,8 @@ export const habitService = {
   // Создать привычку
   createHabit: async (habitData) => {
     console.log('Creating habit with data:', habitData);
-    
     const { data } = await api.post('/habits', habitData);
-    
     console.log('Created habit response:', data);
-    
     return data;
   },
 
@@ -173,7 +164,6 @@ export const habitService = {
       date: unmarkDate
     });
 
-    // Передаем дату в query параметрах для DELETE запроса
     const { data } = await api.delete(`/habits/${id}/mark?date=${unmarkDate}`);
     
     console.log('Unmark habit response:', data);
