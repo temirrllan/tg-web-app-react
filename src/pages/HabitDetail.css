@@ -302,3 +302,83 @@
     font-size: 15px;
   }
 }
+
+
+/* Error state */
+.habit-detail__error {
+  text-align: center;
+  padding: 40px 20px;
+  background: white;
+  border-radius: 16px;
+  margin-top: 20px;
+}
+
+.habit-detail__error p {
+  font-size: 18px;
+  color: #8E8E93;
+  margin-bottom: 20px;
+}
+
+/* Fix для корректного отображения прогресс-баров */
+.habit-detail__stat-circle {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 12px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.habit-detail__stat-circle::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 8px solid #F2F2F7;
+  box-sizing: border-box;
+}
+
+.habit-detail__stat-circle::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 8px solid transparent;
+  border-top-color: var(--color, #A7D96C);
+  border-right-color: var(--color, #A7D96C);
+  transform: rotate(calc((var(--progress, 0) * 3.6deg) - 90deg));
+  box-sizing: border-box;
+  transition: transform 0.5s ease;
+  transform-origin: center;
+}
+
+/* Для полного круга */
+.habit-detail__stat-circle[style*="--progress: 100"]::after {
+  border-color: var(--color, #A7D96C);
+}
+
+/* Для нулевого прогресса */
+.habit-detail__stat-circle[style*="--progress: 0"]::after {
+  border-color: transparent;
+}
+
+/* Кликабельная область для информации о привычке */
+.habit-info {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.habit-info:active {
+  opacity: 0.8;
+}
+
+/* Предотвращаем конфликт со свайпами */
+.habit-card.swiping .habit-info {
+  pointer-events: none;
+}

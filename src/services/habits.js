@@ -171,21 +171,37 @@ export const habitService = {
   },
 
 
-  getHabitStatistics: async (habitId) => {
+ // Получить статистику привычки
+getHabitStatistics: async (habitId) => {
   try {
+    console.log('Getting statistics for habit:', habitId);
     const { data } = await api.get(`/habits/${habitId}/statistics`);
-    console.log('Habit statistics:', data);
-    return data;
+    console.log('Habit statistics response:', data);
+    
+    if (data.success) {
+      return {
+        currentStreak: data.currentStreak || 0,
+        weekCompleted: data.weekCompleted || 0,
+        monthCompleted: data.monthCompleted || 0,
+        monthTotal: data.monthTotal || new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate(),
+        yearCompleted: data.yearCompleted || 0
+      };
+    }
+    
+    throw new Error('Failed to get statistics');
   } catch (error) {
     console.error('getHabitStatistics error:', error);
     
-    // Fallback - возвращаем базовую статистику
+    // Возвращаем базовую статистику при ошибке
+    const today = new Date();
+    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    
     return {
       currentStreak: 0,
       weekCompleted: 0,
       monthCompleted: 0,
-      yearCompleted: 0,
-      monthTotal: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()
+      monthTotal: daysInMonth,
+      yearCompleted: 0
     };
   }
 },

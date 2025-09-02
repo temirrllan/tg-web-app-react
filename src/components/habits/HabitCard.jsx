@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { HABIT_STATUSES } from '../../utils/constants';
 import './HabitCard.css';
 
-const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false }) => {
+const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onClick }) => {
   const [loading, setLoading] = useState(false);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -22,7 +22,12 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false }) => 
   useEffect(() => {
     setSwipeOffset(0);
   }, [habit.today_status]);
-
+const handleTitleClick = (e) => {
+    e.stopPropagation();
+    if (onClick) {
+      onClick(e);
+    }
+  };
   const getNextStatusLeft = () => {
     switch(currentStatus) {
       case HABIT_STATUSES.PENDING:
@@ -250,20 +255,27 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false }) => 
           transform: `translateX(${swipeOffset}px)`,
           transition: isSwiping ? 'none' : 'transform 0.3s ease-out'
         }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
+        // onTouchStart={handleTouchStart}
+        // onTouchMove={handleTouchMove}
+        // onTouchEnd={handleTouchEnd}
+        // onMouseDown={handleMouseDown}
+        // onMouseMove={handleMouseMove}
+        // onMouseUp={handleMouseUp}
+        // onMouseLeave={handleMouseLeave}
+        onMouseDown={handleStart}
+        onMouseMove={handleMove}
+        onMouseUp={handleEnd}
+        onMouseLeave={handleEnd}
+        onTouchStart={handleStart}
+        onTouchMove={handleMove}
+        onTouchEnd={handleEnd}
       >
         <div className="habit-card-content">
           <div className={`habit-icon ${getCardState()}`}>
             <span className="habit-emoji">{habit.icon || habit.category_icon || '🏃'}</span>
           </div>
           
-          <div className="habit-info">
+          <div className="habit-info" onClick={handleTitleClick}>
             <h3 className="habit-title">
               {habit.is_bad_habit && '😈 '}
               {habit.title}
