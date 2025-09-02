@@ -169,4 +169,24 @@ export const habitService = {
     console.log('Unmark habit response:', data);
     return data;
   },
+
+
+  getHabitStatistics: async (habitId) => {
+  try {
+    const { data } = await api.get(`/habits/${habitId}/statistics`);
+    console.log('Habit statistics:', data);
+    return data;
+  } catch (error) {
+    console.error('getHabitStatistics error:', error);
+    
+    // Fallback - возвращаем базовую статистику
+    return {
+      currentStreak: 0,
+      weekCompleted: 0,
+      monthCompleted: 0,
+      yearCompleted: 0,
+      monthTotal: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()
+    };
+  }
+},
 };

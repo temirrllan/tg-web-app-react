@@ -11,7 +11,7 @@ import { useHabits } from "../hooks/useHabits";
 import { useTelegram } from "../hooks/useTelegram";
 import "./Today.css";
 import SwipeHint from '../components/habits/SwipeHint';
-
+import HabitDetail from './HabitDetail';
 const Today = () => {
   const { user } = useTelegram();
   const {
@@ -29,7 +29,40 @@ const Today = () => {
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  
+  // В начале компонента добавьте:
+const [selectedHabit, setSelectedHabit] = useState(null);
+const [showHabitDetail, setShowHabitDetail] = useState(false);
+
+// Добавьте обработчик клика на привычку:
+const handleHabitClick = (habit) => {
+  setSelectedHabit(habit);
+  setShowHabitDetail(true);
+};
+const handleEditHabit = (habit) => {
+  // TODO: Открыть форму редактирования
+  console.log('Edit habit:', habit);
+};
+const handleDeleteHabit = async (habitId) => {
+  try {
+    await deleteHabit(habitId);
+    setShowHabitDetail(false);
+    // Перезагружаем привычки
+    await refresh();
+  } catch (error) {
+    console.error('Failed to delete habit:', error);
+  }
+};
+// В рендере добавьте проверку:
+if (showHabitDetail && selectedHabit) {
+  return (
+    <HabitDetail
+      habit={selectedHabit}
+      onClose={() => setShowHabitDetail(false)}
+      onEdit={handleEditHabit}
+      onDelete={handleDeleteHabit}
+    />
+  );
+}
   const getTodayDate = () => {
     const today = new Date();
     const year = today.getFullYear();
@@ -392,17 +425,19 @@ const Today = () => {
           ) : displayHabits.length === 0 ? (
             <EmptyState onCreateClick={() => setShowCreateForm(true)} />
           ) : (
-            <div className="today__habits">
-              {displayHabits.map((habit) => (
-                <HabitCard
-                  key={`${habit.id}-${selectedDate}`} // Уникальный ключ для каждой даты
-                  habit={habit}
-                  onMark={isEditableDate ? handleMark : undefined}
-                  onUnmark={isEditableDate ? handleUnmark : undefined}
-                  readOnly={!isEditableDate}
-                />
-              ))}
-            </div>
+            // Обновите HabitCard в рендере:
+<div className="today__habits">
+  {displayHabits.map((habit) => (
+    <div key={`${habit.id}-${selectedDate}`} onClick={() => handleHabitClick(habit)}>
+      <HabitCard
+        habit={habit}
+        onMark={isEditableDate ? handleMark : undefined}
+        onUnmark={isEditableDate ? handleUnmark : undefined}
+        readOnly={!isEditableDate}
+      />
+    </div>
+  ))}
+</div>
           )}
         </div>
 
