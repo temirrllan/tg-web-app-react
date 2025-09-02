@@ -8,7 +8,6 @@ import './HabitDetail.css';
 const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const { tg } = useTelegram();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [statistics, setStatistics] = useState({
     currentStreak: 0,
     weekDays: 0,
@@ -18,28 +17,20 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     yearDays: 0,
     yearTotal: 365
   });
+  const [motivationalText, setMotivationalText] = useState('Keep going!');
 
   // Показываем кнопку Back
   useNavigation(onClose);
 
   useEffect(() => {
-    if (!habit || !habit.id) {
-      setError('Habit not found');
-      setLoading(false);
-      return;
-    }
-    
     loadStatistics();
-  }, [habit?.id]);
+  }, [habit.id]);
 
   const loadStatistics = async () => {
     try {
       setLoading(true);
-      setError(null);
       
-      console.log('Loading statistics for habit:', habit);
-      
-      // Используем данные из привычки если статистика недоступна
+      // Получаем статистику с сервера
       const stats = await habitService.getHabitStatistics(habit.id);
       
       if (stats) {
@@ -52,32 +43,23 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
           yearDays: stats.yearCompleted || 0,
           yearTotal: 365
         });
-      } else {
-        // Fallback - используем базовые данные
-        setStatistics({
-          currentStreak: habit.streak_current || 0,
-          weekDays: 0,
-          weekTotal: 7,
-          monthDays: 0,
-          monthTotal: 30,
-          yearDays: 0,
-          yearTotal: 365
-        });
+        
+        // Выбираем мотивационный текст на основе streak
+        const streak = stats.currentStreak || 0;
+        if (streak === 0) {
+          setMotivationalText("Let's start today! 💪");
+        } else if (streak < 7) {
+          setMotivationalText("Keep it up! 🌱");
+        } else if (streak < 30) {
+          setMotivationalText("Great progress! 🔥");
+        } else if (streak < 100) {
+          setMotivationalText("You're on fire! 🚀");
+        } else {
+          setMotivationalText("Incredible dedication! 🏆");
+        }
       }
     } catch (error) {
       console.error('Failed to load statistics:', error);
-      setError('Failed to load statistics');
-      
-      // Используем локальные данные при ошибке
-      setStatistics({
-        currentStreak: habit.streak_current || 0,
-        weekDays: 0,
-        weekTotal: 7,
-        monthDays: 0,
-        monthTotal: 30,
-        yearDays: 0,
-        yearTotal: 365
-      });
     } finally {
       setLoading(false);
     }
@@ -129,12 +111,12 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   };
 
   const getCategoryEmoji = () => {
-    return habit?.category_icon || habit?.icon || '🎯';
+    return habit.category_icon || habit.icon || '🎯';
   };
 
   const getProgressPercentage = (completed, total) => {
     if (total === 0) return 0;
-    return Math.min(Math.round((completed / total) * 100), 100);
+    return Math.round((completed / total) * 100);
   };
 
   const getProgressColor = (type) => {
@@ -146,48 +128,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     };
     return colors[type] || '#A7D96C';
   };
-
-  // Обработка ошибок
-  if (error) {
-    return (
-      <div className="habit-detail">
-        <div className="habit-detail__header">
-          <button className="habit-detail__close" onClick={onClose}>
-            Close
-          </button>
-          <div className="habit-detail__title-wrapper">
-            <h1 className="habit-detail__app-title">Habit Tracker</h1>
-            <span className="habit-detail__app-subtitle">mini-app</span>
-          </div>
-          <button className="habit-detail__menu">⋯</button>
-        </div>
-        <div className="habit-detail__content">
-          <div className="habit-detail__error">
-            <p>⚠️ {error}</p>
-            <button onClick={onClose} className="habit-detail__btn habit-detail__btn--primary">
-              Go Back
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Проверка наличия данных привычки
-  if (!habit) {
-    return (
-      <div className="habit-detail">
-        <div className="habit-detail__content">
-          <div className="habit-detail__error">
-            <p>No habit data available</p>
-            <button onClick={onClose} className="habit-detail__btn habit-detail__btn--primary">
-              Go Back
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (loading) {
     return (
@@ -284,34 +224,34 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
         <div className="habit-detail__friends">
           <h3 className="habit-detail__friends-title">Habit Friends</h3>
           <p className="habit-detail__friends-subtitle">
-           Share the link with friends and invite them to track habits together.
-         </p>
-         
-         <div className="habit-detail__share-buttons">
-           <button 
-             className="habit-detail__btn habit-detail__btn--outline"
-             onClick={handleCopyLink}
-           >
-             Copy Link
-           </button>
-           <button 
-             className="habit-detail__btn habit-detail__btn--primary"
-             onClick={handleShare}
-           >
-             Share
-           </button>
-         </div>
-       </div>
+            Share the link with friends and invite them to track habits together.
+          </p>
+          
+          <div className="habit-detail__share-buttons">
+            <button 
+              className="habit-detail__btn habit-detail__btn--outline"
+              onClick={handleCopyLink}
+            >
+              Copy Link
+            </button>
+            <button 
+              className="habit-detail__btn habit-detail__btn--primary"
+              onClick={handleShare}
+            >
+              Share
+            </button>
+          </div>
+        </div>
 
-       <button 
-         className="habit-detail__btn habit-detail__btn--danger"
-         onClick={handleDelete}
-       >
-         Remove Habit
-       </button>
-     </div>
-   </div>
- );
+        <button 
+          className="habit-detail__btn habit-detail__btn--danger"
+          onClick={handleDelete}
+        >
+          Remove Habit
+        </button>
+      </div>
+    </div>
+  );
 };
 
 export default HabitDetail;
