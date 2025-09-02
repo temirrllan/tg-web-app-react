@@ -39,12 +39,19 @@
  -webkit-transform: translateZ(0);
  transform: translateZ(0);
 }
-
+.habit-card:active:not(.swiping) {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
 /* Убираем transition при свайпе */
 .habit-card.swiping {
  transition: none !important;
 }
-
+.habit-card.swiping:active {
+  cursor: grabbing;
+  transform: translateX(var(--swipe-offset, 0));
+  opacity: 1;
+}
 .habit-card.animating {
  transition: transform 0.3s ease-out;
 }
