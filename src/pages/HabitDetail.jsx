@@ -21,7 +21,12 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
 
   // Показываем кнопку Back
   useNavigation(onClose);
-
+useEffect(() => {
+  console.log('HabitDetail mounted with habit:', habit);
+  if (!habit) {
+    console.error('No habit data provided to HabitDetail!');
+  }
+}, [habit]);
   useEffect(() => {
     loadStatistics();
   }, [habit.id]);

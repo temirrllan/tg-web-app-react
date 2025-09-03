@@ -6,12 +6,13 @@ import EmptyState from "../components/habits/EmptyState";
 import CreateHabitForm from "../components/habits/CreateHabitForm";
 import WeekNavigation from "../components/habits/WeekNavigation";
 import Profile from "./Profile";
+import HabitDetail from './HabitDetail';
 import Loader from "../components/common/Loader";
 import { useHabits } from "../hooks/useHabits";
 import { useTelegram } from "../hooks/useTelegram";
 import "./Today.css";
 import SwipeHint from '../components/habits/SwipeHint';
-import HabitDetail from './HabitDetail';
+
 const Today = () => {
   const { user } = useTelegram();
   const {
@@ -22,6 +23,7 @@ const Today = () => {
     markHabit,
     unmarkHabit,
     createHabit,
+    deleteHabit, // Добавляем deleteHabit
     loadHabitsForDate,
     refresh
   } = useHabits();
@@ -29,40 +31,9 @@ const Today = () => {
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  // В начале компонента добавьте:
-const [selectedHabit, setSelectedHabit] = useState(null);
-const [showHabitDetail, setShowHabitDetail] = useState(false);
-
-// Добавьте обработчик клика на привычку:
-const handleHabitClick = (habit) => {
-  setSelectedHabit(habit);
-  setShowHabitDetail(true);
-};
-const handleEditHabit = (habit) => {
-  // TODO: Открыть форму редактирования
-  console.log('Edit habit:', habit);
-};
-const handleDeleteHabit = async (habitId) => {
-  try {
-    await deleteHabit(habitId);
-    setShowHabitDetail(false);
-    // Перезагружаем привычки
-    await refresh();
-  } catch (error) {
-    console.error('Failed to delete habit:', error);
-  }
-};
-// В рендере добавьте проверку:
-if (showHabitDetail && selectedHabit) {
-  return (
-    <HabitDetail
-      habit={selectedHabit}
-      onClose={() => setShowHabitDetail(false)}
-      onEdit={handleEditHabit}
-      onDelete={handleDeleteHabit}
-    />
-  );
-}
+  const [selectedHabit, setSelectedHabit] = useState(null);
+  const [showHabitDetail, setShowHabitDetail] = useState(false);
+  
   const getTodayDate = () => {
     const today = new Date();
     const year = today.getFullYear();
@@ -85,9 +56,42 @@ if (showHabitDetail && selectedHabit) {
   const [dateHabits, setDateHabits] = useState([]);
   const [dateLoading, setDateLoading] = useState(false);
   const [dateStats, setDateStats] = useState({ completed: 0, total: 0 });
-  
-  // Хранилище статусов для всех загруженных дат
   const [dateCache, setDateCache] = useState({});
+
+  // Обработчик клика на привычку
+  const handleHabitClick = (habit) => {
+    console.log('Habit clicked:', habit);
+    setSelectedHabit(habit);
+    setShowHabitDetail(true);
+  };
+
+  const handleEditHabit = (habit) => {
+    console.log('Edit habit:', habit);
+    setShowHabitDetail(false);
+    // TODO: Открыть форму редактирования
+  };
+
+  const handleDeleteHabit = async (habitId) => {
+    try {
+      console.log('Deleting habit:', habitId);
+      await deleteHabit(habitId);
+      setShowHabitDetail(false);
+      setSelectedHabit(null);
+      
+      // Перезагружаем привычки
+      if (selectedDate === getTodayDate()) {
+        await refresh();
+      } else {
+        const result = await loadHabitsForDate(selectedDate);
+        if (result) {
+          setDateHabits(result.habits || []);
+          setDateStats(result.stats || { completed: 0, total: 0 });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to delete habit:', error);
+    }
+  };
 
   // Обработчик выбора даты
   const handleDateSelect = async (date, isEditable) => {
@@ -97,7 +101,6 @@ if (showHabitDetail && selectedHabit) {
     
     const todayStr = getTodayDate();
     
-    // Проверяем кэш
     if (dateCache[date] && date !== todayStr) {
       console.log(`Using cached data for ${date}`);
       setDateHabits(dateCache[date].habits);
@@ -105,22 +108,18 @@ if (showHabitDetail && selectedHabit) {
       return;
     }
     
-    // Загружаем привычки для выбранной даты
     setDateLoading(true);
     try {
       if (date === todayStr) {
-        // Для сегодня используем специальный метод
         await refresh();
         setDateHabits(todayHabits);
         setDateStats(stats);
       } else {
-        // Для остальных дней загружаем с сервера
         const result = await loadHabitsForDate(date);
         if (result) {
           setDateHabits(result.habits || []);
           setDateStats(result.stats || { completed: 0, total: 0 });
           
-          // Сохраняем в кэш
           setDateCache(prev => ({
             ...prev,
             [date]: {
@@ -152,7 +151,6 @@ if (showHabitDetail && selectedHabit) {
       setDateHabits(todayHabits);
       setDateStats(stats);
       
-      // Обновляем кэш для сегодня
       setDateCache(prev => ({
         ...prev,
         [today]: {
@@ -169,7 +167,6 @@ if (showHabitDetail && selectedHabit) {
     setDateHabits(todayHabits);
     setDateStats(stats);
     
-    // Инициализируем кэш
     setDateCache({
       [today]: {
         habits: todayHabits,
@@ -186,10 +183,8 @@ if (showHabitDetail && selectedHabit) {
       await createHabit(habitData);
       setShowCreateForm(false);
       
-      // Очищаем кэш, чтобы перезагрузить данные
       setDateCache({});
       
-      // Перезагружаем текущую дату
       if (selectedDate !== getTodayDate()) {
         const result = await loadHabitsForDate(selectedDate);
         if (result) {
@@ -238,7 +233,6 @@ if (showHabitDetail && selectedHabit) {
     return `for ${weekday} ${dayNumber}`;
   };
 
-  // Проверка, является ли дата в пределах текущей недели
   const isCurrentWeekDate = (dateStr) => {
     const [year, month, day] = dateStr.split('-');
     const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 12, 0, 0);
@@ -267,7 +261,6 @@ if (showHabitDetail && selectedHabit) {
     return date >= weekStart && date <= weekEnd;
   };
 
-  // Показываем подсказку при первом запуске
   useEffect(() => {
     const hasSeenHint = localStorage.getItem('hasSeenSwipeHint');
     const previousHabitsCount = parseInt(localStorage.getItem('previousHabitsCount') || '0');
@@ -284,7 +277,6 @@ if (showHabitDetail && selectedHabit) {
     }
   }, [dateHabits.length, isEditableDate]);
 
-  // Обработчики свайпов с учетом даты - ВАЖНО: передаем правильную дату
   const handleMark = async (habitId, status) => {
     if (!isEditableDate) {
       console.log('Cannot edit habits for this date');
@@ -294,23 +286,19 @@ if (showHabitDetail && selectedHabit) {
     console.log('Marking habit:', { habitId, status, date: selectedDate });
     
     try {
-      // Передаем выбранную дату для отметки
       await markHabit(habitId, status, selectedDate);
       
-      // Очищаем кэш для этой даты
       setDateCache(prev => {
         const newCache = { ...prev };
         delete newCache[selectedDate];
         return newCache;
       });
       
-      // Перезагружаем данные для текущей даты
       const result = await loadHabitsForDate(selectedDate);
       if (result && result.habits) {
         setDateHabits(result.habits);
         setDateStats(result.stats || { completed: 0, total: result.habits.length });
         
-        // Обновляем кэш
         setDateCache(prev => ({
           ...prev,
           [selectedDate]: {
@@ -333,23 +321,19 @@ if (showHabitDetail && selectedHabit) {
     console.log('Unmarking habit:', { habitId, date: selectedDate });
     
     try {
-      // Передаем выбранную дату для снятия отметки
       await unmarkHabit(habitId, selectedDate);
       
-      // Очищаем кэш для этой даты
       setDateCache(prev => {
         const newCache = { ...prev };
         delete newCache[selectedDate];
         return newCache;
       });
       
-      // Перезагружаем данные для текущей даты
       const result = await loadHabitsForDate(selectedDate);
       if (result && result.habits) {
         setDateHabits(result.habits);
         setDateStats(result.stats || { completed: 0, total: result.habits.length });
         
-        // Обновляем кэш
         setDateCache(prev => ({
           ...prev,
           [selectedDate]: {
@@ -363,6 +347,7 @@ if (showHabitDetail && selectedHabit) {
     }
   };
 
+  // Показываем загрузку
   if (loading) {
     return (
       <Layout>
@@ -373,14 +358,29 @@ if (showHabitDetail && selectedHabit) {
     );
   }
 
+  // Показываем детальную страницу привычки
+  if (showHabitDetail && selectedHabit) {
+    console.log('Rendering HabitDetail with habit:', selectedHabit);
+    return (
+      <HabitDetail
+        habit={selectedHabit}
+        onClose={() => {
+          setShowHabitDetail(false);
+          setSelectedHabit(null);
+        }}
+        onEdit={handleEditHabit}
+        onDelete={handleDeleteHabit}
+      />
+    );
+  }
+
+  // Показываем профиль
   if (showProfile) {
     return <Profile onClose={() => setShowProfile(false)} />;
   }
 
   const displayHabits = dateLoading ? [] : dateHabits;
   const displayStats = dateStats;
-
-  // Определяем, нужно ли показывать уведомление о режиме просмотра
   const showReadOnlyNotice = !isEditableDate && isCurrentWeekDate(selectedDate);
 
   return (
@@ -425,19 +425,18 @@ if (showHabitDetail && selectedHabit) {
           ) : displayHabits.length === 0 ? (
             <EmptyState onCreateClick={() => setShowCreateForm(true)} />
           ) : (
-            // Обновите HabitCard в рендере:
-<div className="today__habits">
-  {displayHabits.map((habit) => (
-    <HabitCard
-      key={`${habit.id}-${selectedDate}`}
-      habit={habit}
-      onMark={isEditableDate ? handleMark : undefined}
-      onUnmark={isEditableDate ? handleUnmark : undefined}
-      onClick={handleHabitClick}
-      readOnly={!isEditableDate}
-    />
-  ))}
-</div>
+            <div className="today__habits">
+              {displayHabits.map((habit) => (
+                <HabitCard
+                  key={`${habit.id}-${selectedDate}`}
+                  habit={habit}
+                  onMark={isEditableDate ? handleMark : undefined}
+                  onUnmark={isEditableDate ? handleUnmark : undefined}
+                  onClick={handleHabitClick}
+                  readOnly={!isEditableDate}
+                />
+              ))}
+            </div>
           )}
         </div>
 
