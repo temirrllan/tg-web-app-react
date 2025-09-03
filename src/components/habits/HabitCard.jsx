@@ -2,12 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { HABIT_STATUSES } from '../../utils/constants';
 import './HabitCard.css';
 
-const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false }) => {
+const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onClick }) => {
   const [loading, setLoading] = useState(false);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [startX, setStartX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
+  const [hasMoved, setHasMoved] = useState(false);
   const cardRef = useRef(null);
   
   const currentStatus = habit.today_status || HABIT_STATUSES.PENDING;
@@ -18,6 +19,7 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false }) => 
   
   const SWIPE_THRESHOLD = 60;
   const MAX_SWIPE = 120;
+  const MOVE_THRESHOLD = 5; // Минимальное движение для начала свайпа
 
   useEffect(() => {
     setSwipeOffset(0);
@@ -93,14 +95,23 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false }) => 
   const handleTouchStart = (e) => {
     if (loading || readOnly) return;
     setStartX(e.touches[0].clientX);
-    setIsSwiping(true);
+    setIsSwiping(false);
+    setHasMoved(false);
   };
 
   const handleTouchMove = (e) => {
-    if (!isSwiping || loading || readOnly) return;
+    if (loading || readOnly) return;
     
     const currentX = e.touches[0].clientX;
     const diff = currentX - startX;
+    
+    // Определяем, начался ли свайп
+    if (Math.abs(diff) > MOVE_THRESHOLD) {
+      setHasMoved(true);
+      setIsSwiping(true);
+    }
+    
+    if (!isSwiping) return;
     
     // Проверяем возможность свайпа
     if (diff < 0 && !getNextStatusLeft()) return;
@@ -111,7 +122,14 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false }) => 
   };
 
   const handleTouchEnd = () => {
-    if (!isSwiping) return;
+    if (!isSwiping) {
+      // Если не было свайпа и есть обработчик клика - вызываем его
+      if (!hasMoved && onClick) {
+        onClick(habit);
+      }
+      return;
+    }
+    
     setIsSwiping(false);
     
     if (Math.abs(swipeOffset) >= SWIPE_THRESHOLD) {
@@ -128,15 +146,24 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false }) => 
   // Mouse handlers для десктопа
   const handleMouseDown = (e) => {
     if (loading || readOnly) return;
+    e.preventDefault();
     setStartX(e.clientX);
-    setIsSwiping(true);
+    setIsSwiping(false);
+    setHasMoved(false);
   };
 
   const handleMouseMove = (e) => {
-    if (!isSwiping || loading || readOnly) return;
+    if (loading || readOnly || startX === 0) return;
     
     const currentX = e.clientX;
     const diff = currentX - startX;
+    
+    if (Math.abs(diff) > MOVE_THRESHOLD) {
+      setHasMoved(true);
+      setIsSwiping(true);
+    }
+    
+    if (!isSwiping) return;
     
     if (diff < 0 && !getNextStatusLeft()) return;
     if (diff > 0 && !getNextStatusRight()) return;
@@ -146,8 +173,19 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false }) => 
   };
 
   const handleMouseUp = () => {
-    if (!isSwiping) return;
+    if (!isSwiping && !hasMoved && onClick) {
+      onClick(habit);
+      setStartX(0);
+      return;
+    }
+    
+    if (!isSwiping) {
+      setStartX(0);
+      return;
+    }
+    
     setIsSwiping(false);
+    setStartX(0);
     
     if (Math.abs(swipeOffset) >= SWIPE_THRESHOLD) {
       if (swipeOffset < 0) {
@@ -165,6 +203,8 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false }) => 
       setIsSwiping(false);
       setSwipeOffset(0);
     }
+    setStartX(0);
+    setHasMoved(false);
   };
 
   const showLeftButton = swipeOffset < -20 && getNextStatusLeft();
@@ -227,28 +267,33 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false }) => 
     }
   };
 
+  const getCategoryEmoji = () => {
+    return habit.category_icon || habit.icon || '🎯';
+  };
+
   return (
     <div className="habit-card-container">
       {rightButton && (
-  <div 
-    className={`swipe-action-button ${rightButton.className} ${showRightButton ? 'visible' : ''}`}
-    style={{
-      left: 0,
-      opacity: showRightButton ? Math.min(swipeOffset / SWIPE_THRESHOLD, 1) : 0,
-      transform: `scale(${showRightButton ? Math.min(swipeOffset / SWIPE_THRESHOLD, 1) : 0.8})`
-    }}
-  >
-    <span className="swipe-action-icon">{rightButton.icon}</span>
-    <span className="swipe-action-text">{rightButton.text}</span>
-  </div>
-)}
+        <div 
+          className={`swipe-action-button ${rightButton.className} ${showRightButton ? 'visible' : ''}`}
+          style={{
+            left: 0,
+            opacity: showRightButton ? Math.min(swipeOffset / SWIPE_THRESHOLD, 1) : 0,
+            transform: `scale(${showRightButton ? Math.min(swipeOffset / SWIPE_THRESHOLD, 1) : 0.8})`
+          }}
+        >
+          <span className="swipe-action-icon">{rightButton.icon}</span>
+          <span className="swipe-action-text">{rightButton.text}</span>
+        </div>
+      )}
 
       <div 
         ref={cardRef}
         className={`habit-card ${getCardState()} ${isAnimating ? 'animating' : ''} ${isSwiping ? 'swiping' : ''}`}
         style={{
           transform: `translateX(${swipeOffset}px)`,
-          transition: isSwiping ? 'none' : 'transform 0.3s ease-out'
+          transition: isSwiping ? 'none' : 'transform 0.3s ease-out',
+          cursor: onClick ? 'pointer' : 'grab'
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -260,7 +305,7 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false }) => 
       >
         <div className="habit-card-content">
           <div className={`habit-icon ${getCardState()}`}>
-            <span className="habit-emoji">{habit.icon || habit.category_icon || '🏃'}</span>
+            <span className="habit-emoji">{getCategoryEmoji()}</span>
           </div>
           
           <div className="habit-info">
@@ -280,22 +325,21 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false }) => 
       </div>
 
       {leftButton && (
-  <div 
-    className={`swipe-action-button ${leftButton.className} ${showLeftButton ? 'visible' : ''}`}
-    style={{
-      right: 0,
-      opacity: showLeftButton ? Math.min(Math.abs(swipeOffset) / SWIPE_THRESHOLD, 1) : 0,
-      transform: `scale(${showLeftButton ? Math.min(Math.abs(swipeOffset) / SWIPE_THRESHOLD, 1) : 0.8})`
-    }}
-  >
-    <span className="swipe-action-icon">{leftButton.icon}</span>
-    <span className="swipe-action-text">{leftButton.text}</span>
-  </div>
-)}
+        <div 
+          className={`swipe-action-button ${leftButton.className} ${showLeftButton ? 'visible' : ''}`}
+          style={{
+            right: 0,
+            opacity: showLeftButton ? Math.min(Math.abs(swipeOffset) / SWIPE_THRESHOLD, 1) : 0,
+            transform: `scale(${showLeftButton ? Math.min(Math.abs(swipeOffset) / SWIPE_THRESHOLD, 1) : 0.8})`
+          }}
+        >
+          <span className="swipe-action-icon">{leftButton.icon}</span>
+          <span className="swipe-action-text">{leftButton.text}</span>
+        </div>
+      )}
     </div>
   );
 }, (prevProps, nextProps) => {
-  // Функция сравнения для memo
   return (
     prevProps.habit.id === nextProps.habit.id &&
     prevProps.habit.today_status === nextProps.habit.today_status &&

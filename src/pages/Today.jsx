@@ -428,14 +428,14 @@ if (showHabitDetail && selectedHabit) {
             // Обновите HabitCard в рендере:
 <div className="today__habits">
   {displayHabits.map((habit) => (
-    <div key={`${habit.id}-${selectedDate}`} onClick={() => handleHabitClick(habit)}>
-      <HabitCard
-        habit={habit}
-        onMark={isEditableDate ? handleMark : undefined}
-        onUnmark={isEditableDate ? handleUnmark : undefined}
-        readOnly={!isEditableDate}
-      />
-    </div>
+    <HabitCard
+      key={`${habit.id}-${selectedDate}`}
+      habit={habit}
+      onMark={isEditableDate ? handleMark : undefined}
+      onUnmark={isEditableDate ? handleUnmark : undefined}
+      onClick={handleHabitClick}
+      readOnly={!isEditableDate}
+    />
   ))}
 </div>
           )}
