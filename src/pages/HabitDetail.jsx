@@ -145,7 +145,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   return (
     <>
       <div className="habit-detail">
-        <div className="habit-detail__header">
+        {/* <div className="habit-detail__header">
           <button className="habit-detail__close" onClick={onClose}>
             Close
           </button>
@@ -154,7 +154,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
             <span className="habit-detail__app-subtitle">mini-app</span>
           </div>
           <button className="habit-detail__menu">⋯</button>
-        </div>
+        </div> */}
 
         <div className="habit-detail__content">
           <div className="habit-detail__habit-info">
