@@ -1,0 +1,320 @@
+.edit-habit {
+  position: fixed;
+  inset: 0;
+  background: #F2F2F7;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease-out;
+}
+
+/* Header */
+.edit-habit__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: white;
+  border-bottom: 1px solid #E5E5EA;
+}
+
+.edit-habit__cancel {
+  background: none;
+  border: none;
+  color: #007AFF;
+  font-size: 17px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.edit-habit__title-wrapper {
+  text-align: center;
+  flex: 1;
+}
+
+.edit-habit__title {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0;
+  color: #000;
+}
+
+.edit-habit__subtitle {
+  font-size: 13px;
+  color: #8E8E93;
+}
+
+.edit-habit__menu {
+  background: none;
+  border: none;
+  color: #007AFF;
+  font-size: 22px;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Form */
+.edit-habit__form {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.edit-habit__content {
+  flex: 1;
+  padding: 20px 16px;
+  overflow-y: auto;
+}
+
+/* Form sections */
+.edit-form-section {
+  margin-bottom: 24px;
+}
+
+.edit-form-section-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.edit-form-label-title {
+  display: block;
+  font-size: 17px;
+  font-weight: 600;
+  color: #000;
+  margin-bottom: 12px;
+}
+
+.edit-form-section-row .edit-form-label-title {
+  margin-bottom: 0;
+}
+
+/* Inputs */
+.edit-form-input,
+.edit-form-textarea {
+  width: 100%;
+  padding: 16px;
+  font-size: 17px;
+  border: none;
+  border-radius: 12px;
+  background: white;
+  color: #000;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  -webkit-appearance: none;
+  transition: all 0.2s;
+}
+
+.edit-form-input::placeholder,
+.edit-form-textarea::placeholder {
+  color: #C7C7CC;
+  line-height: 1.4;
+}
+
+.edit-form-textarea {
+  resize: none;
+  min-height: 120px;
+  line-height: 1.4;
+}
+
+.edit-form-value {
+  font-size: 17px;
+  color: #8E8E93;
+}
+
+.edit-form-value--button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Frequency selector */
+.frequency-selector {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.frequency-counter {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 12px;
+  padding: 4px;
+  gap: 16px;
+}
+
+.frequency-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: none;
+  background: #F2F2F7;
+  color: #007AFF;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.frequency-btn:active {
+  transform: scale(0.95);
+  background: #E5E5EA;
+}
+
+.frequency-value {
+  font-size: 20px;
+  font-weight: 600;
+  min-width: 24px;
+  text-align: center;
+}
+
+.frequency-type {
+  display: flex;
+  flex: 1;
+  background: white;
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.frequency-type-btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 17px;
+  font-weight: 500;
+  color: #8E8E93;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.frequency-type-btn.active {
+  background: #007AFF;
+  color: white;
+}
+
+/* Days selector */
+.days-selector-edit {
+  display: flex;
+  gap: 8px;
+}
+
+.day-button-edit {
+  flex: 1;
+  height: 52px;
+  border-radius: 12px;
+  border: 2px solid #E5E5EA;
+  background: white;
+  color: #000;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.day-button-edit--selected {
+  background: #007AFF;
+  border-color: #007AFF;
+  color: white;
+}
+
+/* Duration selector */
+.duration-selector {
+  display: flex;
+  gap: 8px;
+}
+
+.duration-btn {
+  flex: 1;
+  padding: 16px;
+  border: 2px solid #E5E5EA;
+  border-radius: 12px;
+  background: white;
+  color: #000;
+  font-size: 17px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.duration-btn.active {
+  background: #007AFF;
+  border-color: #007AFF;
+  color: white;
+}
+
+/* Dropdown menu */
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 16px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  z-index: 1000;
+  min-width: 150px;
+}
+
+.dropdown-item {
+  width: 100%;
+  padding: 16px;
+  font-size: 17px;
+  text-align: left;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #E5E5EA;
+  cursor: pointer;
+  transition: background 0.1s;
+  color: #007AFF;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item:active {
+  background: #F2F2F7;
+}
+
+/* Footer */
+.edit-form-footer {
+  padding: 16px;
+  background: white;
+  border-top: 1px solid #E5E5EA;
+}
+
+.edit-submit-button {
+  width: 100%;
+  padding: 17px;
+  font-size: 17px;
+  font-weight: 600;
+  background: #007AFF;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.edit-submit-button:disabled {
+  background: #C8C8CD;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Animation */
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}

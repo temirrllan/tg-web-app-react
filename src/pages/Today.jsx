@@ -12,6 +12,7 @@ import { useHabits } from "../hooks/useHabits";
 import { useTelegram } from "../hooks/useTelegram";
 import "./Today.css";
 import SwipeHint from '../components/habits/SwipeHint';
+import EditHabitForm from '../components/habits/EditHabitForm';
 
 const Today = () => {
   const { user } = useTelegram();
@@ -33,7 +34,11 @@ const Today = () => {
   const [showProfile, setShowProfile] = useState(false);
   const [selectedHabit, setSelectedHabit] = useState(null);
   const [showHabitDetail, setShowHabitDetail] = useState(false);
-  
+  // Добавьте состояние для редактирования
+const [showEditForm, setShowEditForm] = useState(false);
+const [habitToEdit, setHabitToEdit] = useState(null);
+
+
   const getTodayDate = () => {
     const today = new Date();
     const year = today.getFullYear();
@@ -65,12 +70,29 @@ const Today = () => {
     setShowHabitDetail(true);
   };
 
-  const handleEditHabit = (habit) => {
-    console.log('Edit habit:', habit);
-    setShowHabitDetail(false);
-    // TODO: Открыть форму редактирования
-  };
-
+  // Обновите handleEditHabit
+const handleEditHabit = (habit) => {
+  console.log('Edit habit:', habit);
+  setHabitToEdit(habit);
+  setShowEditForm(true);
+  setShowHabitDetail(false);
+};
+// Добавьте обработчик успешного редактирования
+const handleEditSuccess = async () => {
+  setShowEditForm(false);
+  setHabitToEdit(null);
+  
+  // Перезагружаем привычки
+  if (selectedDate === getTodayDate()) {
+    await refresh();
+  } else {
+    const result = await loadHabitsForDate(selectedDate);
+    if (result) {
+      setDateHabits(result.habits || []);
+      setDateStats(result.stats || { completed: 0, total: 0 });
+    }
+  }
+};
   const handleDeleteHabit = async (habitId) => {
     try {
       console.log('Deleting habit:', habitId);
@@ -456,6 +478,18 @@ const Today = () => {
           onSuccess={handleCreateHabit}
         />
       )}
+
+      {/* В конце компонента, после CreateHabitForm, добавьте: */}
+{showEditForm && habitToEdit && (
+  <EditHabitForm
+    habit={habitToEdit}
+    onClose={() => {
+      setShowEditForm(false);
+      setHabitToEdit(null);
+    }}
+    onSuccess={handleEditSuccess}
+  />
+)}
     </>
   );
 };
