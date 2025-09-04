@@ -62,7 +62,7 @@ const Profile = ({ onClose }) => {
 
   return (
     <div className="profile">
-      <div className="profile__header">
+      {/* <div className="profile__header">
         <button className="profile__close" onClick={onClose}>
           Close
         </button>
@@ -71,7 +71,7 @@ const Profile = ({ onClose }) => {
           <span className="profile__subtitle">mini-app</span>
         </div>
         <button className="profile__menu">⋯</button>
-      </div>
+      </div> */}
 
       <div className="profile__content">
         <div className="profile__user">

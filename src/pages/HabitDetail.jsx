@@ -3,11 +3,15 @@ import { useNavigation } from '../hooks/useNavigation';
 import { useTelegram } from '../hooks/useTelegram';
 import { habitService } from '../services/habits';
 import Loader from '../components/common/Loader';
+import DeleteConfirmModal from '../components/modals/DeleteConfirmModal';
+import CopyLinkModal from '../components/modals/CopyLinkModal';
 import './HabitDetail.css';
 
 const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const { tg } = useTelegram();
   const [loading, setLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showCopyModal, setShowCopyModal] = useState(false);
   const [statistics, setStatistics] = useState({
     currentStreak: 0,
     weekDays: 0,
@@ -17,16 +21,10 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     yearDays: 0,
     yearTotal: 365
   });
-  const [motivationalText, setMotivationalText] = useState('Keep going!');
 
   // Показываем кнопку Back
   useNavigation(onClose);
-useEffect(() => {
-  console.log('HabitDetail mounted with habit:', habit);
-  if (!habit) {
-    console.error('No habit data provided to HabitDetail!');
-  }
-}, [habit]);
+
   useEffect(() => {
     loadStatistics();
   }, [habit.id]);
@@ -48,20 +46,6 @@ useEffect(() => {
           yearDays: stats.yearCompleted || 0,
           yearTotal: 365
         });
-        
-        // Выбираем мотивационный текст на основе streak
-        const streak = stats.currentStreak || 0;
-        if (streak === 0) {
-          setMotivationalText("Let's start today! 💪");
-        } else if (streak < 7) {
-          setMotivationalText("Keep it up! 🌱");
-        } else if (streak < 30) {
-          setMotivationalText("Great progress! 🔥");
-        } else if (streak < 100) {
-          setMotivationalText("You're on fire! 🚀");
-        } else {
-          setMotivationalText("Incredible dedication! 🏆");
-        }
       }
     } catch (error) {
       console.error('Failed to load statistics:', error);
@@ -79,39 +63,55 @@ useEffect(() => {
     } else {
       // Fallback для разработки
       console.log('Share:', { text: shareText, url: shareUrl });
-      navigator.clipboard.writeText(shareUrl);
-      alert('Link copied to clipboard!');
+      window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
     }
   };
 
-  const handleCopyLink = () => {
+  const handleCopyLink = async () => {
     const inviteLink = `https://t.me/your_bot_username?start=habit_${habit.id}`;
-    navigator.clipboard.writeText(inviteLink);
     
-    if (tg?.showAlert) {
-      tg.showAlert('Link copied to clipboard!');
-    } else {
-      alert('Link copied to clipboard!');
+    try {
+      // Используем современный API если доступен
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(inviteLink);
+      } else {
+        // Fallback для старых браузеров или HTTP
+        const textArea = document.createElement("textarea");
+        textArea.value = inviteLink;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        textArea.remove();
+      }
+      
+      // Показываем модальное окно успеха
+      setShowCopyModal(true);
+      
+      // Вибрация для обратной связи
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      }
+    } catch (err) {
+      console.error('Failed to copy link:', err);
+      if (tg?.showAlert) {
+        tg.showAlert('Failed to copy link. Please try again.');
+      } else {
+        alert('Failed to copy link. Please try again.');
+      }
     }
   };
 
-  const handleDelete = () => {
-    if (tg?.showConfirm) {
-      tg.showConfirm(
-        `Are you sure you want to delete "${habit.title}"? This action cannot be undone.`,
-        (confirmed) => {
-          if (confirmed) {
-            onDelete(habit.id);
-          }
-        }
-      );
-    } else {
-      const confirmed = window.confirm(
-        `Are you sure you want to delete "${habit.title}"? This action cannot be undone.`
-      );
-      if (confirmed) {
-        onDelete(habit.id);
-      }
+  const handleDeleteClick = () => {
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (onDelete) {
+      onDelete(habit.id);
     }
   };
 
@@ -143,119 +143,134 @@ useEffect(() => {
   }
 
   return (
-    <div className="habit-detail">
-      {/* <div className="habit-detail__header">
-        <button className="habit-detail__close" onClick={onClose}>
-          Close
-        </button>
-        <div className="habit-detail__title-wrapper">
-          <h1 className="habit-detail__app-title">Habit Tracker</h1>
-          <span className="habit-detail__app-subtitle">mini-app</span>
-        </div>
-        <button className="habit-detail__menu">⋯</button>
-      </div> */}
-
-      <div className="habit-detail__content">
-        <div className="habit-detail__habit-info">
-          <div className="habit-detail__habit-header">
-            <div className="habit-detail__habit-title-section">
-              <span className="habit-detail__emoji">{getCategoryEmoji()}</span>
-              <h2 className="habit-detail__habit-title">{habit.title}</h2>
-            </div>
-            <button className="habit-detail__edit-btn" onClick={() => onEdit(habit)}>
-              Edit
-            </button>
+    <>
+      <div className="habit-detail">
+        <div className="habit-detail__header">
+          <button className="habit-detail__close" onClick={onClose}>
+            Close
+          </button>
+          <div className="habit-detail__title-wrapper">
+            <h1 className="habit-detail__app-title">Habit Tracker</h1>
+            <span className="habit-detail__app-subtitle">mini-app</span>
           </div>
-          {habit.goal && (
-            <p className="habit-detail__habit-goal">{habit.goal}</p>
-          )}
+          <button className="habit-detail__menu">⋯</button>
         </div>
 
-        <div className="habit-detail__statistics">
-          <div className="habit-detail__stat-card">
-            <div className="habit-detail__stat-circle" style={{
-              '--progress': getProgressPercentage(statistics.currentStreak, 100),
-              '--color': getProgressColor('streak')
-            }}>
-              <span className="habit-detail__stat-value">{statistics.currentStreak}</span>
+        <div className="habit-detail__content">
+          <div className="habit-detail__habit-info">
+            <div className="habit-detail__habit-header">
+              <div className="habit-detail__habit-title-section">
+                <span className="habit-detail__emoji">{getCategoryEmoji()}</span>
+                <h2 className="habit-detail__habit-title">{habit.title}</h2>
+              </div>
+              <button className="habit-detail__edit-btn" onClick={() => onEdit(habit)}>
+                Edit
+              </button>
             </div>
-            <h3 className="habit-detail__stat-title">Days Strike</h3>
-            <p className="habit-detail__stat-subtitle">Days Strike</p>
+            {habit.goal && (
+              <p className="habit-detail__habit-goal">{habit.goal}</p>
+            )}
           </div>
 
-          <div className="habit-detail__stat-card">
-            <div className="habit-detail__stat-circle" style={{
-              '--progress': getProgressPercentage(statistics.weekDays, statistics.weekTotal),
-              '--color': getProgressColor('week')
-            }}>
-              <span className="habit-detail__stat-value">{statistics.weekDays}</span>
-              <span className="habit-detail__stat-total">{statistics.weekTotal}</span>
+          <div className="habit-detail__statistics">
+            <div className="habit-detail__stat-card">
+              <div className="habit-detail__stat-circle" style={{
+                '--progress': getProgressPercentage(statistics.currentStreak, 100),
+                '--color': getProgressColor('streak')
+              }}>
+                <span className="habit-detail__stat-value">{statistics.currentStreak}</span>
+              </div>
+              <h3 className="habit-detail__stat-title">Days Strike</h3>
+              <p className="habit-detail__stat-subtitle">Days Strike</p>
             </div>
-            <h3 className="habit-detail__stat-title">Week</h3>
-            <p className="habit-detail__stat-subtitle">Days Strike</p>
+
+            <div className="habit-detail__stat-card">
+              <div className="habit-detail__stat-circle" style={{
+                '--progress': getProgressPercentage(statistics.weekDays, statistics.weekTotal),
+                '--color': getProgressColor('week')
+              }}>
+                <span className="habit-detail__stat-value">{statistics.weekDays}</span>
+                <span className="habit-detail__stat-total">{statistics.weekTotal}</span>
+              </div>
+              <h3 className="habit-detail__stat-title">Week</h3>
+              <p className="habit-detail__stat-subtitle">Days Strike</p>
+            </div>
+
+            <div className="habit-detail__stat-card">
+              <div className="habit-detail__stat-circle" style={{
+                '--progress': getProgressPercentage(statistics.monthDays, statistics.monthTotal),
+                '--color': getProgressColor('month')
+              }}>
+                <span className="habit-detail__stat-value">{statistics.monthDays}</span>
+                <span className="habit-detail__stat-total">{statistics.monthTotal}</span>
+              </div>
+              <h3 className="habit-detail__stat-title">Month</h3>
+              <p className="habit-detail__stat-subtitle">Days Strike</p>
+            </div>
+
+            <div className="habit-detail__stat-card">
+              <div className="habit-detail__stat-circle" style={{
+                '--progress': getProgressPercentage(statistics.yearDays, statistics.yearTotal),
+                '--color': getProgressColor('year')
+              }}>
+                <span className="habit-detail__stat-value">{statistics.yearDays}</span>
+                <span className="habit-detail__stat-total">{statistics.yearTotal}</span>
+              </div>
+              <h3 className="habit-detail__stat-title">Year</h3>
+              <p className="habit-detail__stat-subtitle">Days Strike</p>
+            </div>
           </div>
 
-          <div className="habit-detail__stat-card">
-            <div className="habit-detail__stat-circle" style={{
-              '--progress': getProgressPercentage(statistics.monthDays, statistics.monthTotal),
-              '--color': getProgressColor('month')
-            }}>
-              <span className="habit-detail__stat-value">{statistics.monthDays}</span>
-              <span className="habit-detail__stat-total">{statistics.monthTotal}</span>
-            </div>
-            <h3 className="habit-detail__stat-title">Month</h3>
-            <p className="habit-detail__stat-subtitle">Days Strike</p>
+          <div className="habit-detail__motivation">
+            <p className="habit-detail__motivation-text">
+              Good Job My Friend! 🔥
+            </p>
           </div>
 
-          <div className="habit-detail__stat-card">
-            <div className="habit-detail__stat-circle" style={{
-              '--progress': getProgressPercentage(statistics.yearDays, statistics.yearTotal),
-              '--color': getProgressColor('year')
-            }}>
-              <span className="habit-detail__stat-value">{statistics.yearDays}</span>
-              <span className="habit-detail__stat-total">{statistics.yearTotal}</span>
+          <div className="habit-detail__friends">
+            <h3 className="habit-detail__friends-title">Habit Friends</h3>
+            <p className="habit-detail__friends-subtitle">
+              Share the link with friends and invite them to track habits together.
+            </p>
+            
+            <div className="habit-detail__share-buttons">
+              <button 
+                className="habit-detail__btn habit-detail__btn--outline"
+                onClick={handleCopyLink}
+              >
+                Copy Link
+              </button>
+              <button 
+                className="habit-detail__btn habit-detail__btn--primary"
+                onClick={handleShare}
+              >
+                Share
+              </button>
             </div>
-            <h3 className="habit-detail__stat-title">Year</h3>
-            <p className="habit-detail__stat-subtitle">Days Strike</p>
           </div>
+
+          <button 
+            className="habit-detail__btn habit-detail__btn--danger"
+            onClick={handleDeleteClick}
+          >
+            Remove Habit
+          </button>
         </div>
-
-        <div className="habit-detail__motivation">
-          <p className="habit-detail__motivation-text">
-            Good Job My Friend! 🔥
-          </p>
-        </div>
-
-        <div className="habit-detail__friends">
-          <h3 className="habit-detail__friends-title">Habit Friends</h3>
-          <p className="habit-detail__friends-subtitle">
-            Share the link with friends and invite them to track habits together.
-          </p>
-          
-          <div className="habit-detail__share-buttons">
-            <button 
-              className="habit-detail__btn habit-detail__btn--outline"
-              onClick={handleCopyLink}
-            >
-              Copy Link
-            </button>
-            <button 
-              className="habit-detail__btn habit-detail__btn--primary"
-              onClick={handleShare}
-            >
-              Share
-            </button>
-          </div>
-        </div>
-
-        <button 
-          className="habit-detail__btn habit-detail__btn--danger"
-          onClick={handleDelete}
-        >
-          Remove Habit
-        </button>
       </div>
-    </div>
+
+      {/* Модальные окна */}
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteConfirm}
+        habitTitle={habit.title}
+      />
+
+      <CopyLinkModal
+        isOpen={showCopyModal}
+        onClose={() => setShowCopyModal(false)}
+      />
+    </>
   );
 };
 
