@@ -257,3 +257,15 @@
  -ms-user-select: none;
  pointer-events: none;
 }
+
+.habit-members-count {
+  position: absolute;
+  bottom: 8px;
+  right: 16px;
+  background: #A7D96C;
+  color: #1D1D1F;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}

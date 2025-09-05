@@ -316,6 +316,12 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
             <p className="habit-goal">Goal: {habit.goal}</p>
           </div>
 
+          {habit.members_count > 0 && (
+  <div className="habit-members-count">
+    +{habit.members_count} Members
+  </div>
+)}
+
           {!isPending && (
             <div className={`status-indicator ${getCardState()}`}>
               {getStatusIcon()}

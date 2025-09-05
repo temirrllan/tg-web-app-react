@@ -8,10 +8,11 @@ import CopyLinkModal from '../components/modals/CopyLinkModal';
 import './HabitDetail.css';
 
 const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
-  const { tg } = useTelegram();
+  const { tg, user: currentUser } = useTelegram();
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showCopyModal, setShowCopyModal] = useState(false);
+  const [members, setMembers] = useState([]);
   const [statistics, setStatistics] = useState({
     currentStreak: 0,
     weekDays: 0,
@@ -22,18 +23,16 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     yearTotal: 365
   });
 
-  // Показываем кнопку Back
   useNavigation(onClose);
 
   useEffect(() => {
     loadStatistics();
+    loadMembers();
   }, [habit.id]);
 
   const loadStatistics = async () => {
     try {
       setLoading(true);
-      
-      // Получаем статистику с сервера
       const stats = await habitService.getHabitStatistics(habit.id);
       
       if (stats) {
@@ -54,33 +53,47 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     }
   };
 
-  const handleShare = () => {
-    const shareText = `I'm tracking my "${habit.title}" habit with Habit Tracker! Join me to build better habits together! 💪`;
-    const shareUrl = `https://t.me/your_bot_username?start=habit_${habit.id}`;
-    
-    if (tg?.openTelegramLink) {
-      tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`);
-    } else {
-      // Fallback для разработки
-      console.log('Share:', { text: shareText, url: shareUrl });
-      window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
+  const loadMembers = async () => {
+    try {
+      const data = await habitService.getHabitMembers(habit.id);
+      setMembers(data.members || []);
+    } catch (error) {
+      console.error('Failed to load members:', error);
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      // Получаем или создаем share code
+      const shareData = await habitService.createShareLink(habit.id);
+      const shareCode = shareData.shareCode;
+      
+      const shareText = `Join my "${habit.title}" habit!\n\n📝 Goal: ${habit.goal}\n\nLet's build better habits together! 💪`;
+      const shareUrl = `https://t.me/${process.env.REACT_APP_BOT_USERNAME || 'your_bot'}?start=join_${shareCode}`;
+      
+      if (tg?.openTelegramLink) {
+        tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`);
+      } else {
+        window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
+      }
+    } catch (error) {
+      console.error('Failed to create share link:', error);
     }
   };
 
   const handleCopyLink = async () => {
-    const inviteLink = `https://t.me/your_bot_username?start=habit_${habit.id}`;
-    
     try {
-      // Используем современный API если доступен
+      const shareData = await habitService.createShareLink(habit.id);
+      const shareCode = shareData.shareCode;
+      const inviteLink = `https://t.me/${process.env.REACT_APP_BOT_USERNAME || 'your_bot'}?start=join_${shareCode}`;
+      
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(inviteLink);
       } else {
-        // Fallback для старых браузеров или HTTP
         const textArea = document.createElement("textarea");
         textArea.value = inviteLink;
         textArea.style.position = "fixed";
         textArea.style.left = "-999999px";
-        textArea.style.top = "-999999px";
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
@@ -88,30 +101,52 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
         textArea.remove();
       }
       
-      // Показываем модальное окно успеха
       setShowCopyModal(true);
       
-      // Вибрация для обратной связи
       if (window.Telegram?.WebApp?.HapticFeedback) {
         window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
       }
     } catch (err) {
       console.error('Failed to copy link:', err);
-      if (tg?.showAlert) {
-        tg.showAlert('Failed to copy link. Please try again.');
-      } else {
-        alert('Failed to copy link. Please try again.');
-      }
     }
   };
 
-  const handleDeleteClick = () => {
-    setShowDeleteModal(true);
+  const handlePunchFriend = async (memberId) => {
+    try {
+      await habitService.punchFriend(habit.id, memberId);
+      
+      if (tg?.showAlert) {
+        tg.showAlert('Reminder sent to your friend! 👊');
+      } else {
+        alert('Reminder sent to your friend! 👊');
+      }
+      
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+      }
+    } catch (error) {
+      console.error('Failed to send punch:', error);
+    }
   };
 
-  const handleDeleteConfirm = () => {
-    if (onDelete) {
-      onDelete(habit.id);
+  const handleRemoveFriend = async (memberId) => {
+    try {
+      if (tg?.showConfirm) {
+        tg.showConfirm('Remove this friend from the habit?', async (confirmed) => {
+          if (confirmed) {
+            await habitService.removeMember(habit.id, memberId);
+            loadMembers();
+          }
+        });
+      } else {
+        const confirmed = window.confirm('Remove this friend from the habit?');
+        if (confirmed) {
+          await habitService.removeMember(habit.id, memberId);
+          loadMembers();
+        }
+      }
+    } catch (error) {
+      console.error('Failed to remove friend:', error);
     }
   };
 
@@ -127,7 +162,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const getProgressColor = (type) => {
     const colors = {
       streak: '#A7D96C',
-      week: '#7DD3C0',
+      week: '#7DD3C0', 
       month: '#C084FC',
       year: '#FBBF24'
     };
@@ -145,7 +180,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   return (
     <>
       <div className="habit-detail">
-        {/* <div className="habit-detail__header">
+        <div className="habit-detail__header">
           <button className="habit-detail__close" onClick={onClose}>
             Close
           </button>
@@ -154,7 +189,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
             <span className="habit-detail__app-subtitle">mini-app</span>
           </div>
           <button className="habit-detail__menu">⋯</button>
-        </div> */}
+        </div>
 
         <div className="habit-detail__content">
           <div className="habit-detail__habit-info">
@@ -229,40 +264,45 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
 
           <div className="habit-detail__friends">
             <h3 className="habit-detail__friends-title">Habit Friends</h3>
-            <p className="habit-detail__friends-subtitle">
-              Share the link with friends and invite them to track habits together.
-            </p>
             
-            <div className="habit-detail__share-buttons">
-              <button 
-                className="habit-detail__btn habit-detail__btn--outline"
-                onClick={handleCopyLink}
-              >
-                Copy Link
-              </button>
-              <button 
-                className="habit-detail__btn habit-detail__btn--primary"
-                onClick={handleShare}
-              >
-                Share
-              </button>
-            </div>
+            {members.length > 0 ? (
+              <div className="habit-detail__members-list">
+                {members.map(member => (
+                  <FriendCard
+                    key={member.id}
+                    member={member}
+                    onPunch={() => handlePunchFriend(member.id)}
+                    onRemove={() => handleRemoveFriend(member.id)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="habit-detail__friends-subtitle">
+                Share the link with friends and invite them to track habits together.
+              </p>
+            )}
+            
+            <button 
+              className="habit-detail__btn habit-detail__btn--add-friend"
+              onClick={handleShare}
+            >
+              Add Friend
+            </button>
           </div>
 
           <button 
             className="habit-detail__btn habit-detail__btn--danger"
-            onClick={handleDeleteClick}
+            onClick={() => setShowDeleteModal(true)}
           >
             Remove Habit
           </button>
         </div>
       </div>
 
-      {/* Модальные окна */}
       <DeleteConfirmModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        onConfirm={handleDeleteConfirm}
+        onConfirm={() => onDelete(habit.id)}
         habitTitle={habit.title}
       />
 
@@ -271,6 +311,83 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
         onClose={() => setShowCopyModal(false)}
       />
     </>
+  );
+};
+
+// Компонент карточки друга со свайпами
+const FriendCard = ({ member, onPunch, onRemove }) => {
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [startX, setStartX] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+  
+  const SWIPE_THRESHOLD = 60;
+  const MAX_SWIPE = 100;
+
+  const handleTouchStart = (e) => {
+    setStartX(e.touches[0].clientX);
+    setIsSwiping(true);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isSwiping) return;
+    
+    const currentX = e.touches[0].clientX;
+    const diff = currentX - startX;
+    const limitedDiff = Math.max(-MAX_SWIPE, Math.min(MAX_SWIPE, diff));
+    setSwipeOffset(limitedDiff);
+  };
+
+  const handleTouchEnd = () => {
+    if (Math.abs(swipeOffset) >= SWIPE_THRESHOLD) {
+      if (swipeOffset < 0) {
+        // Свайп влево - Punch
+        onPunch();
+      } else {
+        // Свайп вправо - Remove
+        onRemove();
+      }
+    }
+    
+    setSwipeOffset(0);
+    setIsSwiping(false);
+  };
+
+  return (
+    <div className="friend-card-container">
+      {/* Кнопка Remove (свайп вправо) */}
+      {swipeOffset > 20 && (
+        <div className="friend-action friend-action--remove">
+          <span>Remove</span>
+        </div>
+      )}
+      
+      <div 
+        className="friend-card"
+        style={{
+          transform: `translateX(${swipeOffset}px)`,
+          transition: isSwiping ? 'none' : 'transform 0.3s ease-out'
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        <img 
+          src={member.photo_url || `https://ui-avatars.com/api/?name=${member.first_name}`} 
+          alt={member.first_name}
+          className="friend-card__avatar"
+        />
+        <span className="friend-card__name">
+          {member.first_name} {member.last_name}
+        </span>
+      </div>
+      
+      {/* Кнопка Punch (свайп влево) */}
+      {swipeOffset < -20 && (
+        <div className="friend-action friend-action--punch">
+          <span>👊 Punch</span>
+        </div>
+      )}
+    </div>
   );
 };
 

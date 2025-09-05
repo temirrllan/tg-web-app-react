@@ -189,4 +189,34 @@ export const habitService = {
     };
   }
 },
+
+// Создать ссылку для шаринга
+createShareLink: async (habitId) => {
+  const { data } = await api.post(`/habits/${habitId}/share`);
+  return data;
+},
+
+// Получить участников привычки
+getHabitMembers: async (habitId) => {
+  const { data } = await api.get(`/habits/${habitId}/members`);
+  return data;
+},
+
+// Punch друга
+punchFriend: async (habitId, userId) => {
+  const { data } = await api.post(`/habits/${habitId}/punch/${userId}`);
+  return data;
+},
+
+// Удалить участника
+removeMember: async (habitId, userId) => {
+  const { data } = await api.delete(`/habits/${habitId}/members/${userId}`);
+  return data;
+},
+
+// Присоединиться к привычке по коду
+joinHabit: async (shareCode) => {
+  const { data } = await api.post('/habits/join', { shareCode });
+  return data;
+},
 };

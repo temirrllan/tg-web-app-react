@@ -302,3 +302,74 @@
     font-size: 15px;
   }
 }
+
+/* Friends Section Updates */
+.habit-detail__members-list {
+  margin-bottom: 16px;
+}
+
+.habit-detail__btn--add-friend {
+  background: #A7D96C;
+  color: #1D1D1F;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+/* Friend Card */
+.friend-card-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  height: 60px;
+  overflow: hidden;
+}
+
+.friend-card {
+  width: 100%;
+  background: white;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 2;
+  cursor: grab;
+}
+
+.friend-card__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.friend-card__name {
+  flex: 1;
+  font-size: 17px;
+  font-weight: 500;
+  color: #000;
+}
+
+.friend-action {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  border-radius: 12px;
+}
+
+.friend-action--punch {
+  right: 0;
+  background: #FF6B6B;
+}
+
+.friend-action--remove {
+  left: 0;
+  background: #FF3B30;
+}
