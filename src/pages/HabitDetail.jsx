@@ -63,53 +63,52 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   };
 
   const handleShare = async () => {
-    try {
-      // Получаем или создаем share code
-      const shareData = await habitService.createShareLink(habit.id);
-      const shareCode = shareData.shareCode;
-      
-      const shareText = `Join my "${habit.title}" habit!\n\n📝 Goal: ${habit.goal}\n\nLet's build better habits together! 💪`;
-      const shareUrl = `https://t.me/${process.env.REACT_APP_BOT_USERNAME || 'your_bot'}?start=join_${shareCode}`;
-      
-      if (tg?.openTelegramLink) {
-        tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`);
-      } else {
-        window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
-      }
-    } catch (error) {
-      console.error('Failed to create share link:', error);
+  try {
+    const shareData = await habitService.createShareLink(habit.id);
+    const shareCode = shareData.shareCode;
+    
+    const shareText = `Join my "${habit.title}" habit!\n\n📝 Goal: ${habit.goal}\n\nLet's build better habits together! 💪`;
+    const shareUrl = `https://t.me/trackeryourhabitbot?start=join_${shareCode}`;
+    
+    if (tg?.openTelegramLink) {
+      tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`);
+    } else {
+      window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
     }
-  };
+  } catch (error) {
+    console.error('Failed to create share link:', error);
+  }
+};
 
   const handleCopyLink = async () => {
-    try {
-      const shareData = await habitService.createShareLink(habit.id);
-      const shareCode = shareData.shareCode;
-      const inviteLink = `https://t.me/${process.env.REACT_APP_BOT_USERNAME || 'your_bot'}?start=join_${shareCode}`;
-      
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(inviteLink);
-      } else {
-        const textArea = document.createElement("textarea");
-        textArea.value = inviteLink;
-        textArea.style.position = "fixed";
-        textArea.style.left = "-999999px";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        document.execCommand('copy');
-        textArea.remove();
-      }
-      
-      setShowCopyModal(true);
-      
-      if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-      }
-    } catch (err) {
-      console.error('Failed to copy link:', err);
+  try {
+    const shareData = await habitService.createShareLink(habit.id);
+    const shareCode = shareData.shareCode;
+    const inviteLink = `https://t.me/trackeryourhabitbot?start=join_${shareCode}`;
+    
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(inviteLink);
+    } else {
+      const textArea = document.createElement("textarea");
+      textArea.value = inviteLink;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      document.execCommand('copy');
+      textArea.remove();
     }
-  };
+    
+    setShowCopyModal(true);
+    
+    if (window.Telegram?.WebApp?.HapticFeedback) {
+      window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    }
+  } catch (err) {
+    console.error('Failed to copy link:', err);
+  }
+};
 
   const handlePunchFriend = async (memberId) => {
     try {

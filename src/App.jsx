@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { authenticateUser } from './services/auth';
+import { habitService } from './services/habits';
 import { useTelegram } from './hooks/useTelegram';
 import Onboarding from './components/Onboarding';
 import Today from './pages/Today';
@@ -15,19 +16,11 @@ function App() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
 
-  // Инициализация Telegram WebApp
   useEffect(() => {
     if (tg) {
-      // Расширяем приложение на весь экран
       tg.expand();
-      
-      // НЕ включаем enableClosingConfirmation здесь, чтобы не показывалась кнопка Cancel
-      // tg.enableClosingConfirmation(); // Убираем эту строку
-      
-      // Готовность приложения
       tg.ready();
       
-      // Скрываем BackButton по умолчанию (будет показан только на вложенных страницах)
       if (tg.BackButton) {
         tg.BackButton.hide();
       }
@@ -37,7 +30,6 @@ function App() {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        // В production обязательно должны быть данные от Telegram
         const isProduction = window.location.hostname !== 'localhost';
         
         if (isProduction && !webApp?.initData) {
@@ -46,16 +38,34 @@ function App() {
           return;
         }
 
-        console.log('Authenticating with:', { 
-          tgUser, 
-          hasInitData: !!webApp?.initData,
-          environment: isProduction ? 'production' : 'development'
-        });
-
         const response = await authenticateUser(webApp?.initData, tgUser);
         
         if (response.success) {
           setUser(response.user);
+          
+          // Проверяем, есть ли параметр join в URL
+          const urlParams = new URLSearchParams(window.location.search);
+          const action = urlParams.get('action');
+          const code = urlParams.get('code');
+          
+          if (action === 'join' && code) {
+            try {
+              const joinResult = await habitService.joinHabit(code);
+              if (joinResult.success) {
+                if (tg?.showAlert) {
+                  tg.showAlert('Successfully joined the habit! 🎉');
+                }
+                // Очищаем параметры из URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+              }
+            } catch (err) {
+              console.error('Failed to join habit:', err);
+              if (tg?.showAlert) {
+                tg.showAlert('Failed to join habit. It may no longer exist.');
+              }
+            }
+          }
+          
           if (response.isNewUser) {
             setShowOnboarding(true);
           }
@@ -70,23 +80,19 @@ function App() {
       }
     };
 
-    // Ждем загрузки Telegram WebApp
     if (!isLoading && isReady) {
       initAuth();
     } else if (!isLoading && !isReady) {
-      // Telegram не загрузился
       const isProduction = window.location.hostname !== 'localhost';
       if (isProduction) {
         setError('Пожалуйста, откройте приложение через Telegram бота');
       } else {
-        // Development mode
         initAuth();
       }
       setLoading(false);
     }
-  }, [webApp, tgUser, isReady, isLoading]);
+  }, [webApp, tgUser, isReady, isLoading, tg]);
 
-  // Показываем загрузку
   if (loading || isLoading) {
     return (
       <div className="app-loading">
@@ -116,7 +122,7 @@ function App() {
     return (
       <div className="app-error">
         <h2>Необходима авторизация</h2>
-        <p>Откройте приложение через Telegram бота</p>
+        <p>Откройте приложение через Telegram бота @trackeryourhabitbot</p>
       </div>
     );
   }
