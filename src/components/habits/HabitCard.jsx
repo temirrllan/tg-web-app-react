@@ -270,85 +270,90 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
   const getCategoryEmoji = () => {
     return habit.category_icon || habit.icon || '🎯';
   };
+  const hasMembers = habit.members_count && habit.members_count > 0;
 
   return (
-    <div className="habit-card-container">
-      {rightButton && (
-        <div 
-          className={`swipe-action-button ${rightButton.className} ${showRightButton ? 'visible' : ''}`}
+    <div className={`habit-card-wrapper ${hasMembers ? 'has-members' : ''}`}>
+      <div className="habit-card-container">
+        {rightButton && (
+          <div 
+            className={`swipe-action-button ${rightButton.className} ${showRightButton ? 'visible' : ''}`}
+            style={{
+              left: 0,
+              opacity: showRightButton ? Math.min(swipeOffset / SWIPE_THRESHOLD, 1) : 0,
+              transform: `scale(${showRightButton ? Math.min(swipeOffset / SWIPE_THRESHOLD, 1) : 0.8})`
+            }}
+          >
+            <span className="swipe-action-icon">{rightButton.icon}</span>
+            <span className="swipe-action-text">{rightButton.text}</span>
+          </div>
+        )}
+
+       <div 
+          ref={cardRef}
+          className={`habit-card ${getCardState()} ${isAnimating ? 'animating' : ''} ${isSwiping ? 'swiping' : ''}`}
           style={{
-            left: 0,
-            opacity: showRightButton ? Math.min(swipeOffset / SWIPE_THRESHOLD, 1) : 0,
-            transform: `scale(${showRightButton ? Math.min(swipeOffset / SWIPE_THRESHOLD, 1) : 0.8})`
+            transform: `translateX(${swipeOffset}px)`,
+            transition: isSwiping ? 'none' : 'transform 0.3s ease-out',
+            cursor: onClick ? 'pointer' : 'grab'
           }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
         >
-          <span className="swipe-action-icon">{rightButton.icon}</span>
-          <span className="swipe-action-text">{rightButton.text}</span>
-        </div>
-      )}
-
-      <div 
-        ref={cardRef}
-        className={`habit-card ${getCardState()} ${isAnimating ? 'animating' : ''} ${isSwiping ? 'swiping' : ''}`}
-        style={{
-          transform: `translateX(${swipeOffset}px)`,
-          transition: isSwiping ? 'none' : 'transform 0.3s ease-out',
-          cursor: onClick ? 'pointer' : 'grab'
-        }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
-      >
         <div className="habit-card-content">
-          <div className={`habit-icon ${getCardState()}`}>
-            <span className="habit-emoji">{getCategoryEmoji()}</span>
-          </div>
-          
-          <div className="habit-info">
-            <h3 className="habit-title">
-              {habit.is_bad_habit && '😈 '}
-              {habit.title}
-            </h3>
-            <p className="habit-goal">Goal: {habit.goal}</p>
-          </div>
-
-          {habit.members_count > 0 && (
-  <div className="habit-members-count">
-    +{habit.members_count} Members
-  </div>
-)}
-
-          {!isPending && (
-            <div className={`status-indicator ${getCardState()}`}>
-              {getStatusIcon()}
+            <div className={`habit-icon ${getCardState()}`}>
+              <span className="habit-emoji">{getCategoryEmoji()}</span>
             </div>
-          )}
-        </div>
+            
+            <div className="habit-info">
+              <h3 className="habit-title">
+                {habit.is_bad_habit && '😈 '}
+                {habit.title}
+              </h3>
+              <p className="habit-goal">Goal: {habit.goal}</p>
+            </div>
+
+            {!isPending && (
+              <div className={`status-indicator ${getCardState()}`}>
+                {getStatusIcon()}
+              </div>
+            )}
+          </div>
       </div>
 
-      {leftButton && (
-        <div 
-          className={`swipe-action-button ${leftButton.className} ${showLeftButton ? 'visible' : ''}`}
-          style={{
-            right: 0,
-            opacity: showLeftButton ? Math.min(Math.abs(swipeOffset) / SWIPE_THRESHOLD, 1) : 0,
-            transform: `scale(${showLeftButton ? Math.min(Math.abs(swipeOffset) / SWIPE_THRESHOLD, 1) : 0.8})`
-          }}
-        >
-          <span className="swipe-action-icon">{leftButton.icon}</span>
-          <span className="swipe-action-text">{leftButton.text}</span>
+      
+        {leftButton && (
+          <div 
+            className={`swipe-action-button ${leftButton.className} ${showLeftButton ? 'visible' : ''}`}
+            style={{
+              right: 0,
+              opacity: showLeftButton ? Math.min(Math.abs(swipeOffset) / SWIPE_THRESHOLD, 1) : 0,
+              transform: `scale(${showLeftButton ? Math.min(Math.abs(swipeOffset) / SWIPE_THRESHOLD, 1) : 0.8})`
+            }}
+          >
+            <span className="swipe-action-icon">{leftButton.icon}</span>
+            <span className="swipe-action-text">{leftButton.text}</span>
+          </div>
+        )}
+    </div>
+    {/* Отображаем количество участников */}
+      {hasMembers && (
+        <div className="habit-members-badge">
+          +{habit.members_count} Members
         </div>
       )}
-    </div>
+      </div>
   );
 }, (prevProps, nextProps) => {
   return (
     prevProps.habit.id === nextProps.habit.id &&
     prevProps.habit.today_status === nextProps.habit.today_status &&
+    prevProps.habit.members_count === nextProps.habit.members_count &&
     prevProps.readOnly === nextProps.readOnly
   );
 });

@@ -269,3 +269,39 @@
   font-size: 12px;
   font-weight: 600;
 }
+
+/* Wrapper для карточек с участниками */
+.habit-card-wrapper {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.habit-card-wrapper.has-members {
+  margin-bottom: 20px; /* Дополнительный отступ для badge */
+}
+
+/* Badge с количеством участников */
+.habit-members-badge {
+  background: #A7D96C;
+  color: #1D1D1F;
+  padding: 8px 0;
+  border-radius: 0 0 20px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  margin-top: -8px;
+  position: relative;
+  z-index: 1;
+  letter-spacing: 0.3px;
+}
+
+/* Адаптация карточки когда есть участники */
+.has-members .habit-card {
+  border-radius: 20px 20px 0 0;
+  margin-bottom: 0;
+}
+
+/* Адаптация кнопок свайпа */
+.has-members .swipe-action-button {
+  border-radius: 20px 20px 0 0;
+}

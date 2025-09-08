@@ -6,6 +6,7 @@ import Loader from '../components/common/Loader';
 import DeleteConfirmModal from '../components/modals/DeleteConfirmModal';
 import CopyLinkModal from '../components/modals/CopyLinkModal';
 import './HabitDetail.css';
+import FriendSwipeHint from '../components/habits/FriendSwipeHint';
 
 const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const { tg, user: currentUser } = useTelegram();
@@ -13,6 +14,8 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showCopyModal, setShowCopyModal] = useState(false);
   const [members, setMembers] = useState([]);
+  const [showFriendHint, setShowFriendHint] = useState(false);
+
   const [statistics, setStatistics] = useState({
     currentStreak: 0,
     weekDays: 0,
@@ -70,6 +73,16 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     const shareText = `Join my "${habit.title}" habit!\n\n📝 Goal: ${habit.goal}\n\nLet's build better habits together! 💪`;
     const shareUrl = `https://t.me/trackeryourhabitbot?start=join_${shareCode}`;
     
+    // Проверяем, показывали ли уже подсказку о друзьях
+    const hasSeenFriendHint = localStorage.getItem('hasSeenFriendHint');
+    if (!hasSeenFriendHint && members.length === 0) {
+      // Показываем подсказку после первого добавления друга
+      setTimeout(() => {
+        setShowFriendHint(true);
+        localStorage.setItem('hasSeenFriendHint', 'true');
+      }, 2000); // Задержка чтобы пользователь успел поделиться
+    }
+    
     if (tg?.openTelegramLink) {
       tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`);
     } else {
@@ -78,7 +91,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   } catch (error) {
     console.error('Failed to create share link:', error);
   }
-};
+};  
 
   const handleCopyLink = async () => {
   try {
@@ -309,6 +322,11 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
         isOpen={showCopyModal}
         onClose={() => setShowCopyModal(false)}
       />
+
+<FriendSwipeHint 
+  show={showFriendHint}
+  onClose={() => setShowFriendHint(false)}
+/>
     </>
   );
 };
