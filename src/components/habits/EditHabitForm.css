@@ -8,51 +8,6 @@
   animation: slideUp 0.3s ease-out;
 }
 
-/* Header */
-.edit-habit__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px;
-  background: white;
-  border-bottom: 1px solid #E5E5EA;
-}
-
-.edit-habit__cancel {
-  background: none;
-  border: none;
-  color: #007AFF;
-  font-size: 17px;
-  padding: 0;
-  cursor: pointer;
-}
-
-.edit-habit__title-wrapper {
-  text-align: center;
-  flex: 1;
-}
-
-.edit-habit__title {
-  font-size: 17px;
-  font-weight: 600;
-  margin: 0;
-  color: #000;
-}
-
-.edit-habit__subtitle {
-  font-size: 13px;
-  color: #8E8E93;
-}
-
-.edit-habit__menu {
-  background: none;
-  border: none;
-  color: #007AFF;
-  font-size: 22px;
-  padding: 0;
-  cursor: pointer;
-}
-
 /* Form */
 .edit-habit__form {
   flex: 1;
@@ -63,27 +18,40 @@
 
 .edit-habit__content {
   flex: 1;
-  padding: 20px 16px;
+  padding: 44px 16px 24px;
   overflow-y: auto;
 }
 
+/* Используем те же стили что и в CreateHabitForm */
 /* Form sections */
-.edit-form-section {
-  margin-bottom: 24px;
-}
-
-.edit-form-section-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px;
-  background: white;
-  border-radius: 12px;
-  margin-bottom: 12px;
+.form-section {
+  margin-bottom: 16px;
   position: relative;
 }
 
-.edit-form-label-title {
+.form-section-row {
+  margin-bottom: 16px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 124px;
+}
+
+.form-section-rw2 {
+  margin-bottom: 16px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 145px;
+}
+
+.form-label {
+  display: block;
+}
+
+.form-label-title {
   display: block;
   font-size: 17px;
   font-weight: 600;
@@ -91,129 +59,124 @@
   margin-bottom: 12px;
 }
 
-.edit-form-section-row .edit-form-label-title {
-  margin-bottom: 0;
-}
-
 /* Inputs */
-.edit-form-input,
-.edit-form-textarea {
+.form-input,
+.form-textarea {
   width: 100%;
-  padding: 16px;
+  padding: 15px 12px;
   font-size: 17px;
   border: none;
   border-radius: 12px;
-  background: white;
+  background: #FFFFFF;
   color: #000;
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
   -webkit-appearance: none;
   transition: all 0.2s;
 }
 
-.edit-form-input::placeholder,
-.edit-form-textarea::placeholder {
+.form-input::placeholder,
+.form-textarea::placeholder {
   color: #C7C7CC;
-  line-height: 1.4;
 }
 
-.edit-form-textarea {
+.form-input:focus,
+.form-textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #007AFF;
+}
+
+.form-textarea {
   resize: none;
-  min-height: 120px;
   line-height: 1.4;
 }
 
-.edit-form-value {
-  font-size: 17px;
-  color: #8E8E93;
+/* Hints */
+.form-hint {
+  font-size: 13px;
+  color: #6E6E73;
+  line-height: 18px;
+  margin-top: 8px;
 }
 
-.edit-form-value--button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
+/* Categories */
+.category-scroll-container {
+  margin-top: 12px;
+  margin-left: -16px;
+  margin-right: -16px;
+  padding: 0 16px;
 }
 
-/* Frequency selector */
-.frequency-selector {
+.category-scroll {
   display: flex;
-  gap: 16px;
-  align-items: center;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-.frequency-counter {
-  display: flex;
-  align-items: center;
-  background: white;
-  border-radius: 12px;
-  padding: 4px;
-  gap: 16px;
+.category-scroll::-webkit-scrollbar {
+  display: none;
 }
 
-.frequency-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  border: none;
-  background: #F2F2F7;
-  color: #007AFF;
-  font-size: 24px;
+.category-item {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.frequency-btn:active {
-  transform: scale(0.95);
-  background: #E5E5EA;
-}
-
-.frequency-value {
-  font-size: 20px;
-  font-weight: 600;
-  min-width: 24px;
-  text-align: center;
-}
-
-.frequency-type {
-  display: flex;
-  flex: 1;
+  padding: 6px 15px;
   background: white;
-  border-radius: 12px;
-  padding: 4px;
-}
-
-.frequency-type-btn {
-  flex: 1;
-  padding: 12px;
-  border: none;
-  background: transparent;
-  border-radius: 8px;
-  font-size: 17px;
-  font-weight: 500;
-  color: #8E8E93;
+  border: 2px solid transparent;
+  border-radius: 16px;
   cursor: pointer;
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 
-.frequency-type-btn.active {
-  background: #007AFF;
-  color: white;
+.category-item--selected {
+  border-color: #007AFF;
+  background: #E8F4FD;
 }
 
-/* Days selector */
-.days-selector-edit {
+.category-item__icon {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+
+.category-item__name {
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  color: #000;
+}
+
+/* Days selector with animation */
+.days-section {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: all 0.3s ease-out;
+  margin-bottom: 0;
+}
+
+.days-section--visible {
+  max-height: 150px;
+  opacity: 1;
+  margin-bottom: 32px;
+}
+
+.days-selector {
   display: flex;
   gap: 8px;
+  margin-top: 12px;
+  justify-content: space-between;
 }
 
-.day-button-edit {
+.day-button {
   flex: 1;
   height: 52px;
   border-radius: 12px;
-  border: 2px solid #E5E5EA;
+  border: none;
   background: white;
   color: #000;
   font-weight: 600;
@@ -222,55 +185,53 @@
   transition: all 0.2s;
 }
 
-.day-button-edit--selected {
+.day-button--selected {
   background: #007AFF;
-  border-color: #007AFF;
   color: white;
 }
 
-/* Duration selector */
-.duration-selector {
-  display: flex;
-  gap: 8px;
-}
-
-.duration-btn {
-  flex: 1;
-  padding: 16px;
-  border: 2px solid #E5E5EA;
-  border-radius: 12px;
-  background: white;
-  color: #000;
+/* Dropdown buttons */
+.dropdown-button {
+  width: 100%;
+  padding: 12px 16px;
   font-size: 17px;
-  font-weight: 500;
+  border: 1px solid #C6C6C8;
+  border-radius: 10px;
+  background: #FFFFFF;
+  color: #8E8E93;
+  text-align: center;
+  font-weight: 400;
   cursor: pointer;
+  position: relative;
   transition: all 0.2s;
 }
 
-.duration-btn.active {
-  background: #007AFF;
+.dropdown-button.active {
+  color: #000;
   border-color: #007AFF;
-  color: white;
 }
 
-/* Dropdown menu */
+.dropdown-button:active {
+  background: #F2F2F7;
+}
+
 .dropdown-menu {
   position: absolute;
   top: calc(100% + 8px);
-  right: 16px;
+  left: 0;
+  right: 0;
   background: white;
   border-radius: 12px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
   overflow: hidden;
   z-index: 1000;
-  min-width: 150px;
 }
 
 .dropdown-item {
   width: 100%;
   padding: 16px;
   font-size: 17px;
-  text-align: left;
+  text-align: center;
   background: none;
   border: none;
   border-bottom: 1px solid #E5E5EA;
@@ -287,14 +248,96 @@
   background: #F2F2F7;
 }
 
-/* Footer */
-.edit-form-footer {
-  padding: 16px;
+/* Time Picker */
+.time-picker-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
   background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 16px;
+  z-index: 1000;
+}
+
+.time-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.time-picker-header span {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.time-picker-done {
+  background: none;
+  border: none;
+  color: #007AFF;
+  font-size: 17px;
+  font-weight: 600;
+  padding: 0;
+  cursor: pointer;
+}
+
+.time-picker-input {
+  width: 100%;
+  padding: 12px;
+  font-size: 17px;
+  border: 1px solid #E5E5EA;
+  border-radius: 8px;
+}
+
+/* Bad habit toggle */
+.bad-habit-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.bad-habit-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle-buttons {
+  display: flex;
+  background: white;
+  border-radius: 12px;
+  padding: 2px;
+  gap: 0;
+}
+
+.toggle-button {
+  padding: 10px 32px;
+  font-size: 15px;
+  font-weight: 600;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: #8E8E93;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toggle-button--active {
+  background: #007AFF;
+  color: white;
+}
+
+/* Footer */
+.form-footer {
+  padding: 16px;
+  background: #F2F2F7;
   border-top: 1px solid #E5E5EA;
 }
 
-.edit-submit-button {
+.submit-button {
   width: 100%;
   padding: 17px;
   font-size: 17px;
@@ -307,7 +350,7 @@
   transition: all 0.2s;
 }
 
-.edit-submit-button:disabled {
+.submit-button:disabled {
   background: #C8C8CD;
   cursor: not-allowed;
   opacity: 0.6;
@@ -317,4 +360,15 @@
 @keyframes slideUp {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 320px) {
+  .category-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .days-selector {
+    flex-wrap: wrap;
+  }
 }
