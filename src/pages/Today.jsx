@@ -225,14 +225,50 @@ const handleEditSuccess = async () => {
   };
 
   const getMotivationalMessage = () => {
-    const currentStats = selectedDate === getTodayDate() ? stats : dateStats;
-    
-    if (currentStats.total === 0) return "Yes U Can!";
-    if (currentStats.completed === 0) return phrase.text || "Let's start!";
-    if (currentStats.completed === currentStats.total)
-      return phrase.text || "Perfect day! 🎉";
-    return phrase.text || "Keep going!";
-  };
+  const currentStats = selectedDate === getTodayDate() ? stats : dateStats;
+  const currentPhrase = selectedDate === getTodayDate() ? phrase : null;
+  
+  // Если есть фраза с сервера для текущего дня, используем её
+  if (currentPhrase && currentPhrase.text) {
+    return currentPhrase.text;
+  }
+  
+  // Иначе используем локальную логику
+  if (currentStats.total === 0) {
+    return "Create your first habit!";
+  }
+  if (currentStats.completed === 0) {
+    return "You can do it!";
+  }
+  if (currentStats.completed === currentStats.total) {
+    return "All done! Amazing! 🎉";
+  }
+  
+  const percentage = (currentStats.completed / currentStats.total) * 100;
+  if (percentage >= 70) {
+    return "Almost there! 🔥";
+  }
+  if (percentage >= 50) {
+    return "Great progress! ✨";
+  }
+  
+  return "Keep going! 💪";
+};
+
+const getMotivationalEmoji = () => {
+  const currentPhrase = selectedDate === getTodayDate() ? phrase : null;
+  
+  if (currentPhrase && currentPhrase.emoji) {
+    return currentPhrase.emoji;
+  }
+  
+  // Запасные эмодзи
+  const currentStats = selectedDate === getTodayDate() ? stats : dateStats;
+  if (currentStats.total === 0) return "🚀";
+  if (currentStats.completed === 0) return "💪";
+  if (currentStats.completed === currentStats.total) return "🎉";
+  return "✨";
+};
 
   const getDateLabel = () => {
     const todayStr = getTodayDate();
@@ -422,7 +458,7 @@ const handleEditSuccess = async () => {
             <div className="today__container2">
               <p className="today__subtitle">{getDateLabel()}</p>
               <div className="today__motivation">
-                {getMotivationalMessage()} {phrase.emoji}
+                {getMotivationalMessage()} {getMotivationalEmoji()}
               </div>
             </div>
           </div>
