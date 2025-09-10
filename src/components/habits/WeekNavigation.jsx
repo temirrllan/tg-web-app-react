@@ -40,7 +40,7 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
     return `${year}-${month}-${day}`;
   };
   
-  // Форматирование даты для отображения
+  // Форматирование даты для отображения - ИЗМЕНЕНО: убираем числа
   const formatDate = (date) => {
     const today = new Date();
     today.setHours(12, 0, 0, 0);
@@ -64,10 +64,9 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
     if (dateStr === yesterdayStr) return 'Yesterday';
     if (dateStr === tomorrowStr) return 'Tomorrow';
     
-    // Для остальных дней показываем день недели и число
+    // Для остальных дней показываем ТОЛЬКО день недели без числа
     const dayName = compareDate.toLocaleDateString('en-US', { weekday: 'short' });
-    const dayNumber = compareDate.getDate();
-    return `${dayName} ${dayNumber}`;
+    return dayName;
   };
   
   // Проверка, можно ли редактировать день (только сегодня и вчера)
