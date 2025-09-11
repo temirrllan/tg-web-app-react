@@ -398,7 +398,7 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
               )}
 
               {/* Reminder time */}
-              <div className="form-section-rw2" ref={timeRef}>
+              <div className="form-sectiorw2" ref={timeRef}>
                 <span className="form-label-title">Ping me</span>
                 <button
                   type="button"
