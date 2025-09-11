@@ -35,14 +35,14 @@
   justify-content: space-between;
   gap: 124px;
 }
-.form-section-rw2{
+/* .form-section-rw2{
   margin-bottom: 16px;
   position: relative;
   display: flex;
   align-items: center;
-  /* justify-content: space-between; */
+  justify-content: space-between;
   gap: 125px;
-}
+} */
 .form-label {
   display: block;
 }
