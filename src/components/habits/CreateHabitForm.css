@@ -43,6 +43,12 @@
   justify-content: space-between;
   gap: 125px;
 } */
+ .form-sectiorw2{
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+ }
 .form-label {
   display: block;
 }
