@@ -24,9 +24,9 @@
   padding: 10px 24px;
   border-radius: 24px;
   font-weight: 500;
-  font-size: 17px;
-  color: white; /* Изменено: белый цвет текста для всех кнопок */
-  background: #8B8E88; /* Изменено: серый фон по умолчанию */
+  font-size: 15px;
+  color: #8E8E93;
+  background: transparent;
   border: none;
   cursor: pointer;
   transition: all 0.2s;
@@ -34,78 +34,42 @@
   flex-shrink: 0;
 }
 
-/* Активный день - зеленый фон */
+
 .week-navigation__day--active {
-  background: #A7D96C; /* Остается зеленый цвет для активного дня */
+  background: #A7D96C;
   color: white;
   font-weight: 600;
 }
 
-/* Сегодняшний день (если не активен) */
+.week-navigation__day--active {
+  background: #A7D96C;
+  color: white;
+  border-color: #A7D96C;
+}
+
 .week-navigation__day--today {
   font-weight: 700;
-  background: #8B8E88; /* Серый фон для неактивного сегодняшнего дня */
-  color: white;
+  color: #111827;
 }
-
-/* Сегодняшний день когда активен */
-.week-navigation__day--today.week-navigation__day--active {
-  background: #A7D96C; /* Зеленый фон когда сегодня активен */
-  color: white;
-}
-
-/* Вчерашний день */
-.week-navigation__day--yesterday {
-  background: #8B8E88; /* Серый фон */
-  color: white;
-}
-
-/* Вчерашний день когда активен */
-.week-navigation__day--yesterday.week-navigation__day--active {
-  background: #A7D96C; /* Зеленый фон когда вчера активен */
-  color: white;
-}
-
-/* Прошедшие дни (недоступные для редактирования) */
 .week-navigation__day--past {
   opacity: 0.5;
-  background: #8B8E88; /* Серый фон */
-  color: white;
+}
+.week-navigation__day--today:not(.week-navigation__day--active) {
+  color: #000;
 }
 
-/* Прошедшие дни когда активны */
-.week-navigation__day--past.week-navigation__day--active {
-  background: #A7D96C; /* Зеленый фон даже для прошедших дней если они активны */
-  opacity: 0.8; /* Немного прозрачнее чем обычный активный день */
+
+.week-navigation__day--yesterday {
+  color: #374151;
 }
 
-/* Дни только для чтения */
 .week-navigation__day--readonly {
   opacity: 0.7;
   cursor: default;
-  background: #8B8E88; /* Серый фон */
-  color: white;
 }
 
-/* Дни только для чтения когда активны */
-.week-navigation__day--readonly.week-navigation__day--active {
-  background: #A7D96C; /* Зеленый фон */
-  opacity: 0.8;
-}
-
-/* Убираем hover эффект для readonly дней */
 .week-navigation__day--readonly:hover {
-  background: #8B8E88; /* Остается серым при наведении */
-}
-
-/* Hover эффект для обычных дней */
-.week-navigation__day:hover:not(.week-navigation__day--readonly):not(.week-navigation__day--active) {
-  background: #6B6E68; /* Немного темнее при наведении */
-}
-
-/* Hover эффект для активных дней */
-.week-navigation__day--active:hover:not(.week-navigation__day--readonly) {
-  background: #95C55D; /* Немного светлее зеленый при наведении */
+  background: white;
 }
 
 .week-navigation__day-label {
@@ -124,22 +88,4 @@
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-/* Дополнительные стили для улучшения контраста */
-.week-navigation__day:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(167, 217, 108, 0.5);
-}
-
-.week-navigation__day:active:not(.week-navigation__day--readonly) {
-  transform: scale(0.95);
-}
-
-/* Медиа-запрос для маленьких экранов */
-@media (max-width: 375px) {
-  .week-navigation__day {
-    padding: 8px 20px;
-    font-size: 16px;
-  }
 }
