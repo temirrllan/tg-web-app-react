@@ -168,10 +168,10 @@
   max-width: 200px;
   background: white;
   border-radius: 16px;
-  padding: 13px 20px;
+  padding: 10px 20px;
   text-align: center;
   font-size: 16px;
-  font-weight: 700;
+  /* font-weight: 700; */
   color: #1D1D1F;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
