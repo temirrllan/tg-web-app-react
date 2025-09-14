@@ -444,7 +444,7 @@ const getMotivationalEmoji = () => {
   return (
     <>
       <Layout>
-        {/* <Header user={user} onProfileClick={() => setShowProfile(true)} /> */}
+        <Header user={user} onProfileClick={() => setShowProfile(true)} />
 
         <div className="today">
           <div className="today__stats">
