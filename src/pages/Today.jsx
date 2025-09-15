@@ -24,7 +24,7 @@ const Today = () => {
     markHabit,
     unmarkHabit,
     createHabit,
-    deleteHabit, // Добавляем deleteHabit
+    deleteHabit,
     loadHabitsForDate,
     refresh
   } = useHabits();
@@ -34,10 +34,8 @@ const Today = () => {
   const [showProfile, setShowProfile] = useState(false);
   const [selectedHabit, setSelectedHabit] = useState(null);
   const [showHabitDetail, setShowHabitDetail] = useState(false);
-  // Добавьте состояние для редактирования
-const [showEditForm, setShowEditForm] = useState(false);
-const [habitToEdit, setHabitToEdit] = useState(null);
-
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [habitToEdit, setHabitToEdit] = useState(null);
 
   const getTodayDate = () => {
     const today = new Date();
@@ -70,29 +68,31 @@ const [habitToEdit, setHabitToEdit] = useState(null);
     setShowHabitDetail(true);
   };
 
-  // Обновите handleEditHabit
-const handleEditHabit = (habit) => {
-  console.log('Edit habit:', habit);
-  setHabitToEdit(habit);
-  setShowEditForm(true);
-  setShowHabitDetail(false);
-};
-// Добавьте обработчик успешного редактирования
-const handleEditSuccess = async () => {
-  setShowEditForm(false);
-  setHabitToEdit(null);
-  
-  // Перезагружаем привычки
-  if (selectedDate === getTodayDate()) {
-    await refresh();
-  } else {
-    const result = await loadHabitsForDate(selectedDate);
-    if (result) {
-      setDateHabits(result.habits || []);
-      setDateStats(result.stats || { completed: 0, total: 0 });
+  // Обработчик редактирования
+  const handleEditHabit = (habit) => {
+    console.log('Edit habit:', habit);
+    setHabitToEdit(habit);
+    setShowEditForm(true);
+    setShowHabitDetail(false);
+  };
+
+  // Обработчик успешного редактирования
+  const handleEditSuccess = async () => {
+    setShowEditForm(false);
+    setHabitToEdit(null);
+    
+    // Перезагружаем привычки
+    if (selectedDate === getTodayDate()) {
+      await refresh();
+    } else {
+      const result = await loadHabitsForDate(selectedDate);
+      if (result) {
+        setDateHabits(result.habits || []);
+        setDateStats(result.stats || { completed: 0, total: 0 });
+      }
     }
-  }
-};
+  };
+
   const handleDeleteHabit = async (habitId) => {
     try {
       console.log('Deleting habit:', habitId);
@@ -123,11 +123,9 @@ const handleEditSuccess = async () => {
     
     const todayStr = getTodayDate();
     
-    if (dateCache[date] && date !== todayStr) {
-      console.log(`Using cached data for ${date}`);
-      setDateHabits(dateCache[date].habits);
-      setDateStats(dateCache[date].stats);
-      return;
+    // Очищаем кэш для выбранной даты, чтобы загрузить свежие данные
+    if (dateCache[date]) {
+      delete dateCache[date];
     }
     
     setDateLoading(true);
@@ -153,7 +151,8 @@ const handleEditSuccess = async () => {
           console.log('Loaded habits from server:', {
             date,
             habitsCount: result.habits?.length,
-            stats: result.stats
+            stats: result.stats,
+            habits: result.habits
           });
         }
       }
@@ -225,50 +224,47 @@ const handleEditSuccess = async () => {
   };
 
   const getMotivationalMessage = () => {
-  const currentStats = selectedDate === getTodayDate() ? stats : dateStats;
-  const currentPhrase = selectedDate === getTodayDate() ? phrase : null;
-  
-  // Если есть фраза с сервера для текущего дня, используем её
-  if (currentPhrase && currentPhrase.text) {
-    return currentPhrase.text;
-  }
-  
-  // Иначе используем локальную логику
-  if (currentStats.total === 0) {
-    return "Create your first habit!";
-  }
-  if (currentStats.completed === 0) {
-    return "You can do it!";
-  }
-  if (currentStats.completed === currentStats.total) {
-    return "All done! Amazing! 🎉";
-  }
-  
-  const percentage = (currentStats.completed / currentStats.total) * 100;
-  if (percentage >= 70) {
-    return "Almost there! 🔥";
-  }
-  if (percentage >= 50) {
-    return "Great progress! ✨";
-  }
-  
-  return "Keep going! 💪";
-};
+    const currentStats = selectedDate === getTodayDate() ? stats : dateStats;
+    const currentPhrase = selectedDate === getTodayDate() ? phrase : null;
+    
+    if (currentPhrase && currentPhrase.text) {
+      return currentPhrase.text;
+    }
+    
+    if (currentStats.total === 0) {
+      return "Create your first habit!";
+    }
+    if (currentStats.completed === 0) {
+      return "You can do it!";
+    }
+    if (currentStats.completed === currentStats.total) {
+      return "All done! Amazing! 🎉";
+    }
+    
+    const percentage = (currentStats.completed / currentStats.total) * 100;
+    if (percentage >= 70) {
+      return "Almost there! 🔥";
+    }
+    if (percentage >= 50) {
+      return "Great progress! ✨";
+    }
+    
+    return "Keep going! 💪";
+  };
 
-const getMotivationalEmoji = () => {
-  const currentPhrase = selectedDate === getTodayDate() ? phrase : null;
-  
-  if (currentPhrase && currentPhrase.emoji) {
-    return currentPhrase.emoji;
-  }
-  
-  // Запасные эмодзи
-  const currentStats = selectedDate === getTodayDate() ? stats : dateStats;
-  if (currentStats.total === 0) return "🚀";
-  if (currentStats.completed === 0) return "💪";
-  if (currentStats.completed === currentStats.total) return "🎉";
-  return "✨";
-};
+  const getMotivationalEmoji = () => {
+    const currentPhrase = selectedDate === getTodayDate() ? phrase : null;
+    
+    if (currentPhrase && currentPhrase.emoji) {
+      return currentPhrase.emoji;
+    }
+    
+    const currentStats = selectedDate === getTodayDate() ? stats : dateStats;
+    if (currentStats.total === 0) return "🚀";
+    if (currentStats.completed === 0) return "💪";
+    if (currentStats.completed === currentStats.total) return "🎉";
+    return "✨";
+  };
 
   const getDateLabel = () => {
     const todayStr = getTodayDate();
@@ -346,27 +342,39 @@ const getMotivationalEmoji = () => {
     try {
       await markHabit(habitId, status, selectedDate);
       
-      setDateCache(prev => {
-        const newCache = { ...prev };
-        delete newCache[selectedDate];
-        return newCache;
+      // Обновляем только статус конкретной привычки без полной перезагрузки
+      setDateHabits(prevHabits => 
+        prevHabits.map(h => 
+          h.id === habitId 
+            ? { ...h, today_status: status }
+            : h
+        )
+      );
+      
+      // Обновляем статистику
+      setDateStats(prev => {
+        let newStats = { ...prev };
+        const habit = dateHabits.find(h => h.id === habitId);
+        const oldStatus = habit?.today_status || 'pending';
+        
+        // Корректируем счетчики
+        if (oldStatus === 'completed' && status !== 'completed') {
+          newStats.completed = Math.max(0, newStats.completed - 1);
+        } else if (oldStatus !== 'completed' && status === 'completed') {
+          newStats.completed = newStats.completed + 1;
+        }
+        
+        return newStats;
       });
       
+    } catch (error) {
+      console.error('Error marking habit:', error);
+      // В случае ошибки перезагружаем данные
       const result = await loadHabitsForDate(selectedDate);
       if (result && result.habits) {
         setDateHabits(result.habits);
         setDateStats(result.stats || { completed: 0, total: result.habits.length });
-        
-        setDateCache(prev => ({
-          ...prev,
-          [selectedDate]: {
-            habits: result.habits,
-            stats: result.stats || { completed: 0, total: result.habits.length }
-          }
-        }));
       }
-    } catch (error) {
-      console.error('Error marking habit:', error);
     }
   };
 
@@ -381,27 +389,34 @@ const getMotivationalEmoji = () => {
     try {
       await unmarkHabit(habitId, selectedDate);
       
-      setDateCache(prev => {
-        const newCache = { ...prev };
-        delete newCache[selectedDate];
-        return newCache;
+      // Обновляем только статус конкретной привычки
+      setDateHabits(prevHabits => 
+        prevHabits.map(h => 
+          h.id === habitId 
+            ? { ...h, today_status: 'pending' }
+            : h
+        )
+      );
+      
+      // Обновляем статистику
+      setDateStats(prev => {
+        const habit = dateHabits.find(h => h.id === habitId);
+        const oldStatus = habit?.today_status || 'pending';
+        
+        if (oldStatus === 'completed') {
+          return { ...prev, completed: Math.max(0, prev.completed - 1) };
+        }
+        return prev;
       });
       
+    } catch (error) {
+      console.error('Error unmarking habit:', error);
+      // В случае ошибки перезагружаем данные
       const result = await loadHabitsForDate(selectedDate);
       if (result && result.habits) {
         setDateHabits(result.habits);
         setDateStats(result.stats || { completed: 0, total: result.habits.length });
-        
-        setDateCache(prev => ({
-          ...prev,
-          [selectedDate]: {
-            habits: result.habits,
-            stats: result.stats || { completed: 0, total: result.habits.length }
-          }
-        }));
       }
-    } catch (error) {
-      console.error('Error unmarking habit:', error);
     }
   };
 
@@ -486,7 +501,7 @@ const getMotivationalEmoji = () => {
             <div className="today__habits">
               {displayHabits.map((habit) => (
                 <HabitCard
-                  key={`${habit.id}-${selectedDate}`}
+                  key={`${habit.id}-${selectedDate}-${habit.today_status}`}
                   habit={habit}
                   onMark={isEditableDate ? handleMark : undefined}
                   onUnmark={isEditableDate ? handleUnmark : undefined}
@@ -515,17 +530,16 @@ const getMotivationalEmoji = () => {
         />
       )}
 
-      {/* В конце компонента, после CreateHabitForm, добавьте: */}
-{showEditForm && habitToEdit && (
-  <EditHabitForm
-    habit={habitToEdit}
-    onClose={() => {
-      setShowEditForm(false);
-      setHabitToEdit(null);
-    }}
-    onSuccess={handleEditSuccess}
-  />
-)}
+      {showEditForm && habitToEdit && (
+        <EditHabitForm
+          habit={habitToEdit}
+          onClose={() => {
+            setShowEditForm(false);
+            setHabitToEdit(null);
+          }}
+          onSuccess={handleEditSuccess}
+        />
+      )}
     </>
   );
 };
