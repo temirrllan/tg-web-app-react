@@ -24,15 +24,21 @@ const Toast = ({ message, type = 'info', duration = 3000, onClose }) => {
       }
     }
 
-    const timer = setTimeout(() => {
+    // Таймер для начала анимации исчезновения
+    const hideTimer = setTimeout(() => {
       setIsLeaving(true);
-      setTimeout(() => {
-        setIsVisible(false);
-        onClose && onClose();
-      }, 300); // Время анимации исчезновения
     }, duration);
 
-    return () => clearTimeout(timer);
+    // Таймер для полного удаления компонента
+    const removeTimer = setTimeout(() => {
+      setIsVisible(false);
+      onClose && onClose();
+    }, duration + 300); // +300ms для анимации исчезновения
+
+    return () => {
+      clearTimeout(hideTimer);
+      clearTimeout(removeTimer);
+    };
   }, [duration, onClose, type]);
 
   if (!isVisible) return null;
@@ -52,9 +58,11 @@ const Toast = ({ message, type = 'info', duration = 3000, onClose }) => {
   };
 
   return (
-    <div className={`toast toast--${type} ${isLeaving ? 'toast--leaving' : ''}`}>
-      <span className="toast__icon">{getIcon()}</span>
-      <span className="toast__message">{message}</span>
+    <div className="toast-container">
+      <div className={`toast toast--${type} ${isLeaving ? 'toast--leaving' : ''}`}>
+        <span className="toast__icon">{getIcon()}</span>
+        <span className="toast__message">{message}</span>
+      </div>
     </div>
   );
 };
