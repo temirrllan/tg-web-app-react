@@ -377,7 +377,26 @@ const Today = () => {
       }
     }
   };
-
+const getMotivationalBackgroundColor = () => {
+  const currentPhrase = selectedDate === getTodayDate() ? phrase : null;
+  
+  if (currentPhrase && currentPhrase.backgroundColor) {
+    return currentPhrase.backgroundColor;
+  }
+  
+  // Запасные цвета в зависимости от прогресса
+  const currentStats = selectedDate === getTodayDate() ? stats : dateStats;
+  
+  if (currentStats.total === 0) return '#FFE4B5';
+  if (currentStats.completed === 0) return '#FFB3BA';
+  if (currentStats.completed === currentStats.total) return '#87CEEB';
+  
+  const percentage = (currentStats.completed / currentStats.total) * 100;
+  if (percentage >= 70) return '#B5E7A0';
+  if (percentage >= 50) return '#A7D96C';
+  
+  return '#FFB3BA';
+};
   const handleUnmark = async (habitId) => {
     if (!isEditableDate) {
       console.log('Cannot edit habits for this date');
@@ -472,7 +491,9 @@ const Today = () => {
 
             <div className="today__container2">
               <p className="today__subtitle">{getDateLabel()}</p>
-              <div className="today__motivation">
+              <div className="today__motivation" style={{ 
+      backgroundColor: getMotivationalBackgroundColor() 
+    }}>
                 {getMotivationalMessage()} {getMotivationalEmoji()}
               </div>
             </div>

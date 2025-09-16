@@ -175,7 +175,44 @@
   color: #1D1D1F;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
+.today__motivation--updating {
+  animation: motivationPulse 0.5s ease;
+}
+@keyframes motivationPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@media (max-width: 375px) {
+  .today__motivation {
+    max-width: 160px;
+    font-size: 14px;
+    padding: 8px 16px;
+  }
+}
 
+/* Цвета для разных типов фраз - запасные */
+.today__motivation--encouragement {
+  background: #FFB3BA !important;
+}
+
+.today__motivation--success {
+  background: #B5E7A0 !important;
+}
+
+.today__motivation--perfect {
+  background: #87CEEB !important;
+}
+
+.today__motivation--streak {
+  background: #A7D96C !important;
+}
 .today__habits {
   margin-bottom: 80px;
   padding: 0;
