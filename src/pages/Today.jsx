@@ -13,7 +13,7 @@ import { useTelegram } from "../hooks/useTelegram";
 import "./Today.css";
 import SwipeHint from '../components/habits/SwipeHint';
 import EditHabitForm from '../components/habits/EditHabitForm';
-
+import SubscriptionModal from '../components/modals/SubscriptionModal';
 const Today = () => {
   const { user } = useTelegram();
   const {
@@ -28,7 +28,7 @@ const Today = () => {
     loadHabitsForDate,
     refresh
   } = useHabits();
-  
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -196,33 +196,55 @@ const Today = () => {
     });
   }, []);
 
-  const handleCreateHabit = async (habitData) => {
-    try {
-      const currentCount = todayHabits.length;
+const handleCreateHabit = async (habitData) => {
+  try {
+    // Проверяем лимит привычек для бесплатного тарифа
+    const currentCount = todayHabits.length;
+    
+    if (currentCount >= 3) {
+      // Проверяем подписку пользователя
+      const hasSubscription = localStorage.getItem('user_subscription') === 'premium';
       
-      console.log('Creating new habit:', habitData);
-      await createHabit(habitData);
-      setShowCreateForm(false);
-      
-      setDateCache({});
-      
-      if (selectedDate !== getTodayDate()) {
-        const result = await loadHabitsForDate(selectedDate);
-        if (result) {
-          setDateHabits(result.habits || []);
-          setDateStats(result.stats || { completed: 0, total: 0 });
-        }
+      if (!hasSubscription) {
+        // Показываем модальное окно подписки
+        setShowSubscriptionModal(true);
+        setShowCreateForm(false);
+        return;
       }
-      
-      if (currentCount === 0) {
-        localStorage.removeItem('hasSeenSwipeHint');
-        console.log('First habit created, hint will be shown');
-      }
-    } catch (error) {
-      console.error("Failed to create habit:", error);
     }
-  };
-
+    
+    console.log('Creating new habit:', habitData);
+    await createHabit(habitData);
+    setShowCreateForm(false);
+    
+    setDateCache({});
+    
+    if (selectedDate !== getTodayDate()) {
+      const result = await loadHabitsForDate(selectedDate);
+      if (result) {
+        setDateHabits(result.habits || []);
+        setDateStats(result.stats || { completed: 0, total: result.habits.length });
+      }
+    }
+    
+    if (currentCount === 0) {
+      localStorage.removeItem('hasSeenSwipeHint');
+      console.log('First habit created, hint will be shown');
+    }
+  } catch (error) {
+    console.error("Failed to create habit:", error);
+  }
+};
+const handleSubscriptionContinue = (plan) => {
+  console.log('Selected subscription plan:', plan);
+  // Временно сохраняем в localStorage
+  localStorage.setItem('user_subscription', 'premium');
+  localStorage.setItem('subscription_plan', plan);
+  
+  setShowSubscriptionModal(false);
+  // После оплаты показываем форму создания привычки снова
+  setShowCreateForm(true);
+};
   const getMotivationalMessage = () => {
     const currentStats = selectedDate === getTodayDate() ? stats : dateStats;
     const currentPhrase = selectedDate === getTodayDate() ? phrase : null;
@@ -561,6 +583,24 @@ const getMotivationalBackgroundColor = () => {
           onSuccess={handleEditSuccess}
         />
       )}
+
+
+      {showEditForm && habitToEdit && (
+  <EditHabitForm
+    habit={habitToEdit}
+    onClose={() => {
+      setShowEditForm(false);
+      setHabitToEdit(null);
+    }}
+    onSuccess={handleEditSuccess}
+  />
+)}
+
+<SubscriptionModal
+  isOpen={showSubscriptionModal}
+  onClose={() => setShowSubscriptionModal(false)}
+  onContinue={handleSubscriptionContinue}
+/>
     </>
   );
 };
