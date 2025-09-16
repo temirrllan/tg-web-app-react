@@ -5,6 +5,7 @@ import { habitService } from '../services/habits';
 import Loader from '../components/common/Loader';
 import DeleteConfirmModal from '../components/modals/DeleteConfirmModal';
 import CopyLinkModal from '../components/modals/CopyLinkModal';
+import Toast from '../components/common/Toast';
 import './HabitDetail.css';
 import FriendSwipeHint from '../components/habits/FriendSwipeHint';
 
@@ -15,6 +16,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const [showCopyModal, setShowCopyModal] = useState(false);
   const [members, setMembers] = useState([]);
   const [showFriendHint, setShowFriendHint] = useState(false);
+  const [toast, setToast] = useState(null);
 
   const [statistics, setStatistics] = useState({
     currentStreak: 0,
@@ -66,78 +68,96 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   };
 
   const handleShare = async () => {
-  try {
-    const shareData = await habitService.createShareLink(habit.id);
-    const shareCode = shareData.shareCode;
-    
-    const shareText = `Join my "${habit.title}" habit!\n\n📝 Goal: ${habit.goal}\n\nLet's build better habits together! 💪`;
-    const shareUrl = `https://t.me/trackeryourhabitbot?start=join_${shareCode}`;
-    
-    // Проверяем, показывали ли уже подсказку о друзьях
-    const hasSeenFriendHint = localStorage.getItem('hasSeenFriendHint');
-    if (!hasSeenFriendHint && members.length === 0) {
-      // Показываем подсказку после первого добавления друга
-      setTimeout(() => {
-        setShowFriendHint(true);
-        localStorage.setItem('hasSeenFriendHint', 'true');
-      }, 2000); // Задержка чтобы пользователь успел поделиться
+    try {
+      const shareData = await habitService.createShareLink(habit.id);
+      const shareCode = shareData.shareCode;
+      
+      const shareText = `Join my "${habit.title}" habit!\n\n📝 Goal: ${habit.goal}\n\nLet's build better habits together! 💪`;
+      const shareUrl = `https://t.me/trackeryourhabitbot?start=join_${shareCode}`;
+      
+      // Проверяем, показывали ли уже подсказку о друзьях
+      const hasSeenFriendHint = localStorage.getItem('hasSeenFriendHint');
+      if (!hasSeenFriendHint && members.length === 0) {
+        // Показываем подсказку после первого добавления друга
+        setTimeout(() => {
+          setShowFriendHint(true);
+          localStorage.setItem('hasSeenFriendHint', 'true');
+        }, 2000);
+      }
+      
+      if (tg?.openTelegramLink) {
+        tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`);
+      } else {
+        window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
+      }
+    } catch (error) {
+      console.error('Failed to create share link:', error);
     }
-    
-    if (tg?.openTelegramLink) {
-      tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`);
-    } else {
-      window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
-    }
-  } catch (error) {
-    console.error('Failed to create share link:', error);
-  }
-};  
+  };  
 
   const handleCopyLink = async () => {
-  try {
-    const shareData = await habitService.createShareLink(habit.id);
-    const shareCode = shareData.shareCode;
-    const inviteLink = `https://t.me/trackeryourhabitbot?start=join_${shareCode}`;
-    
-    if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(inviteLink);
-    } else {
-      const textArea = document.createElement("textarea");
-      textArea.value = inviteLink;
-      textArea.style.position = "fixed";
-      textArea.style.left = "-999999px";
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-      document.execCommand('copy');
-      textArea.remove();
+    try {
+      const shareData = await habitService.createShareLink(habit.id);
+      const shareCode = shareData.shareCode;
+      const inviteLink = `https://t.me/trackeryourhabitbot?start=join_${shareCode}`;
+      
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(inviteLink);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = inviteLink;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        textArea.remove();
+      }
+      
+      setShowCopyModal(true);
+      
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      }
+    } catch (err) {
+      console.error('Failed to copy link:', err);
     }
-    
-    setShowCopyModal(true);
-    
-    if (window.Telegram?.WebApp?.HapticFeedback) {
-      window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-    }
-  } catch (err) {
-    console.error('Failed to copy link:', err);
-  }
-};
+  };
 
   const handlePunchFriend = async (memberId) => {
     try {
-      await habitService.punchFriend(habit.id, memberId);
+      const result = await habitService.punchFriend(habit.id, memberId);
       
-      if (tg?.showAlert) {
-        tg.showAlert('Reminder sent to your friend! 👊');
-      } else {
-        alert('Reminder sent to your friend! 👊');
-      }
-      
-      if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+      if (result.showToast) {
+        setToast({
+          message: result.toastMessage,
+          type: result.toastType || 'info'
+        });
+        
+        if (window.Telegram?.WebApp?.HapticFeedback) {
+          if (result.alreadyCompleted) {
+            window.Telegram.WebApp.HapticFeedback.notificationOccurred('warning');
+          } else if (result.success) {
+            window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+          }
+        }
+      } else if (tg?.showAlert) {
+        // Fallback для старых версий
+        if (result.alreadyCompleted) {
+          tg.showAlert(`Bro, ${result.friendName} already completed this habit today! 👌`);
+        } else if (result.isSkipped) {
+          tg.showAlert(`${result.friendName} skipped this habit today 😔`);
+        } else if (result.success) {
+          tg.showAlert('Reminder sent to your friend! 👊');
+        }
       }
     } catch (error) {
       console.error('Failed to send punch:', error);
+      setToast({
+        message: 'Failed to send punch. Please try again.',
+        type: 'error'
+      });
     }
   };
 
@@ -148,6 +168,10 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
           if (confirmed) {
             await habitService.removeMember(habit.id, memberId);
             loadMembers();
+            setToast({
+              message: 'Friend removed from habit',
+              type: 'success'
+            });
           }
         });
       } else {
@@ -155,10 +179,18 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
         if (confirmed) {
           await habitService.removeMember(habit.id, memberId);
           loadMembers();
+          setToast({
+            message: 'Friend removed from habit',
+            type: 'success'
+          });
         }
       }
     } catch (error) {
       console.error('Failed to remove friend:', error);
+      setToast({
+        message: 'Failed to remove friend. Please try again.',
+        type: 'error'
+      });
     }
   };
 
@@ -192,17 +224,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   return (
     <>
       <div className="habit-detail">
-        {/* <div className="habit-detail__header">
-          <button className="habit-detail__close" onClick={onClose}>
-            Close
-          </button>
-          <div className="habit-detail__title-wrapper">
-            <h1 className="habit-detail__app-title">Habit Tracker</h1>
-            <span className="habit-detail__app-subtitle">mini-app</span>
-          </div>
-          <button className="habit-detail__menu">⋯</button>
-        </div> */}
-
         <div className="habit-detail__content">
           <div className="habit-detail__habit-info">
             <div className="habit-detail__habit-header">
@@ -323,10 +344,19 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
         onClose={() => setShowCopyModal(false)}
       />
 
-<FriendSwipeHint 
-  show={showFriendHint}
-  onClose={() => setShowFriendHint(false)}
-/>
+      <FriendSwipeHint 
+        show={showFriendHint}
+        onClose={() => setShowFriendHint(false)}
+      />
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          duration={3000}
+          onClose={() => setToast(null)}
+        />
+      )}
     </>
   );
 };
