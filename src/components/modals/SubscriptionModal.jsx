@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './SubscriptionModal.css';
-
+import sub from "../../../public/images/sub.png"
 const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
   const [selectedPlan, setSelectedPlan] = useState(null);
 
@@ -15,7 +15,7 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
   return (
     <div className="subscription-modal-overlay">
       <div className="subscription-modal">
-        <div className="subscription-modal__header">
+        {/* <div className="subscription-modal__header">
           <button className="subscription-modal__cancel" onClick={onClose}>
             Cancel
           </button>
@@ -30,11 +30,11 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
               <circle cx="12" cy="19" r="2" fill="white"/>
             </svg>
           </button>
-        </div>
+        </div> */}
 
         <div className="subscription-modal__content">
           <div className="subscription-modal__illustration">
-            <img src="/images/subscription-illustration.png" alt="PRO Features" />
+            <img src={sub} alt="PRO Features" />
           </div>
 
           <div className="subscription-modal__info">
