@@ -138,37 +138,43 @@ export const habitService = {
     return data;
   },
 
-  // Отметить выполнение/провал с указанием даты
-  markHabit: async (id, status = 'completed', date = null) => {
-    const markDate = date || new Date().toISOString().split('T')[0];
-    console.log('Marking habit:', { 
-      id, 
-      status, 
-      date: markDate
-    });
+// Отметить выполнение/провал с указанием даты
+markHabit: async (id, status = 'completed', date = null) => {
+  // ВАЖНО: Всегда передаем дату в формате YYYY-MM-DD
+  const markDate = date || new Date().toISOString().split('T')[0];
+  
+  console.log('Marking habit from frontend:', { 
+    id, 
+    status, 
+    date: markDate,
+    originalDate: date
+  });
 
-    const { data } = await api.post(`/habits/${id}/mark`, {
-      status,
-      date: markDate,
-    });
-    
-    console.log('Mark habit response:', data);
-    return data;
-  },
+  const { data } = await api.post(`/habits/${id}/mark`, {
+    status,
+    date: markDate, // Явно передаем дату
+  });
+  
+  console.log('Mark habit response:', data);
+  return data;
+},
 
-  // Снять отметку с указанием даты
-  unmarkHabit: async (id, date = null) => {
-    const unmarkDate = date || new Date().toISOString().split('T')[0];
-    console.log('Unmarking habit:', { 
-      id, 
-      date: unmarkDate
-    });
+ // Снять отметку с указанием даты
+unmarkHabit: async (id, date = null) => {
+  // ВАЖНО: Всегда передаем дату в формате YYYY-MM-DD
+  const unmarkDate = date || new Date().toISOString().split('T')[0];
+  
+  console.log('Unmarking habit from frontend:', { 
+    id, 
+    date: unmarkDate,
+    originalDate: date
+  });
 
-    const { data } = await api.delete(`/habits/${id}/mark?date=${unmarkDate}`);
-    
-    console.log('Unmark habit response:', data);
-    return data;
-  },
+  const { data } = await api.delete(`/habits/${id}/mark?date=${unmarkDate}`);
+  
+  console.log('Unmark habit response:', data);
+  return data;
+},
 
 
   getHabitStatistics: async (habitId) => {
