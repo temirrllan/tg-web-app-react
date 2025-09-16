@@ -6,16 +6,34 @@ const Toast = ({ message, type = 'info', duration = 3000, onClose }) => {
   const [isLeaving, setIsLeaving] = useState(false);
 
   useEffect(() => {
+    // Добавляем вибрацию для тактильной обратной связи
+    if (window.Telegram?.WebApp?.HapticFeedback) {
+      switch(type) {
+        case 'success':
+          window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+          break;
+        case 'error':
+          window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+          break;
+        case 'warning':
+        case 'info':
+          window.Telegram.WebApp.HapticFeedback.notificationOccurred('warning');
+          break;
+        default:
+          break;
+      }
+    }
+
     const timer = setTimeout(() => {
       setIsLeaving(true);
       setTimeout(() => {
         setIsVisible(false);
         onClose && onClose();
-      }, 300);
+      }, 300); // Время анимации исчезновения
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [duration, onClose]);
+  }, [duration, onClose, type]);
 
   if (!isVisible) return null;
 
