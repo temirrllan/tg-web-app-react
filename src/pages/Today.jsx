@@ -14,6 +14,7 @@ import "./Today.css";
 import SwipeHint from '../components/habits/SwipeHint';
 import EditHabitForm from '../components/habits/EditHabitForm';
 import SubscriptionModal from '../components/modals/SubscriptionModal';
+
 const Today = () => {
   const { user } = useTelegram();
   const {
@@ -557,13 +558,23 @@ const getMotivationalBackgroundColor = () => {
         />
         
         <button className="fab" onClick={() => {
-  // Проверяем лимит привычек перед открытием формы
-  const currentCount = todayHabits.length;
-  const hasSubscription = localStorage.getItem('user_subscription') === 'premium';
+  // Проверяем количество активных привычек
+  const allHabits = dateHabits.filter(h => h.is_active !== false);
+  const currentCount = allHabits.length;
   
+  console.log('Current habits count:', currentCount);
+  console.log('Checking subscription...');
+  
+  // Проверяем подписку
+  const hasSubscription = localStorage.getItem('user_subscription') === 'premium';
+  console.log('Has subscription:', hasSubscription);
+  
+  // Если 3 или больше привычек и нет подписки - показываем SubscriptionModal
   if (currentCount >= 3 && !hasSubscription) {
+    console.log('Showing subscription modal');
     setShowSubscriptionModal(true);
   } else {
+    console.log('Opening create form');
     setShowCreateForm(true);
   }
 }}>
