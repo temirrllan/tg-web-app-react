@@ -1,20 +1,75 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './SubscriptionModal.css';
 import sub from "../../../public/images/sub.png";
 import { useNavigation } from '../../hooks/useNavigation';
+import { habitService } from '../../services/habits';
 
 const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [availablePlans, setAvailablePlans] = useState([]);
+  const [currentSubscription, setCurrentSubscription] = useState(null);
+  const [loading, setLoading] = useState(false);
   
   // Используем существующий хук для навигации
   useNavigation(onClose, { isVisible: isOpen });
 
+  useEffect(() => {
+    if (isOpen) {
+      loadSubscriptionInfo();
+    }
+  }, [isOpen]);
+
+  const loadSubscriptionInfo = async () => {
+    try {
+      // Загружаем текущий статус подписки
+      const status = await habitService.checkSubscriptionLimits();
+      setCurrentSubscription(status.subscription);
+      
+      // Если у пользователя уже есть активная подписка, можно показать это
+      if (status.subscription && status.subscription.isActive) {
+        console.log('User already has active subscription:', status.subscription);
+      }
+    } catch (error) {
+      console.error('Failed to load subscription info:', error);
+    }
+  };
+
   if (!isOpen) return null;
 
   const handleContinue = () => {
-    if (selectedPlan) {
+    if (selectedPlan && !loading) {
+      setLoading(true);
       onContinue(selectedPlan);
     }
+  };
+
+  // Форматирование цены для отображения
+  const formatPrice = (stars, period) => {
+    if (period === 'month') {
+      return `${stars} ⭐/month`;
+    }
+    return `${stars} ⭐`;
+  };
+
+  // Показываем сообщение если у пользователя уже есть подписка
+  const renderExistingSubscription = () => {
+    if (!currentSubscription || !currentSubscription.isActive) return null;
+    
+    return (
+      <div style={{
+        background: '#E8F4FD',
+        border: '1px solid #007AFF',
+        borderRadius: '12px',
+        padding: '12px',
+        marginBottom: '16px',
+        fontSize: '14px',
+        color: '#007AFF',
+        textAlign: 'center'
+      }}>
+        You already have {currentSubscription.planName}
+        {currentSubscription.daysLeft && ` (${currentSubscription.daysLeft} days left)`}
+      </div>
+    );
   };
 
   return (
@@ -37,7 +92,7 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
                     <path d="M8 12l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
-                <span className="subscription-modal__feature-text">Make New Habits</span>
+                <span className="subscription-modal__feature-text">Unlimited Habits</span>
               </div>
 
               <div className="subscription-modal__feature">
@@ -47,7 +102,7 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
                     <path d="M8 12l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
-                <span className="subscription-modal__feature-text">Remove All Limitations</span>
+                <span className="subscription-modal__feature-text">Advanced Statistics</span>
               </div>
 
               <div className="subscription-modal__feature">
@@ -57,14 +112,16 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
                     <path d="M8 12l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
-                <span className="subscription-modal__feature-text">Focus Mode</span>
+                <span className="subscription-modal__feature-text">Priority Support</span>
               </div>
             </div>
+
+            {renderExistingSubscription()}
 
             <div className="subscription-modal__plans">
               <div 
                 className={`subscription-modal__plan ${selectedPlan === 'month' ? 'subscription-modal__plan--selected' : ''}`}
-                onClick={() => setSelectedPlan('month')}
+                onClick={() => !loading && setSelectedPlan('month')}
               >
                 <div className="subscription-modal__plan-radio">
                   {selectedPlan === 'month' && (
@@ -76,9 +133,9 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
                   )}
                 </div>
                 <div className="subscription-modal__plan-details">
-                  <div className="subscription-modal__plan-name">For 6 Month</div>
+                  <div className="subscription-modal__plan-name">For 6 Months</div>
                   <div className="subscription-modal__plan-total">
-                    600 <span className="subscription-modal__star">⭐</span>
+                    600 <span className="subscription-modal__star">⭐</span> total
                   </div>
                 </div>
                 <div className="subscription-modal__plan-price">
@@ -88,7 +145,7 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
 
               <div 
                 className={`subscription-modal__plan ${selectedPlan === 'year' ? 'subscription-modal__plan--selected' : ''}`}
-                onClick={() => setSelectedPlan('year')}
+                onClick={() => !loading && setSelectedPlan('year')}
               >
                 <div className="subscription-modal__plan-radio">
                   {selectedPlan === 'year' && (
@@ -102,11 +159,22 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
                 <div className="subscription-modal__plan-details">
                   <div className="subscription-modal__plan-name">Per Year</div>
                   <div className="subscription-modal__plan-total">
-                    350 <span className="subscription-modal__star">⭐</span>
+                    350 <span className="subscription-modal__star">⭐</span> total
+                    <span style={{ 
+                      marginLeft: '8px', 
+                      padding: '2px 6px', 
+                      background: '#FF9500', 
+                      borderRadius: '4px', 
+                      fontSize: '12px',
+                      color: 'white',
+                      fontWeight: 'bold'
+                    }}>
+                      SAVE 42%
+                    </span>
                   </div>
                 </div>
                 <div className="subscription-modal__plan-price">
-                  117 <span className="subscription-modal__star">⭐</span>/month
+                  29 <span className="subscription-modal__star">⭐</span>/month
                 </div>
               </div>
             </div>
@@ -117,12 +185,22 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
             </div>
 
             <button 
-              className={`subscription-modal__continue ${!selectedPlan ? 'subscription-modal__continue--disabled' : ''}`}
+              className={`subscription-modal__continue ${!selectedPlan || loading ? 'subscription-modal__continue--disabled' : ''}`}
               onClick={handleContinue}
-              disabled={!selectedPlan}
+              disabled={!selectedPlan || loading}
             >
-              Continue
+              {loading ? 'Processing...' : 'Continue'}
             </button>
+            
+            {/* Временное уведомление о тестовом режиме */}
+            <p style={{ 
+              fontSize: '12px', 
+              color: '#8E8E93', 
+              textAlign: 'center', 
+              marginTop: '12px' 
+            }}>
+              ⚠️ Test mode: Payment simulation only
+            </p>
           </div>
         </div>
       </div>

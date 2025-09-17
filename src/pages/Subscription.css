@@ -1,0 +1,154 @@
+.subscription-page {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #F2F2F7;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease-out;
+}
+
+.subscription-page--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.subscription-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: white;
+  border-bottom: 1px solid #E5E5EA;
+}
+
+.subscription-page__close {
+  background: none;
+  border: none;
+  color: #007AFF;
+  font-size: 17px;
+  padding: 0;
+}
+
+.subscription-page__header h2 {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0;
+  color: #000;
+  text-align: center;
+  flex: 1;
+}
+
+.subscription-page__content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.subscription-status {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.subscription-status h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  color: #000;
+}
+
+.subscription-status p {
+  font-size: 16px;
+  color: #8E8E93;
+  margin: 8px 0;
+}
+
+.subscription-usage {
+  font-weight: 600;
+  color: #000;
+  margin-top: 16px !important;
+}
+
+.subscription-status--premium {
+  background: linear-gradient(135deg, #A7D96C 0%, #95C55D 100%);
+  color: white;
+}
+
+.subscription-status--premium h3,
+.subscription-status--premium p {
+  color: white;
+}
+
+.days-warning {
+  color: #FFD60A !important;
+  font-weight: 600;
+}
+
+.trial-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: #FFD60A;
+  color: #000;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 12px;
+}
+
+.subscription-page__cancel-btn {
+  width: 100%;
+  padding: 16px;
+  background: white;
+  color: #FF3B30;
+  border: 1px solid #FF3B30;
+  border-radius: 12px;
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.subscription-history {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.subscription-history h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: #000;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #F2F2F7;
+}
+
+.history-item:last-child {
+  border-bottom: none;
+}
+
+.history-action {
+  font-size: 16px;
+  color: #000;
+  text-transform: capitalize;
+}
+
+.history-date {
+  font-size: 14px;
+  color: #8E8E93;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}

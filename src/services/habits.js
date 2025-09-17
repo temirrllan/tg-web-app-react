@@ -192,7 +192,38 @@ checkSubscriptionLimits: async () => {
     };
   }
 },
+// Получить историю подписок
+getSubscriptionHistory: async () => {
+  try {
+    const { data } = await api.get('/subscription/history');
+    return data;
+  } catch (error) {
+    console.error('getSubscriptionHistory error:', error);
+    return { success: false, history: [] };
+  }
+},
 
+// Отменить подписку
+cancelSubscription: async () => {
+  try {
+    const { data } = await api.post('/subscription/cancel');
+    return data;
+  } catch (error) {
+    console.error('cancelSubscription error:', error);
+    throw error;
+  }
+},
+
+// Получить доступные планы
+getSubscriptionPlans: async () => {
+  try {
+    const { data } = await api.get('/subscription/plans');
+    return data;
+  } catch (error) {
+    console.error('getSubscriptionPlans error:', error);
+    return { success: false, plans: [] };
+  }
+},
 // Активация премиум подписки
 activatePremium: async (plan) => {
   try {
