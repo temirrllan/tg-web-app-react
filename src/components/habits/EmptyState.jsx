@@ -1,7 +1,8 @@
 import React from 'react';
 import './EmptyState.css';
 import bear3 from '../../../public/images/bear3.svg?url';
-const EmptyState = () => {
+
+const EmptyState = ({ onCreateClick }) => {
   return (
     <div className="empty-state">
       <div className="empty-state__image">
@@ -13,8 +14,6 @@ const EmptyState = () => {
         All your habits will show up here.<br />
         Tap to + to add a Habit.
       </p>
-      
-      
     </div>
   );
 };

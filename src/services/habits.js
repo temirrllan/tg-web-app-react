@@ -175,7 +175,35 @@ unmarkHabit: async (id, date = null) => {
   console.log('Unmark habit response:', data);
   return data;
 },
+// Проверка лимитов подписки
+checkSubscriptionLimits: async () => {
+  try {
+    const { data } = await api.get('/subscription/check');
+    console.log('Subscription limits:', data);
+    return data;
+  } catch (error) {
+    console.error('checkSubscriptionLimits error:', error);
+    return {
+      success: false,
+      habitCount: 0,
+      limit: 3,
+      isPremium: false,
+      canCreateMore: true
+    };
+  }
+},
 
+// Активация премиум подписки
+activatePremium: async (plan) => {
+  try {
+    const { data } = await api.post('/subscription/activate', { plan });
+    console.log('Premium activation result:', data);
+    return data;
+  } catch (error) {
+    console.error('activatePremium error:', error);
+    throw error;
+  }
+},
 
   getHabitStatistics: async (habitId) => {
   try {
