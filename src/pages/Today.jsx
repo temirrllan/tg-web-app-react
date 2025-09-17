@@ -15,7 +15,8 @@ import SwipeHint from '../components/habits/SwipeHint';
 import EditHabitForm from '../components/habits/EditHabitForm';
 import SubscriptionModal from '../components/modals/SubscriptionModal';
 
-const Today = () => {
+const Today = ({ user }) => {
+  
   const { user } = useTelegram();
   const {
     todayHabits,
@@ -199,11 +200,12 @@ const Today = () => {
 
 const handleCreateHabit = async (habitData) => {
   try {
-    // Повторная проверка на случай, если пользователь как-то обошел первую проверку
+    // Повторная проверка на случай, если пользователь обошел первую проверку
     const currentCount = todayHabits.length;
-    const hasSubscription = localStorage.getItem('user_subscription') === 'premium';
+    const hasSubscription = user?.is_premium === true;
     
     if (currentCount >= 3 && !hasSubscription) {
+      console.log('Blocking habit creation - no premium subscription');
       setShowCreateForm(false);
       setShowSubscriptionModal(true);
       return;
@@ -229,17 +231,49 @@ const handleCreateHabit = async (habitData) => {
     }
   } catch (error) {
     console.error("Failed to create habit:", error);
+    
+    // Проверяем, если ошибка связана с лимитом
+    if (error.response?.status === 403 && error.response?.data?.showPremium) {
+      setShowCreateForm(false);
+      setShowSubscriptionModal(true);
+    }
   }
 };
-const handleSubscriptionContinue = (plan) => {
+const handleSubscriptionContinue = async (plan) => {
   console.log('Selected subscription plan:', plan);
-  // Временно сохраняем в localStorage
-  localStorage.setItem('user_subscription', 'premium');
-  localStorage.setItem('subscription_plan', plan);
   
-  setShowSubscriptionModal(false);
-  // После "оплаты" показываем форму создания привычки
-  setShowCreateForm(true);
+  try {
+    // Здесь в будущем будет логика оплаты через Telegram Stars
+    // Пока что просто логируем выбранный план
+    console.log('Payment processing for plan:', plan);
+    
+    // TODO: Implement payment through Telegram Stars API
+    // const paymentResult = await processTelegramStarsPayment(plan);
+    
+    // После успешной оплаты нужно будет обновить is_premium в БД через API
+    // await api.post('/api/users/upgrade-subscription', { plan });
+    
+    // Временное решение: показываем уведомление
+    if (window.Telegram?.WebApp?.showAlert) {
+      window.Telegram.WebApp.showAlert(
+        'Payment functionality will be available soon. Contact admin to upgrade your account.'
+      );
+    } else {
+      alert('Payment functionality will be available soon. Contact admin to upgrade your account.');
+    }
+    
+    // Закрываем модальное окно
+    setShowSubscriptionModal(false);
+    
+    // НЕ открываем форму создания, так как оплата еще не прошла
+    // setShowCreateForm(true);
+    
+  } catch (error) {
+    console.error('Subscription error:', error);
+    if (window.Telegram?.WebApp?.showAlert) {
+      window.Telegram.WebApp.showAlert('Failed to process subscription. Please try again.');
+    }
+  }
 };
   const getMotivationalMessage = () => {
     const currentStats = selectedDate === getTodayDate() ? stats : dateStats;
@@ -563,18 +597,17 @@ const getMotivationalBackgroundColor = () => {
   const currentCount = allHabits.length;
   
   console.log('Current habits count:', currentCount);
-  console.log('Checking subscription...');
+  console.log('User premium status:', user?.is_premium);
   
-  // Проверяем подписку
-  const hasSubscription = localStorage.getItem('user_subscription') === 'premium';
-  console.log('Has subscription:', hasSubscription);
+  // Проверяем подписку из данных пользователя (is_premium из БД)
+  const hasSubscription = user?.is_premium === true;
   
   // Если 3 или больше привычек и нет подписки - показываем SubscriptionModal
   if (currentCount >= 3 && !hasSubscription) {
-    console.log('Showing subscription modal');
+    console.log('Showing subscription modal - user has no premium');
     setShowSubscriptionModal(true);
   } else {
-    console.log('Opening create form');
+    console.log('Opening create form - user has premium or less than 3 habits');
     setShowCreateForm(true);
   }
 }}>

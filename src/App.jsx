@@ -133,7 +133,7 @@ function App() {
 
   return (
     <>
-      <Today />
+      <Today user={user}/>
       {showProfile && (
         <Profile onClose={() => setShowProfile(false)} />
       )}
