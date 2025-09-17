@@ -124,7 +124,7 @@
 }
 .today__stats {
   text-align: center;
-  margin-bottom: 4px;
+  margin-bottom: 20px;
 }
 
 .today__container {
@@ -134,7 +134,7 @@
   font-weight: 700;
   font-size: 24px;
   color: #1D1D1F;
-  margin-bottom: 13px;
+  margin-bottom: 8px;
 }
 
 .today__container2 {
