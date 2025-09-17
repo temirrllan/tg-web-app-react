@@ -198,19 +198,14 @@ const Today = () => {
 
 const handleCreateHabit = async (habitData) => {
   try {
-    // Проверяем лимит привычек для бесплатного тарифа
+    // Повторная проверка на случай, если пользователь как-то обошел первую проверку
     const currentCount = todayHabits.length;
+    const hasSubscription = localStorage.getItem('user_subscription') === 'premium';
     
-    if (currentCount >= 3) {
-      // Проверяем подписку пользователя
-      const hasSubscription = localStorage.getItem('user_subscription') === 'premium';
-      
-      if (!hasSubscription) {
-        // Показываем модальное окно подписки
-        setShowSubscriptionModal(true);
-        setShowCreateForm(false);
-        return;
-      }
+    if (currentCount >= 3 && !hasSubscription) {
+      setShowCreateForm(false);
+      setShowSubscriptionModal(true);
+      return;
     }
     
     console.log('Creating new habit:', habitData);
@@ -242,7 +237,7 @@ const handleSubscriptionContinue = (plan) => {
   localStorage.setItem('subscription_plan', plan);
   
   setShowSubscriptionModal(false);
-  // После оплаты показываем форму создания привычки снова
+  // После "оплаты" показываем форму создания привычки
   setShowCreateForm(true);
 };
   const getMotivationalMessage = () => {
@@ -561,9 +556,19 @@ const getMotivationalBackgroundColor = () => {
           onClose={() => setShowSwipeHint(false)} 
         />
         
-        <button className="fab" onClick={() => setShowCreateForm(true)}>
-          +
-        </button>
+        <button className="fab" onClick={() => {
+  // Проверяем лимит привычек перед открытием формы
+  const currentCount = todayHabits.length;
+  const hasSubscription = localStorage.getItem('user_subscription') === 'premium';
+  
+  if (currentCount >= 3 && !hasSubscription) {
+    setShowSubscriptionModal(true);
+  } else {
+    setShowCreateForm(true);
+  }
+}}>
+  +
+</button>
       </Layout>
 
       {showCreateForm && (
