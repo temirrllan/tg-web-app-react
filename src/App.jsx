@@ -42,7 +42,8 @@ function App() {
         
         if (response.success) {
           setUser(response.user);
-          
+           console.log('Authenticated user:', response.user); // Добавьте для отладки
+          console.log('User is_premium status:', response.user.is_premium);
           // Проверяем, есть ли параметр join в URL
           const urlParams = new URLSearchParams(window.location.search);
           const action = urlParams.get('action');

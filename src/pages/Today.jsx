@@ -15,8 +15,10 @@ import SwipeHint from '../components/habits/SwipeHint';
 import EditHabitForm from '../components/habits/EditHabitForm';
 import SubscriptionModal from '../components/modals/SubscriptionModal';
 
-const Today = () => {
-  const { user } = useTelegram();
+const Today = ({ user }) => {
+    const { user: tgUser } = useTelegram(); // Telegram user
+
+  // const { user } = useTelegram();
   const {
     todayHabits,
     stats,
@@ -595,11 +597,15 @@ const getMotivationalBackgroundColor = () => {
   const allHabits = dateHabits.filter(h => h.is_active !== false);
   const currentCount = allHabits.length;
   
+  console.log('=== Premium Check Debug ===');
   console.log('Current habits count:', currentCount);
-  console.log('User premium status:', user?.is_premium);
+  console.log('User object:', user);
+  console.log('User is_premium:', user?.is_premium);
+  console.log('Type of is_premium:', typeof user?.is_premium);
   
-  // Проверяем подписку из данных пользователя (is_premium из БД)
-  const hasSubscription = user?.is_premium === true;
+  // Проверяем подписку из данных пользователя
+  const hasSubscription = user?.is_premium === true || user?.is_premium === 1;
+  console.log('Has subscription result:', hasSubscription);
   
   // Если 3 или больше привычек и нет подписки - показываем SubscriptionModal
   if (currentCount >= 3 && !hasSubscription) {
