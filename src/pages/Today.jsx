@@ -15,8 +15,7 @@ import SwipeHint from '../components/habits/SwipeHint';
 import EditHabitForm from '../components/habits/EditHabitForm';
 import SubscriptionModal from '../components/modals/SubscriptionModal';
 
-const Today = ({ user }) => {
-  
+const Today = () => {
   const { user } = useTelegram();
   const {
     todayHabits,
