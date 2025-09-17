@@ -15,7 +15,7 @@ import SwipeHint from '../components/habits/SwipeHint';
 import EditHabitForm from '../components/habits/EditHabitForm';
 import SubscriptionModal from '../components/modals/SubscriptionModal';
 
-const Today = ({ user }) => {
+const Today = ({ currentUser }) => {  // Принимаем currentUser как проп
     const { user: tgUser } = useTelegram(); // Telegram user
 
   // const { user } = useTelegram();
@@ -592,32 +592,28 @@ const getMotivationalBackgroundColor = () => {
           onClose={() => setShowSwipeHint(false)} 
         />
         
-        <button className="fab" onClick={() => {
-  // Проверяем количество активных привычек
-  const allHabits = dateHabits.filter(h => h.is_active !== false);
-  const currentCount = allHabits.length;
-  
-  console.log('=== Premium Check Debug ===');
-  console.log('Current habits count:', currentCount);
-  console.log('User object:', user);
-  console.log('User is_premium:', user?.is_premium);
-  console.log('Type of is_premium:', typeof user?.is_premium);
-  
-  // Проверяем подписку из данных пользователя
-  const hasSubscription = user?.is_premium === true || user?.is_premium === 1;
-  console.log('Has subscription result:', hasSubscription);
-  
-  // Если 3 или больше привычек и нет подписки - показываем SubscriptionModal
-  if (currentCount >= 3 && !hasSubscription) {
-    console.log('Showing subscription modal - user has no premium');
-    setShowSubscriptionModal(true);
-  } else {
-    console.log('Opening create form - user has premium or less than 3 habits');
-    setShowCreateForm(true);
-  }
-}}>
-  +
-</button>
+   <button className="fab" onClick={() => {
+        // Проверяем количество активных привычек
+        const currentCount = todayHabits.filter(h => h.is_active !== false).length;
+        
+        console.log('=== Premium Check ===');
+        console.log('Current habits count:', currentCount);
+        console.log('User premium status:', currentUser?.is_premium);
+        
+        // Проверяем is_premium (может быть boolean или 0/1)
+        const hasPremium = currentUser?.is_premium === true || currentUser?.is_premium === 1;
+        
+        // Если 3 или больше привычек и нет премиума - показываем модалку
+        if (currentCount >= 3 && !hasPremium) {
+          console.log('❌ Showing subscription modal - limit reached');
+          setShowSubscriptionModal(true);
+        } else {
+          console.log('✅ Opening create form');
+          setShowCreateForm(true);
+        }
+      }}>
+        +
+      </button>
       </Layout>
 
       {showCreateForm && (
@@ -650,11 +646,11 @@ const getMotivationalBackgroundColor = () => {
   />
 )}
 
-<SubscriptionModal
-  isOpen={showSubscriptionModal}
-  onClose={() => setShowSubscriptionModal(false)}
-  onContinue={handleSubscriptionContinue}
-/>
+ <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
+        onContinue={handleSubscriptionContinue}
+      />
     </>
   );
 };
