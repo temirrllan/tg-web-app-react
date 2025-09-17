@@ -41,18 +41,9 @@ function App() {
         const response = await authenticateUser(webApp?.initData, tgUser);
         
         if (response.success) {
-          // Сохраняем пользователя с is_premium
           setUser(response.user);
           
-          // Логируем для отладки
-          console.log('✅ User authenticated:', {
-            id: response.user.id,
-            telegram_id: response.user.telegram_id,
-            is_premium: response.user.is_premium,
-            type: typeof response.user.is_premium
-          });
-          
-          // Проверяем параметр join в URL
+          // Проверяем, есть ли параметр join в URL
           const urlParams = new URLSearchParams(window.location.search);
           const action = urlParams.get('action');
           const code = urlParams.get('code');
@@ -64,6 +55,7 @@ function App() {
                 if (tg?.showAlert) {
                   tg.showAlert('Successfully joined the habit! 🎉');
                 }
+                // Очищаем параметры из URL
                 window.history.replaceState({}, document.title, window.location.pathname);
               }
             } catch (err) {
@@ -139,12 +131,11 @@ function App() {
     return <Onboarding user={user} onComplete={() => setShowOnboarding(false)} />;
   }
 
-  // Передаем пользователя в Today
   return (
     <>
-      <Today currentUser={user} />
+      <Today />
       {showProfile && (
-        <Profile user={user} onClose={() => setShowProfile(false)} />
+        <Profile onClose={() => setShowProfile(false)} />
       )}
     </>
   );

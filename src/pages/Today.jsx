@@ -14,11 +14,8 @@ import "./Today.css";
 import SwipeHint from '../components/habits/SwipeHint';
 import EditHabitForm from '../components/habits/EditHabitForm';
 import SubscriptionModal from '../components/modals/SubscriptionModal';
-
-const Today = ({ currentUser }) => {  // Принимаем currentUser как проп
-    const { user: tgUser } = useTelegram(); // Telegram user
-
-  // const { user } = useTelegram();
+const Today = () => {
+  const { user } = useTelegram();
   const {
     todayHabits,
     stats,
@@ -201,15 +198,19 @@ const Today = ({ currentUser }) => {  // Принимаем currentUser как �
 
 const handleCreateHabit = async (habitData) => {
   try {
-    // Повторная проверка на случай, если пользователь обошел первую проверку
+    // Проверяем лимит привычек для бесплатного тарифа
     const currentCount = todayHabits.length;
-    const hasSubscription = user?.is_premium === true;
     
-    if (currentCount >= 3 && !hasSubscription) {
-      console.log('Blocking habit creation - no premium subscription');
-      setShowCreateForm(false);
-      setShowSubscriptionModal(true);
-      return;
+    if (currentCount >= 3) {
+      // Проверяем подписку пользователя
+      const hasSubscription = localStorage.getItem('user_subscription') === 'premium';
+      
+      if (!hasSubscription) {
+        // Показываем модальное окно подписки
+        setShowSubscriptionModal(true);
+        setShowCreateForm(false);
+        return;
+      }
     }
     
     console.log('Creating new habit:', habitData);
@@ -232,49 +233,17 @@ const handleCreateHabit = async (habitData) => {
     }
   } catch (error) {
     console.error("Failed to create habit:", error);
-    
-    // Проверяем, если ошибка связана с лимитом
-    if (error.response?.status === 403 && error.response?.data?.showPremium) {
-      setShowCreateForm(false);
-      setShowSubscriptionModal(true);
-    }
   }
 };
-const handleSubscriptionContinue = async (plan) => {
+const handleSubscriptionContinue = (plan) => {
   console.log('Selected subscription plan:', plan);
+  // Временно сохраняем в localStorage
+  localStorage.setItem('user_subscription', 'premium');
+  localStorage.setItem('subscription_plan', plan);
   
-  try {
-    // Здесь в будущем будет логика оплаты через Telegram Stars
-    // Пока что просто логируем выбранный план
-    console.log('Payment processing for plan:', plan);
-    
-    // TODO: Implement payment through Telegram Stars API
-    // const paymentResult = await processTelegramStarsPayment(plan);
-    
-    // После успешной оплаты нужно будет обновить is_premium в БД через API
-    // await api.post('/api/users/upgrade-subscription', { plan });
-    
-    // Временное решение: показываем уведомление
-    if (window.Telegram?.WebApp?.showAlert) {
-      window.Telegram.WebApp.showAlert(
-        'Payment functionality will be available soon. Contact admin to upgrade your account.'
-      );
-    } else {
-      alert('Payment functionality will be available soon. Contact admin to upgrade your account.');
-    }
-    
-    // Закрываем модальное окно
-    setShowSubscriptionModal(false);
-    
-    // НЕ открываем форму создания, так как оплата еще не прошла
-    // setShowCreateForm(true);
-    
-  } catch (error) {
-    console.error('Subscription error:', error);
-    if (window.Telegram?.WebApp?.showAlert) {
-      window.Telegram.WebApp.showAlert('Failed to process subscription. Please try again.');
-    }
-  }
+  setShowSubscriptionModal(false);
+  // После оплаты показываем форму создания привычки снова
+  setShowCreateForm(true);
 };
   const getMotivationalMessage = () => {
     const currentStats = selectedDate === getTodayDate() ? stats : dateStats;
@@ -592,28 +561,9 @@ const getMotivationalBackgroundColor = () => {
           onClose={() => setShowSwipeHint(false)} 
         />
         
-   <button className="fab" onClick={() => {
-        // Проверяем количество активных привычек
-        const currentCount = todayHabits.filter(h => h.is_active !== false).length;
-        
-        console.log('=== Premium Check ===');
-        console.log('Current habits count:', currentCount);
-        console.log('User premium status:', currentUser?.is_premium);
-        
-        // Проверяем is_premium (может быть boolean или 0/1)
-        const hasPremium = currentUser?.is_premium === true || currentUser?.is_premium === 1;
-        
-        // Если 3 или больше привычек и нет премиума - показываем модалку
-        if (currentCount >= 3 && !hasPremium) {
-          console.log('❌ Showing subscription modal - limit reached');
-          setShowSubscriptionModal(true);
-        } else {
-          console.log('✅ Opening create form');
-          setShowCreateForm(true);
-        }
-      }}>
-        +
-      </button>
+        <button className="fab" onClick={() => setShowCreateForm(true)}>
+          +
+        </button>
       </Layout>
 
       {showCreateForm && (
@@ -646,11 +596,11 @@ const getMotivationalBackgroundColor = () => {
   />
 )}
 
- <SubscriptionModal
-        isOpen={showSubscriptionModal}
-        onClose={() => setShowSubscriptionModal(false)}
-        onContinue={handleSubscriptionContinue}
-      />
+<SubscriptionModal
+  isOpen={showSubscriptionModal}
+  onClose={() => setShowSubscriptionModal(false)}
+  onContinue={handleSubscriptionContinue}
+/>
     </>
   );
 };
