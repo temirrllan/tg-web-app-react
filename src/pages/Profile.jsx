@@ -19,17 +19,32 @@ const Profile = ({ onClose }) => {
     loadSubscriptionStatus();
   }, []);
 
-  const loadSubscriptionStatus = async () => {
-    try {
-      const status = await habitService.checkSubscriptionLimits();
-      setSubscription(status);
-      console.log('Subscription status:', status);
-    } catch (error) {
-      console.error('Failed to load subscription:', error);
-    } finally {
-      setLoading(false);
+ const loadSubscriptionStatus = async () => {
+  try {
+    const status = await habitService.checkSubscriptionLimits();
+    setSubscription(status);
+    console.log('Loaded subscription status:', status);
+    
+    // Отладка - проверяем что приходит с сервера
+    if (process.env.NODE_ENV === 'development') {
+      try {
+        const debugResponse = await fetch(`${import.meta.env.VITE_API_URL}/subscription/debug`, {
+          headers: {
+            'X-User-Id': localStorage.getItem('user_id')
+          }
+        });
+        const debugData = await debugResponse.json();
+        console.log('Debug subscription data:', debugData);
+      } catch (err) {
+        console.log('Debug endpoint not available');
+      }
     }
-  };
+  } catch (error) {
+    console.error('Failed to load subscription:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const getSubscriptionLabel = () => {
     if (loading) return 'Loading...';
