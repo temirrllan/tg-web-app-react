@@ -146,6 +146,18 @@ const Profile = ({ onClose }) => {
 
   return (
     <div className="profile">
+      <div className="profile__header">
+        <button className="profile__back" onClick={onClose}>
+          Back
+        </button>
+        <div className="profile__title">
+          <h2>Habit Tracker</h2>
+          <span className="profile__subtitle">mini-app</span>
+        </div>
+        <button className="profile__menu">
+          ⋯
+        </button>
+      </div>
 
       <div className="profile__content">
         <div className="profile__user">
