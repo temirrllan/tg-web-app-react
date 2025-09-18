@@ -19,32 +19,17 @@ const Profile = ({ onClose }) => {
     loadSubscriptionStatus();
   }, []);
 
- const loadSubscriptionStatus = async () => {
-  try {
-    const status = await habitService.checkSubscriptionLimits();
-    setSubscription(status);
-    console.log('Loaded subscription status:', status);
-    
-    // Отладка - проверяем что приходит с сервера
-    if (process.env.NODE_ENV === 'development') {
-      try {
-        const debugResponse = await fetch(`${import.meta.env.VITE_API_URL}/subscription/debug`, {
-          headers: {
-            'X-User-Id': localStorage.getItem('user_id')
-          }
-        });
-        const debugData = await debugResponse.json();
-        console.log('Debug subscription data:', debugData);
-      } catch (err) {
-        console.log('Debug endpoint not available');
-      }
+  const loadSubscriptionStatus = async () => {
+    try {
+      const status = await habitService.checkSubscriptionLimits();
+      setSubscription(status);
+      console.log('Loaded subscription status:', status);
+    } catch (error) {
+      console.error('Failed to load subscription:', error);
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Failed to load subscription:', error);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const getSubscriptionLabel = () => {
     if (loading) return 'Loading...';
@@ -55,50 +40,63 @@ const Profile = ({ onClose }) => {
     
     const sub = subscription.subscription;
     
+    // Форматируем label в зависимости от типа подписки
+    if (sub.planType === '6_months') {
+      return 'For 6 Month';
+    }
+    
+    if (sub.planType === '1_year') {
+      return 'For 1 Year';
+    }
+    
     if (sub.planType === 'lifetime') {
       return 'Lifetime';
     }
     
-    if (sub.daysLeft !== null) {
-      if (sub.daysLeft <= 7) {
-        return `Premium (${sub.daysLeft} days left)`;
-      }
-      return 'Premium';
+    // Для trial или других типов
+    if (sub.isTrial) {
+      return `Trial (${sub.daysLeft || 0} days)`;
     }
     
     return 'Premium';
   };
 
-  const getSubscriptionColor = () => {
-    if (!subscription || !subscription.subscription || !subscription.subscription.isActive) {
-      return '#8E8E93';
-    }
-    
-    const sub = subscription.subscription;
-    
-    if (sub.daysLeft !== null && sub.daysLeft <= 7) {
-      return '#FF9500'; // Оранжевый для скорого истечения
-    }
-    
-    return '#34C759'; // Зеленый для активной подписки
+  const isSubscriptionActive = () => {
+    return subscription && subscription.subscription && subscription.subscription.isActive;
   };
 
   const menuItems = [
     { 
       id: 'subscription', 
       label: 'Subscription', 
-      value: getSubscriptionLabel(), 
-      icon: '›',
-      valueColor: getSubscriptionColor()
+      icon: '⭐',
+      showBadge: true
     },
-    { id: 'settings', label: 'Settings', icon: '›' },
-    { id: 'support', label: 'Support', icon: '›' },
+    { 
+      id: 'purchase_history', 
+      label: 'Purchase History',
+      icon: '📋'
+    }
+  ];
+
+  const specialItems = [
+    { 
+      id: 'special_habits', 
+      label: 'Special Habits',
+      icon: '✨',
+      highlight: true
+    }
+  ];
+
+  const settingsItems = [
+    { id: 'settings', label: 'Settings', icon: '⚙️' },
+    { id: 'support', label: 'Support', icon: '🎯' }
   ];
 
   const legalItems = [
-    { id: 'terms', label: 'Term of Use', icon: '›' },
-    { id: 'privacy', label: 'Privacy Policy', icon: '›' },
-    { id: 'payment', label: 'Payment Policy', icon: '›' },
+    { id: 'terms', label: 'Term of Use' },
+    { id: 'privacy', label: 'Privacy Policy' },
+    { id: 'payment', label: 'Payment Policy' }
   ];
 
   const handleMenuClick = (itemId) => {
@@ -106,9 +104,7 @@ const Profile = ({ onClose }) => {
     
     switch(itemId) {
       case 'subscription':
-        // Можно добавить страницу управления подпиской
         if (subscription && subscription.subscription && subscription.subscription.isActive) {
-          // Показать информацию о текущей подписке
           const sub = subscription.subscription;
           const message = `Plan: ${sub.planName}\n` +
                          `Started: ${new Date(sub.startsAt).toLocaleDateString()}\n` +
@@ -122,10 +118,8 @@ const Profile = ({ onClose }) => {
         }
         break;
       case 'settings':
-        // Открыть настройки
         break;
       case 'support':
-        // Открыть поддержку
         if (tg) {
           tg.openLink('https://t.me/your_support_bot');
         }
@@ -152,6 +146,19 @@ const Profile = ({ onClose }) => {
 
   return (
     <div className="profile">
+      <div className="profile__header">
+        <button className="profile__back" onClick={onClose}>
+          Back
+        </button>
+        <div className="profile__title">
+          <h2>Habit Tracker</h2>
+          <span className="profile__subtitle">mini-app</span>
+        </div>
+        <button className="profile__menu">
+          ⋯
+        </button>
+      </div>
+
       <div className="profile__content">
         <div className="profile__user">
           {user?.photo_url ? (
@@ -173,28 +180,63 @@ const Profile = ({ onClose }) => {
           )}
         </div>
 
+        <div className="profile__section profile__section--highlighted">
+          <button 
+            className={`profile__item profile__item--subscription ${isSubscriptionActive() ? 'profile__item--active' : ''}`}
+            onClick={() => handleMenuClick('subscription')}
+          >
+            <div className="profile__item-left">
+              <span className="profile__item-icon">⭐</span>
+              <span className="profile__item-label">Subscription</span>
+            </div>
+            <div className="profile__item-right">
+              <span className={`profile__subscription-badge ${isSubscriptionActive() ? 'profile__subscription-badge--active' : 'profile__subscription-badge--free'}`}>
+                {getSubscriptionLabel()}
+              </span>
+              <span className="profile__item-arrow">›</span>
+            </div>
+          </button>
+          
+          <button 
+            className="profile__item"
+            onClick={() => handleMenuClick('purchase_history')}
+          >
+            <div className="profile__item-left">
+              <span className="profile__item-icon">📋</span>
+              <span className="profile__item-label">Purchase History</span>
+            </div>
+            <span className="profile__item-arrow">›</span>
+          </button>
+        </div>
+
+        <div className="profile__section profile__section--special">
+          {specialItems.map(item => (
+            <button 
+              key={item.id} 
+              className="profile__item profile__item--special"
+              onClick={() => handleMenuClick(item.id)}
+            >
+              <div className="profile__item-left">
+                <span className="profile__item-icon">{item.icon}</span>
+                <span className="profile__item-label">{item.label}</span>
+              </div>
+              <span className="profile__item-arrow">›</span>
+            </button>
+          ))}
+        </div>
+
         <div className="profile__section">
-          {menuItems.map(item => (
+          {settingsItems.map(item => (
             <button 
               key={item.id} 
               className="profile__item"
               onClick={() => handleMenuClick(item.id)}
             >
               <div className="profile__item-left">
-                <span className="profile__item-icon">⚪</span>
+                <span className="profile__item-icon">{item.icon}</span>
                 <span className="profile__item-label">{item.label}</span>
               </div>
-              <span className="profile__item-value">
-                {item.value && (
-                  <span 
-                    className="profile__item-badge" 
-                    style={{ color: item.valueColor || '#8E8E93' }}
-                  >
-                    {item.value}
-                  </span>
-                )}
-                {item.icon}
-              </span>
+              <span className="profile__item-arrow">›</span>
             </button>
           ))}
         </div>
@@ -203,11 +245,11 @@ const Profile = ({ onClose }) => {
           {legalItems.map(item => (
             <button 
               key={item.id} 
-              className="profile__item"
+              className="profile__item profile__item--legal"
               onClick={() => handleMenuClick(item.id)}
             >
               <span className="profile__item-label">{item.label}</span>
-              <span className="profile__item-value">{item.icon}</span>
+              <span className="profile__item-arrow">›</span>
             </button>
           ))}
         </div>
@@ -215,11 +257,6 @@ const Profile = ({ onClose }) => {
         <div className="profile__version">
           <p>App Version</p>
           <p>v1.20.6-00-kz.2L - v1.20.11B</p>
-          {subscription && subscription.habitCount !== undefined && (
-            <p style={{ marginTop: '8px', fontSize: '12px', color: '#8E8E93' }}>
-              Habits: {subscription.habitCount}/{subscription.limit}
-            </p>
-          )}
         </div>
       </div>
     </div>
