@@ -16,6 +16,9 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
   useEffect(() => {
     if (isOpen) {
       loadSubscriptionInfo();
+      // Сбрасываем выбранный план при открытии модалки
+      setSelectedPlan(null);
+      setLoading(false);
     }
   }, [isOpen]);
 
@@ -24,6 +27,8 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
       // Загружаем текущий статус подписки
       const status = await habitService.checkSubscriptionLimits();
       setCurrentSubscription(status.subscription);
+      
+      console.log('Subscription modal - current status:', status);
       
       // Если у пользователя уже есть активная подписка, можно показать это
       if (status.subscription && status.subscription.isActive) {
@@ -36,19 +41,42 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
 
   if (!isOpen) return null;
 
-  const handleContinue = () => {
-    if (selectedPlan && !loading) {
-      setLoading(true);
-      onContinue(selectedPlan);
+  const handleContinue = async () => {
+    if (!selectedPlan || loading) {
+      console.log('Cannot continue: selectedPlan=', selectedPlan, 'loading=', loading);
+      return;
+    }
+    
+    console.log('Starting subscription activation for plan:', selectedPlan);
+    setLoading(true);
+    
+    try {
+      await onContinue(selectedPlan);
+      // onContinue теперь сам закроет модалку после успешной активации
+    } catch (error) {
+      console.error('Failed to activate subscription:', error);
+      setLoading(false);
+      // Показываем ошибку пользователю
+      if (window.Telegram?.WebApp?.showAlert) {
+        window.Telegram.WebApp.showAlert('Failed to activate subscription. Please try again.');
+      }
     }
   };
 
-  // Форматирование цены для отображения
-  const formatPrice = (stars, period) => {
-    if (period === 'month') {
-      return `${stars} ⭐/month`;
-    }
-    return `${stars} ⭐`;
+  const handlePlanSelect = (plan) => {
+    if (loading) return;
+    
+    console.log('Plan selected:', plan);
+    setSelectedPlan(plan);
+  };
+
+  const handleClose = () => {
+    if (loading) return;
+    
+    // Сбрасываем состояние при закрытии
+    setSelectedPlan(null);
+    setLoading(false);
+    onClose();
   };
 
   // Показываем сообщение если у пользователя уже есть подписка
@@ -73,8 +101,8 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
   };
 
   return (
-    <div className="subscription-modal-overlay">
-      <div className="subscription-modal">
+    <div className="subscription-modal-overlay" onClick={handleClose}>
+      <div className="subscription-modal" onClick={(e) => e.stopPropagation()}>
         <div className="subscription-modal__content">
           <div className="subscription-modal__illustration">
             <img src={sub} alt="PRO Features" />
@@ -120,11 +148,12 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
 
             <div className="subscription-modal__plans">
               <div 
-                className={`subscription-modal__plan ${selectedPlan === 'month' ? 'subscription-modal__plan--selected' : ''}`}
-                onClick={() => !loading && setSelectedPlan('month')}
+                className={`subscription-modal__plan ${selectedPlan === '6_months' ? 'subscription-modal__plan--selected' : ''}`}
+                onClick={() => handlePlanSelect('6_months')}
+                style={{ opacity: loading ? 0.7 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}
               >
                 <div className="subscription-modal__plan-radio">
-                  {selectedPlan === 'month' && (
+                  {selectedPlan === '6_months' && (
                     <div className="subscription-modal__plan-radio-inner">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                         <path d="M5 12l5 5L19 7" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
@@ -144,11 +173,12 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
               </div>
 
               <div 
-                className={`subscription-modal__plan ${selectedPlan === 'year' ? 'subscription-modal__plan--selected' : ''}`}
-                onClick={() => !loading && setSelectedPlan('year')}
+                className={`subscription-modal__plan ${selectedPlan === '1_year' ? 'subscription-modal__plan--selected' : ''}`}
+                onClick={() => handlePlanSelect('1_year')}
+                style={{ opacity: loading ? 0.7 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}
               >
                 <div className="subscription-modal__plan-radio">
-                  {selectedPlan === 'year' && (
+                  {selectedPlan === '1_year' && (
                     <div className="subscription-modal__plan-radio-inner">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                         <path d="M5 12l5 5L19 7" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
@@ -185,7 +215,7 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
             </div>
 
             <button 
-              className={`subscription-modal__continue ${!selectedPlan || loading ? 'subscription-modal__continue--disabled' : ''}`}
+              className={`subscription-modal__continue ${(!selectedPlan || loading) ? 'subscription-modal__continue--disabled' : ''}`}
               onClick={handleContinue}
               disabled={!selectedPlan || loading}
             >

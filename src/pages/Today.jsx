@@ -267,11 +267,12 @@ const Today = () => {
     }
   };
 
-  const handleSubscriptionContinue = async (plan) => {
+const handleSubscriptionContinue = async (plan) => {
   console.log('Selected subscription plan:', plan);
   
   try {
     // Активируем премиум через API
+    // План уже приходит в правильном формате: '6_months' или '1_year'
     const result = await habitService.activatePremium(plan);
     
     if (result.success) {
@@ -280,9 +281,13 @@ const Today = () => {
       // Обновляем статус подписки
       await checkUserSubscription();
       
-      // Закрываем модалку и открываем форму создания
+      // Закрываем модалку подписки
       setShowSubscriptionModal(false);
-      setShowCreateForm(true);
+      
+      // Если лимит был достигнут, теперь открываем форму создания
+      if (userSubscription && !userSubscription.canCreateMore) {
+        setShowCreateForm(true);
+      }
       
       // Показываем уведомление (если есть Telegram WebApp)
       if (window.Telegram?.WebApp?.showAlert) {
@@ -291,8 +296,14 @@ const Today = () => {
     }
   } catch (error) {
     console.error('Failed to activate premium:', error);
+    
+    // Сбрасываем состояние модалки в случае ошибки
+    setShowSubscriptionModal(false);
+    
     if (window.Telegram?.WebApp?.showAlert) {
       window.Telegram.WebApp.showAlert('Failed to activate premium. Please try again.');
+    } else {
+      alert('Failed to activate premium. Please try again.');
     }
   }
 };
