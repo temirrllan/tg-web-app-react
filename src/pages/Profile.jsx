@@ -41,15 +41,18 @@ const Profile = ({ onClose }) => {
     const sub = subscription.subscription;
     
     // Форматируем label в зависимости от типа подписки
-    if (sub.planType === '6_months') {
+    // Обрабатываем оба варианта: с подчеркиванием и с пробелом
+    const planType = sub.planType || '';
+    
+    if (planType === '6_months' || planType === '6 months') {
       return 'For 6 Month';
     }
     
-    if (sub.planType === '1_year') {
+    if (planType === '1_year' || planType === '1 year') {
       return 'For 1 Year';
     }
     
-    if (sub.planType === 'lifetime') {
+    if (planType === 'lifetime') {
       return 'Lifetime';
     }
     

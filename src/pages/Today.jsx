@@ -268,34 +268,34 @@ const Today = () => {
   };
 
   const handleSubscriptionContinue = async (plan) => {
-    console.log('Selected subscription plan:', plan);
+  console.log('Selected subscription plan:', plan);
+  
+  try {
+    // Активируем премиум через API
+    const result = await habitService.activatePremium(plan);
     
-    try {
-      // Активируем премиум через API
-      const result = await habitService.activatePremium(plan);
+    if (result.success) {
+      console.log('Premium activated successfully');
       
-      if (result.success) {
-        console.log('Premium activated successfully');
-        
-        // Обновляем статус подписки
-        await checkUserSubscription();
-        
-        // Закрываем модалку и открываем форму создания
-        setShowSubscriptionModal(false);
-        setShowCreateForm(true);
-        
-        // Показываем уведомление (если есть Telegram WebApp)
-        if (window.Telegram?.WebApp?.showAlert) {
-          window.Telegram.WebApp.showAlert('Premium activated! Now you can create unlimited habits! 🎉');
-        }
-      }
-    } catch (error) {
-      console.error('Failed to activate premium:', error);
+      // Обновляем статус подписки
+      await checkUserSubscription();
+      
+      // Закрываем модалку и открываем форму создания
+      setShowSubscriptionModal(false);
+      setShowCreateForm(true);
+      
+      // Показываем уведомление (если есть Telegram WebApp)
       if (window.Telegram?.WebApp?.showAlert) {
-        window.Telegram.WebApp.showAlert('Failed to activate premium. Please try again.');
+        window.Telegram.WebApp.showAlert('Premium activated! Now you can create unlimited habits! 🎉');
       }
     }
-  };
+  } catch (error) {
+    console.error('Failed to activate premium:', error);
+    if (window.Telegram?.WebApp?.showAlert) {
+      window.Telegram.WebApp.showAlert('Failed to activate premium. Please try again.');
+    }
+  }
+};
 
   const getMotivationalMessage = () => {
     const currentStats = selectedDate === getTodayDate() ? stats : dateStats;
