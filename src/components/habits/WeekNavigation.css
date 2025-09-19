@@ -3,10 +3,18 @@
   padding: 0 16px;
   margin-bottom: 24px;
   overflow-x: auto;
+  overflow-y: hidden;
   scrollbar-width: none;
   -ms-overflow-style: none;
   -webkit-overflow-scrolling: touch;
   position: relative;
+  /* Предотвращаем overscroll эффект */
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: none;
+  /* Фиксируем высоту чтобы предотвратить вертикальное смещение */
+  height: 60px;
+  display: flex;
+  align-items: center;
 }
 
 .week-navigation::-webkit-scrollbar {
@@ -18,6 +26,12 @@
   gap: 6px;
   padding: 4px 16px;
   min-width: min-content;
+  /* Предотвращаем вертикальное смещение */
+  align-items: center;
+  height: 100%;
+  /* Блокируем bounce эффект на iOS */
+  -webkit-overflow-scrolling: touch;
+  position: relative;
 }
 
 .week-navigation__day {
@@ -32,6 +46,18 @@
   transition: all 0.2s;
   white-space: nowrap;
   flex-shrink: 0;
+  /* Фиксируем высоту кнопок */
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Предотвращаем выделение текста при свайпе */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  /* Убираем подсветку при тапе на мобильных */
+  -webkit-tap-highlight-color: transparent;
 }
 
 .week-navigation__day:hover:not(.week-navigation__day--active) {
@@ -69,6 +95,7 @@
 .week-navigation__day-label {
   display: block;
   color: inherit;
+  pointer-events: none;
 }
 
 .week-navigation__day-badge {
@@ -83,4 +110,26 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Дополнительные стили для мобильных устройств */
+@supports (-webkit-touch-callout: none) {
+  /* iOS specific */
+  .week-navigation {
+    /* Блокируем rubber band эффект */
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
+
+/* Предотвращаем любое вертикальное смещение */
+@media (hover: none) and (pointer: coarse) {
+  .week-navigation {
+    touch-action: pan-x;
+    overscroll-behavior: contain;
+  }
+  
+  .week-navigation__scroll {
+    touch-action: pan-x;
+  }
 }
