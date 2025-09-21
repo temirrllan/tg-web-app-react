@@ -4,6 +4,7 @@ import { useNavigation } from '../hooks/useNavigation';
 import { habitService } from '../services/habits';
 import PurchaseHistory from './PurchaseHistory';
 import Subscription from './Subscription';
+import Settings from './Settings';
 
 const Profile = ({ onClose }) => {
   useNavigation(onClose);
@@ -11,33 +12,30 @@ const Profile = ({ onClose }) => {
   const [loading, setLoading] = useState(true);
   const [showPurchaseHistory, setShowPurchaseHistory] = useState(false);
   const [showSubscriptionPage, setShowSubscriptionPage] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  
   useEffect(() => {
-  // Очищаем кэш и загружаем свежие данные
-  setSubscription(null);
-  setLoading(true);
-  loadSubscriptionStatus();
-  
-  // Обновляем данные каждый раз при фокусе на окне
-  const handleFocus = () => {
+    setSubscription(null);
+    setLoading(true);
     loadSubscriptionStatus();
-  };
+    
+    const handleFocus = () => {
+      loadSubscriptionStatus();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
   
-  window.addEventListener('focus', handleFocus);
-  
-  return () => {
-    window.removeEventListener('focus', handleFocus);
-  };
-}, []);
   const tg = window.Telegram?.WebApp;
   const user = tg?.initDataUnsafe?.user || {
     first_name: 'Test',
     last_name: 'User',
     username: 'testuser'
   };
-
-  useEffect(() => {
-    loadSubscriptionStatus();
-  }, []);
 
   const loadSubscriptionStatus = async () => {
     try {
@@ -51,39 +49,34 @@ const Profile = ({ onClose }) => {
     }
   };
 
- const getSubscriptionLabel = () => {
-  if (loading) return 'Loading...';
-  
-  // Проверяем наличие активной подписки
-  if (!subscription || !subscription.isPremium || !subscription.subscription) {
-    return 'Free';
-  }
-  
-  const sub = subscription.subscription;
-  
-  // Проверяем что подписка действительно активна
-  if (!sub.isActive) {
-    return 'Free';
-  }
-  
-  // Форматируем label в зависимости от типа подписки
-  const planType = sub.planType || '';
-  
-  // Маппинг типов подписок на отображаемые названия
-  const planLabels = {
-    '6_months': 'For 6 Month',
-    '1_year': 'For 1 Year',
-    'lifetime': 'Lifetime',
-    'trial_7_days': `Trial (${sub.daysLeft || 0} days)`
+  const getSubscriptionLabel = () => {
+    if (loading) return 'Loading...';
+    
+    if (!subscription || !subscription.isPremium || !subscription.subscription) {
+      return 'Free';
+    }
+    
+    const sub = subscription.subscription;
+    
+    if (!sub.isActive) {
+      return 'Free';
+    }
+    
+    const planType = sub.planType || '';
+    
+    const planLabels = {
+      '6_months': 'For 6 Month',
+      '1_year': 'For 1 Year',
+      'lifetime': 'Lifetime',
+      'trial_7_days': `Trial (${sub.daysLeft || 0} days)`
+    };
+    
+    return planLabels[planType] || 'Premium';
   };
-  
-  // Возвращаем соответствующий label или Premium по умолчанию
-  return planLabels[planType] || 'Premium';
-};
 
-const isSubscriptionActive = () => {
-  return subscription?.isPremium && subscription?.subscription?.isActive;
-};
+  const isSubscriptionActive = () => {
+    return subscription?.isPremium && subscription?.subscription?.isActive;
+  };
 
   const menuItems = [
     { 
@@ -130,6 +123,7 @@ const isSubscriptionActive = () => {
         setShowPurchaseHistory(true);
         break;
       case 'settings':
+        setShowSettings(true);
         break;
       case 'support':
         if (tg) {
@@ -162,7 +156,7 @@ const isSubscriptionActive = () => {
       <PurchaseHistory 
         onClose={() => {
           setShowPurchaseHistory(false);
-          loadSubscriptionStatus(); // Обновляем статус после закрытия
+          loadSubscriptionStatus();
         }} 
       />
     );
@@ -174,7 +168,18 @@ const isSubscriptionActive = () => {
       <Subscription 
         onClose={() => {
           setShowSubscriptionPage(false);
-          loadSubscriptionStatus(); // Обновляем статус после закрытия
+          loadSubscriptionStatus();
+        }}
+      />
+    );
+  }
+
+  // Если открыты настройки
+  if (showSettings) {
+    return (
+      <Settings 
+        onClose={() => {
+          setShowSettings(false);
         }}
       />
     );
@@ -182,19 +187,6 @@ const isSubscriptionActive = () => {
 
   return (
     <div className="profile">
-      {/* <div className="profile__header">
-        <button className="profile__back" onClick={onClose}>
-          Back
-        </button>
-        <div className="profile__title">
-          <h2>Habit Tracker</h2>
-          <span className="profile__subtitle">mini-app</span>
-        </div>
-        <button className="profile__menu">
-          ⋯
-        </button>
-      </div> */}
-
       <div className="profile__content">
         <div className="profile__user">
           {user?.photo_url ? (
