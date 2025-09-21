@@ -100,12 +100,12 @@ const Subscription = ({ onClose }) => {
   
   return (
     <div className="subscription-page">
-      <div className="subscription-page__header">
+      {/* <div className="subscription-page__header">
         <button className="subscription-page__close" onClick={onClose}>
           Close
         </button>
         <h2>Subscription</h2>
-      </div>
+      </div> */}
       
       <div className="subscription-page__content">
         {renderSubscriptionStatus()}

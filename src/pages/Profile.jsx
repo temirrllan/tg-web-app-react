@@ -11,7 +11,23 @@ const Profile = ({ onClose }) => {
   const [loading, setLoading] = useState(true);
   const [showPurchaseHistory, setShowPurchaseHistory] = useState(false);
   const [showSubscriptionPage, setShowSubscriptionPage] = useState(false);
+  useEffect(() => {
+  // Очищаем кэш и загружаем свежие данные
+  setSubscription(null);
+  setLoading(true);
+  loadSubscriptionStatus();
   
+  // Обновляем данные каждый раз при фокусе на окне
+  const handleFocus = () => {
+    loadSubscriptionStatus();
+  };
+  
+  window.addEventListener('focus', handleFocus);
+  
+  return () => {
+    window.removeEventListener('focus', handleFocus);
+  };
+}, []);
   const tg = window.Telegram?.WebApp;
   const user = tg?.initDataUnsafe?.user || {
     first_name: 'Test',
@@ -35,41 +51,39 @@ const Profile = ({ onClose }) => {
     }
   };
 
-  const getSubscriptionLabel = () => {
-    if (loading) return 'Loading...';
-    
-    if (!subscription || !subscription.subscription || !subscription.subscription.isActive) {
-      return 'Free';
-    }
-    
-    const sub = subscription.subscription;
-    
-    // Форматируем label в зависимости от типа подписки
-    const planType = sub.planType || '';
-    
-    if (planType === '6_months' || planType === '6 months') {
-      return 'For 6 Month';
-    }
-    
-    if (planType === '1_year' || planType === '1 year' || planType === 'Per Year') {
-      return 'For 1 Year';
-    }
-    
-    if (planType === 'lifetime') {
-      return 'Lifetime';
-    }
-    
-    // Для trial или других типов
-    if (sub.isTrial) {
-      return `Trial (${sub.daysLeft || 0} days)`;
-    }
-    
-    return 'Premium';
+ const getSubscriptionLabel = () => {
+  if (loading) return 'Loading...';
+  
+  // Проверяем наличие активной подписки
+  if (!subscription || !subscription.isPremium || !subscription.subscription) {
+    return 'Free';
+  }
+  
+  const sub = subscription.subscription;
+  
+  // Проверяем что подписка действительно активна
+  if (!sub.isActive) {
+    return 'Free';
+  }
+  
+  // Форматируем label в зависимости от типа подписки
+  const planType = sub.planType || '';
+  
+  // Маппинг типов подписок на отображаемые названия
+  const planLabels = {
+    '6_months': 'For 6 Month',
+    '1_year': 'For 1 Year',
+    'lifetime': 'Lifetime',
+    'trial_7_days': `Trial (${sub.daysLeft || 0} days)`
   };
+  
+  // Возвращаем соответствующий label или Premium по умолчанию
+  return planLabels[planType] || 'Premium';
+};
 
-  const isSubscriptionActive = () => {
-    return subscription && subscription.subscription && subscription.subscription.isActive;
-  };
+const isSubscriptionActive = () => {
+  return subscription?.isPremium && subscription?.subscription?.isActive;
+};
 
   const menuItems = [
     { 
