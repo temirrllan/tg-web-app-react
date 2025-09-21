@@ -2,11 +2,15 @@ import React, { useState, useEffect } from 'react';
 import './Profile.css';
 import { useNavigation } from '../hooks/useNavigation';
 import { habitService } from '../services/habits';
+import PurchaseHistory from './PurchaseHistory';
+import Subscription from './Subscription';
 
 const Profile = ({ onClose }) => {
   useNavigation(onClose);
   const [subscription, setSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showPurchaseHistory, setShowPurchaseHistory] = useState(false);
+  const [showSubscriptionPage, setShowSubscriptionPage] = useState(false);
   
   const tg = window.Telegram?.WebApp;
   const user = tg?.initDataUnsafe?.user || {
@@ -41,14 +45,13 @@ const Profile = ({ onClose }) => {
     const sub = subscription.subscription;
     
     // Форматируем label в зависимости от типа подписки
-    // Обрабатываем оба варианта: с подчеркиванием и с пробелом
     const planType = sub.planType || '';
     
     if (planType === '6_months' || planType === '6 months') {
       return 'For 6 Month';
     }
     
-    if (planType === '1_year' || planType === '1 year') {
+    if (planType === '1_year' || planType === '1 year' || planType === 'Per Year') {
       return 'For 1 Year';
     }
     
@@ -107,18 +110,10 @@ const Profile = ({ onClose }) => {
     
     switch(itemId) {
       case 'subscription':
-        if (subscription && subscription.subscription && subscription.subscription.isActive) {
-          const sub = subscription.subscription;
-          const message = `Plan: ${sub.planName}\n` +
-                         `Started: ${new Date(sub.startsAt).toLocaleDateString()}\n` +
-                         (sub.expiresAt ? `Expires: ${new Date(sub.expiresAt).toLocaleDateString()}` : 'Lifetime access');
-          
-          if (tg?.showAlert) {
-            tg.showAlert(message);
-          } else {
-            alert(message);
-          }
-        }
+        setShowSubscriptionPage(true);
+        break;
+      case 'purchase_history':
+        setShowPurchaseHistory(true);
         break;
       case 'settings':
         break;
@@ -147,9 +142,33 @@ const Profile = ({ onClose }) => {
     }
   };
 
+  // Если открыта история покупок
+  if (showPurchaseHistory) {
+    return (
+      <PurchaseHistory 
+        onClose={() => {
+          setShowPurchaseHistory(false);
+          loadSubscriptionStatus(); // Обновляем статус после закрытия
+        }} 
+      />
+    );
+  }
+
+  // Если открыта страница подписки
+  if (showSubscriptionPage) {
+    return (
+      <Subscription 
+        onClose={() => {
+          setShowSubscriptionPage(false);
+          loadSubscriptionStatus(); // Обновляем статус после закрытия
+        }}
+      />
+    );
+  }
+
   return (
     <div className="profile">
-      <div className="profile__header">
+      {/* <div className="profile__header">
         <button className="profile__back" onClick={onClose}>
           Back
         </button>
@@ -160,7 +179,7 @@ const Profile = ({ onClose }) => {
         <button className="profile__menu">
           ⋯
         </button>
-      </div>
+      </div> */}
 
       <div className="profile__content">
         <div className="profile__user">
