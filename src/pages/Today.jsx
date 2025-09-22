@@ -157,6 +157,7 @@ const Today = () => {
   };
 
   // Обработчик выбора даты
+  // Обработчик выбора даты
   const handleDateSelect = async (date, isEditable) => {
     console.log('handleDateSelect:', date, 'isEditable:', isEditable);
     setSelectedDate(date);
@@ -164,36 +165,42 @@ const Today = () => {
     
     const todayStr = getTodayDate();
     
-    // Очищаем кэш для выбранной даты, чтобы загрузить свежие данные
-    if (dateCache[date]) {
-      delete dateCache[date];
-    }
-    
+    // ВАЖНО: Всегда загружаем свежие данные с сервера для выбранной даты
     setDateLoading(true);
     try {
       if (date === todayStr) {
+        // Для сегодня используем специальный эндпоинт
         await refresh();
-        setDateHabits(todayHabits);
-        setDateStats(stats);
+        // НЕ копируем todayHabits напрямую, ждем обновления через useEffect
       } else {
+        // Для других дат всегда загружаем с сервера
         const result = await loadHabitsForDate(date);
         if (result) {
-          setDateHabits(result.habits || []);
-          setDateStats(result.stats || { completed: 0, total: 0 });
+          // Убеждаемся что статусы относятся именно к запрошенной дате
+          const habitsForDate = result.habits?.map(h => ({
+            ...h,
+            // Переименовываем today_status в date_specific_status для ясности
+            date_specific_status: h.today_status,
+            today_status: h.today_status // Оставляем для совместимости с HabitCard
+          })) || [];
           
+          setDateHabits(habitsForDate);
+          setDateStats(result.stats || { completed: 0, total: habitsForDate.length });
+          
+          // Обновляем кэш только для этой конкретной даты
           setDateCache(prev => ({
             ...prev,
             [date]: {
-              habits: result.habits || [],
-              stats: result.stats || { completed: 0, total: 0 }
+              habits: habitsForDate,
+              stats: result.stats || { completed: 0, total: habitsForDate.length },
+              timestamp: Date.now() // Добавляем временную метку
             }
           }));
           
-          console.log('Loaded habits from server:', {
+          console.log('Loaded habits for specific date:', {
             date,
-            habitsCount: result.habits?.length,
-            stats: result.stats,
-            habits: result.habits
+            habitsCount: habitsForDate.length,
+            stats: result.stats
           });
         }
       }
@@ -206,36 +213,67 @@ const Today = () => {
     }
   };
 
-  // При изменении todayHabits обновляем dateHabits если выбран сегодня
+  // При изменении todayHabits обновляем dateHabits ТОЛЬКО если выбран сегодня
+  useEffect(() => {
+    const today = getTodayDate();
+    if (selectedDate === today && !dateLoading) {
+      console.log('Updating today habits from refresh');
+      setDateHabits(todayHabits);
+      setDateStats(stats);
+      
+      // Обновляем кэш для сегодня
+      setDateCache(prev => ({
+        ...prev,
+        [today]: {
+          habits: todayHabits,
+          stats: stats,
+          timestamp: Date.now()
+        }
+      }));
+    }
+  }, [todayHabits, stats, selectedDate, dateLoading]);
+
+  // Инициализация при загрузке
   useEffect(() => {
     const today = getTodayDate();
     if (selectedDate === today) {
       setDateHabits(todayHabits);
       setDateStats(stats);
       
-      setDateCache(prev => ({
-        ...prev,
+      setDateCache({
         [today]: {
           habits: todayHabits,
-          stats: stats
+          stats: stats,
+          timestamp: Date.now()
         }
-      }));
+      });
     }
-  }, [todayHabits, stats, selectedDate]);
+  }, []); // Только при монтировании
 
-  // Инициализация при загрузке
+  // Очищаем старый кэш (старше 5 минут)
   useEffect(() => {
-    const today = getTodayDate();
-    setDateHabits(todayHabits);
-    setDateStats(stats);
+    const cleanupInterval = setInterval(() => {
+      const now = Date.now();
+      const fiveMinutes = 5 * 60 * 1000;
+      
+      setDateCache(prev => {
+        const newCache = {};
+        Object.entries(prev).forEach(([date, data]) => {
+          if (now - data.timestamp < fiveMinutes || date === getTodayDate()) {
+            newCache[date] = data;
+          }
+        });
+        return newCache;
+      });
+    }, 60000); // Проверяем каждую минуту
     
-    setDateCache({
-      [today]: {
-        habits: todayHabits,
-        stats: stats
-      }
-    });
+    return () => clearInterval(cleanupInterval);
   }, []);
+
+  // При изменении todayHabits обновляем dateHabits если выбран сегодня
+  
+
+  
 
   const handleCreateHabit = async (habitData) => {
     try {
@@ -427,31 +465,28 @@ const handleSubscriptionContinue = async (plan) => {
     try {
       await markHabit(habitId, status, selectedDate);
       
-      // Обновляем только статус конкретной привычки без полной перезагрузки
-      setDateHabits(prevHabits => 
-        prevHabits.map(h => 
-          h.id === habitId 
-            ? { ...h, today_status: status }
-            : h
-        )
-      );
-      
-      // Обновляем статистику
-      setDateStats(prev => {
-        let newStats = { ...prev };
-        const habit = dateHabits.find(h => h.id === habitId);
-        const oldStatus = habit?.today_status || 'pending';
-        
-        // Корректируем счетчики
-        if (oldStatus === 'completed' && status !== 'completed') {
-          newStats.completed = Math.max(0, newStats.completed - 1);
-        } else if (oldStatus !== 'completed' && status === 'completed') {
-          newStats.completed = newStats.completed + 1;
+      // После успешной отметки перезагружаем данные для текущей даты
+      const today = getTodayDate();
+      if (selectedDate === today) {
+        await refresh();
+      } else {
+        // Для других дат загружаем заново с сервера
+        const result = await loadHabitsForDate(selectedDate);
+        if (result && result.habits) {
+          setDateHabits(result.habits);
+          setDateStats(result.stats || { completed: 0, total: result.habits.length });
+          
+          // Обновляем кэш
+          setDateCache(prev => ({
+            ...prev,
+            [selectedDate]: {
+              habits: result.habits,
+              stats: result.stats || { completed: 0, total: result.habits.length },
+              timestamp: Date.now()
+            }
+          }));
         }
-        
-        return newStats;
-      });
-      
+      }
     } catch (error) {
       console.error('Error marking habit:', error);
       // В случае ошибки перезагружаем данные
@@ -495,26 +530,28 @@ const handleSubscriptionContinue = async (plan) => {
     try {
       await unmarkHabit(habitId, selectedDate);
       
-      // Обновляем только статус конкретной привычки
-      setDateHabits(prevHabits => 
-        prevHabits.map(h => 
-          h.id === habitId 
-            ? { ...h, today_status: 'pending' }
-            : h
-        )
-      );
-      
-      // Обновляем статистику
-      setDateStats(prev => {
-        const habit = dateHabits.find(h => h.id === habitId);
-        const oldStatus = habit?.today_status || 'pending';
-        
-        if (oldStatus === 'completed') {
-          return { ...prev, completed: Math.max(0, prev.completed - 1) };
+      // После успешной отмены отметки перезагружаем данные для текущей даты
+      const today = getTodayDate();
+      if (selectedDate === today) {
+        await refresh();
+      } else {
+        // Для других дат загружаем заново с сервера
+        const result = await loadHabitsForDate(selectedDate);
+        if (result && result.habits) {
+          setDateHabits(result.habits);
+          setDateStats(result.stats || { completed: 0, total: result.habits.length });
+          
+          // Обновляем кэш
+          setDateCache(prev => ({
+            ...prev,
+            [selectedDate]: {
+              habits: result.habits,
+              stats: result.stats || { completed: 0, total: result.habits.length },
+              timestamp: Date.now()
+            }
+          }));
         }
-        return prev;
-      });
-      
+      }
     } catch (error) {
       console.error('Error unmarking habit:', error);
       // В случае ошибки перезагружаем данные
