@@ -62,7 +62,8 @@ const Today = () => {
   const [dateHabits, setDateHabits] = useState([]);
   const [dateLoading, setDateLoading] = useState(false);
   const [dateStats, setDateStats] = useState({ completed: 0, total: 0 });
-  const [dateCache, setDateCache] = useState({});
+  
+  // ВАЖНО: Удаляем dateCache - он больше не нужен, каждый раз загружаем свежие данные
 
   // Проверяем подписку при загрузке
   useEffect(() => {
@@ -119,16 +120,8 @@ const Today = () => {
     setShowEditForm(false);
     setHabitToEdit(null);
     
-    // Перезагружаем привычки
-    if (selectedDate === getTodayDate()) {
-      await refresh();
-    } else {
-      const result = await loadHabitsForDate(selectedDate);
-      if (result) {
-        setDateHabits(result.habits || []);
-        setDateStats(result.stats || { completed: 0, total: 0 });
-      }
-    }
+    // Перезагружаем привычки для текущей даты
+    await reloadCurrentDateHabits();
   };
 
   const handleDeleteHabit = async (habitId) => {
@@ -138,16 +131,8 @@ const Today = () => {
       setShowHabitDetail(false);
       setSelectedHabit(null);
       
-      // Перезагружаем привычки и обновляем подписку
-      if (selectedDate === getTodayDate()) {
-        await refresh();
-      } else {
-        const result = await loadHabitsForDate(selectedDate);
-        if (result) {
-          setDateHabits(result.habits || []);
-          setDateStats(result.stats || { completed: 0, total: 0 });
-        }
-      }
+      // Перезагружаем привычки для текущей даты
+      await reloadCurrentDateHabits();
       
       // Обновляем статус подписки после удаления
       await checkUserSubscription();
@@ -156,38 +141,50 @@ const Today = () => {
     }
   };
 
-  // Обработчик выбора даты
+  // Вспомогательная функция для перезагрузки привычек текущей даты
+  const reloadCurrentDateHabits = async () => {
+    const todayStr = getTodayDate();
+    
+    if (selectedDate === todayStr) {
+      await refresh();
+      setDateHabits(todayHabits);
+      setDateStats(stats);
+    } else {
+      const result = await loadHabitsForDate(selectedDate);
+      if (result) {
+        setDateHabits(result.habits || []);
+        setDateStats(result.stats || { completed: 0, total: 0 });
+      }
+    }
+  };
+
+  // Обработчик выбора даты - ПОЛНОСТЬЮ ПЕРЕПИСАН
   const handleDateSelect = async (date, isEditable) => {
     console.log('handleDateSelect:', date, 'isEditable:', isEditable);
+    
+    // Сохраняем выбранную дату
     setSelectedDate(date);
     setIsEditableDate(isEditable);
     
     const todayStr = getTodayDate();
     
-    // Очищаем кэш для выбранной даты, чтобы загрузить свежие данные
-    if (dateCache[date]) {
-      delete dateCache[date];
-    }
-    
+    // Сбрасываем текущие привычки перед загрузкой новых
+    setDateHabits([]);
+    setDateStats({ completed: 0, total: 0 });
     setDateLoading(true);
+    
     try {
       if (date === todayStr) {
-        await refresh();
+        // Для сегодня используем данные из хука
+        await refresh(); // Обновляем данные
         setDateHabits(todayHabits);
         setDateStats(stats);
       } else {
+        // Для других дней ВСЕГДА загружаем с сервера
         const result = await loadHabitsForDate(date);
         if (result) {
           setDateHabits(result.habits || []);
           setDateStats(result.stats || { completed: 0, total: 0 });
-          
-          setDateCache(prev => ({
-            ...prev,
-            [date]: {
-              habits: result.habits || [],
-              stats: result.stats || { completed: 0, total: 0 }
-            }
-          }));
           
           console.log('Loaded habits from server:', {
             date,
@@ -206,35 +203,22 @@ const Today = () => {
     }
   };
 
-  // При изменении todayHabits обновляем dateHabits если выбран сегодня
+  // При изменении todayHabits обновляем dateHabits ТОЛЬКО если выбран сегодня
+  useEffect(() => {
+    const today = getTodayDate();
+    if (selectedDate === today && !dateLoading) {
+      setDateHabits(todayHabits);
+      setDateStats(stats);
+    }
+  }, [todayHabits, stats, selectedDate, dateLoading]);
+
+  // Инициализация при загрузке
   useEffect(() => {
     const today = getTodayDate();
     if (selectedDate === today) {
       setDateHabits(todayHabits);
       setDateStats(stats);
-      
-      setDateCache(prev => ({
-        ...prev,
-        [today]: {
-          habits: todayHabits,
-          stats: stats
-        }
-      }));
     }
-  }, [todayHabits, stats, selectedDate]);
-
-  // Инициализация при загрузке
-  useEffect(() => {
-    const today = getTodayDate();
-    setDateHabits(todayHabits);
-    setDateStats(stats);
-    
-    setDateCache({
-      [today]: {
-        habits: todayHabits,
-        stats: stats
-      }
-    });
   }, []);
 
   const handleCreateHabit = async (habitData) => {
@@ -243,15 +227,8 @@ const Today = () => {
       await createHabit(habitData);
       setShowCreateForm(false);
       
-      setDateCache({});
-      
-      if (selectedDate !== getTodayDate()) {
-        const result = await loadHabitsForDate(selectedDate);
-        if (result) {
-          setDateHabits(result.habits || []);
-          setDateStats(result.stats || { completed: 0, total: result.habits.length });
-        }
-      }
+      // Перезагружаем привычки для текущей даты
+      await reloadCurrentDateHabits();
       
       // Обновляем статус подписки после создания
       await checkUserSubscription();
@@ -267,46 +244,44 @@ const Today = () => {
     }
   };
 
-const handleSubscriptionContinue = async (plan) => {
-  console.log('Selected subscription plan:', plan);
-  
-  try {
-    // Активируем премиум через API
-    // План уже приходит в правильном формате: '6_months' или '1_year'
-    const result = await habitService.activatePremium(plan);
+  const handleSubscriptionContinue = async (plan) => {
+    console.log('Selected subscription plan:', plan);
     
-    if (result.success) {
-      console.log('Premium activated successfully');
+    try {
+      // Активируем премиум через API
+      const result = await habitService.activatePremium(plan);
       
-      // Обновляем статус подписки
-      await checkUserSubscription();
+      if (result.success) {
+        console.log('Premium activated successfully');
+        
+        // Обновляем статус подписки
+        await checkUserSubscription();
+        
+        // Закрываем модалку подписки
+        setShowSubscriptionModal(false);
+        
+        // Если лимит был достигнут, теперь открываем форму создания
+        if (userSubscription && !userSubscription.canCreateMore) {
+          setShowCreateForm(true);
+        }
+        
+        // Показываем уведомление
+        if (window.Telegram?.WebApp?.showAlert) {
+          window.Telegram.WebApp.showAlert('Premium activated! Now you can create unlimited habits! 🎉');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to activate premium:', error);
       
-      // Закрываем модалку подписки
       setShowSubscriptionModal(false);
       
-      // Если лимит был достигнут, теперь открываем форму создания
-      if (userSubscription && !userSubscription.canCreateMore) {
-        setShowCreateForm(true);
-      }
-      
-      // Показываем уведомление (если есть Telegram WebApp)
       if (window.Telegram?.WebApp?.showAlert) {
-        window.Telegram.WebApp.showAlert('Premium activated! Now you can create unlimited habits! 🎉');
+        window.Telegram.WebApp.showAlert('Failed to activate premium. Please try again.');
+      } else {
+        alert('Failed to activate premium. Please try again.');
       }
     }
-  } catch (error) {
-    console.error('Failed to activate premium:', error);
-    
-    // Сбрасываем состояние модалки в случае ошибки
-    setShowSubscriptionModal(false);
-    
-    if (window.Telegram?.WebApp?.showAlert) {
-      window.Telegram.WebApp.showAlert('Failed to activate premium. Please try again.');
-    } else {
-      alert('Failed to activate premium. Please try again.');
-    }
-  }
-};
+  };
 
   const getMotivationalMessage = () => {
     const currentStats = selectedDate === getTodayDate() ? stats : dateStats;
@@ -416,6 +391,7 @@ const handleSubscriptionContinue = async (plan) => {
     }
   }, [dateHabits.length, isEditableDate]);
 
+  // ВАЖНО: Обновленные обработчики с передачей даты
   const handleMark = async (habitId, status) => {
     if (!isEditableDate) {
       console.log('Cannot edit habits for this date');
@@ -425,63 +401,18 @@ const handleSubscriptionContinue = async (plan) => {
     console.log('Marking habit:', { habitId, status, date: selectedDate });
     
     try {
+      // ВСЕГДА передаем дату
       await markHabit(habitId, status, selectedDate);
       
-      // Обновляем только статус конкретной привычки без полной перезагрузки
-      setDateHabits(prevHabits => 
-        prevHabits.map(h => 
-          h.id === habitId 
-            ? { ...h, today_status: status }
-            : h
-        )
-      );
-      
-      // Обновляем статистику
-      setDateStats(prev => {
-        let newStats = { ...prev };
-        const habit = dateHabits.find(h => h.id === habitId);
-        const oldStatus = habit?.today_status || 'pending';
-        
-        // Корректируем счетчики
-        if (oldStatus === 'completed' && status !== 'completed') {
-          newStats.completed = Math.max(0, newStats.completed - 1);
-        } else if (oldStatus !== 'completed' && status === 'completed') {
-          newStats.completed = newStats.completed + 1;
-        }
-        
-        return newStats;
-      });
-      
-    } catch (error) {
-      console.error('Error marking habit:', error);
-      // В случае ошибки перезагружаем данные
+      // Перезагружаем данные для текущей даты
       const result = await loadHabitsForDate(selectedDate);
       if (result && result.habits) {
         setDateHabits(result.habits);
         setDateStats(result.stats || { completed: 0, total: result.habits.length });
       }
+    } catch (error) {
+      console.error('Error marking habit:', error);
     }
-  };
-
-  const getMotivationalBackgroundColor = () => {
-    const currentPhrase = selectedDate === getTodayDate() ? phrase : null;
-    
-    if (currentPhrase && currentPhrase.backgroundColor) {
-      return currentPhrase.backgroundColor;
-    }
-    
-    // Запасные цвета в зависимости от прогресса
-    const currentStats = selectedDate === getTodayDate() ? stats : dateStats;
-    
-    if (currentStats.total === 0) return '#FFE4B5';
-    if (currentStats.completed === 0) return '#FFB3BA';
-    if (currentStats.completed === currentStats.total) return '#87CEEB';
-    
-    const percentage = (currentStats.completed / currentStats.total) * 100;
-    if (percentage >= 70) return '#B5E7A0';
-    if (percentage >= 50) return '#A7D96C';
-    
-    return '#FFB3BA';
   };
 
   const handleUnmark = async (habitId) => {
@@ -493,37 +424,38 @@ const handleSubscriptionContinue = async (plan) => {
     console.log('Unmarking habit:', { habitId, date: selectedDate });
     
     try {
+      // ВСЕГДА передаем дату
       await unmarkHabit(habitId, selectedDate);
       
-      // Обновляем только статус конкретной привычки
-      setDateHabits(prevHabits => 
-        prevHabits.map(h => 
-          h.id === habitId 
-            ? { ...h, today_status: 'pending' }
-            : h
-        )
-      );
-      
-      // Обновляем статистику
-      setDateStats(prev => {
-        const habit = dateHabits.find(h => h.id === habitId);
-        const oldStatus = habit?.today_status || 'pending';
-        
-        if (oldStatus === 'completed') {
-          return { ...prev, completed: Math.max(0, prev.completed - 1) };
-        }
-        return prev;
-      });
-      
-    } catch (error) {
-      console.error('Error unmarking habit:', error);
-      // В случае ошибки перезагружаем данные
+      // Перезагружаем данные для текущей даты
       const result = await loadHabitsForDate(selectedDate);
       if (result && result.habits) {
         setDateHabits(result.habits);
         setDateStats(result.stats || { completed: 0, total: result.habits.length });
       }
+    } catch (error) {
+      console.error('Error unmarking habit:', error);
     }
+  };
+
+  const getMotivationalBackgroundColor = () => {
+    const currentPhrase = selectedDate === getTodayDate() ? phrase : null;
+    
+    if (currentPhrase && currentPhrase.backgroundColor) {
+      return currentPhrase.backgroundColor;
+    }
+    
+    const currentStats = selectedDate === getTodayDate() ? stats : dateStats;
+    
+    if (currentStats.total === 0) return '#FFE4B5';
+    if (currentStats.completed === 0) return '#FFB3BA';
+    if (currentStats.completed === currentStats.total) return '#87CEEB';
+    
+    const percentage = (currentStats.completed / currentStats.total) * 100;
+    if (percentage >= 70) return '#B5E7A0';
+    if (percentage >= 50) return '#A7D96C';
+    
+    return '#FFB3BA';
   };
 
   // Показываем загрузку
@@ -636,7 +568,7 @@ const handleSubscriptionContinue = async (plan) => {
           onClose={() => setShowCreateForm(false)}
           onSuccess={handleCreateHabit}
         />
-        )}
+      )}
 
       {showEditForm && habitToEdit && (
         <EditHabitForm
