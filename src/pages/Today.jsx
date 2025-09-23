@@ -63,7 +63,8 @@ const Today = () => {
   const [dateLoading, setDateLoading] = useState(false);
   const [dateStats, setDateStats] = useState({ completed: 0, total: 0 });
   
-  // ВАЖНО: Удаляем dateCache - он больше не нужен, каждый раз загружаем свежие данные
+  // ВАЖНО: Храним данные для каждой даты отдельно
+  const [dateCache, setDateCache] = useState({});
 
   // Проверяем подписку при загрузке
   useEffect(() => {
@@ -120,7 +121,8 @@ const Today = () => {
     setShowEditForm(false);
     setHabitToEdit(null);
     
-    // Перезагружаем привычки для текущей даты
+    // Очищаем кэш и перезагружаем данные
+    setDateCache({});
     await reloadCurrentDateHabits();
   };
 
@@ -131,7 +133,8 @@ const Today = () => {
       setShowHabitDetail(false);
       setSelectedHabit(null);
       
-      // Перезагружаем привычки для текущей даты
+      // Очищаем кэш и перезагружаем данные
+      setDateCache({});
       await reloadCurrentDateHabits();
       
       // Обновляем статус подписки после удаления
@@ -147,18 +150,22 @@ const Today = () => {
     
     if (selectedDate === todayStr) {
       await refresh();
-      setDateHabits(todayHabits);
-      setDateStats(stats);
+      const newCache = { ...dateCache };
+      delete newCache[todayStr]; // Удаляем кэш для сегодня
+      setDateCache(newCache);
     } else {
       const result = await loadHabitsForDate(selectedDate);
       if (result) {
+        const newCache = { ...dateCache };
+        newCache[selectedDate] = result;
+        setDateCache(newCache);
         setDateHabits(result.habits || []);
         setDateStats(result.stats || { completed: 0, total: 0 });
       }
     }
   };
 
-  // Обработчик выбора даты - ПОЛНОСТЬЮ ПЕРЕПИСАН
+  // Обработчик выбора даты - ИСПРАВЛЕНО
   const handleDateSelect = async (date, isEditable) => {
     console.log('handleDateSelect:', date, 'isEditable:', isEditable);
     
@@ -168,30 +175,35 @@ const Today = () => {
     
     const todayStr = getTodayDate();
     
-    // Сбрасываем текущие привычки перед загрузкой новых
-    setDateHabits([]);
-    setDateStats({ completed: 0, total: 0 });
+    // Проверяем кэш для выбранной даты
+    if (dateCache[date] && date !== todayStr) {
+      console.log('Loading from cache for date:', date);
+      setDateHabits(dateCache[date].habits || []);
+      setDateStats(dateCache[date].stats || { completed: 0, total: 0 });
+      return;
+    }
+    
+    // Загружаем данные
     setDateLoading(true);
     
     try {
       if (date === todayStr) {
-        // Для сегодня используем данные из хука
-        await refresh(); // Обновляем данные
-        setDateHabits(todayHabits);
-        setDateStats(stats);
+        // Для сегодня ВСЕГДА используем актуальные данные из хука
+        await refresh();
+        // Не кэшируем сегодняшние данные
       } else {
-        // Для других дней ВСЕГДА загружаем с сервера
+        // Для других дней загружаем с сервера
         const result = await loadHabitsForDate(date);
         if (result) {
+          // Сохраняем в кэш
+          const newCache = { ...dateCache };
+          newCache[date] = result;
+          setDateCache(newCache);
+          
           setDateHabits(result.habits || []);
           setDateStats(result.stats || { completed: 0, total: 0 });
           
-          console.log('Loaded habits from server:', {
-            date,
-            habitsCount: result.habits?.length,
-            stats: result.stats,
-            habits: result.habits
-          });
+          console.log('Loaded and cached habits for date:', date, result);
         }
       }
     } catch (error) {
@@ -210,15 +222,17 @@ const Today = () => {
       setDateHabits(todayHabits);
       setDateStats(stats);
     }
-  }, [todayHabits, stats, selectedDate, dateLoading]);
+  }, [todayHabits, stats]);
+
+  // НЕ обновляем dateHabits при изменении selectedDate автоматически
+  // Это происходит только в handleDateSelect
 
   // Инициализация при загрузке
   useEffect(() => {
     const today = getTodayDate();
-    if (selectedDate === today) {
-      setDateHabits(todayHabits);
-      setDateStats(stats);
-    }
+    setSelectedDate(today);
+    setDateHabits(todayHabits);
+    setDateStats(stats);
   }, []);
 
   const handleCreateHabit = async (habitData) => {
@@ -227,7 +241,8 @@ const Today = () => {
       await createHabit(habitData);
       setShowCreateForm(false);
       
-      // Перезагружаем привычки для текущей даты
+      // Очищаем кэш и перезагружаем данные
+      setDateCache({});
       await reloadCurrentDateHabits();
       
       // Обновляем статус подписки после создания
@@ -391,7 +406,7 @@ const Today = () => {
     }
   }, [dateHabits.length, isEditableDate]);
 
-  // ВАЖНО: Обновленные обработчики с передачей даты
+  // ВАЖНО: Обновленные обработчики с передачей даты и обновлением кэша
   const handleMark = async (habitId, status) => {
     if (!isEditableDate) {
       console.log('Cannot edit habits for this date');
@@ -401,14 +416,24 @@ const Today = () => {
     console.log('Marking habit:', { habitId, status, date: selectedDate });
     
     try {
-      // ВСЕГДА передаем дату
       await markHabit(habitId, status, selectedDate);
       
-      // Перезагружаем данные для текущей даты
-      const result = await loadHabitsForDate(selectedDate);
-      if (result && result.habits) {
-        setDateHabits(result.habits);
-        setDateStats(result.stats || { completed: 0, total: result.habits.length });
+      // Очищаем кэш для текущей даты
+      const newCache = { ...dateCache };
+      delete newCache[selectedDate];
+      setDateCache(newCache);
+      
+      // Перезагружаем данные
+      if (selectedDate === getTodayDate()) {
+        await refresh();
+      } else {
+        const result = await loadHabitsForDate(selectedDate);
+        if (result && result.habits) {
+          newCache[selectedDate] = result;
+          setDateCache(newCache);
+          setDateHabits(result.habits);
+          setDateStats(result.stats || { completed: 0, total: result.habits.length });
+        }
       }
     } catch (error) {
       console.error('Error marking habit:', error);
@@ -424,14 +449,24 @@ const Today = () => {
     console.log('Unmarking habit:', { habitId, date: selectedDate });
     
     try {
-      // ВСЕГДА передаем дату
       await unmarkHabit(habitId, selectedDate);
       
-      // Перезагружаем данные для текущей даты
-      const result = await loadHabitsForDate(selectedDate);
-      if (result && result.habits) {
-        setDateHabits(result.habits);
-        setDateStats(result.stats || { completed: 0, total: result.habits.length });
+      // Очищаем кэш для текущей даты
+      const newCache = { ...dateCache };
+      delete newCache[selectedDate];
+      setDateCache(newCache);
+      
+      // Перезагружаем данные
+      if (selectedDate === getTodayDate()) {
+        await refresh();
+      } else {
+        const result = await loadHabitsForDate(selectedDate);
+        if (result && result.habits) {
+          newCache[selectedDate] = result;
+          setDateCache(newCache);
+          setDateHabits(result.habits);
+          setDateStats(result.stats || { completed: 0, total: result.habits.length });
+        }
       }
     } catch (error) {
       console.error('Error unmarking habit:', error);
