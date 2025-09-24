@@ -14,19 +14,21 @@ export const useHabits = () => {
   const loadTodayHabits = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await habitService.getTodayHabits();
+      const today = new Date().toISOString().split('T')[0];
+      console.log(`Loading habits for TODAY: ${today}`);
+      
+      // ВАЖНО: Всегда загружаем привычки с сервера для сегодня
+      const data = await habitService.getHabitsForDate(today);
 
-      const normalizedHabits = Array.isArray(data)
-        ? data
-        : (data?.habits || []);
+      const normalizedHabits = data?.habits || [];
 
       console.log('Today habits loaded:', {
+        date: today,
         count: normalizedHabits.length,
-        date: new Date().toISOString().split('T')[0],
         statuses: normalizedHabits.map(h => ({
           id: h.id,
           title: h.title,
-          status: h.today_status
+          today_status: h.today_status
         }))
       });
 
@@ -48,15 +50,16 @@ export const useHabits = () => {
     }
   }, []);
 
-  // Загрузка привычек для конкретной даты - всегда загружаем с сервера
+  // Загрузка привычек для конкретной даты - ВСЕГДА с сервера, без кэширования
   const loadHabitsForDate = useCallback(async (date) => {
     try {
-      console.log(`Loading habits for ${date} from server`);
+      console.log(`Loading habits for date ${date} from server (no cache)`);
       
-      // Всегда загружаем актуальные данные с сервера
+      // ВАЖНО: Всегда загружаем актуальные данные с сервера для конкретной даты
       const result = await habitService.getHabitsForDate(date);
       
-      console.log(`Loaded ${result.habits?.length || 0} habits for ${date}:`, {
+      console.log(`Server returned ${result.habits?.length || 0} habits for ${date}:`, {
+        date: date,
         statuses: result.habits?.map(h => ({
           id: h.id,
           title: h.title,
@@ -64,10 +67,18 @@ export const useHabits = () => {
         }))
       });
       
-      return result;
+      return {
+        habits: result.habits || [],
+        stats: result.stats || { completed: 0, total: 0 },
+        phrase: result.phrase || null
+      };
     } catch (err) {
-      console.error('loadHabitsForDate error:', err);
-      return { habits: [], stats: { completed: 0, total: 0 } };
+      console.error(`Error loading habits for date ${date}:`, err);
+      return { 
+        habits: [], 
+        stats: { completed: 0, total: 0 },
+        phrase: null
+      };
     }
   }, []);
 
@@ -81,65 +92,61 @@ export const useHabits = () => {
     }
   }, []);
 
-  // Отметка привычки с ОБЯЗАТЕЛЬНЫМ указанием даты
+  // Отметка привычки - ОБЯЗАТЕЛЬНО с датой
   const markHabit = useCallback(async (habitId, status = 'completed', date) => {
     try {
       vibrate();
       
-      // Дата обязательна
+      // КРИТИЧНО: Дата обязательна для отметки
       if (!date) {
         throw new Error('Date is required for marking habit');
       }
       
-      console.log(`Marking habit ${habitId} as ${status} for date ${date}`);
+      console.log(`Marking habit ${habitId} as ${status} for specific date: ${date}`);
       
       // Отправляем запрос на сервер с конкретной датой
-      await habitService.markHabit(habitId, status, date);
+      const result = await habitService.markHabit(habitId, status, date);
       
-      // Если отмечаем сегодня, перезагружаем сегодняшние привычки
-      const today = new Date().toISOString().split('T')[0];
-      if (date === today) {
-        console.log('Reloading today habits after marking');
-        await loadTodayHabits();
-      }
+      console.log('Mark habit response:', result);
       
-      // Не возвращаем результат здесь, пусть компонент сам перезагрузит данные
+      // НЕ перезагружаем сегодняшние привычки автоматически
+      // Пусть компонент сам решает, что перезагрузить
+      
+      return result;
     } catch (err) {
       console.error('markHabit error:', err);
       setError(err.message || 'Failed to mark habit');
       throw err;
     }
-  }, [loadTodayHabits]);
+  }, []);
 
-  // Отмена отметки с ОБЯЗАТЕЛЬНЫМ указанием даты
+  // Отмена отметки - ОБЯЗАТЕЛЬНО с датой
   const unmarkHabit = useCallback(async (habitId, date) => {
     try {
       vibrate();
       
-      // Дата обязательна
+      // КРИТИЧНО: Дата обязательна для отмены отметки
       if (!date) {
         throw new Error('Date is required for unmarking habit');
       }
       
-      console.log(`Unmarking habit ${habitId} for date ${date}`);
+      console.log(`Unmarking habit ${habitId} for specific date: ${date}`);
       
       // Отправляем запрос на сервер с конкретной датой
-      await habitService.unmarkHabit(habitId, date);
+      const result = await habitService.unmarkHabit(habitId, date);
       
-      // Если отменяем сегодня, перезагружаем сегодняшние привычки
-      const today = new Date().toISOString().split('T')[0];
-      if (date === today) {
-        console.log('Reloading today habits after unmarking');
-        await loadTodayHabits();
-      }
+      console.log('Unmark habit response:', result);
       
-      // Не возвращаем результат здесь, пусть компонент сам перезагрузит данные
+      // НЕ перезагружаем сегодняшние привычки автоматически
+      // Пусть компонент сам решает, что перезагрузить
+      
+      return result;
     } catch (err) {
       console.error('unmarkHabit error:', err);
       setError(err.message || 'Failed to unmark habit');
       throw err;
     }
-  }, [loadTodayHabits]);
+  }, []);
 
   // Создание привычки
   const createHabit = useCallback(async (habitData) => {
@@ -170,12 +177,18 @@ export const useHabits = () => {
     }
   }, [loadAllHabits, loadTodayHabits]);
 
-  // Очистка кэша (теперь просто перезагружает данные)
-  const clearCache = useCallback(() => {
-    console.log('Refreshing all data from server');
-    loadTodayHabits();
-    loadAllHabits();
-  }, [loadTodayHabits, loadAllHabits]);
+  // Перезагрузка данных для конкретной даты
+  const refreshDateData = useCallback(async (date) => {
+    console.log(`Refreshing data for date: ${date}`);
+    const today = new Date().toISOString().split('T')[0];
+    
+    if (date === today) {
+      await loadTodayHabits();
+    } else {
+      // Для других дат просто возвращаем результат загрузки
+      return await loadHabitsForDate(date);
+    }
+  }, [loadTodayHabits, loadHabitsForDate]);
 
   // Загрузка при монтировании
   useEffect(() => {
@@ -196,6 +209,6 @@ export const useHabits = () => {
     deleteHabit,
     loadHabitsForDate,
     refresh: loadTodayHabits,
-    clearCache
+    refreshDateData
   };
 };
