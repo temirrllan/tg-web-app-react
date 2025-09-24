@@ -190,8 +190,7 @@ const Today = () => {
       if (date === todayStr) {
         // Для сегодня ВСЕГДА используем актуальные данные из хука
         await refresh();
-        // После refresh, хук useHabits обновит todayHabits и stats,
-        // а следующий useEffect синхронизирует их с dateHabits
+        // Не кэшируем сегодняшние данные
       } else {
         // Для других дней загружаем с сервера
         const result = await loadHabitsForDate(date);
@@ -216,14 +215,14 @@ const Today = () => {
     }
   };
 
-  // При изменении todayHabits или selectedDate обновляем dateHabits
+  // При изменении todayHabits обновляем dateHabits ТОЛЬКО если выбран сегодня
   useEffect(() => {
     const today = getTodayDate();
-    if (selectedDate === today) {
+    if (selectedDate === today && !dateLoading) {
       setDateHabits(todayHabits);
       setDateStats(stats);
     }
-  }, [todayHabits, stats, selectedDate]);
+  }, [todayHabits, stats]);
 
   // НЕ обновляем dateHabits при изменении selectedDate автоматически
   // Это происходит только в handleDateSelect
