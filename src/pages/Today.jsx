@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Layout from "../components/layout/Layout";
 import Header from "../components/layout/Header";
 import HabitCard from "../components/habits/HabitCard";
@@ -28,7 +28,8 @@ const Today = () => {
     createHabit,
     deleteHabit,
     loadHabitsForDate,
-    refresh
+    refresh,
+    refreshDateData
   } = useHabits();
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
@@ -62,6 +63,7 @@ const Today = () => {
   const [dateHabits, setDateHabits] = useState([]);
   const [dateLoading, setDateLoading] = useState(false);
   const [dateStats, setDateStats] = useState({ completed: 0, total: 0 });
+  const [datePhrase, setDatePhrase] = useState(null);
 
   // Проверяем подписку при загрузке
   useEffect(() => {
@@ -140,24 +142,24 @@ const Today = () => {
   };
 
   // КРИТИЧНО: Функция перезагрузки привычек для текущей даты
-  const reloadCurrentDateHabits = async () => {
+  const reloadCurrentDateHabits = useCallback(async () => {
     const todayStr = getTodayDate();
     
     console.log(`Reloading habits for selected date: ${selectedDate}`);
     setDateLoading(true);
     
     try {
-      if (selectedDate === todayStr) {
-        // Для сегодня используем refresh
-        await refresh();
-        setDateHabits(todayHabits);
-        setDateStats(stats);
-      } else {
-        // Для других дней загружаем с сервера
-        const result = await loadHabitsForDate(selectedDate);
-        if (result) {
-          setDateHabits(result.habits || []);
-          setDateStats(result.stats || { completed: 0, total: 0 });
+      // ВСЕГДА загружаем с сервера для любой даты
+      const result = await loadHabitsForDate(selectedDate);
+      
+      if (result) {
+        setDateHabits(result.habits || []);
+        setDateStats(result.stats || { completed: 0, total: 0 });
+        setDatePhrase(result.phrase);
+        
+        // Если это сегодня, также обновляем основной хук
+        if (selectedDate === todayStr) {
+          await refresh();
         }
       }
     } catch (error) {
@@ -165,72 +167,69 @@ const Today = () => {
     } finally {
       setDateLoading(false);
     }
-  };
+  }, [selectedDate, loadHabitsForDate, refresh]);
 
-  // КРИТИЧНО: Обработчик выбора даты - БЕЗ КЭШИРОВАНИЯ
-  const handleDateSelect = async (date, isEditable) => {
+  // КРИТИЧНО: Обработчик выбора даты
+  const handleDateSelect = useCallback(async (date, isEditable) => {
     console.log('Date selected:', date, 'isEditable:', isEditable);
     
     // Сохраняем выбранную дату
     setSelectedDate(date);
     setIsEditableDate(isEditable);
     
-    const todayStr = getTodayDate();
-    
     // Начинаем загрузку
     setDateLoading(true);
     
     try {
-      if (date === todayStr) {
-        // Для сегодня используем данные из хука
-        console.log('Loading TODAY data from hook');
-        setDateHabits(todayHabits);
-        setDateStats(stats);
-      } else {
-        // ДЛЯ ВСЕХ ДРУГИХ ДНЕЙ - ВСЕГДА ЗАГРУЖАЕМ С СЕРВЕРА
-        console.log(`Loading data from server for date: ${date}`);
-        const result = await loadHabitsForDate(date);
+      // ВСЕГДА загружаем с сервера для любой даты
+      console.log(`Loading data from server for date: ${date}`);
+      const result = await loadHabitsForDate(date);
+      
+      if (result) {
+        setDateHabits(result.habits || []);
+        setDateStats(result.stats || { completed: 0, total: 0 });
+        setDatePhrase(result.phrase);
         
-        if (result) {
-          setDateHabits(result.habits || []);
-          setDateStats(result.stats || { completed: 0, total: 0 });
-          
-          console.log(`Loaded ${result.habits?.length || 0} habits for ${date}:`, {
-            date: date,
-            statuses: result.habits?.map(h => ({
-              id: h.id,
-              title: h.title,
-              status: h.today_status
-            }))
-          });
-        }
+        console.log(`Loaded ${result.habits?.length || 0} habits for ${date}:`, {
+          date: date,
+          statuses: result.habits?.map(h => ({
+            id: h.id,
+            title: h.title,
+            status: h.today_status
+          }))
+        });
       }
     } catch (error) {
       console.error(`Failed to load habits for date ${date}:`, error);
       setDateHabits([]);
       setDateStats({ completed: 0, total: 0 });
+      setDatePhrase(null);
     } finally {
       setDateLoading(false);
     }
-  };
+  }, [loadHabitsForDate]);
 
   // При изменении todayHabits обновляем dateHabits ТОЛЬКО если выбран сегодня
   useEffect(() => {
     const today = getTodayDate();
-    if (selectedDate === today && !dateLoading) {
+    if (selectedDate === today && !dateLoading && !loading) {
       console.log('Updating TODAY display from hook');
       setDateHabits(todayHabits);
       setDateStats(stats);
+      setDatePhrase(phrase);
     }
-  }, [todayHabits, stats, selectedDate, dateLoading]);
+  }, [todayHabits, stats, phrase, selectedDate, dateLoading, loading]);
 
   // Инициализация при загрузке
   useEffect(() => {
     const today = getTodayDate();
-    setSelectedDate(today);
-    setDateHabits(todayHabits);
-    setDateStats(stats);
-  }, []);
+    if (!loading) {
+      setSelectedDate(today);
+      setDateHabits(todayHabits);
+      setDateStats(stats);
+      setDatePhrase(phrase);
+    }
+  }, [loading, todayHabits, stats, phrase]);
 
   const handleCreateHabit = async (habitData) => {
     try {
@@ -295,8 +294,8 @@ const Today = () => {
   };
 
   const getMotivationalMessage = () => {
-    const currentStats = selectedDate === getTodayDate() ? stats : dateStats;
-    const currentPhrase = selectedDate === getTodayDate() ? phrase : null;
+    const currentStats = dateStats;
+    const currentPhrase = datePhrase;
     
     if (currentPhrase && currentPhrase.text) {
       return currentPhrase.text;
@@ -324,13 +323,13 @@ const Today = () => {
   };
 
   const getMotivationalEmoji = () => {
-    const currentPhrase = selectedDate === getTodayDate() ? phrase : null;
+    const currentPhrase = datePhrase;
     
     if (currentPhrase && currentPhrase.emoji) {
       return currentPhrase.emoji;
     }
     
-    const currentStats = selectedDate === getTodayDate() ? stats : dateStats;
+    const currentStats = dateStats;
     if (currentStats.total === 0) return "🚀";
     if (currentStats.completed === 0) return "💪";
     if (currentStats.completed === currentStats.total) return "🎉";
@@ -403,7 +402,7 @@ const Today = () => {
   }, [dateHabits.length, isEditableDate]);
 
   // КРИТИЧНО: Обработчики с передачей даты
-  const handleMark = async (habitId, status) => {
+  const handleMark = useCallback(async (habitId, status) => {
     if (!isEditableDate) {
       console.log('Cannot edit habits for this date');
       return;
@@ -415,14 +414,14 @@ const Today = () => {
       // КРИТИЧНО: Передаем дату в markHabit
       await markHabit(habitId, status, selectedDate);
       
-      // Перезагружаем данные для выбранной даты
+      // ВАЖНО: Перезагружаем данные ТОЛЬКО для выбранной даты
       await reloadCurrentDateHabits();
     } catch (error) {
       console.error('Error marking habit:', error);
     }
-  };
+  }, [isEditableDate, selectedDate, markHabit, reloadCurrentDateHabits]);
 
-  const handleUnmark = async (habitId) => {
+  const handleUnmark = useCallback(async (habitId) => {
     if (!isEditableDate) {
       console.log('Cannot edit habits for this date');
       return;
@@ -434,21 +433,21 @@ const Today = () => {
       // КРИТИЧНО: Передаем дату в unmarkHabit
       await unmarkHabit(habitId, selectedDate);
       
-      // Перезагружаем данные для выбранной даты
+      // ВАЖНО: Перезагружаем данные ТОЛЬКО для выбранной даты
       await reloadCurrentDateHabits();
     } catch (error) {
       console.error('Error unmarking habit:', error);
     }
-  };
+  }, [isEditableDate, selectedDate, unmarkHabit, reloadCurrentDateHabits]);
 
   const getMotivationalBackgroundColor = () => {
-    const currentPhrase = selectedDate === getTodayDate() ? phrase : null;
+    const currentPhrase = datePhrase;
     
     if (currentPhrase && currentPhrase.backgroundColor) {
       return currentPhrase.backgroundColor;
     }
     
-    const currentStats = selectedDate === getTodayDate() ? stats : dateStats;
+    const currentStats = dateStats;
     
     if (currentStats.total === 0) return '#FFE4B5';
     if (currentStats.completed === 0) return '#FFB3BA';

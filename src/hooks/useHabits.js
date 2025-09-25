@@ -18,7 +18,7 @@ export const useHabits = () => {
       console.log(`Loading habits for TODAY: ${today}`);
       
       // ВАЖНО: Всегда загружаем привычки с сервера для сегодня
-      const data = await habitService.getHabitsForDate(today);
+      const data = await habitService.getTodayHabits();
 
       const normalizedHabits = data?.habits || [];
 
@@ -55,8 +55,15 @@ export const useHabits = () => {
     try {
       console.log(`Loading habits for date ${date} from server (no cache)`);
       
-      // ВАЖНО: Всегда загружаем актуальные данные с сервера для конкретной даты
-      const result = await habitService.getHabitsForDate(date);
+      // Если это сегодня - используем специальный эндпоинт для сегодня
+      const today = new Date().toISOString().split('T')[0];
+      let result;
+      
+      if (date === today) {
+        result = await habitService.getTodayHabits();
+      } else {
+        result = await habitService.getHabitsForDate(date);
+      }
       
       console.log(`Server returned ${result.habits?.length || 0} habits for ${date}:`, {
         date: date,
@@ -109,9 +116,7 @@ export const useHabits = () => {
       
       console.log('Mark habit response:', result);
       
-      // НЕ перезагружаем сегодняшние привычки автоматически
-      // Пусть компонент сам решает, что перезагрузить
-      
+      // Возвращаем результат для обработки в компоненте
       return result;
     } catch (err) {
       console.error('markHabit error:', err);
@@ -137,9 +142,7 @@ export const useHabits = () => {
       
       console.log('Unmark habit response:', result);
       
-      // НЕ перезагружаем сегодняшние привычки автоматически
-      // Пусть компонент сам решает, что перезагрузить
-      
+      // Возвращаем результат для обработки в компоненте
       return result;
     } catch (err) {
       console.error('unmarkHabit error:', err);
@@ -183,12 +186,18 @@ export const useHabits = () => {
     const today = new Date().toISOString().split('T')[0];
     
     if (date === today) {
+      // Для сегодня обновляем состояние хука
       await loadTodayHabits();
+      return {
+        habits: todayHabits,
+        stats: stats,
+        phrase: phrase
+      };
     } else {
       // Для других дат просто возвращаем результат загрузки
       return await loadHabitsForDate(date);
     }
-  }, [loadTodayHabits, loadHabitsForDate]);
+  }, [loadTodayHabits, loadHabitsForDate, todayHabits, stats, phrase]);
 
   // Загрузка при монтировании
   useEffect(() => {
