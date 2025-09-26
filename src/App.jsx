@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { authenticateUser } from './services/auth';
 import { habitService } from './services/habits';
 import { useTelegram } from './hooks/useTelegram';
+import { LanguageProvider } from './contexts/LanguageContext';
 import Onboarding from './components/Onboarding';
 import Today from './pages/Today';
 import Profile from './pages/Profile';
@@ -95,49 +96,57 @@ function App() {
 
   if (loading || isLoading) {
     return (
-      <div className="app-loading">
-        <Loader size="large" />
-        <p style={{ marginTop: '20px', color: '#666' }}>
-          Загрузка Habit Tracker...
-        </p>
-      </div>
+      <LanguageProvider>
+        <div className="app-loading">
+          <Loader size="large" />
+          <p style={{ marginTop: '20px', color: '#666' }}>
+            Загрузка Habit Tracker...
+          </p>
+        </div>
+      </LanguageProvider>
     );
   }
 
   if (error) {
     return (
-      <div className="app-error">
-        <h2>Ошибка</h2>
-        <p>{error}</p>
-        {window.location.hostname === 'localhost' && (
-          <button onClick={() => window.location.reload()}>
-            Обновить
-          </button>
-        )}
-      </div>
+      <LanguageProvider>
+        <div className="app-error">
+          <h2>Ошибка</h2>
+          <p>{error}</p>
+          {window.location.hostname === 'localhost' && (
+            <button onClick={() => window.location.reload()}>
+              Обновить
+            </button>
+          )}
+        </div>
+      </LanguageProvider>
     );
   }
 
   if (!user) {
     return (
-      <div className="app-error">
-        <h2>Необходима авторизация</h2>
-        <p>Откройте приложение через Telegram бота @trackeryourhabitbot</p>
-      </div>
+      <LanguageProvider>
+        <div className="app-error">
+          <h2>Необходима авторизация</h2>
+          <p>Откройте приложение через Telegram бота @trackeryourhabitbot</p>
+        </div>
+      </LanguageProvider>
     );
   }
 
-  if (showOnboarding) {
-    return <Onboarding user={user} onComplete={() => setShowOnboarding(false)} />;
-  }
-
   return (
-    <>
-      <Today />
-      {showProfile && (
-        <Profile onClose={() => setShowProfile(false)} />
+    <LanguageProvider>
+      {showOnboarding ? (
+        <Onboarding user={user} onComplete={() => setShowOnboarding(false)} />
+      ) : (
+        <>
+          <Today />
+          {showProfile && (
+            <Profile onClose={() => setShowProfile(false)} />
+          )}
+        </>
       )}
-    </>
+    </LanguageProvider>
   );
 }
 

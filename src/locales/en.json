@@ -1,0 +1,144 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK"
+  },
+  "today": {
+    "date": "{{date, MMMM d}}",
+    "noHabitsToday": "No habits for today",
+    "noHabitsTodayDescription": "You can add new habits or change the schedule of existing ones.",
+    "motivation": "Motivation",
+    "viewStats": "View Stats"
+  },
+  "navigation": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "tomorrow": "Tomorrow"
+  },
+  "habits": {
+    "title": "Habits",
+    "createNew": "Create New Habit",
+    "completed": "Completed",
+    "outOf": "out of",
+    "habits": "Habits",
+    "forToday": "for today",
+    "forYesterday": "for yesterday",
+    "noHabitsYet": "No Habits Yet",
+    "noHabitsDescription": "All your habits will show up here.\nTap to + to add a Habit.",
+    "habitName": "Habit name",
+    "habitNamePlaceholder": "What is your goal?",
+    "habitNameHint": "Being specific is better. Instead of \"Jog\", think \"Jog for 20 minutes\" or \"Jog for 2 miles\"",
+    "goal": "Goal",
+    "goalPlaceholder": "What's your motivation?",
+    "category": "Category",
+    "repeat": "Repeat",
+    "pingMe": "Ping me",
+    "onWhichDays": "On which days?",
+    "badHabit": "Bad habit",
+    "badHabitHint": "For bad habits, you only need to set name and goal.",
+    "createHabit": "Create habit",
+    "saveChanges": "Save Changes",
+    "everyDay": "Every day",
+    "weekdays": "Weekdays",
+    "weekend": "Weekend",
+    "custom": "Custom",
+    "selectTime": "Select time",
+    "done": "Done",
+    "undone": "Undone",
+    "skip": "Skip",
+    "default": "Default"
+  },
+  "onboarding": {
+    "welcome": "Welcome to the",
+    "habitTracker": "Habit Tracker!",
+    "description": "Create healthy habits and achieve\nyour goals with our easy-to-use\ntracker.",
+    "createNewHabit": "Create a New Habit"
+  },
+  "profile": {
+    "title": "Profile",
+    "subscription": "Subscription",
+    "purchaseHistory": "Purchase History",
+    "specialHabits": "Special Habits",
+    "settings": "Settings",
+    "support": "Support",
+    "termsOfUse": "Term of Use",
+    "privacyPolicy": "Privacy Policy",
+    "paymentPolicy": "Payment Policy",
+    "appVersion": "App Version",
+    "free": "Free",
+    "premium": "Premium",
+    "forSixMonths": "For 6 Months",
+    "forOneYear": "For 1 Year",
+    "trial": "Trial"
+  },
+  "settings": {
+    "title": "Settings",
+    "applicationSettings": "Application Settings",
+    "language": "Language",
+    "timeZone": "Time Zone",
+    "displaySettings": "Display Settings",
+    "nightTheme": "Night Theme",
+    "inboxSettings": "Inbox Settings",
+    "inboxNotifications": "Inbox Notifications",
+    "inboxNotificationsDescription": "Choose which types of inbox events the bot should send notifications about",
+    "system": "System",
+    "on": "On",
+    "off": "Off"
+  },
+  "subscription": {
+    "startLikePro": "Start Like a PRO",
+    "unlockAllFeatures": "Unlock All Features",
+    "unlimitedHabits": "Unlimited Habits",
+    "advancedStatistics": "Advanced Statistics",
+    "prioritySupport": "Priority Support",
+    "continue": "Continue",
+    "testMode": "Test mode: Payment simulation only",
+    "alreadyHave": "You already have",
+    "daysLeft": "days left",
+    "total": "total",
+    "perMonth": "/month",
+    "save": "SAVE"
+  },
+  "habitDetail": {
+    "daysStrike": "Days Strike",
+    "week": "Week",
+    "month": "Month",
+    "year": "Year",
+    "goodJob": "Good Job My Friend! 🔥",
+    "habitFriends": "Habit Friends",
+    "addFriend": "Add Friend",
+    "shareDescription": "Share the link with friends and invite them to track habits together.",
+    "removeHabit": "Remove Habit",
+    "punch": "Punch",
+    "remove": "Remove"
+  },
+  "deleteModal": {
+    "title": "Are You Sure You Want to Delete the Habit?"
+  },
+  "copyModal": {
+    "title": "Copied!",
+    "subtitle": "Link is copied to clipboard"
+  },
+  "languages": {
+    "en": "English",
+    "ru": "Russian",
+    "kk": "Kazakh"
+  },
+  "motivationalPhrases": {
+    "createFirst": "Create your first habit!",
+    "youCanDoIt": "You can do it!",
+    "allDone": "All done! Amazing! 🎉",
+    "almostThere": "Almost there! 🔥",
+    "greatProgress": "Great progress! ✨",
+    "keepGoing": "Keep going! 💪"
+  }
+}

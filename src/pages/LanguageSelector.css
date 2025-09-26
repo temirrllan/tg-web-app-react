@@ -104,10 +104,15 @@
   background: none;
   text-align: left;
   border: none;
-  transition: background 0.2s;
+  transition: all 0.2s;
   cursor: pointer;
   position: relative;
-  min-height: 44px;
+  min-height: 60px;
+}
+
+.language-selector__item:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .language-selector__item:not(:last-child)::after {
@@ -120,24 +125,44 @@
   background: rgba(60, 60, 67, 0.12);
 }
 
-.language-selector__item:active {
+.language-selector__item:active:not(:disabled) {
   background: #F2F2F7;
+}
+
+.language-selector__item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .language-selector__item-name {
   font-size: 17px;
   color: #000;
   font-weight: 400;
+  line-height: 22px;
 }
 
 .language-selector__item--selected .language-selector__item-name {
   color: #007AFF;
 }
 
+.language-selector__item-subtitle {
+  font-size: 13px;
+  color: #8E8E93;
+  line-height: 18px;
+}
+
+.language-selector__item--selected .language-selector__item-subtitle {
+  color: #007AFF;
+  opacity: 0.8;
+}
+
 .language-selector__item-check {
   font-size: 17px;
   color: #007AFF;
   font-weight: 600;
+  margin-left: 12px;
 }
 
 @keyframes slideUp {

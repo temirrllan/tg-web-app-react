@@ -15,9 +15,10 @@ import "./Today.css";
 import SwipeHint from '../components/habits/SwipeHint';
 import EditHabitForm from '../components/habits/EditHabitForm';
 import SubscriptionModal from '../components/modals/SubscriptionModal';
-
+import { useTranslation } from "../hooks/useTranslation";
 const Today = () => {
   const { user } = useTelegram();
+  const { t } = useTranslation();
   const {
     todayHabits,
     stats,
@@ -302,24 +303,24 @@ const Today = () => {
     }
     
     if (currentStats.total === 0) {
-      return "Create your first habit!";
+      return t('motivationalPhrases.createFirst');
     }
     if (currentStats.completed === 0) {
-      return "You can do it!";
+      return t('motivationalPhrases.youCanDoIt');
     }
     if (currentStats.completed === currentStats.total) {
-      return "All done! Amazing! 🎉";
+      return t('motivationalPhrases.allDone');
     }
     
     const percentage = (currentStats.completed / currentStats.total) * 100;
     if (percentage >= 70) {
-      return "Almost there! 🔥";
+      return t('motivationalPhrases.almostThere');
     }
     if (percentage >= 50) {
-      return "Great progress! ✨";
+      return t('motivationalPhrases.greatProgress');
     }
     
-    return "Keep going! 💪";
+    return t('motivationalPhrases.keepGoing');
   };
 
   const getMotivationalEmoji = () => {
@@ -341,11 +342,11 @@ const Today = () => {
     const yesterdayStr = getYesterdayDate();
     
     if (selectedDate === todayStr) {
-      return 'for today';
+      return t('habits.forToday');
     }
     
     if (selectedDate === yesterdayStr) {
-      return 'for yesterday';
+      return t('habits.forYesterday');
     }
     
     const [year, month, day] = selectedDate.split('-');
@@ -506,7 +507,7 @@ const Today = () => {
             <div className="today__container">
               <h2 className="today__title">Completed</h2>
               <span className="today__count">
-                {displayStats.completed} out of {displayStats.total} Habits
+                {displayStats.completed} {t('habits.outOf')} {displayStats.total} {t('habits.habits')}
               </span>
             </div>
 
