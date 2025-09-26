@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { authenticateUser } from './services/auth';
 import { habitService } from './services/habits';
 import { useTelegram } from './hooks/useTelegram';
-import { LanguageProvider } from './contexts/LanguageContext';
+import { LanguageProvider } from '../src/context/LanguageContext';
 import Onboarding from './components/Onboarding';
 import Today from './pages/Today';
 import Profile from './pages/Profile';
