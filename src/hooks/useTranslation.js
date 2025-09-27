@@ -14,6 +14,7 @@ export const useTranslation = () => {
     language: context.language,
     setLanguage: context.setLanguage,
     availableLanguages: context.availableLanguages,
-    isChanging: context.isChanging
+    isChanging: context.isChanging,
+    initializeLanguage: context.initializeLanguage
   };
 };

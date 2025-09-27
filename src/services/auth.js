@@ -1,4 +1,4 @@
-// src/services/auth.js
+// Обновите src/services/auth.js
 import api, { setAuthUser } from './api';
 
 export const authenticateUser = async (initData, user) => {
@@ -29,6 +29,14 @@ export const authenticateUser = async (initData, user) => {
 
     if (response.data.success && response.data.user) {
       setAuthUser(response.data.user);
+      
+      // ВАЖНО: Сохраняем язык пользователя
+      const userLanguage = response.data.user.language;
+      if (userLanguage) {
+        console.log('User language from auth:', userLanguage);
+        // Сохраняем язык в localStorage для быстрого доступа
+        localStorage.setItem('userLanguage', userLanguage);
+      }
     }
 
     return response.data;

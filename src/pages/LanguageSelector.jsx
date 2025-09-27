@@ -16,25 +16,26 @@ const LanguageSelector = ({ onClose }) => {
     { code: 'kk', name: 'Kazakh', nativeName: 'Қазақша' }
   ];
   
-  const handleLanguageSelect = async (langCode) => {
+  const handleLanguageSelect = (langCode) => {
     if (isSelecting || isChanging) return;
     
     setIsSelecting(true);
     setSelectedLanguage(langCode);
     
     // Применяем изменение языка
-    await setLanguage(langCode);
-    
-    // Добавляем вибрацию
-    if (window.Telegram?.WebApp?.HapticFeedback) {
-      window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-    }
-    
-    // Небольшая задержка перед закрытием для плавности
     setTimeout(() => {
-      onClose();
-      setIsSelecting(false);
-    }, 500);
+      setLanguage(langCode);
+      
+      // Добавляем вибрацию
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      }
+      
+      // Небольшая задержка перед закрытием для плавности
+      setTimeout(() => {
+        onClose();
+      }, 200);
+    }, 100);
   };
   
   return (
