@@ -357,7 +357,7 @@ const Today = () => {
     const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
     const dayNumber = date.getDate();
     
-    return t('todays.for')`${weekday} ${dayNumber}`;
+    return `${t('todays.for')} ${weekday} ${dayNumber}`;
   };
 
   const isCurrentWeekDate = (dateStr) => {
