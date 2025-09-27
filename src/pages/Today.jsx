@@ -305,24 +305,24 @@ const Today = () => {
     }
     
     if (currentStats.total === 0) {
-      return "Create your first habit!";
+      return t('todays.createYourFirstHabit');
     }
     if (currentStats.completed === 0) {
-      return "You can do it!";
+      return t("todays.youCanDoIt");
     }
     if (currentStats.completed === currentStats.total) {
-      return "All done! Amazing! 🎉";
+      return t("todays.allDoneAmazing");
     }
     
     const percentage = (currentStats.completed / currentStats.total) * 100;
     if (percentage >= 70) {
-      return "Almost there! 🔥";
+      return t("habits.almostThere");
     }
     if (percentage >= 50) {
-      return "Great progress! ✨";
+      return t("habits.greatProgress");
     }
     
-    return "Keep going! 💪";
+    return t("habits.keepGoing");
   };
 
   const getMotivationalEmoji = () => {
@@ -344,11 +344,11 @@ const Today = () => {
     const yesterdayStr = getYesterdayDate();
     
     if (selectedDate === todayStr) {
-      return 'for today';
+      return t('todays.forToday');
     }
     
     if (selectedDate === yesterdayStr) {
-      return 'for yesterday';
+      return t('todays.forYesterday');
     }
     
     const [year, month, day] = selectedDate.split('-');
@@ -357,7 +357,7 @@ const Today = () => {
     const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
     const dayNumber = date.getDate();
     
-    return `for ${weekday} ${dayNumber}`;
+    return t('todays.for')`${weekday} ${dayNumber}`;
   };
 
   const isCurrentWeekDate = (dateStr) => {
@@ -509,7 +509,7 @@ const Today = () => {
             <div className="today__container">
               <h2 className="today__title">{t('todays.completed')}</h2>
               <span className="today__count">
-                {displayStats.completed} out of {displayStats.total} Habits
+                {displayStats.completed} {t('todays.outof')} {displayStats.total} {t('todays.Habits')}
               </span>
             </div>
 

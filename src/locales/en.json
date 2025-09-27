@@ -2,10 +2,17 @@
   
   "todays": {
     "completed": "Completed",
-    "habitsCount": "{{completed}} out of {{total}} Habits",
+    "outof": "out of",
+    "Habits": "Habits",
     "forToday": "for today",
     "forYesterday": "for yesterday",
-    "forDate": "for {{weekday}} {{day}}",
+    "for": "for",
+    "createYourFirstHabit": "Create your first habit!",
+    "youCanDoIt": "You can do it!",
+    "allDoneAmazing": "All done! Amazing! 🎉",
+    "almostThere": "Almost there! 🔥",
+    "greatProgress": "Great progress! ✨",
+    "keepGoing": "Keep going! 💪",
     "viewOnly": "View only mode - you can mark habits only for today and yesterday",
     "noHabits": "No Habits Yet",
     "noHabitsDescription": "All your habits will show up here.\nTap to + to add a Habit."

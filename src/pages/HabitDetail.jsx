@@ -8,6 +8,7 @@ import CopyLinkModal from '../components/modals/CopyLinkModal';
 import Toast from '../components/common/Toast';
 import './HabitDetail.css';
 import FriendSwipeHint from '../components/habits/FriendSwipeHint';
+import { useTranslation } from "../hooks/useTranslation";
 
 const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const { tg, user: currentUser } = useTelegram();
@@ -17,6 +18,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const [members, setMembers] = useState([]);
   const [showFriendHint, setShowFriendHint] = useState(false);
   const [toast, setToast] = useState(null);
+  const { t } = useTranslation(); // Добавьте эту строку
 
   const [statistics, setStatistics] = useState({
     currentStreak: 0,
