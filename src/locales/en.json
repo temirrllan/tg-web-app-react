@@ -13,8 +13,13 @@
     "almostThere": "Almost there! 🔥",
     "greatProgress": "Great progress! ✨",
     "keepGoing": "Keep going! 💪",
-    "viewOnly": "View only mode - you can mark habits only for today and yesterday",
+    "viewOnly": "📅 View only mode - you can mark habits only for today and yesterday",
     "noHabits": "No Habits Yet",
-    "noHabitsDescription": "All your habits will show up here.\nTap to + to add a Habit."
+    "noHabitsDescription": "All your habits will show up here.",
+    "tapToAddHabit": "Tap to + to add a Habit."
+  },
+  "button": {
+    "done": "Done",
+    "skip": "Skip"
   }
 }

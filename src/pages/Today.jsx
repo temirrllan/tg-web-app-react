@@ -531,7 +531,7 @@ const Today = () => {
           {showReadOnlyNotice && (
             <div className="today__readonly-notice">
               <span>
-                📅 View only mode - you can mark habits only for today and yesterday
+                {t('todays.viewOnly')}
               </span>
             </div>
           )}

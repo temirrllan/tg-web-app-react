@@ -216,9 +216,9 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
     
     switch(nextStatus) {
       case HABIT_STATUSES.COMPLETED:
-        return { icon: '✓', text: 'Done', className: 'done-button' };
+        return { icon: '✓', text:  t('button.done'), className: 'done-button' };
       case HABIT_STATUSES.SKIPPED:
-        return { icon: '⟳', text: 'Skip', className: 'skip-button' };
+        return { icon: '⟳', text: t('button.skip'), className: 'skip-button' };
       default:
         return null;
     }
