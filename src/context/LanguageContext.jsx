@@ -1,4 +1,3 @@
-// src/context/LanguageContext.jsx
 import React, { createContext, useState, useEffect, useCallback } from 'react';
 import en from '../locales/en.json';
 import ru from '../locales/ru.json';
@@ -38,10 +37,10 @@ export const LanguageProvider = ({ children }) => {
 
   // Загружаем язык при монтировании компонента
   useEffect(() => {
-    if (isInitialized) return; // Если уже инициализирован из данных пользователя, не перезаписываем
+    if (isInitialized) return;
     
     const loadInitialLanguage = () => {
-      // Сначала проверяем localStorage как временное решение
+      // Сначала проверяем localStorage
       const savedLanguage = localStorage.getItem('appLanguage');
       
       if (savedLanguage && ['en', 'ru', 'kk'].includes(savedLanguage)) {
@@ -144,7 +143,6 @@ export const LanguageProvider = ({ children }) => {
           console.log(`✅ Language updated to ${newLanguage} in database`);
         } catch (error) {
           console.error('Failed to update language in database:', error);
-          // Не откатываем изменения, так как локально язык уже изменен
         }
       }
     } finally {

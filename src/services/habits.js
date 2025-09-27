@@ -241,26 +241,25 @@ activatePremium: async (plan) => {
 
 // Получить профиль пользователя
 getUserProfile: async () => {
-  try {
-    const { data } = await api.get('/user/profile');
-    return data.user;
-  } catch (error) {
-    console.error('getUserProfile error:', error);
-    return null;
-  }
-},
-
+    try {
+      const { data } = await api.get('/user/profile');
+      return data.user;
+    } catch (error) {
+      console.error('getUserProfile error:', error);
+      return null;
+    }
+  },
 // Обновить язык пользователя
-updateUserLanguage: async (language) => {
-  try {
-    const { data } = await api.patch('/user/language', { language });
-    console.log('Language updated:', data);
-    return data;
-  } catch (error) {
-    console.error('updateUserLanguage error:', error);
-    throw error;
-  }
-},
+  updateUserLanguage: async (language) => {
+    try {
+      const { data } = await api.patch('/user/language', { language });
+      console.log('Language updated:', data);
+      return data;
+    } catch (error) {
+      console.error('updateUserLanguage error:', error);
+      throw error;
+    }
+  },
   getHabitStatistics: async (habitId) => {
   try {
     const { data } = await api.get(`/habits/${habitId}/statistics`);

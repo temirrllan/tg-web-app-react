@@ -1,22 +1,25 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { authenticateUser } from './services/auth';
 import { habitService } from './services/habits';
 import { useTelegram } from './hooks/useTelegram';
+import { LanguageProvider, LanguageContext } from './context/LanguageContext';
 import Onboarding from './components/Onboarding';
 import Today from './pages/Today';
 import Profile from './pages/Profile';
 import Loader from './components/common/Loader';
 import './App.css';
-import { LanguageProvider, LanguageContext } from './context/LanguageContext';
 
-function App() {
+// Внутренний компонент для использования контекста языка
+function AppContent() {
   const { tg, user: tgUser, webApp, isReady, isLoading } = useTelegram();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const { initializeLanguage } = React.useContext(LanguageContext);
+  
+  // Получаем функцию инициализации языка из контекста
+  const { initializeLanguage } = useContext(LanguageContext);
 
   useEffect(() => {
     if (tg) {
@@ -44,11 +47,13 @@ function App() {
         
         if (response.success) {
           setUser(response.user);
+          
           // ВАЖНО: Инициализируем язык из данных пользователя
           if (response.user.language) {
             console.log('Initializing language from user data:', response.user.language);
             initializeLanguage(response.user.language);
           }
+          
           // Проверяем, есть ли параметр join в URL
           const urlParams = new URLSearchParams(window.location.search);
           const action = urlParams.get('action');
@@ -110,39 +115,31 @@ function App() {
     );
   }
 
- if (error) {
+  if (error) {
     return (
-      <LanguageProvider>
-        <div className="app-error">
-          <h2>Ошибка</h2>
-          <p>{error}</p>
-          {window.location.hostname === 'localhost' && (
-            <button onClick={() => window.location.reload()}>
-              Обновить
-            </button>
-          )}
-        </div>
-      </LanguageProvider>
+      <div className="app-error">
+        <h2>Ошибка</h2>
+        <p>{error}</p>
+        {window.location.hostname === 'localhost' && (
+          <button onClick={() => window.location.reload()}>
+            Обновить
+          </button>
+        )}
+      </div>
     );
   }
 
   if (!user) {
     return (
-      <LanguageProvider>
-        <div className="app-error">
-          <h2>Необходима авторизация</h2>
-          <p>Откройте приложение через Telegram бота @trackeryourhabitbot</p>
-        </div>
-      </LanguageProvider>
+      <div className="app-error">
+        <h2>Необходима авторизация</h2>
+        <p>Откройте приложение через Telegram бота @trackeryourhabitbot</p>
+      </div>
     );
   }
 
-  if (showOnboarding) {
-    return <Onboarding user={user} onComplete={() => setShowOnboarding(false)} />;
-  }
-
   return (
-    <LanguageProvider>
+    <>
       {showOnboarding ? (
         <Onboarding user={user} onComplete={() => setShowOnboarding(false)} />
       ) : (
@@ -153,6 +150,15 @@ function App() {
           )}
         </>
       )}
+    </>
+  );
+}
+
+// Главный компонент App с LanguageProvider
+function App() {
+  return (
+    <LanguageProvider>
+      <AppContent />
     </LanguageProvider>
   );
 }
