@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { HABIT_STATUSES } from '../../utils/constants';
 import './HabitCard.css';
+import { useTranslation } from "../hooks/useTranslation";
 
 const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onClick }) => {
   const [loading, setLoading] = useState(false);
@@ -10,7 +11,8 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
   const [isSwiping, setIsSwiping] = useState(false);
   const [hasMoved, setHasMoved] = useState(false);
   const cardRef = useRef(null);
-  
+    const { t } = useTranslation(); // Добавьте эту строку
+
   const currentStatus = habit.today_status || HABIT_STATUSES.PENDING;
   const isCompleted = currentStatus === HABIT_STATUSES.COMPLETED;
   const isFailed = currentStatus === HABIT_STATUSES.FAILED;
