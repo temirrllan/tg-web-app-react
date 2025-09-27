@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { HABIT_STATUSES } from '../../utils/constants';
 import './HabitCard.css';
-import { useTranslation } from "../hooks/useTranslation";
+import { useTranslation } from "../../hooks/useTranslation";
 
 const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onClick }) => {
   const [loading, setLoading] = useState(false);
