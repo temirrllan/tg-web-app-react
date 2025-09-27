@@ -1,3 +1,4 @@
+// src/pages/LanguageSelector.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigation } from '../hooks/useNavigation';
 import { useTranslation } from '../hooks/useTranslation';
@@ -15,30 +16,40 @@ const LanguageSelector = ({ onClose }) => {
     { code: 'kk', name: 'Kazakh', nativeName: 'Қазақша' }
   ];
   
-  const handleLanguageSelect = (langCode) => {
+  const handleLanguageSelect = async (langCode) => {
     if (isSelecting || isChanging) return;
     
     setIsSelecting(true);
     setSelectedLanguage(langCode);
     
     // Применяем изменение языка
+    await setLanguage(langCode);
+    
+    // Добавляем вибрацию
+    if (window.Telegram?.WebApp?.HapticFeedback) {
+      window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    }
+    
+    // Небольшая задержка перед закрытием для плавности
     setTimeout(() => {
-      setLanguage(langCode);
-      
-      // Добавляем вибрацию
-      if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-      }
-      
-      // Небольшая задержка перед закрытием для плавности
-      setTimeout(() => {
-        onClose();
-      }, 200);
-    }, 100);
+      onClose();
+      setIsSelecting(false);
+    }, 500);
   };
   
   return (
     <div className="language-selector">
+      <div className="language-selector__header">
+        <button className="language-selector__close" onClick={onClose}>
+          {t('common.back')}
+        </button>
+        <div className="language-selector__title-wrapper">
+          <h2 className="language-selector__title">{t('settings.language')}</h2>
+          <span className="language-selector__subtitle">mini-app</span>
+        </div>
+        <button className="language-selector__menu">⋯</button>
+      </div>
+      
       <div className="language-selector__content">
         <h3 className="language-selector__heading">{t('settings.language')}</h3>
         

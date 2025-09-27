@@ -1,3 +1,4 @@
+// src/pages/Settings.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigation } from '../hooks/useNavigation';
 import { useTranslation } from '../hooks/useTranslation';
@@ -48,6 +49,17 @@ const Settings = ({ onClose }) => {
   
   return (
     <div className="settings">
+      <div className="settings__header">
+        <button className="settings__back" onClick={onClose}>
+          {t('common.back')}
+        </button>
+        <div className="settings__title-wrapper">
+          <h2 className="settings__title">{t('settings.title')}</h2>
+          <span className="settings__subtitle">mini-app</span>
+        </div>
+        <button className="settings__menu">⋯</button>
+      </div>
+      
       <div className="settings__content">
         <div className="settings__section">
           <h3 className="settings__section-title">{t('settings.applicationSettings')}</h3>

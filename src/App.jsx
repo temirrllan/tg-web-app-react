@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { authenticateUser } from './services/auth';
 import { habitService } from './services/habits';
 import { useTelegram } from './hooks/useTelegram';
-import { LanguageProvider } from '../src/context/LanguageContext';
 import Onboarding from './components/Onboarding';
 import Today from './pages/Today';
 import Profile from './pages/Profile';
 import Loader from './components/common/Loader';
 import './App.css';
+import { LanguageProvider } from './context/LanguageContext';
 
 function App() {
   const { tg, user: tgUser, webApp, isReady, isLoading } = useTelegram();
@@ -96,18 +96,16 @@ function App() {
 
   if (loading || isLoading) {
     return (
-      <LanguageProvider>
-        <div className="app-loading">
-          <Loader size="large" />
-          <p style={{ marginTop: '20px', color: '#666' }}>
-            Загрузка Habit Tracker...
-          </p>
-        </div>
-      </LanguageProvider>
+      <div className="app-loading">
+        <Loader size="large" />
+        <p style={{ marginTop: '20px', color: '#666' }}>
+          Загрузка Habit Tracker...
+        </p>
+      </div>
     );
   }
 
-  if (error) {
+ if (error) {
     return (
       <LanguageProvider>
         <div className="app-error">
@@ -132,6 +130,10 @@ function App() {
         </div>
       </LanguageProvider>
     );
+  }
+
+  if (showOnboarding) {
+    return <Onboarding user={user} onComplete={() => setShowOnboarding(false)} />;
   }
 
   return (

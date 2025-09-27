@@ -1,7 +1,9 @@
+// src/context/LanguageContext.jsx
 import React, { createContext, useState, useEffect, useCallback } from 'react';
 import en from '../locales/en.json';
 import ru from '../locales/ru.json';
 import kk from '../locales/kk.json';
+import { habitService } from '../services/habits';
 
 const translations = {
   en,
@@ -20,23 +22,44 @@ export const LanguageProvider = ({ children }) => {
   const [language, setLanguageState] = useState('en');
   const [isChanging, setIsChanging] = useState(false);
 
-  // Загружаем язык из localStorage при монтировании
+  // Загружаем язык из localStorage и данных пользователя при монтировании
   useEffect(() => {
-    const savedLanguage = localStorage.getItem('appLanguage');
-    const tgLanguage = window.Telegram?.WebApp?.initDataUnsafe?.user?.language_code;
-    
-    if (savedLanguage && ['en', 'ru', 'kk'].includes(savedLanguage)) {
-      setLanguageState(savedLanguage);
-    } else if (tgLanguage) {
-      // Определяем язык по Telegram
-      if (tgLanguage === 'ru') {
-        setLanguageState('ru');
-      } else if (tgLanguage === 'kk' || tgLanguage === 'kz') {
-        setLanguageState('kk');
-      } else {
-        setLanguageState('en');
+    const loadUserLanguage = async () => {
+      // Сначала проверяем сохраненный язык
+      const savedLanguage = localStorage.getItem('appLanguage');
+      
+      // Затем проверяем язык из Telegram
+      const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+      const tgLanguage = tgUser?.language_code;
+      
+      // Пытаемся получить язык из БД через API
+      try {
+        const userData = await habitService.getUserProfile();
+        if (userData?.language && ['en', 'ru', 'kk'].includes(userData.language)) {
+          setLanguageState(userData.language);
+          localStorage.setItem('appLanguage', userData.language);
+          return;
+        }
+      } catch (error) {
+        console.log('Could not load user language from DB');
       }
-    }
+      
+      // Fallback на сохраненный язык
+      if (savedLanguage && ['en', 'ru', 'kk'].includes(savedLanguage)) {
+        setLanguageState(savedLanguage);
+      } else if (tgLanguage) {
+        // Определяем язык по Telegram
+        if (tgLanguage === 'ru') {
+          setLanguageState('ru');
+        } else if (tgLanguage === 'kk' || tgLanguage === 'kz') {
+          setLanguageState('kk');
+        } else {
+          setLanguageState('en');
+        }
+      }
+    };
+    
+    loadUserLanguage();
   }, []);
 
   // Функция для получения перевода
@@ -75,16 +98,24 @@ export const LanguageProvider = ({ children }) => {
   }, [language]);
 
   // Функция смены языка с защитой от двойных кликов
-  const setLanguage = useCallback((newLanguage) => {
+  const setLanguage = useCallback(async (newLanguage) => {
     if (isChanging || newLanguage === language) return;
     
     setIsChanging(true);
     
     // Задержка для предотвращения двойных кликов
-    setTimeout(() => {
+    setTimeout(async () => {
       if (['en', 'ru', 'kk'].includes(newLanguage)) {
         setLanguageState(newLanguage);
         localStorage.setItem('appLanguage', newLanguage);
+        
+        // Обновляем язык в базе данных
+        try {
+          await habitService.updateUserLanguage(newLanguage);
+          console.log(`Language updated to ${newLanguage} in database`);
+        } catch (error) {
+          console.error('Failed to update language in database:', error);
+        }
         
         // Вибрация при смене языка
         if (window.Telegram?.WebApp?.HapticFeedback) {
