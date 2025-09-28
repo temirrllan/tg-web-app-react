@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './SwipeHint.css';
-import { useTranslation } from "../hooks/useTranslation";
+import { useTranslation } from "../../hooks/useTranslation";
 
 const SwipeHint = ({ show, onClose }) => {
   const [isVisible, setIsVisible] = useState(false);
