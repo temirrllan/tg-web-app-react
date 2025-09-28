@@ -144,6 +144,31 @@
     "errors": {
       "activateFailed": "Не удалось активировать подписку. Попробуйте ещё раз."
     }
+  },
+
+   "common": {
+    "back": "Назад"
+  },
+  "languages": {
+    "en": "Английский",
+    "ru": "Русский",
+    "kk": "Казахский"
+  },
+  "settings": {
+    "title": "Настройки",
+    "subtitle": "мини-приложение",
+    "more": "Ещё",
+    "applicationSettings": "Настройки приложения",
+    "language": "Язык",
+    "timeZone": "Часовой пояс",
+    "system": "Системный",
+    "displaySettings": "Настройки отображения",
+    "nightTheme": "Ночная тема",
+    "inboxSettings": "Входящие",
+    "inboxNotifications": "Уведомления во входящих",
+    "inboxNotificationsDescription": "Получать обновления и сервисные сообщения во вкладке Входящие",
+    "on": "Вкл",
+    "off": "Выкл"
   }
 
 

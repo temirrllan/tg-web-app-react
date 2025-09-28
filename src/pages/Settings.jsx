@@ -14,37 +14,40 @@ const Settings = ({ onClose }) => {
   const [inboxNotifications, setInboxNotifications] = useState(true);
   
   useEffect(() => {
-    // Загружаем сохраненные настройки
     const savedTheme = localStorage.getItem('nightTheme') === 'true';
     const savedNotifications = localStorage.getItem('inboxNotifications') !== 'false';
-    
     setNightTheme(savedTheme);
     setInboxNotifications(savedNotifications);
+
+    // применить сохранённую тему при входе
+    if (savedTheme) {
+      document.documentElement.classList.add('dark-theme');
+    } else {
+      document.documentElement.classList.remove('dark-theme');
+    }
   }, []);
   
   const handleThemeToggle = () => {
     const newTheme = !nightTheme;
     setNightTheme(newTheme);
     localStorage.setItem('nightTheme', String(newTheme));
-    
-    // Применяем тему к документу
     if (newTheme) {
       document.documentElement.classList.add('dark-theme');
     } else {
       document.documentElement.classList.remove('dark-theme');
     }
   };
-  
-  const getLanguageDisplayName = () => {
-    return t(`languages.${language}`);
+
+  const handleInboxToggle = () => {
+    const next = !inboxNotifications;
+    setInboxNotifications(next);
+    localStorage.setItem('inboxNotifications', String(next));
   };
   
+  const getLanguageDisplayName = () => t(`languages.${language}`);
+  
   if (showLanguageSelector) {
-    return (
-      <LanguageSelector 
-        onClose={() => setShowLanguageSelector(false)}
-      />
-    );
+    return <LanguageSelector onClose={() => setShowLanguageSelector(false)} />;
   }
   
   return (
@@ -55,9 +58,9 @@ const Settings = ({ onClose }) => {
         </button>
         <div className="settings__title-wrapper">
           <h2 className="settings__title">{t('settings.title')}</h2>
-          <span className="settings__subtitle">mini-app</span>
+          <span className="settings__subtitle">{t('settings.subtitle')}</span>
         </div>
-        <button className="settings__menu">⋯</button>
+        <button className="settings__menu" aria-label={t('settings.more')}>⋯</button>
       </div>
       
       <div className="settings__content">
@@ -76,7 +79,7 @@ const Settings = ({ onClose }) => {
               </div>
             </button>
             
-            <button className="settings__item">
+            <button className="settings__item" disabled>
               <span className="settings__item-label">{t('settings.timeZone')}</span>
               <div className="settings__item-right">
                 <span className="settings__item-value">{t('settings.system')}</span>
@@ -84,7 +87,7 @@ const Settings = ({ onClose }) => {
               </div>
             </button>
             
-            <button className="settings__item">
+            <button className="settings__item" disabled>
               <span className="settings__item-label">{t('settings.displaySettings')}</span>
               <span className="settings__item-arrow">›</span>
             </button>
@@ -97,6 +100,8 @@ const Settings = ({ onClose }) => {
             <button 
               className={`settings__toggle ${nightTheme ? 'settings__toggle--active' : ''}`}
               onClick={handleThemeToggle}
+              aria-pressed={nightTheme}
+              aria-label={t('settings.nightTheme')}
             >
               <div className="settings__toggle-slider">
                 <span className="settings__toggle-icon">
@@ -111,7 +116,7 @@ const Settings = ({ onClose }) => {
           <h3 className="settings__section-title">{t('settings.inboxSettings')}</h3>
           
           <div className="settings__items">
-            <button className="settings__item">
+            <button className="settings__item" onClick={handleInboxToggle}>
               <div className="settings__item-content">
                 <span className="settings__item-label">{t('settings.inboxNotifications')}</span>
                 <span className="settings__item-description">
@@ -119,7 +124,9 @@ const Settings = ({ onClose }) => {
                 </span>
               </div>
               <div className="settings__item-right">
-                <span className="settings__item-value">{t('settings.on')}</span>
+                <span className="settings__item-value">
+                  {inboxNotifications ? t('settings.on') : t('settings.off')}
+                </span>
                 <span className="settings__item-arrow">›</span>
               </div>
             </button>

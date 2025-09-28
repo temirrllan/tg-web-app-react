@@ -148,6 +148,31 @@
     "errors": {
       "activateFailed": "Failed to activate subscription. Please try again."
     }
+  },
+
+  "common": {
+    "back": "Back"
+  },
+  "languages": {
+    "en": "English",
+    "ru": "Russian",
+    "kk": "Kazakh"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "mini-app",
+    "more": "More",
+    "applicationSettings": "Application settings",
+    "language": "Language",
+    "timeZone": "Time zone",
+    "system": "System",
+    "displaySettings": "Display settings",
+    "nightTheme": "Night theme",
+    "inboxSettings": "Inbox",
+    "inboxNotifications": "Inbox notifications",
+    "inboxNotificationsDescription": "Receive updates and service messages in your inbox",
+    "on": "On",
+    "off": "Off"
   }
 
 

@@ -144,6 +144,30 @@
     "errors": {
       "activateFailed": "Жазылымды қосу сәтсіз аяқталды. Қайта көріңіз."
     }
+  },
+   "common": {
+    "back": "Артқа"
+  },
+  "languages": {
+    "en": "Ағылшын",
+    "ru": "Орыс",
+    "kk": "Қазақ"
+  },
+  "settings": {
+    "title": "Баптаулар",
+    "subtitle": "мини-қосымша",
+    "more": "Тағы",
+    "applicationSettings": "Қосымша баптаулары",
+    "language": "Тіл",
+    "timeZone": "Уақыт белдеуі",
+    "system": "Жүйелік",
+    "displaySettings": "Көрсету баптаулары",
+    "nightTheme": "Түнгі tema",
+    "inboxSettings": "Кіріс хаттар",
+    "inboxNotifications": "Кіріс туралы хабарламалар",
+    "inboxNotificationsDescription": "Жаңартулар мен қызметтік хабарламаларды Кіріс жолағында алу",
+    "on": "Қосулы",
+    "off": "Сөнд."
   }
 
 
