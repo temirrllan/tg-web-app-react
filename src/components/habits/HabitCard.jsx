@@ -317,7 +317,7 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
                 {habit.is_bad_habit && '😈 '}
                 {habit.title}
               </h3>
-              <p className="habit-goal">Goal: {habit.goal}</p>
+              <p className="habit-goal">{t('habit.goal')}: {habit.goal}</p>
             </div>
 
             {!isPending && (

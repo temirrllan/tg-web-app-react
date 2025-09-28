@@ -36,5 +36,76 @@
     "left": "<strong>Swipe left</strong> to mark habit as completed",
     "right": "<strong>Swipe right</strong> to undo or mark as failed"
 
+  },
+  "habits": {
+    "goal": "Goal"
+  },
+  
+  "common": {
+    "loading": "Loading..."
+  },
+  "profile": {
+    "appVersion": "App Version",
+    "plan": {
+      "free": "Free",
+      "premium": "Premium",
+      "sixMonths": "For 6 Months",
+      "oneYear": "For 1 Year",
+      "lifetime": "Lifetime",
+      "trial": "Trial ({{days}} days)"
+    },
+    "menu": {
+      "subscription": "Subscription",
+      "purchaseHistory": "Purchase History",
+      "special_habits": "Special Habits",
+      "settings": "Settings",
+      "support": "Support"
+    },
+    "legal": {
+      "terms": "Terms of Use",
+      "privacy": "Privacy Policy",
+      "payment": "Payment Policy"
+    }
+  },
+
+  
+  "common": {
+    "yes": "Yes",
+    "no": "No",
+    "done": "Done"
+  },
+  "createHabit": {
+    "habitName": "Habit name",
+    "habitNamePlaceholder": "What is your goal?",
+    "habitNameHint": "Being specific is better. Instead of \"Jog\", think \"Jog for 20 minutes\" or \"Jog for 2 miles\"",
+    "goal": "Goal",
+    "goalPlaceholder": "What's your motivation?",
+    "category": "Category",
+    "repeat": {
+      "title": "Repeat",
+      "everyDay": "Every day",
+      "weekdays": "Weekdays",
+      "weekend": "Weekend",
+      "custom": "Custom"
+    },
+    "onWhichDays": "On which days?",
+    "pingMe": "Ping me",
+    "selectTime": "Select time",
+    "default": "Default",
+    "am": "AM",
+    "pm": "PM",
+    "badHabit": "Bad habit",
+    "badHabitHintOn": "For bad habits, you only need to set name and goal.",
+    "badHabitHintOff": "Helping text for explaining about bad habit switcher.",
+    "creating": "Creating...",
+    "create": "Create habit",
+    "errors": {
+      "selectAtLeastOneDay": "Please select at least one day",
+      "createFailed": "Failed to create habit",
+      "unknown": "Unknown error"
+    }
   }
+
+
+
 }

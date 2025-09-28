@@ -5,32 +5,32 @@ import { habitService } from '../services/habits';
 import PurchaseHistory from './PurchaseHistory';
 import Subscription from './Subscription';
 import Settings from './Settings';
+import { useTranslation } from '../hooks/useTranslation';
 
 const Profile = ({ onClose }) => {
-  
+  const { t } = useTranslation();
+
   const [subscription, setSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showPurchaseHistory, setShowPurchaseHistory] = useState(false);
   const [showSubscriptionPage, setShowSubscriptionPage] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-    const childOpen = showPurchaseHistory || showSubscriptionPage || showSettings;
-useNavigation(onClose, { isVisible: !childOpen });
+
+  const childOpen = showPurchaseHistory || showSubscriptionPage || showSettings;
+  useNavigation(onClose, { isVisible: !childOpen });
+
   useEffect(() => {
     setSubscription(null);
     setLoading(true);
     loadSubscriptionStatus();
-    
+
     const handleFocus = () => {
       loadSubscriptionStatus();
     };
-    
     window.addEventListener('focus', handleFocus);
-    
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-    };
+    return () => window.removeEventListener('focus', handleFocus);
   }, []);
-  
+
   const tg = window.Telegram?.WebApp;
   const user = tg?.initDataUnsafe?.user || {
     first_name: 'Test',
@@ -51,72 +51,62 @@ useNavigation(onClose, { isVisible: !childOpen });
   };
 
   const getSubscriptionLabel = () => {
-    if (loading) return 'Loading...';
-    
+    if (loading) return t('common.loading');
+
     if (!subscription || !subscription.isPremium || !subscription.subscription) {
-      return 'Free';
+      return t('profile.plan.free');
     }
-    
+
     const sub = subscription.subscription;
-    
     if (!sub.isActive) {
-      return 'Free';
+      return t('profile.plan.free');
     }
-    
+
     const planType = sub.planType || '';
-    
-    const planLabels = {
-      '6_months': 'For 6 Month',
-      '1_year': 'For 1 Year',
-      'lifetime': 'Lifetime',
-      'trial_7_days': `Trial (${sub.daysLeft || 0} days)`
-    };
-    
-    return planLabels[planType] || 'Premium';
-  };
 
-  const isSubscriptionActive = () => {
-    return subscription?.isPremium && subscription?.subscription?.isActive;
-  };
-
-  const menuItems = [
-    { 
-      id: 'subscription', 
-      label: 'Subscription', 
-      icon: '⭐',
-      showBadge: true
-    },
-    { 
-      id: 'purchase_history', 
-      label: 'Purchase History',
-      icon: '📋'
+    // используем t с интерполяцией
+    switch (planType) {
+      case '6_months':
+        return t('profile.plan.sixMonths'); // "For 6 Months"
+      case '1_year':
+        return t('profile.plan.oneYear');   // "For 1 Year"
+      case 'lifetime':
+        return t('profile.plan.lifetime');  // "Lifetime"
+      case 'trial_7_days':
+        return t('profile.plan.trial', { days: sub.daysLeft || 0 }); // "Trial ({{days}} days)"
+      default:
+        return t('profile.plan.premium');   // "Premium"
     }
+  };
+
+  const isSubscriptionActive = () =>
+    subscription?.isPremium && subscription?.subscription?.isActive;
+
+  // только id/иконки, лейблы возьмём через t при рендере
+  const menuItems = [
+    { id: 'subscription', icon: '⭐', showBadge: true },
+    { id: 'purchase_history', icon: '📋' }
   ];
 
   const specialItems = [
-    { 
-      id: 'special_habits', 
-      label: 'Special Habits',
-      icon: '✨',
-      highlight: true
-    }
+    { id: 'special_habits', icon: '✨', highlight: true }
   ];
 
   const settingsItems = [
-    { id: 'settings', label: 'Settings', icon: '⚙️' },
-    { id: 'support', label: 'Support', icon: '🎯' }
+    { id: 'settings', icon: '⚙️' },
+    { id: 'support', icon: '🎯' }
   ];
 
   const legalItems = [
-    { id: 'terms', label: 'Term of Use' },
-    { id: 'privacy', label: 'Privacy Policy' },
-    { id: 'payment', label: 'Payment Policy' }
+    { id: 'terms' },
+    { id: 'privacy' },
+    { id: 'payment' }
   ];
 
   const handleMenuClick = (itemId) => {
     console.log('Menu item clicked:', itemId);
-    
-    switch(itemId) {
+
+    switch (itemId) {
       case 'subscription':
         setShowSubscriptionPage(true);
         break;
@@ -127,46 +117,36 @@ useNavigation(onClose, { isVisible: !childOpen });
         setShowSettings(true);
         break;
       case 'support':
-        if (tg) {
-          tg.openLink('https://t.me/your_support_bot');
-        }
+        tg?.openLink?.('https://t.me/your_support_bot');
         break;
       case 'terms':
-        if (tg) {
-          tg.openLink('https://yoursite.com/terms');
-        }
+        tg?.openLink?.('https://yoursite.com/terms');
         break;
       case 'privacy':
-        if (tg) {
-          tg.openLink('https://yoursite.com/privacy');
-        }
+        tg?.openLink?.('https://yoursite.com/privacy');
         break;
       case 'payment':
-        if (tg) {
-          tg.openLink('https://yoursite.com/payment-policy');
-        }
+        tg?.openLink?.('https://yoursite.com/payment-policy');
         break;
       default:
         break;
     }
   };
 
-  // Если открыта история покупок
   if (showPurchaseHistory) {
     return (
-      <PurchaseHistory 
+      <PurchaseHistory
         onClose={() => {
           setShowPurchaseHistory(false);
           loadSubscriptionStatus();
-        }} 
+        }}
       />
     );
   }
 
-  // Если открыта страница подписки
   if (showSubscriptionPage) {
     return (
-      <Subscription 
+      <Subscription
         onClose={() => {
           setShowSubscriptionPage(false);
           loadSubscriptionStatus();
@@ -175,10 +155,9 @@ useNavigation(onClose, { isVisible: !childOpen });
     );
   }
 
-  // Если открыты настройки
   if (showSettings) {
     return (
-      <Settings 
+      <Settings
         onClose={() => {
           setShowSettings(false);
         }}
@@ -210,44 +189,56 @@ useNavigation(onClose, { isVisible: !childOpen });
         </div>
 
         <div className="profile__section profile__section--highlighted">
-          <button 
+          <button
             className={`profile__item profile__item--subscription ${isSubscriptionActive() ? 'profile__item--active' : ''}`}
             onClick={() => handleMenuClick('subscription')}
           >
             <div className="profile__item-left">
               <span className="profile__item-icon">⭐</span>
-              <span className="profile__item-label">Subscription</span>
+              <span className="profile__item-label">
+                {t('profile.menu.subscription')}
+              </span>
             </div>
             <div className="profile__item-right">
-              <span className={`profile__subscription-badge ${isSubscriptionActive() ? 'profile__subscription-badge--active' : 'profile__subscription-badge--free'}`}>
+              <span
+                className={`profile__subscription-badge ${
+                  isSubscriptionActive()
+                    ? 'profile__subscription-badge--active'
+                    : 'profile__subscription-badge--free'
+                }`}
+              >
                 {getSubscriptionLabel()}
               </span>
               <span className="profile__item-arrow">›</span>
             </div>
           </button>
-          
-          <button 
+
+          <button
             className="profile__item"
             onClick={() => handleMenuClick('purchase_history')}
           >
             <div className="profile__item-left">
               <span className="profile__item-icon">📋</span>
-              <span className="profile__item-label">Purchase History</span>
+              <span className="profile__item-label">
+                {t('profile.menu.purchaseHistory')}
+              </span>
             </div>
             <span className="profile__item-arrow">›</span>
           </button>
         </div>
 
         <div className="profile__section profile__section--special">
-          {specialItems.map(item => (
-            <button 
-              key={item.id} 
+          {specialItems.map((item) => (
+            <button
+              key={item.id}
               className="profile__item profile__item--special"
               onClick={() => handleMenuClick(item.id)}
             >
               <div className="profile__item-left">
                 <span className="profile__item-icon">{item.icon}</span>
-                <span className="profile__item-label">{item.label}</span>
+                <span className="profile__item-label">
+                  {t(`profile.menu.${item.id}`)}
+                </span>
               </div>
               <span className="profile__item-arrow">›</span>
             </button>
@@ -255,15 +246,17 @@ useNavigation(onClose, { isVisible: !childOpen });
         </div>
 
         <div className="profile__section">
-          {settingsItems.map(item => (
-            <button 
-              key={item.id} 
+          {settingsItems.map((item) => (
+            <button
+              key={item.id}
               className="profile__item"
               onClick={() => handleMenuClick(item.id)}
             >
               <div className="profile__item-left">
                 <span className="profile__item-icon">{item.icon}</span>
-                <span className="profile__item-label">{item.label}</span>
+                <span className="profile__item-label">
+                  {t(`profile.menu.${item.id}`)}
+                </span>
               </div>
               <span className="profile__item-arrow">›</span>
             </button>
@@ -271,20 +264,22 @@ useNavigation(onClose, { isVisible: !childOpen });
         </div>
 
         <div className="profile__section">
-          {legalItems.map(item => (
-            <button 
-              key={item.id} 
+          {legalItems.map((item) => (
+            <button
+              key={item.id}
               className="profile__item profile__item--legal"
               onClick={() => handleMenuClick(item.id)}
             >
-              <span className="profile__item-label">{item.label}</span>
+              <span className="profile__item-label">
+                {t(`profile.legal.${item.id}`)}
+              </span>
               <span className="profile__item-arrow">›</span>
             </button>
           ))}
         </div>
 
         <div className="profile__version">
-          <p>App Version</p>
+          <p>{t('profile.appVersion')}</p>
           <p>v1.20.6-00-kz.2L - v1.20.11B</p>
         </div>
       </div>
