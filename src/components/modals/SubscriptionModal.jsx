@@ -3,20 +3,21 @@ import './SubscriptionModal.css';
 import sub from "../../../public/images/sub.png";
 import { useNavigation } from '../../hooks/useNavigation';
 import { habitService } from '../../services/habits';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
+  const { t } = useTranslation();
+
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const [availablePlans, setAvailablePlans] = useState([]);
+  const [availablePlans, setAvailablePlans] = useState([]); // оставил на будущее
   const [currentSubscription, setCurrentSubscription] = useState(null);
   const [loading, setLoading] = useState(false);
   
-  // Используем существующий хук для навигации
   useNavigation(onClose, { isVisible: isOpen });
 
   useEffect(() => {
     if (isOpen) {
       loadSubscriptionInfo();
-      // Сбрасываем выбранный план при открытии модалки
       setSelectedPlan(null);
       setLoading(false);
     }
@@ -24,16 +25,9 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
 
   const loadSubscriptionInfo = async () => {
     try {
-      // Загружаем текущий статус подписки
       const status = await habitService.checkSubscriptionLimits();
       setCurrentSubscription(status.subscription);
-      
-      console.log('Subscription modal - current status:', status);
-      
-      // Если у пользователя уже есть активная подписка, можно показать это
-      if (status.subscription && status.subscription.isActive) {
-        console.log('User already has active subscription:', status.subscription);
-      }
+      // console.log('Subscription modal - current status:', status);
     } catch (error) {
       console.error('Failed to load subscription info:', error);
     }
@@ -42,47 +36,35 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
   if (!isOpen) return null;
 
   const handleContinue = async () => {
-    if (!selectedPlan || loading) {
-      console.log('Cannot continue: selectedPlan=', selectedPlan, 'loading=', loading);
-      return;
-    }
-    
-    console.log('Starting subscription activation for plan:', selectedPlan);
+    if (!selectedPlan || loading) return;
     setLoading(true);
-    
     try {
       await onContinue(selectedPlan);
-      // onContinue теперь сам закроет модалку после успешной активации
+      // onContinue сам закроет модалку при успехе
     } catch (error) {
       console.error('Failed to activate subscription:', error);
       setLoading(false);
-      // Показываем ошибку пользователю
       if (window.Telegram?.WebApp?.showAlert) {
-        window.Telegram.WebApp.showAlert('Failed to activate subscription. Please try again.');
+        window.Telegram.WebApp.showAlert(t('subscriptionModal.errors.activateFailed'));
       }
     }
   };
 
   const handlePlanSelect = (plan) => {
     if (loading) return;
-    
-    console.log('Plan selected:', plan);
     setSelectedPlan(plan);
   };
 
   const handleClose = () => {
     if (loading) return;
-    
-    // Сбрасываем состояние при закрытии
     setSelectedPlan(null);
     setLoading(false);
     onClose();
   };
 
-  // Показываем сообщение если у пользователя уже есть подписка
   const renderExistingSubscription = () => {
     if (!currentSubscription || !currentSubscription.isActive) return null;
-    
+    const daysLeft = currentSubscription.daysLeft;
     return (
       <div style={{
         background: '#E8F4FD',
@@ -94,8 +76,13 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
         color: '#007AFF',
         textAlign: 'center'
       }}>
-        You already have {currentSubscription.planName}
-        {currentSubscription.daysLeft && ` (${currentSubscription.daysLeft} days left)`}
+        {daysLeft != null
+          ? t('subscriptionModal.alreadyHaveWithDays', {
+              plan: currentSubscription.planName,
+              days: daysLeft
+            })
+          : t('subscriptionModal.alreadyHave', { plan: currentSubscription.planName })
+        }
       </div>
     );
   };
@@ -105,12 +92,12 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
       <div className="subscription-modal" onClick={(e) => e.stopPropagation()}>
         <div className="subscription-modal__content">
           <div className="subscription-modal__illustration">
-            <img src={sub} alt="PRO Features" />
+            <img src={sub} alt={t('subscriptionModal.illustrationAlt')} />
           </div>
 
           <div className="subscription-modal__info">
-            <h1 className="subscription-modal__main-title">Start Like a PRO</h1>
-            <p className="subscription-modal__subtitle">Unlock All Features</p>
+            <h1 className="subscription-modal__main-title">{t('subscriptionModal.title')}</h1>
+            <p className="subscription-modal__subtitle">{t('subscriptionModal.subtitle')}</p>
 
             <div className="subscription-modal__features">
               <div className="subscription-modal__feature">
@@ -120,7 +107,7 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
                     <path d="M8 12l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
-                <span className="subscription-modal__feature-text">Unlimited Habits</span>
+                <span className="subscription-modal__feature-text">{t('subscriptionModal.features.unlimited')}</span>
               </div>
 
               <div className="subscription-modal__feature">
@@ -130,7 +117,7 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
                     <path d="M8 12l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
-                <span className="subscription-modal__feature-text">Advanced Statistics</span>
+                <span className="subscription-modal__feature-text">{t('subscriptionModal.features.stats')}</span>
               </div>
 
               <div className="subscription-modal__feature">
@@ -140,13 +127,14 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
                     <path d="M8 12l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
-                <span className="subscription-modal__feature-text">Priority Support</span>
+                <span className="subscription-modal__feature-text">{t('subscriptionModal.features.support')}</span>
               </div>
             </div>
 
             {renderExistingSubscription()}
 
             <div className="subscription-modal__plans">
+              {/* 6 months */}
               <div 
                 className={`subscription-modal__plan ${selectedPlan === '6_months' ? 'subscription-modal__plan--selected' : ''}`}
                 onClick={() => handlePlanSelect('6_months')}
@@ -162,16 +150,17 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
                   )}
                 </div>
                 <div className="subscription-modal__plan-details">
-                  <div className="subscription-modal__plan-name">For 6 Months</div>
+                  <div className="subscription-modal__plan-name">{t('subscriptionModal.plans.sixMonths.name')}</div>
                   <div className="subscription-modal__plan-total">
-                    600 <span className="subscription-modal__star">⭐</span> total
+                    {t('subscriptionModal.plans.sixMonths.total', { stars: 600 })}
                   </div>
                 </div>
                 <div className="subscription-modal__plan-price">
-                  100 <span className="subscription-modal__star">⭐</span>/month
+                  {t('subscriptionModal.plans.sixMonths.perMonth', { stars: 100 })}
                 </div>
               </div>
 
+              {/* 1 year */}
               <div 
                 className={`subscription-modal__plan ${selectedPlan === '1_year' ? 'subscription-modal__plan--selected' : ''}`}
                 onClick={() => handlePlanSelect('1_year')}
@@ -187,9 +176,9 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
                   )}
                 </div>
                 <div className="subscription-modal__plan-details">
-                  <div className="subscription-modal__plan-name">Per Year</div>
+                  <div className="subscription-modal__plan-name">{t('subscriptionModal.plans.oneYear.name')}</div>
                   <div className="subscription-modal__plan-total">
-                    350 <span className="subscription-modal__star">⭐</span> total
+                    {t('subscriptionModal.plans.oneYear.total', { stars: 350 })}
                     <span style={{ 
                       marginLeft: '8px', 
                       padding: '2px 6px', 
@@ -199,19 +188,19 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
                       color: 'white',
                       fontWeight: 'bold'
                     }}>
-                      SAVE 42%
+                      {t('subscriptionModal.plans.oneYear.save', { percent: 42 })}
                     </span>
                   </div>
                 </div>
                 <div className="subscription-modal__plan-price">
-                  29 <span className="subscription-modal__star">⭐</span>/month
+                  {t('subscriptionModal.plans.oneYear.perMonth', { stars: 29 })}
                 </div>
               </div>
             </div>
 
             <div className="subscription-modal__links">
-              <a href="#" className="subscription-modal__link">Privacy Policy</a>
-              <a href="#" className="subscription-modal__link">Terms of Use</a>
+              <a href="#" className="subscription-modal__link">{t('subscriptionModal.links.privacy')}</a>
+              <a href="#" className="subscription-modal__link">{t('subscriptionModal.links.terms')}</a>
             </div>
 
             <button 
@@ -219,17 +208,16 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
               onClick={handleContinue}
               disabled={!selectedPlan || loading}
             >
-              {loading ? 'Processing...' : 'Continue'}
+              {loading ? t('subscriptionModal.processing') : t('subscriptionModal.continue')}
             </button>
-            
-            {/* Временное уведомление о тестовом режиме */}
+
             <p style={{ 
               fontSize: '12px', 
               color: '#8E8E93', 
               textAlign: 'center', 
               marginTop: '12px' 
             }}>
-              ⚠️ Test mode: Payment simulation only
+              {t('subscriptionModal.testNote')}
             </p>
           </div>
         </div>

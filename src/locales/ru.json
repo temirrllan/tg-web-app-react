@@ -107,6 +107,44 @@
     "errors": {
       "updateFailed": "Не удалось обновить привычку"
     }
+  },
+
+  
+  "subscriptionModal": {
+    "illustrationAlt": "Преимущества PRO",
+    "title": "Начни как PRO",
+    "subtitle": "Открой все функции",
+    "features": {
+      "unlimited": "Неограниченные привычки",
+      "stats": "Расширенная статистика",
+      "support": "Приоритетная поддержка"
+    },
+    "alreadyHave": "У вас уже есть {{plan}}",
+    "alreadyHaveWithDays": "У вас уже есть {{plan}} (осталось {{days}} дн.)",
+    "plans": {
+      "sixMonths": {
+        "name": "На 6 месяцев",
+        "total": "Итого {{stars}} ⭐",
+        "perMonth": "{{stars}} ⭐/мес"
+      },
+      "oneYear": {
+        "name": "За год",
+        "total": "Итого {{stars}} ⭐",
+        "perMonth": "{{stars}} ⭐/мес",
+        "save": "ЭКОНОМИЯ {{percent}}%"
+      }
+    },
+    "links": {
+      "privacy": "Политика конфиденциальности",
+      "terms": "Пользовательское соглашение"
+    },
+    "processing": "Обработка...",
+    "continue": "Продолжить",
+    "testNote": "⚠️ Тестовый режим: только симуляция оплаты",
+    "errors": {
+      "activateFailed": "Не удалось активировать подписку. Попробуйте ещё раз."
+    }
   }
+
 
 }

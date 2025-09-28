@@ -111,7 +111,45 @@
     "errors": {
       "updateFailed": "Failed to update habit"
     }
+  },
+
+  
+  "subscriptionModal": {
+    "illustrationAlt": "PRO Features",
+    "title": "Start Like a PRO",
+    "subtitle": "Unlock All Features",
+    "features": {
+      "unlimited": "Unlimited Habits",
+      "stats": "Advanced Statistics",
+      "support": "Priority Support"
+    },
+    "alreadyHave": "You already have {{plan}}",
+    "alreadyHaveWithDays": "You already have {{plan}} ({{days}} days left)",
+    "plans": {
+      "sixMonths": {
+        "name": "For 6 Months",
+        "total": "{{stars}} ⭐ total",
+        "perMonth": "{{stars}} ⭐/month"
+      },
+      "oneYear": {
+        "name": "Per Year",
+        "total": "{{stars}} ⭐ total",
+        "perMonth": "{{stars}} ⭐/month",
+        "save": "SAVE {{percent}}%"
+      }
+    },
+    "links": {
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Use"
+    },
+    "processing": "Processing...",
+    "continue": "Continue",
+    "testNote": "⚠️ Test mode: Payment simulation only",
+    "errors": {
+      "activateFailed": "Failed to activate subscription. Please try again."
+    }
   }
+
 
 
 }

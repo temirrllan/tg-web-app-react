@@ -107,7 +107,45 @@
     "errors": {
       "updateFailed": "Әдетті жаңарту сәтсіз аяқталды"
     }
+  },
+
+  
+  "subscriptionModal": {
+    "illustrationAlt": "PRO мүмкіндіктері",
+    "title": "PRO сияқты бастаңыз",
+    "subtitle": "Барлық функцияларды ашыңыз",
+    "features": {
+      "unlimited": "Шексіз әдеттер",
+      "stats": "Кеңейтілген статистика",
+      "support": "Басым қолдау"
+    },
+    "alreadyHave": "Сізде қазірдің өзінде {{plan}} бар",
+    "alreadyHaveWithDays": "Сізде {{plan}} бар ({{days}} күн қалды)",
+    "plans": {
+      "sixMonths": {
+        "name": "6 айға",
+        "total": "Барлығы {{stars}} ⭐",
+        "perMonth": "Айына {{stars}} ⭐"
+      },
+      "oneYear": {
+        "name": "Жылына",
+        "total": "Барлығы {{stars}} ⭐",
+        "perMonth": "Айына {{stars}} ⭐",
+        "save": "{{percent}}% ҮНЕМДЕУ"
+      }
+    },
+    "links": {
+      "privacy": "Құпиялылық саясаты",
+      "terms": "Пайдалану шарттары"
+    },
+    "processing": "Өңделуде...",
+    "continue": "Жалғастыру",
+    "testNote": "⚠️ Тест режимі: төлем тек модельденеді",
+    "errors": {
+      "activateFailed": "Жазылымды қосу сәтсіз аяқталды. Қайта көріңіз."
+    }
   }
+
 
 
 }
