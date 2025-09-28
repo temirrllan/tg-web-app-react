@@ -232,9 +232,9 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
     
     switch(nextStatus) {
       case HABIT_STATUSES.FAILED:
-        return { icon: '✗', text: 'Undone', className: 'undone-button' };
+        return { icon: '✗', text: t('button.unDone'), className: 'undone-button' };
       case HABIT_STATUSES.SKIPPED:
-        return { icon: '⟳', text: 'Skip', className: 'skip-button' };
+        return { icon: '⟳', text: t('button.skip'), className: 'skip-button' };
       default:
         return null;
     }
@@ -346,8 +346,8 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
     {/* Отображаем количество участников */}
       {hasMembers && (
         <div className="habit-members-badge">
-          +{habit.members_count} Members
-        </div>
+  +{habit.members_count} {t('member.members')}
+</div>
       )}
       </div>
   );

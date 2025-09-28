@@ -20,6 +20,21 @@
   },
   "button": {
     "done": "Done",
-    "skip": "Skip"
+    "skip": "Skip",
+    "unDone": "Undone"
+  },
+  "member": {
+    "members": "Members"
+  },
+  "swipeHint": {
+    "quickActions": "Quick Actions",
+    "swipeLeft": "Swipe left to mark as done",
+    "swipeRight": "Swipe right to mark as undone",
+    "tapToSkip": "Tap to skip for today"
+  },
+  "swipe": {
+    "left": "<strong>Swipe left</strong> to mark habit as completed",
+    "right": "<strong>Swipe right</strong> to undo or mark as failed"
+
   }
 }

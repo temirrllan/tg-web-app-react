@@ -7,13 +7,14 @@ import Subscription from './Subscription';
 import Settings from './Settings';
 
 const Profile = ({ onClose }) => {
-  useNavigation(onClose);
+  
   const [subscription, setSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showPurchaseHistory, setShowPurchaseHistory] = useState(false);
   const [showSubscriptionPage, setShowSubscriptionPage] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  
+    const childOpen = showPurchaseHistory || showSubscriptionPage || showSettings;
+useNavigation(onClose, { isVisible: !childOpen });
   useEffect(() => {
     setSubscription(null);
     setLoading(true);

@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import './SwipeHint.css';
+import { useTranslation } from "../hooks/useTranslation";
 
 const SwipeHint = ({ show, onClose }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isHiding, setIsHiding] = useState(false);
+  const { t } = useTranslation(); // Добавьте эту строку
 
   useEffect(() => {
     if (!show) return;
@@ -40,7 +42,7 @@ const SwipeHint = ({ show, onClose }) => {
       onClick={handleOverlayClick}
     >
       <div className="swipe-hint" onClick={(e) => e.stopPropagation()}>
-        <h3 className="swipe-hint__title">Quick Actions</h3>
+        <h3 className="swipe-hint__title">{t("swipeHint.quickActions")}</h3>
         
         <div className="swipe-hint__content">
           <div className="swipe-hint__item">
@@ -48,17 +50,19 @@ const SwipeHint = ({ show, onClose }) => {
               ←
             </div>
             <div className="swipe-hint__text">
-              <strong>Swipe left</strong> to mark habit as completed
-            </div>
+  <Trans i18nKey="swipe.left">
+    <strong>Swipe left</strong> to mark habit as completed
+  </Trans>
+</div>
           </div>
           
           <div className="swipe-hint__item">
             <div className="swipe-hint__arrow swipe-hint__arrow--right">
               →
             </div>
-            <div className="swipe-hint__text">
-              <strong>Swipe right</strong> to undo or mark as failed
-            </div>
+            <Trans i18nKey="swipe.right">
+    <strong>Swipe right</strong> to undo or mark as failed
+  </Trans>
           </div>
         </div>
         
