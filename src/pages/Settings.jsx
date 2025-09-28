@@ -52,16 +52,7 @@ const Settings = ({ onClose }) => {
   
   return (
     <div className="settings">
-      <div className="settings__header">
-        <button className="settings__back" onClick={onClose}>
-          {t('common.back')}
-        </button>
-        <div className="settings__title-wrapper">
-          <h2 className="settings__title">{t('settings.title')}</h2>
-          <span className="settings__subtitle">{t('settings.subtitle')}</span>
-        </div>
-        <button className="settings__menu" aria-label={t('settings.more')}>⋯</button>
-      </div>
+      
       
       <div className="settings__content">
         <div className="settings__section">
