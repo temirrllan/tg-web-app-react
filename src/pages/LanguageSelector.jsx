@@ -40,16 +40,7 @@ const LanguageSelector = ({ onClose }) => {
   
   return (
     <div className="language-selector">
-      <div className="language-selector__header">
-        <button className="language-selector__close" onClick={onClose}>
-          {t('common.back')}
-        </button>
-        <div className="language-selector__title-wrapper">
-          <h2 className="language-selector__title">{t('settings.language')}</h2>
-          <span className="language-selector__subtitle">mini-app</span>
-        </div>
-        <button className="language-selector__menu">⋯</button>
-      </div>
+      
       
       <div className="language-selector__content">
         <h3 className="language-selector__heading">{t('settings.language')}</h3>
