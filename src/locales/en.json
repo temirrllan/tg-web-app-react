@@ -104,8 +104,14 @@
       "createFailed": "Failed to create habit",
       "unknown": "Unknown error"
     }
+  },
+  "editHabit": {
+    "saving": "Saving...",
+    "saveChanges": "Save Changes",
+    "errors": {
+      "updateFailed": "Failed to update habit"
+    }
   }
-
 
 
 }
