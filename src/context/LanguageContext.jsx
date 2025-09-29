@@ -27,17 +27,29 @@ export const LanguageProvider = ({ children }) => {
   const initializeLanguage = useCallback((userLanguage) => {
     console.log('🌍 Initializing language from user data:', userLanguage);
     
-    if (userLanguage && ['en', 'ru', 'kk'].includes(userLanguage)) {
-      setLanguageState(userLanguage);
-      // НЕ сохраняем в localStorage - используем только данные из БД
-      setIsInitialized(true);
-      console.log('✅ Language initialized to:', userLanguage);
-    } else {
-      // Если язык некорректный, ставим английский
-      console.log('⚠️ Invalid language received, defaulting to English');
-      setLanguageState('en');
-      setIsInitialized(true);
+    // Проверяем и нормализуем язык
+    let normalizedLanguage = 'en'; // По умолчанию английский
+    
+    if (userLanguage) {
+      const langLower = userLanguage.toLowerCase();
+      
+      if (langLower === 'kk' || langLower === 'kz') {
+        // Казахский язык всегда сохраняем как 'kk'
+        normalizedLanguage = 'kk';
+      } else if (langLower === 'ru') {
+        normalizedLanguage = 'ru';
+      } else if (langLower === 'en') {
+        normalizedLanguage = 'en';
+      } else {
+        // Любой неизвестный язык = английский
+        normalizedLanguage = 'en';
+        console.log(`⚠️ Unknown language "${userLanguage}", using English`);
+      }
     }
+    
+    setLanguageState(normalizedLanguage);
+    setIsInitialized(true);
+    console.log('✅ Language initialized to:', normalizedLanguage);
   }, []);
 
   // При монтировании компонента НЕ загружаем язык автоматически
@@ -48,7 +60,7 @@ export const LanguageProvider = ({ children }) => {
     if (!isInitialized) {
       setLanguageState('en'); // Временно ставим английский
     }
-  }, []);
+  }, [isInitialized]);
 
   // Функция для получения перевода
   const t = useCallback((key, params = {}) => {
@@ -96,7 +108,6 @@ export const LanguageProvider = ({ children }) => {
       // Сначала меняем язык локально для мгновенного отклика
       if (['en', 'ru', 'kk'].includes(newLanguage)) {
         setLanguageState(newLanguage);
-        // НЕ сохраняем в localStorage
         setIsInitialized(true);
         
         // Вибрация при смене языка
