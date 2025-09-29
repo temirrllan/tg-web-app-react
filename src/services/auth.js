@@ -1,8 +1,8 @@
-// Обновите src/services/auth.js
 import api, { setAuthUser } from './api';
 
 export const authenticateUser = async (initData, user) => {
   try {
+    console.log('🔐 Authenticating user...');
     const isProduction = window.location.hostname !== 'localhost';
     
     // В production проверяем наличие данных от Telegram
@@ -18,30 +18,37 @@ export const authenticateUser = async (initData, user) => {
         first_name: 'Test',
         last_name: 'User',
         username: 'testuser',
-        language_code: 'en'
+        language_code: 'en' // По умолчанию английский для dev
       };
     }
 
+    // ВАЖНО: Передаем language_code на сервер
+    console.log('📤 Sending user data with language_code:', user.language_code);
+
     const response = await api.post('/auth/telegram', {
       initData,
-      user
+      user: {
+        ...user,
+        language_code: user.language_code || 'en' // Гарантируем наличие language_code
+      }
     });
 
     if (response.data.success && response.data.user) {
       setAuthUser(response.data.user);
       
-      // ВАЖНО: Сохраняем язык пользователя
+      // Сохраняем язык пользователя в localStorage для быстрого доступа
       const userLanguage = response.data.user.language;
       if (userLanguage) {
-        console.log('User language from auth:', userLanguage);
-        // Сохраняем язык в localStorage для быстрого доступа
+        console.log('💾 Saving user language to localStorage:', userLanguage);
         localStorage.setItem('userLanguage', userLanguage);
       }
+      
+      console.log('✅ Authentication successful. User language:', userLanguage);
     }
 
     return response.data;
   } catch (error) {
-    console.error('Auth error:', error);
+    console.error('❌ Auth error:', error);
     
     // Более понятные сообщения об ошибках
     if (error.response?.status === 403) {

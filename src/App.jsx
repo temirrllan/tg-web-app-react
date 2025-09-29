@@ -35,6 +35,7 @@ function AppContent() {
   useEffect(() => {
     const initAuth = async () => {
       try {
+        console.log('🚀 Starting authentication...');
         const isProduction = window.location.hostname !== 'localhost';
         
         if (isProduction && !webApp?.initData) {
@@ -43,18 +44,36 @@ function AppContent() {
           return;
         }
 
-        const response = await authenticateUser(webApp?.initData, tgUser);
+        // Отправляем язык Telegram на сервер
+        const userDataForAuth = tgUser || {
+          id: 123456789,
+          first_name: 'Test',
+          last_name: 'User',
+          username: 'testuser',
+          language_code: 'en' // По умолчанию для dev режима
+        };
+        
+        console.log('📤 Sending auth request with language_code:', userDataForAuth.language_code);
+        
+        const response = await authenticateUser(webApp?.initData, userDataForAuth);
         
         if (response.success) {
           setUser(response.user);
           
-          // ВАЖНО: Инициализируем язык из данных пользователя
-          if (response.user.language) {
-            console.log('Initializing language from user data:', response.user.language);
-            initializeLanguage(response.user.language);
+          // КРИТИЧНО: Инициализируем язык из БД
+          const userLanguage = response.user.language;
+          console.log('📥 Received user language from server:', userLanguage);
+          
+          if (userLanguage) {
+            // Инициализируем язык интерфейса из БД
+            initializeLanguage(userLanguage);
+          } else {
+            // Fallback на английский
+            console.warn('⚠️ No language in user data, using English');
+            initializeLanguage('en');
           }
           
-          // Проверяем, есть ли параметр join в URL
+          // Обработка параметров URL (join и т.д.)
           const urlParams = new URLSearchParams(window.location.search);
           const action = urlParams.get('action');
           const code = urlParams.get('code');
@@ -66,7 +85,6 @@ function AppContent() {
                 if (tg?.showAlert) {
                   tg.showAlert('Successfully joined the habit! 🎉');
                 }
-                // Очищаем параметры из URL
                 window.history.replaceState({}, document.title, window.location.pathname);
               }
             } catch (err) {
@@ -79,12 +97,13 @@ function AppContent() {
           
           if (response.isNewUser) {
             setShowOnboarding(true);
+            console.log('👋 New user - showing onboarding');
           }
         } else {
           setError('Ошибка аутентификации');
         }
       } catch (err) {
-        console.error('Auth error:', err);
+        console.error('❌ Auth error:', err);
         setError(err.message || 'Ошибка подключения к серверу');
       } finally {
         setLoading(false);
@@ -97,10 +116,11 @@ function AppContent() {
       const isProduction = window.location.hostname !== 'localhost';
       if (isProduction) {
         setError('Пожалуйста, откройте приложение через Telegram бота');
+        setLoading(false);
       } else {
+        // В dev режиме все равно пытаемся авторизоваться
         initAuth();
       }
-      setLoading(false);
     }
   }, [webApp, tgUser, isReady, isLoading, tg, initializeLanguage]);
 
@@ -121,7 +141,19 @@ function AppContent() {
         <h2>Ошибка</h2>
         <p>{error}</p>
         {window.location.hostname === 'localhost' && (
-          <button onClick={() => window.location.reload()}>
+          <button 
+            onClick={() => window.location.reload()}
+            style={{
+              marginTop: '20px',
+              padding: '10px 20px',
+              fontSize: '16px',
+              borderRadius: '8px',
+              border: 'none',
+              background: '#0088cc',
+              color: 'white',
+              cursor: 'pointer'
+            }}
+          >
             Обновить
           </button>
         )}

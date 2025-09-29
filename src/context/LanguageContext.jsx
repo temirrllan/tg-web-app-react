@@ -15,72 +15,62 @@ export const LanguageContext = createContext({
   setLanguage: () => {},
   t: () => '',
   availableLanguages: ['en', 'ru', 'kk'],
-  initializeLanguage: () => {}
+  initializeLanguage: () => {},
+  isLoading: true
 });
 
 export const LanguageProvider = ({ children }) => {
   const [language, setLanguageState] = useState('en');
   const [isChanging, setIsChanging] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Функция инициализации языка из данных пользователя
+  // Функция инициализации языка из данных пользователя (вызывается из App.jsx)
   const initializeLanguage = useCallback((userLanguage) => {
-    console.log('Initializing language from user data:', userLanguage);
+    console.log('🌍 Initializing language from user data:', userLanguage);
     
     if (userLanguage && ['en', 'ru', 'kk'].includes(userLanguage)) {
       setLanguageState(userLanguage);
-      localStorage.setItem('appLanguage', userLanguage);
+      localStorage.setItem('userLanguage', userLanguage);
       setIsInitialized(true);
-      console.log('Language initialized to:', userLanguage);
+      setIsLoading(false);
+      console.log('✅ Language initialized to:', userLanguage);
+    } else {
+      // Если язык не поддерживается, используем английский
+      console.log('⚠️ Unsupported language, defaulting to English');
+      setLanguageState('en');
+      localStorage.setItem('userLanguage', 'en');
+      setIsInitialized(true);
+      setIsLoading(false);
     }
   }, []);
 
-  // Загружаем язык при монтировании компонента
+  // При монтировании пытаемся загрузить сохраненный язык (для быстрого старта)
   useEffect(() => {
-    if (isInitialized) return;
+    // Если язык уже инициализирован из БД, не перезаписываем
+    if (isInitialized) {
+      setIsLoading(false);
+      return;
+    }
     
-    const loadInitialLanguage = () => {
-      // Сначала проверяем localStorage
-      const savedLanguage = localStorage.getItem('appLanguage');
-      
-      if (savedLanguage && ['en', 'ru', 'kk'].includes(savedLanguage)) {
-        console.log('Loading language from localStorage:', savedLanguage);
-        setLanguageState(savedLanguage);
-        return;
-      }
-      
-      // Если нет сохраненного языка, пробуем определить по Telegram
-      const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-      const tgLanguage = tgUser?.language_code;
-      
-      if (tgLanguage) {
-        console.log('Telegram language code:', tgLanguage);
-        if (tgLanguage === 'ru') {
-          setLanguageState('ru');
-          localStorage.setItem('appLanguage', 'ru');
-        } else if (tgLanguage === 'kk' || tgLanguage === 'kz') {
-          setLanguageState('kk');
-          localStorage.setItem('appLanguage', 'kk');
-        } else {
-          setLanguageState('en');
-          localStorage.setItem('appLanguage', 'en');
-        }
-      } else {
-        // По умолчанию английский
-        console.log('No language preference found, defaulting to English');
-        setLanguageState('en');
-        localStorage.setItem('appLanguage', 'en');
-      }
-    };
+    // Пробуем загрузить из localStorage для быстрого старта
+    const savedLanguage = localStorage.getItem('userLanguage');
+    if (savedLanguage && ['en', 'ru', 'kk'].includes(savedLanguage)) {
+      console.log('📦 Loading cached language from localStorage:', savedLanguage);
+      setLanguageState(savedLanguage);
+      // НЕ устанавливаем isInitialized, чтобы язык из БД мог перезаписать
+    }
     
-    // Небольшая задержка для загрузки данных пользователя
-    const timeoutId = setTimeout(() => {
+    // Устанавливаем таймаут, если инициализация не произошла
+    const timeout = setTimeout(() => {
       if (!isInitialized) {
-        loadInitialLanguage();
+        console.log('⏱️ Language initialization timeout, using default');
+        setLanguageState('en');
+        setIsLoading(false);
       }
-    }, 100);
+    }, 2000);
     
-    return () => clearTimeout(timeoutId);
+    return () => clearTimeout(timeout);
   }, [isInitialized]);
 
   // Функция для получения перевода
@@ -122,15 +112,16 @@ export const LanguageProvider = ({ children }) => {
   const setLanguage = useCallback(async (newLanguage) => {
     if (isChanging || newLanguage === language) return;
     
-    console.log('Changing language from', language, 'to', newLanguage);
+    console.log('🔄 Changing language from', language, 'to', newLanguage);
     setIsChanging(true);
     
     try {
       // Сначала меняем язык локально для мгновенного отклика
       if (['en', 'ru', 'kk'].includes(newLanguage)) {
         setLanguageState(newLanguage);
-        localStorage.setItem('appLanguage', newLanguage);
+        localStorage.setItem('userLanguage', newLanguage);
         setIsInitialized(true);
+        setIsLoading(false);
         
         // Вибрация при смене языка
         if (window.Telegram?.WebApp?.HapticFeedback) {
@@ -139,10 +130,11 @@ export const LanguageProvider = ({ children }) => {
         
         // Затем обновляем в БД
         try {
-          await habitService.updateUserLanguage(newLanguage);
-          console.log(`✅ Language updated to ${newLanguage} in database`);
+          const result = await habitService.updateUserLanguage(newLanguage);
+          console.log(`✅ Language updated in database:`, result);
         } catch (error) {
-          console.error('Failed to update language in database:', error);
+          console.error('❌ Failed to update language in database:', error);
+          // Не откатываем изменения, так как локально язык уже изменен
         }
       }
     } finally {
@@ -158,7 +150,8 @@ export const LanguageProvider = ({ children }) => {
     t,
     availableLanguages: ['en', 'ru', 'kk'],
     isChanging,
-    initializeLanguage
+    initializeLanguage,
+    isLoading
   };
 
   return (
