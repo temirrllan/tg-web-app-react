@@ -19,8 +19,11 @@ function AppContent() {
   const [showProfile, setShowProfile] = useState(false);
   
   // Получаем функцию инициализации языка из контекста
-  const { initializeLanguage } = useContext(LanguageContext);
+  const { initializeLanguage, language } = useContext(LanguageContext);
 
+  console.log('🔍 APP DEBUG: Current language in context:', language);
+  console.log('🔍 APP DEBUG: Telegram user:', tgUser);
+  console.log('🔍 APP DEBUG: Telegram language_code:', tgUser?.language_code);
   useEffect(() => {
     if (tg) {
       tg.expand();
@@ -35,6 +38,12 @@ function AppContent() {
   useEffect(() => {
     const initAuth = async () => {
       try {
+        console.log('🔍 APP DEBUG: Starting authentication');
+        console.log('🔍 APP DEBUG: Telegram WebApp data:', {
+          hasInitData: !!webApp?.initData,
+          user: tgUser,
+          language_code: tgUser?.language_code
+        });
         const isProduction = window.location.hostname !== 'localhost';
         
         if (isProduction && !webApp?.initData) {
@@ -50,8 +59,11 @@ function AppContent() {
           
           // ВАЖНО: Инициализируем язык из данных пользователя
           if (response.user.language) {
-            console.log('Initializing language from user data:', response.user.language);
+            console.log('🔍 APP DEBUG: Initializing language from user data:', response.user.language);
             initializeLanguage(response.user.language);
+          }else {
+            console.log('⚠️ APP DEBUG: No language in user data, using default');
+            initializeLanguage('en'); // Явно ставим английский если нет языка
           }
           
           // Проверяем, есть ли параметр join в URL
