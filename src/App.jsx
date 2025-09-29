@@ -35,7 +35,15 @@ function AppContent() {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        console.log('🚀 Starting authentication...');
+        console.log('🚀 App.jsx: Starting authentication...');
+        console.log('📱 Telegram WebApp data:', webApp);
+        console.log('👤 Telegram user:', tgUser);
+        
+        // КРИТИЧНО: Проверяем language_code
+        if (tgUser) {
+          console.log('🌐 User language_code from Telegram:', tgUser.language_code);
+        }
+        
         const isProduction = window.location.hostname !== 'localhost';
         
         if (isProduction && !webApp?.initData) {
@@ -44,16 +52,36 @@ function AppContent() {
           return;
         }
 
-        // Отправляем язык Telegram на сервер
-        const userDataForAuth = tgUser || {
-          id: 123456789,
-          first_name: 'Test',
-          last_name: 'User',
-          username: 'testuser',
-          language_code: 'en' // По умолчанию для dev режима
-        };
+        // ВАЖНО: Передаем полные данные пользователя включая language_code
+        let userDataForAuth;
         
-        console.log('📤 Sending auth request with language_code:', userDataForAuth.language_code);
+        if (tgUser && tgUser.id) {
+          // Используем реальные данные из Telegram
+          userDataForAuth = {
+            id: tgUser.id,
+            first_name: tgUser.first_name || '',
+            last_name: tgUser.last_name || '',
+            username: tgUser.username || null,
+            language_code: tgUser.language_code || 'en', // ВАЖНО: передаем язык
+            is_premium: tgUser.is_premium || false,
+            photo_url: tgUser.photo_url || null
+          };
+          console.log('✅ Using real Telegram data with language_code:', userDataForAuth.language_code);
+        } else {
+          // Fallback для development
+          userDataForAuth = {
+            id: 123456789,
+            first_name: 'Test',
+            last_name: 'User',
+            username: 'testuser',
+            language_code: 'en', // По умолчанию для dev режима
+            is_premium: false,
+            photo_url: null
+          };
+          console.log('⚠️ Using mock data for development');
+        }
+        
+        console.log('📤 Sending auth request with user data:', userDataForAuth);
         
         const response = await authenticateUser(webApp?.initData, userDataForAuth);
         
@@ -66,10 +94,11 @@ function AppContent() {
           
           if (userLanguage) {
             // Инициализируем язык интерфейса из БД
+            console.log(`🌍 Initializing UI language to: ${userLanguage}`);
             initializeLanguage(userLanguage);
           } else {
             // Fallback на английский
-            console.warn('⚠️ No language in user data, using English');
+            console.error('⚠️ No language in user data, using English as default');
             initializeLanguage('en');
           }
           
@@ -111,16 +140,21 @@ function AppContent() {
     };
 
     if (!isLoading && isReady) {
+      console.log('✅ Telegram WebApp is ready, starting auth...');
       initAuth();
     } else if (!isLoading && !isReady) {
       const isProduction = window.location.hostname !== 'localhost';
       if (isProduction) {
+        console.log('❌ Telegram WebApp not ready in production');
         setError('Пожалуйста, откройте приложение через Telegram бота');
         setLoading(false);
       } else {
         // В dev режиме все равно пытаемся авторизоваться
+        console.log('⚠️ Development mode - proceeding without Telegram WebApp');
         initAuth();
       }
+    } else {
+      console.log('⏳ Waiting for Telegram WebApp to load...');
     }
   }, [webApp, tgUser, isReady, isLoading, tg, initializeLanguage]);
 

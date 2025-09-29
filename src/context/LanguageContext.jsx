@@ -20,6 +20,7 @@ export const LanguageContext = createContext({
 });
 
 export const LanguageProvider = ({ children }) => {
+  // ВАЖНО: Начальный язык ВСЕГДА английский, пока не загрузится из БД
   const [language, setLanguageState] = useState('en');
   const [isChanging, setIsChanging] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -27,17 +28,17 @@ export const LanguageProvider = ({ children }) => {
 
   // Функция инициализации языка из данных пользователя (вызывается из App.jsx)
   const initializeLanguage = useCallback((userLanguage) => {
-    console.log('🌍 Initializing language from user data:', userLanguage);
+    console.log('🌍 LanguageContext: Initializing language from user data:', userLanguage);
     
     if (userLanguage && ['en', 'ru', 'kk'].includes(userLanguage)) {
+      console.log(`✅ Setting language to: ${userLanguage}`);
       setLanguageState(userLanguage);
       localStorage.setItem('userLanguage', userLanguage);
       setIsInitialized(true);
       setIsLoading(false);
-      console.log('✅ Language initialized to:', userLanguage);
     } else {
       // Если язык не поддерживается, используем английский
-      console.log('⚠️ Unsupported language, defaulting to English');
+      console.log(`⚠️ Unsupported language "${userLanguage}", defaulting to English`);
       setLanguageState('en');
       localStorage.setItem('userLanguage', 'en');
       setIsInitialized(true);
@@ -45,30 +46,36 @@ export const LanguageProvider = ({ children }) => {
     }
   }, []);
 
-  // При монтировании пытаемся загрузить сохраненный язык (для быстрого старта)
+  // При монтировании НЕ загружаем язык автоматически
   useEffect(() => {
-    // Если язык уже инициализирован из БД, не перезаписываем
+    // Если язык уже инициализирован из БД, не делаем ничего
     if (isInitialized) {
       setIsLoading(false);
       return;
     }
     
-    // Пробуем загрузить из localStorage для быстрого старта
-    const savedLanguage = localStorage.getItem('userLanguage');
-    if (savedLanguage && ['en', 'ru', 'kk'].includes(savedLanguage)) {
-      console.log('📦 Loading cached language from localStorage:', savedLanguage);
-      setLanguageState(savedLanguage);
-      // НЕ устанавливаем isInitialized, чтобы язык из БД мог перезаписать
-    }
+    console.log('🔍 LanguageContext mounted, waiting for initialization from auth...');
     
-    // Устанавливаем таймаут, если инициализация не произошла
+    // НЕ загружаем из localStorage автоматически при первом входе
+    // Ждем данные от сервера
+    
+    // Устанавливаем таймаут на случай если инициализация не произойдет
     const timeout = setTimeout(() => {
       if (!isInitialized) {
-        console.log('⏱️ Language initialization timeout, using default');
-        setLanguageState('en');
+        console.log('⏱️ Language initialization timeout, checking localStorage...');
+        
+        // Только если прошло много времени, пробуем localStorage
+        const savedLanguage = localStorage.getItem('userLanguage');
+        if (savedLanguage && ['en', 'ru', 'kk'].includes(savedLanguage)) {
+          console.log(`📦 Loading language from localStorage: ${savedLanguage}`);
+          setLanguageState(savedLanguage);
+        } else {
+          console.log('📦 No saved language, keeping English as default');
+          setLanguageState('en');
+        }
         setIsLoading(false);
       }
-    }, 2000);
+    }, 3000); // Увеличиваем таймаут до 3 секунд
     
     return () => clearTimeout(timeout);
   }, [isInitialized]);
@@ -88,7 +95,7 @@ export const LanguageProvider = ({ children }) => {
           if (translation && typeof translation === 'object' && fallbackKey in translation) {
             translation = translation[fallbackKey];
           } else {
-            console.warn(`Translation not found for key: ${key}`);
+            // Не спамим консоль предупреждениями
             return key;
           }
         }
@@ -112,7 +119,7 @@ export const LanguageProvider = ({ children }) => {
   const setLanguage = useCallback(async (newLanguage) => {
     if (isChanging || newLanguage === language) return;
     
-    console.log('🔄 Changing language from', language, 'to', newLanguage);
+    console.log(`🔄 Changing language from ${language} to ${newLanguage}`);
     setIsChanging(true);
     
     try {
@@ -134,7 +141,6 @@ export const LanguageProvider = ({ children }) => {
           console.log(`✅ Language updated in database:`, result);
         } catch (error) {
           console.error('❌ Failed to update language in database:', error);
-          // Не откатываем изменения, так как локально язык уже изменен
         }
       }
     } finally {
