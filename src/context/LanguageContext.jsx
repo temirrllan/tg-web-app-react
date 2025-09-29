@@ -33,20 +33,21 @@ export const LanguageProvider = ({ children }) => {
     if (userLanguage && ['en', 'ru', 'kk'].includes(userLanguage)) {
       console.log(`✅ Setting language to: ${userLanguage}`);
       setLanguageState(userLanguage);
-      localStorage.setItem('userLanguage', userLanguage);
+      // localStorage.setItem('userLanguage', userLanguage);
       setIsInitialized(true);
       setIsLoading(false);
     } else {
       // Если язык не поддерживается, используем английский
       console.log(`⚠️ Unsupported language "${userLanguage}", defaulting to English`);
       setLanguageState('en');
-      localStorage.setItem('userLanguage', 'en');
+      // localStorage.setItem('userLanguage', 'en');
       setIsInitialized(true);
       setIsLoading(false);
     }
   }, []);
 
   // При монтировании НЕ загружаем язык автоматически
+ // При монтировании НЕ загружаем язык автоматически
   useEffect(() => {
     // Если язык уже инициализирован из БД, не делаем ничего
     if (isInitialized) {
@@ -55,27 +56,22 @@ export const LanguageProvider = ({ children }) => {
     }
     
     console.log('🔍 LanguageContext mounted, waiting for initialization from auth...');
+    console.log('📌 Current language state:', language);
     
-    // НЕ загружаем из localStorage автоматически при первом входе
-    // Ждем данные от сервера
+    // НЕ загружаем из localStorage при первом монтировании!
+    // Ждем инициализацию от авторизации
     
     // Устанавливаем таймаут на случай если инициализация не произойдет
     const timeout = setTimeout(() => {
       if (!isInitialized) {
-        console.log('⏱️ Language initialization timeout, checking localStorage...');
-        
-        // Только если прошло много времени, пробуем localStorage
-        const savedLanguage = localStorage.getItem('userLanguage');
-        if (savedLanguage && ['en', 'ru', 'kk'].includes(savedLanguage)) {
-          console.log(`📦 Loading language from localStorage: ${savedLanguage}`);
-          setLanguageState(savedLanguage);
-        } else {
-          console.log('📦 No saved language, keeping English as default');
-          setLanguageState('en');
-        }
+        console.log('⏱️ Language initialization timeout (3s passed)');
+        console.log('⚠️ Auth did not initialize language, keeping default English');
+        // НЕ пытаемся загрузить из localStorage для нового пользователя
+        // Просто оставляем английский по умолчанию
+        setLanguageState('en');
         setIsLoading(false);
       }
-    }, 3000); // Увеличиваем таймаут до 3 секунд
+    }, 3000);
     
     return () => clearTimeout(timeout);
   }, [isInitialized]);
@@ -126,7 +122,7 @@ export const LanguageProvider = ({ children }) => {
       // Сначала меняем язык локально для мгновенного отклика
       if (['en', 'ru', 'kk'].includes(newLanguage)) {
         setLanguageState(newLanguage);
-        localStorage.setItem('userLanguage', newLanguage);
+        // localStorage.setItem('userLanguage', newLanguage);
         setIsInitialized(true);
         setIsLoading(false);
         
