@@ -1,148 +1,134 @@
-import React, { createContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useEffect, useCallback, useRef } from 'react';
 import en from '../locales/en.json';
 import ru from '../locales/ru.json';
 import kk from '../locales/kk.json';
 import { habitService } from '../services/habits';
 
-const translations = {
-  en,
-  ru,
-  kk
-};
+const translations = { en, ru, kk };
+const SUPPORTED = ['en', 'ru', 'kk'];
+
+// Нормализация кода языка (ru-RU -> ru, en_US -> en, kz -> kk)
+function normalizeLang(input) {
+  if (!input || typeof input !== 'string') return 'en';
+  const lang = input.toLowerCase().replace('_', '-'); // en_US -> en-US
+  if (lang === 'kz' || lang.startsWith('kz-')) return 'kk';
+  if (lang === 'kk' || lang.startsWith('kk-')) return 'kk';
+  if (lang === 'ru' || lang.startsWith('ru-')) return 'ru';
+  if (lang === 'en' || lang.startsWith('en-')) return 'en';
+  // всё остальное — en
+  return 'en';
+}
 
 export const LanguageContext = createContext({
   language: 'en',
-  setLanguage: () => {},
+  setLanguage: async () => {},
   t: () => '',
-  availableLanguages: ['en', 'ru', 'kk'],
+  availableLanguages: SUPPORTED,
   initializeLanguage: () => {},
-  isLoading: true
+  isLoading: true,
+  isInitialized: false,
+  isChanging: false,
 });
 
 export const LanguageProvider = ({ children }) => {
-  // ВАЖНО: Начальный язык ВСЕГДА английский, пока не загрузится из БД
   const [language, setLanguageState] = useState('en');
   const [isChanging, setIsChanging] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Функция инициализации языка из данных пользователя (вызывается из App.jsx)
-  const initializeLanguage = useCallback((userLanguage) => {
-    console.log('🌍 LanguageContext: Initializing language from user data:', userLanguage);
-    
-    if (userLanguage && ['en', 'ru', 'kk'].includes(userLanguage)) {
-      console.log(`✅ Setting language to: ${userLanguage}`);
-      setLanguageState(userLanguage);
-      // localStorage.setItem('userLanguage', userLanguage);
-      setIsInitialized(true);
-      setIsLoading(false);
-    } else {
-      // Если язык не поддерживается, используем английский
-      console.log(`⚠️ Unsupported language "${userLanguage}", defaulting to English`);
-      setLanguageState('en');
-      // localStorage.setItem('userLanguage', 'en');
-      setIsInitialized(true);
-      setIsLoading(false);
-    }
-  }, []);
+  // Чтобы исключить двойную инициализацию (например, если auth внезапно вызовет повторно)
+  const initCalledRef = useRef(false);
 
-  // При монтировании НЕ загружаем язык автоматически
- // При монтировании НЕ загружаем язык автоматически
-  useEffect(() => {
-    // Если язык уже инициализирован из БД, не делаем ничего
-    if (isInitialized) {
-      setIsLoading(false);
+  // Инициализация из БД (вызывается из App.jsx после auth)
+  const initializeLanguage = useCallback((userLanguage) => {
+    if (initCalledRef.current) {
+      // Уже инициализировано — ничего не делаем
       return;
     }
-    
-    console.log('🔍 LanguageContext mounted, waiting for initialization from auth...');
-    console.log('📌 Current language state:', language);
-    
-    // НЕ загружаем из localStorage при первом монтировании!
-    // Ждем инициализацию от авторизации
-    
-    // Устанавливаем таймаут на случай если инициализация не произойдет
-    const timeout = setTimeout(() => {
-      if (!isInitialized) {
-        console.log('⏱️ Language initialization timeout (3s passed)');
-        console.log('⚠️ Auth did not initialize language, keeping default English');
-        // НЕ пытаемся загрузить из localStorage для нового пользователя
-        // Просто оставляем английский по умолчанию
-        setLanguageState('en');
-        setIsLoading(false);
-      }
-    }, 3000);
-    
-    return () => clearTimeout(timeout);
+    initCalledRef.current = true;
+
+    const normalized = normalizeLang(userLanguage);
+    const finalLang = SUPPORTED.includes(normalized) ? normalized : 'en';
+
+    console.log('🌍 LanguageContext: initializeLanguage ->', userLanguage, '=>', finalLang);
+
+    setLanguageState(finalLang);
+    setIsInitialized(true);
+    setIsLoading(false);
+  }, []);
+
+  // Не грузим ничего сами — ждём initializeLanguage из App после авторизации
+  useEffect(() => {
+    if (!isInitialized) {
+      // остаёмся в isLoading=true, пока App не дернёт initializeLanguage
+      // можно подстраховаться защитным таймером, но оставим чисто
+      return;
+    }
+    setIsLoading(false);
   }, [isInitialized]);
 
-  // Функция для получения перевода
+  // Переводы
   const t = useCallback((key, params = {}) => {
     const keys = key.split('.');
-    let translation = translations[language];
-    
+    let bundle = translations[language] || translations.en;
+
+    // По цепочке достаём ключ
     for (const k of keys) {
-      if (translation && typeof translation === 'object' && k in translation) {
-        translation = translation[k];
+      if (bundle && typeof bundle === 'object' && k in bundle) {
+        bundle = bundle[k];
       } else {
-        // Fallback to English if translation not found
-        translation = translations['en'];
-        for (const fallbackKey of keys) {
-          if (translation && typeof translation === 'object' && fallbackKey in translation) {
-            translation = translation[fallbackKey];
+        // Фоллбек к английскому
+        bundle = translations.en;
+        for (const fk of keys) {
+          if (bundle && typeof bundle === 'object' && fk in bundle) {
+            bundle = bundle[fk];
           } else {
-            // Не спамим консоль предупреждениями
             return key;
           }
         }
         break;
       }
     }
-    
-    // Replace parameters if any
-    if (typeof translation === 'string' && Object.keys(params).length > 0) {
-      let result = translation;
-      Object.entries(params).forEach(([param, value]) => {
-        result = result.replace(`{{${param}}}`, value);
-      });
+
+    if (typeof bundle === 'string' && Object.keys(params).length) {
+      let result = bundle;
+      for (const [p, v] of Object.entries(params)) {
+        result = result.replace(`{{${p}}}`, v);
+      }
       return result;
     }
-    
-    return translation || key;
+    return typeof bundle === 'string' ? bundle : key;
   }, [language]);
 
-  // Функция смены языка с сохранением в БД
+  // Смена языка + сохранение в БД
   const setLanguage = useCallback(async (newLanguage) => {
-    if (isChanging || newLanguage === language) return;
-    
-    console.log(`🔄 Changing language from ${language} to ${newLanguage}`);
+    const normalized = normalizeLang(newLanguage);
+    const finalLang = SUPPORTED.includes(normalized) ? normalized : 'en';
+
+    if (isChanging || finalLang === language) return;
+
+    console.log(`🔄 Changing language: ${language} -> ${finalLang}`);
     setIsChanging(true);
-    
+
+    const prev = language;
+    // Мгновенно обновляем локально для отзывчивости
+    setLanguageState(finalLang);
+    setIsInitialized(true);
+    setIsLoading(false);
+
+    // Хаптик (опционально)
+    window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light');
+
     try {
-      // Сначала меняем язык локально для мгновенного отклика
-      if (['en', 'ru', 'kk'].includes(newLanguage)) {
-        setLanguageState(newLanguage);
-        // localStorage.setItem('userLanguage', newLanguage);
-        setIsInitialized(true);
-        setIsLoading(false);
-        
-        // Вибрация при смене языка
-        if (window.Telegram?.WebApp?.HapticFeedback) {
-          window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-        }
-        
-        // Затем обновляем в БД
-        try {
-          const result = await habitService.updateUserLanguage(newLanguage);
-          console.log(`✅ Language updated in database:`, result);
-        } catch (error) {
-          console.error('❌ Failed to update language in database:', error);
-        }
-      }
+      // Важно: ждём БД
+      const result = await habitService.updateUserLanguage(finalLang);
+      console.log('✅ Language updated in DB:', result);
+    } catch (err) {
+      console.error('❌ Failed to update language in DB:', err);
+      // Откат
+      setLanguageState(prev);
     } finally {
-      setTimeout(() => {
-        setIsChanging(false);
-      }, 300);
+      setIsChanging(false);
     }
   }, [language, isChanging]);
 
@@ -150,10 +136,11 @@ export const LanguageProvider = ({ children }) => {
     language,
     setLanguage,
     t,
-    availableLanguages: ['en', 'ru', 'kk'],
+    availableLanguages: SUPPORTED,
     isChanging,
     initializeLanguage,
-    isLoading
+    isLoading,
+    isInitialized,
   };
 
   return (
