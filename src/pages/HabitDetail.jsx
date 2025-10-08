@@ -6,6 +6,7 @@ import Loader from '../components/common/Loader';
 import DeleteConfirmModal from '../components/modals/DeleteConfirmModal';
 import CopyLinkModal from '../components/modals/CopyLinkModal';
 import Toast from '../components/common/Toast';
+import SubscriptionModal from '../components/modals/SubscriptionModal';
 import './HabitDetail.css';
 import FriendSwipeHint from '../components/habits/FriendSwipeHint';
 import { useTranslation } from "../hooks/useTranslation";
@@ -15,10 +16,12 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showCopyModal, setShowCopyModal] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [members, setMembers] = useState([]);
   const [showFriendHint, setShowFriendHint] = useState(false);
   const [toast, setToast] = useState(null);
-  const { t } = useTranslation(); // Добавьте эту строку
+  const [friendLimitData, setFriendLimitData] = useState(null);
+  const { t } = useTranslation();
 
   const [statistics, setStatistics] = useState({
     currentStreak: 0,
@@ -35,6 +38,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   useEffect(() => {
     loadStatistics();
     loadMembers();
+    checkFriendLimit();
   }, [habit.id]);
 
   const loadStatistics = async () => {
@@ -69,6 +73,36 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     }
   };
 
+  const checkFriendLimit = async () => {
+    try {
+      const limitData = await habitService.checkFriendLimit(habit.id);
+      setFriendLimitData(limitData);
+      console.log('Friend limit data:', limitData);
+    } catch (error) {
+      console.error('Failed to check friend limit:', error);
+    }
+  };
+
+  const handleAddFriend = async () => {
+    console.log('Add Friend clicked, checking limits...');
+    
+    // Проверяем актуальные лимиты
+    const limitCheck = await habitService.checkFriendLimit(habit.id);
+    setFriendLimitData(limitCheck);
+    
+    console.log('Friend limit check result:', limitCheck);
+    
+    // Если достигнут лимит и пользователь не премиум - показываем модалку подписки
+    if (limitCheck.showPremiumModal && !limitCheck.isPremium) {
+      console.log('Friend limit reached, showing subscription modal');
+      setShowSubscriptionModal(true);
+      return;
+    }
+    
+    // Если можно добавлять друзей - продолжаем с шарингом
+    await handleShare();
+  };
+
   const handleShare = async () => {
     try {
       const shareData = await habitService.createShareLink(habit.id);
@@ -95,7 +129,47 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     } catch (error) {
       console.error('Failed to create share link:', error);
     }
-  };  
+  };
+
+  const handleSubscriptionContinue = async (plan) => {
+    console.log('Selected subscription plan:', plan);
+    
+    try {
+      // Активируем премиум через API
+      const result = await habitService.activatePremium(plan);
+      
+      if (result.success) {
+        console.log('Premium activated successfully');
+        
+        // Перезагружаем лимиты и членов
+        await checkFriendLimit();
+        await loadMembers();
+        
+        // Закрываем модалку подписки
+        setShowSubscriptionModal(false);
+        
+        // Показываем уведомление
+        if (window.Telegram?.WebApp?.showAlert) {
+          window.Telegram.WebApp.showAlert('Premium activated! Now you can invite unlimited friends! 🎉');
+        }
+        
+        // Теперь можно продолжить с добавлением друга
+        setTimeout(() => {
+          handleShare();
+        }, 500);
+      }
+    } catch (error) {
+      console.error('Failed to activate premium:', error);
+      
+      setShowSubscriptionModal(false);
+      
+      if (window.Telegram?.WebApp?.showAlert) {
+        window.Telegram.WebApp.showAlert('Failed to activate premium. Please try again.');
+      } else {
+        alert('Failed to activate premium. Please try again.');
+      }
+    }
+  };
 
   const handleCopyLink = async () => {
     try {
@@ -169,7 +243,8 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
         tg.showConfirm('Remove this friend from the habit?', async (confirmed) => {
           if (confirmed) {
             await habitService.removeMember(habit.id, memberId);
-            loadMembers();
+            await loadMembers();
+            await checkFriendLimit(); // Обновляем лимиты после удаления
             setToast({
               message: 'Friend removed from habit',
               type: 'success'
@@ -180,7 +255,8 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
         const confirmed = window.confirm('Remove this friend from the habit?');
         if (confirmed) {
           await habitService.removeMember(habit.id, memberId);
-          loadMembers();
+          await loadMembers();
+          await checkFriendLimit(); // Обновляем лимиты после удаления
           setToast({
             message: 'Friend removed from habit',
             type: 'success'
@@ -300,6 +376,17 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
           <div className="habit-detail__friends">
             <h3 className="habit-detail__friends-title">Habit Friends</h3>
             
+            {friendLimitData && !friendLimitData.isPremium && (
+              <p style={{
+                fontSize: '13px',
+                color: '#8E8E93',
+                marginBottom: '12px',
+                textAlign: 'center'
+              }}>
+                {friendLimitData.currentFriendsCount}/{friendLimitData.limit} friend{friendLimitData.limit !== 1 ? 's' : ''} added (Free plan)
+              </p>
+            )}
+            
             {members.length > 0 ? (
               <div className="habit-detail__members-list">
                 {members.map(member => (
@@ -319,7 +406,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
             
             <button 
               className="habit-detail__btn habit-detail__btn--add-friend"
-              onClick={handleShare}
+              onClick={handleAddFriend}
             >
               Add Friend
             </button>
@@ -349,6 +436,12 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       <FriendSwipeHint 
         show={showFriendHint}
         onClose={() => setShowFriendHint(false)}
+      />
+
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
+        onContinue={handleSubscriptionContinue}
       />
 
       {toast && (

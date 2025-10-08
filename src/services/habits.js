@@ -308,4 +308,31 @@ joinHabit: async (shareCode) => {
   const { data } = await api.post('/habits/join', { shareCode });
   return data;
 },
+// Проверить лимит на добавление друзей
+checkFriendLimit: async (habitId) => {
+  try {
+    const { data } = await api.get(`/habits/${habitId}/check-friend-limit`);
+    console.log('Friend limit check:', data);
+    return data;
+  } catch (error) {
+    console.error('checkFriendLimit error:', error);
+    return {
+      success: false,
+      canAddFriend: false,
+      showPremiumModal: true
+    };
+  }
+},
+
+// Удалить участника (обновленный метод)
+removeMember: async (habitId, userId) => {
+  try {
+    const { data } = await api.delete(`/habits/${habitId}/members/${userId}`);
+    console.log('Member removed:', data);
+    return data;
+  } catch (error) {
+    console.error('removeMember error:', error);
+    throw error;
+  }
+},
 };
