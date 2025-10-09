@@ -19,8 +19,6 @@ import { useTranslation } from '../hooks/useTranslation';
 
 const Today = () => {
     const { t } = useTranslation(); // Получаем функцию перевода
-const { tg } = useTelegram();
- 
 
   const { user } = useTelegram();
   const {
@@ -45,7 +43,7 @@ const { tg } = useTelegram();
   const [showEditForm, setShowEditForm] = useState(false);
   const [habitToEdit, setHabitToEdit] = useState(null);
   const [userSubscription, setUserSubscription] = useState(null);
- useNavigation(null, { isVisible: false });
+
   const getTodayDate = () => {
     const today = new Date();
     const year = today.getFullYear();

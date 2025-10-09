@@ -1,9 +1,11 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useTelegram } from './useTelegram';
 
 export const useNavigation = (onBack = null, options = {}) => {
   const { tg } = useTelegram();
   const { isVisible = true } = options;
+  const isInitializedRef = useRef(false);
+  const backButtonHandlerRef = useRef(null);
   
   const goBack = useCallback(() => {
     console.log('Navigation: goBack called');
@@ -21,31 +23,63 @@ export const useNavigation = (onBack = null, options = {}) => {
       return;
     }
     
+    // Предотвращаем повторную инициализацию
+    if (isInitializedRef.current && backButtonHandlerRef.current) {
+      console.log('Navigation: Already initialized, skipping');
+      return;
+    }
+    
     if (!isVisible) {
       tg.BackButton.hide();
       return;
     }
     
-    // Показываем кнопку Back
-    console.log('Navigation: Showing BackButton');
-    tg.BackButton.show();
-    
-    // Обработчик клика на кнопку Back
+    // Создаем обработчик один раз
     const handleBack = () => {
       console.log('Navigation: BackButton clicked');
       goBack();
     };
     
-    // Регистрируем обработчик
-    tg.BackButton.onClick(handleBack);
+    // Сохраняем ссылку на обработчик
+    backButtonHandlerRef.current = handleBack;
+    
+    // Небольшая задержка для стабилизации
+    const timeoutId = setTimeout(() => {
+      console.log('Navigation: Showing BackButton');
+      tg.BackButton.show();
+      tg.BackButton.onClick(handleBack);
+      isInitializedRef.current = true;
+    }, 100);
     
     // Cleanup при размонтировании компонента
     return () => {
+      clearTimeout(timeoutId);
       console.log('Navigation: Cleaning up BackButton');
+      
+      if (backButtonHandlerRef.current) {
+        tg.BackButton.offClick(backButtonHandlerRef.current);
+        backButtonHandlerRef.current = null;
+      }
+      
       tg.BackButton.hide();
-      tg.BackButton.offClick(handleBack);
+      isInitializedRef.current = false;
     };
-  }, [tg, goBack, isVisible]);
+  }, [tg, isVisible]); // Убираем goBack из зависимостей
+  
+  // Обновляем обработчик при изменении onBack
+  useEffect(() => {
+    if (backButtonHandlerRef.current && tg && tg.BackButton) {
+      tg.BackButton.offClick(backButtonHandlerRef.current);
+      
+      const newHandler = () => {
+        console.log('Navigation: BackButton clicked (updated)');
+        goBack();
+      };
+      
+      backButtonHandlerRef.current = newHandler;
+      tg.BackButton.onClick(newHandler);
+    }
+  }, [goBack, tg]);
   
   return { goBack };
 };

@@ -21,7 +21,7 @@ const EditHabitForm = ({ habit, onClose, onSuccess }) => {
   const repeatRef = useRef(null);
   const timeRef = useRef(null);
 
-useNavigation(onClose, { isVisible: true });
+  useNavigation(onClose);
 
   // анимация блока с днями
   const [showDaysAnimation, setShowDaysAnimation] = useState(false);
