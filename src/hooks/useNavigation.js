@@ -1,10 +1,9 @@
-// src/hooks/useNavigation.js
 import { useEffect, useCallback } from 'react';
 import { useTelegram } from './useTelegram';
 
 export const useNavigation = (onBack = null, options = {}) => {
   const { tg } = useTelegram();
-  const { isVisible = true, showBackButton = true } = options;
+  const { isVisible = true } = options;
   
   const goBack = useCallback(() => {
     console.log('Navigation: goBack called');
@@ -22,7 +21,7 @@ export const useNavigation = (onBack = null, options = {}) => {
       return;
     }
     
-    if (!isVisible || !showBackButton) {
+    if (!isVisible) {
       tg.BackButton.hide();
       return;
     }
@@ -43,10 +42,10 @@ export const useNavigation = (onBack = null, options = {}) => {
     // Cleanup при размонтировании компонента
     return () => {
       console.log('Navigation: Cleaning up BackButton');
+      tg.BackButton.hide();
       tg.BackButton.offClick(handleBack);
-      // НЕ скрываем кнопку здесь - пусть следующий компонент решает
     };
-  }, [tg, goBack, isVisible, showBackButton]);
+  }, [tg, goBack, isVisible]);
   
   return { goBack };
 };
