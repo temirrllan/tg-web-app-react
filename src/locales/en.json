@@ -151,7 +151,9 @@
   },
 
   "common": {
-    "back": "Back"
+    "back": "Back",
+    "no":"No",
+    "yes":"Yes"
   },
   "languages": {
     "en": "English",

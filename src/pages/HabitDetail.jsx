@@ -22,7 +22,11 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const [toast, setToast] = useState(null);
   const [friendLimitData, setFriendLimitData] = useState(null);
   const { t } = useTranslation();
-
+// --- CHANGED ---
+  // Если открыт хоть один "дочерний" UI (модалка/подсказка) — навигация должна показать "назад".
+  const childOpen = showDeleteModal || showCopyModal || showSubscriptionModal || showFriendHint;
+  useNavigation(onClose, { isVisible: !childOpen });
+  // --- END CHANGED ---
   const [statistics, setStatistics] = useState({
     currentStreak: 0,
     weekDays: 0,
