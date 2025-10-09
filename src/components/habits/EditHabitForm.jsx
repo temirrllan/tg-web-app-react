@@ -7,22 +7,11 @@ import { useTranslation } from '../../hooks/useTranslation';
 
 const EditHabitForm = ({ habit, onClose, onSuccess }) => {
   const { t } = useTranslation();
-  const { tg } = useTelegram();
 
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
-// Показываем кнопку "Назад" всегда
-  useNavigation(onClose, { 
-    isVisible: true,
-    showBackButton: true 
-  });
-  
-  useEffect(() => {
-    if (tg?.BackButton) {
-      tg.BackButton.show();
-    }
-  }, [tg]);
+
   // dropdown states
   const [showRepeatDropdown, setShowRepeatDropdown] = useState(false);
   const [showTimeDropdown, setShowTimeDropdown] = useState(false);
@@ -32,7 +21,7 @@ const EditHabitForm = ({ habit, onClose, onSuccess }) => {
   const repeatRef = useRef(null);
   const timeRef = useRef(null);
 
-  useNavigation(onClose);
+useNavigation(onClose, { isVisible: true });
 
   // анимация блока с днями
   const [showDaysAnimation, setShowDaysAnimation] = useState(false);

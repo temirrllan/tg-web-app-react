@@ -19,7 +19,12 @@ import { useTranslation } from '../hooks/useTranslation';
 
 const Today = () => {
     const { t } = useTranslation(); // Получаем функцию перевода
-
+const { tg } = useTelegram();
+useEffect(() => {
+  if (tg?.BackButton) {
+    tg.BackButton.hide(); // Прячем на главном экране
+  }
+}, [tg]);
   const { user } = useTelegram();
   const {
     todayHabits,
@@ -43,23 +48,7 @@ const Today = () => {
   const [showEditForm, setShowEditForm] = useState(false);
   const [habitToEdit, setHabitToEdit] = useState(null);
   const [userSubscription, setUserSubscription] = useState(null);
-// src/pages/Today.jsx
-// В начале компонента Today добавляем:
 
-const [navigationStack, setNavigationStack] = useState([]);
-
-// Вместо старых useNavigation вызовов используем условную логику:
-useEffect(() => {
-  const { tg } = useTelegram();
-  
-  if (!tg?.BackButton) return;
-  
-  // На главной странице кнопка должна закрывать приложение
-  if (!showHabitDetail && !showProfile && !showCreateForm && !showEditForm) {
-    console.log('Main screen - hiding back button');
-    tg.BackButton.hide();
-  }
-}, [showHabitDetail, showProfile, showCreateForm, showEditForm]);
   const getTodayDate = () => {
     const today = new Date();
     const year = today.getFullYear();
