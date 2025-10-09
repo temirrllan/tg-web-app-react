@@ -39,7 +39,9 @@ useNavigation(onClose, { isVisible: true });
     loadMembers();
     checkFriendLimit();
   }, [habit.id]);
-
+// 👇 УЖЕ ПРАВИЛЬНО (оставь как есть)
+  const childOpen = showDeleteModal || showCopyModal || showSubscriptionModal || showFriendHint;
+  useNavigation(onClose, { isVisible: !childOpen });
   const loadStatistics = async () => {
     try {
       setLoading(true);

@@ -20,11 +20,8 @@ import { useTranslation } from '../hooks/useTranslation';
 const Today = () => {
     const { t } = useTranslation(); // Получаем функцию перевода
 const { tg } = useTelegram();
-useEffect(() => {
-  if (tg?.BackButton) {
-    tg.BackButton.hide(); // Прячем на главном экране
-  }
-}, [tg]);
+ 
+
   const { user } = useTelegram();
   const {
     todayHabits,
@@ -48,7 +45,7 @@ useEffect(() => {
   const [showEditForm, setShowEditForm] = useState(false);
   const [habitToEdit, setHabitToEdit] = useState(null);
   const [userSubscription, setUserSubscription] = useState(null);
-
+ useNavigation(null, { isVisible: false });
   const getTodayDate = () => {
     const today = new Date();
     const year = today.getFullYear();
