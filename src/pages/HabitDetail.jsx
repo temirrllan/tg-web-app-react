@@ -35,58 +35,53 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
 
   useNavigation(onClose);
 
- // Добавьте ПОСЛЕ всех useState в компоненте HabitDetail
-useEffect(() => {
-  let isMounted = true;
-  
-  const loadAllData = async () => {
+  useEffect(() => {
+    loadStatistics();
+    loadMembers();
+    checkFriendLimit();
+  }, [habit.id]);
+
+  const loadStatistics = async () => {
     try {
       setLoading(true);
+      const stats = await habitService.getHabitStatistics(habit.id);
       
-      // Загружаем все данные параллельно
-      const [statsResult, membersResult, limitResult] = await Promise.allSettled([
-        habitService.getHabitStatistics(habit.id),
-        habitService.getHabitMembers(habit.id),
-        habitService.checkFriendLimit(habit.id)
-      ]);
-      
-      if (!isMounted) return;
-      
-      // Обновляем все состояния одновременно
-      if (statsResult.status === 'fulfilled' && statsResult.value) {
+      if (stats) {
         setStatistics({
-          currentStreak: statsResult.value.currentStreak || habit.streak_current || 0,
-          weekDays: statsResult.value.weekCompleted || 0,
+          currentStreak: stats.currentStreak || habit.streak_current || 0,
+          weekDays: stats.weekCompleted || 0,
           weekTotal: 7,
-          monthDays: statsResult.value.monthCompleted || 0,
-          monthTotal: statsResult.value.monthTotal || 30,
-          yearDays: statsResult.value.yearCompleted || 0,
+          monthDays: stats.monthCompleted || 0,
+          monthTotal: stats.monthTotal || 30,
+          yearDays: stats.yearCompleted || 0,
           yearTotal: 365
         });
       }
-      
-      if (membersResult.status === 'fulfilled') {
-        setMembers(membersResult.value.members || []);
-      }
-      
-      if (limitResult.status === 'fulfilled') {
-        setFriendLimitData(limitResult.value);
-      }
     } catch (error) {
-      console.error('Failed to load habit details:', error);
+      console.error('Failed to load statistics:', error);
     } finally {
-      if (isMounted) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   };
-  
-  loadAllData();
-  
-  return () => {
-    isMounted = false;
+
+  const loadMembers = async () => {
+    try {
+      const data = await habitService.getHabitMembers(habit.id);
+      setMembers(data.members || []);
+    } catch (error) {
+      console.error('Failed to load members:', error);
+    }
   };
-}, [habit.id]);
+
+  const checkFriendLimit = async () => {
+    try {
+      const limitData = await habitService.checkFriendLimit(habit.id);
+      setFriendLimitData(limitData);
+      console.log('Friend limit data:', limitData);
+    } catch (error) {
+      console.error('Failed to check friend limit:', error);
+    }
+  };
 
   const handleAddFriend = async () => {
     console.log('Add Friend clicked, checking limits...');
