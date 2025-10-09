@@ -22,11 +22,28 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const [toast, setToast] = useState(null);
   const [friendLimitData, setFriendLimitData] = useState(null);
   const { t } = useTranslation();
-// --- CHANGED ---
-  // Если открыт хоть один "дочерний" UI (модалка/подсказка) — навигация должна показать "назад".
-  const childOpen = showDeleteModal || showCopyModal || showSubscriptionModal || showFriendHint;
-  useNavigation(onClose, { isVisible: !childOpen });
-  // --- END CHANGED ---
+// Определяем, открыт ли какой-то дочерний UI
+  const hasChildUI = showDeleteModal || showCopyModal || 
+                     showSubscriptionModal || showFriendHint;
+  
+  // Показываем кнопку "Назад" только когда нет дочерних UI
+  useNavigation(onClose, { 
+    isVisible: true,
+    showBackButton: !hasChildUI 
+  });
+  
+  // Управление кнопкой при изменении состояния
+  useEffect(() => {
+    if (!tg?.BackButton) return;
+    
+    if (hasChildUI) {
+      // Если открыта модалка/хинт - скрываем кнопку назад
+      tg.BackButton.hide();
+    } else {
+      // Иначе показываем
+      tg.BackButton.show();
+    }
+  }, [hasChildUI, tg]);
   const [statistics, setStatistics] = useState({
     currentStreak: 0,
     weekDays: 0,
