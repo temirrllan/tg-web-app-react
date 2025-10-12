@@ -17,327 +17,32 @@
   justify-content: center;
 }
 
-.subscription-page--purchase {
-  background: white;
-}
-
-/* PURCHASE PAGE STYLES */
-.subscription-purchase {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-}
-
-.subscription-purchase__illustration {
-  height: 200px;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #5B9BD5;
-  padding: 20px;
-}
-
-.subscription-purchase__image {
-  width: 100%;
-  max-width: 280px;
-  height: 100%;
-  object-fit: contain;
-}
-
-.subscription-purchase__content {
-  flex: 1;
-  background: white;
-  padding: 24px 16px;
-  overflow-y: auto;
-}
-
-.subscription-purchase__title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #000;
-  margin: 0 0 6px 0;
-  text-align: center;
-}
-
-.subscription-purchase__subtitle {
-  font-size: 16px;
-  color: #8E8E93;
-  margin: 0 0 24px 0;
-  text-align: center;
-}
-
-.subscription-purchase__section-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #000;
-  margin: 0 0 12px 0;
-}
-
-.subscription-purchase__method {
-  margin-bottom: 24px;
-}
-
-.subscription-purchase__payment-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px;
-  background: white;
-  border: 1px solid #E5E5EA;
-  border-radius: 12px;
-}
-
-.subscription-purchase__payment-icon {
-  width: 40px;
-  height: 40px;
-  background: #FFF8E1;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-}
-
-.subscription-purchase__payment-info {
-  flex: 1;
-}
-
-.subscription-purchase__payment-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: #000;
-  margin-bottom: 2px;
-}
-
-.subscription-purchase__payment-desc {
-  font-size: 13px;
-  color: #8E8E93;
-}
-
-.subscription-purchase__quantity {
-  margin-bottom: 24px;
-}
-
-.subscription-purchase__quantity-row {
+.subscription-page__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px;
+  padding: 16px;
   background: white;
-  border: 1px solid #E5E5EA;
-  border-radius: 12px;
-  margin-bottom: 1px;
+  border-bottom: 1px solid #E5E5EA;
 }
 
-.subscription-purchase__quantity-row:first-of-type {
-  border-radius: 12px 12px 0 0;
-}
-
-.subscription-purchase__quantity-row:last-of-type {
-  border-radius: 0 0 12px 12px;
-  margin-bottom: 8px;
-}
-
-.subscription-purchase__quantity-label {
-  font-size: 16px;
-  color: #000;
-}
-
-.subscription-purchase__quantity-controls {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.subscription-purchase__quantity-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+.subscription-page__close {
+  background: none;
   border: none;
-  background: #F2F2F7;
-  color: #8E8E93;
-  font-size: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
+  color: #007AFF;
+  font-size: 17px;
+  padding: 0;
 }
 
-.subscription-purchase__quantity-value {
-  font-size: 16px;
+.subscription-page__header h2 {
+  font-size: 17px;
   font-weight: 600;
+  margin: 0;
   color: #000;
-  min-width: 20px;
   text-align: center;
-}
-
-.subscription-purchase__gift-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 16px;
-  color: #000;
-  cursor: pointer;
-}
-
-.subscription-purchase__quantity-note {
-  font-size: 13px;
-  color: #8E8E93;
-  line-height: 1.4;
-  margin: 8px 0 0 0;
-}
-
-.subscription-purchase__plans {
-  margin-bottom: 16px;
-}
-
-.subscription-purchase__plan {
-  display: flex;
-  align-items: center;
-  padding: 14px;
-  background: white;
-  border: 2px solid #E5E5EA;
-  border-radius: 12px;
-  margin-bottom: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.subscription-purchase__plan--selected {
-  border-color: #A7D96C;
-  background: #F8FFF4;
-}
-
-.subscription-purchase__plan-radio {
-  width: 24px;
-  height: 24px;
-  border: 2px solid #C7C7CC;
-  border-radius: 50%;
-  margin-right: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  background: white;
-}
-
-.subscription-purchase__plan--selected .subscription-purchase__plan-radio {
-  border-color: #A7D96C;
-  background: #A7D96C;
-}
-
-.subscription-purchase__plan-info {
   flex: 1;
 }
 
-.subscription-purchase__plan-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: #000;
-  margin-bottom: 2px;
-}
-
-.subscription-purchase__plan-total {
-  font-size: 14px;
-  color: #8E8E93;
-}
-
-.subscription-purchase__plan-price {
-  font-size: 16px;
-  font-weight: 600;
-  color: #000;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.subscription-purchase__promo {
-  width: 100%;
-  padding: 14px;
-  border: 1px solid #E5E5EA;
-  border-radius: 12px;
-  font-size: 16px;
-  margin-bottom: 24px;
-}
-
-.subscription-purchase__promo::placeholder {
-  color: #C7C7CC;
-}
-
-.subscription-purchase__benefits {
-  margin-bottom: 24px;
-}
-
-.subscription-purchase__benefit-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  background: white;
-  border: 1px solid #E5E5EA;
-  border-radius: 12px;
-  margin-bottom: 8px;
-  font-size: 16px;
-  color: #000;
-}
-
-.subscription-purchase__about {
-  margin-bottom: 24px;
-}
-
-.subscription-purchase__about-text {
-  font-size: 14px;
-  color: #8E8E93;
-  line-height: 1.5;
-  margin: 0;
-}
-
-.subscription-purchase__agreement {
-  margin-bottom: 20px;
-}
-
-.subscription-purchase__agreement-label {
-  display: flex;
-  gap: 10px;
-  font-size: 14px;
-  color: #8E8E93;
-  line-height: 1.4;
-  cursor: pointer;
-}
-
-.subscription-purchase__agreement-label a {
-  color: #A7D96C;
-  text-decoration: none;
-}
-
-.subscription-purchase__subscribe-btn {
-  width: 100%;
-  padding: 17px;
-  background: #A7D96C;
-  color: #1D1D1F;
-  border: none;
-  border-radius: 16px;
-  font-size: 18px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-bottom: 16px;
-}
-
-.subscription-purchase__subscribe-btn--disabled {
-  background: #E5E5EA;
-  color: #C7C7CC;
-  cursor: not-allowed;
-}
-
-.subscription-purchase__subscribe-btn:not(.subscription-purchase__subscribe-btn--disabled):active {
-  transform: scale(0.98);
-}
-
-/* СТАРЫЕ СТИЛИ - СОХРАНЯЕМ */
 .subscription-page__content {
   flex: 1;
   padding: 20px;
@@ -406,7 +111,41 @@
   font-size: 17px;
   font-weight: 600;
   margin-bottom: 20px;
-  cursor: pointer;
+}
+
+.subscription-history {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.subscription-history h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: #000;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #F2F2F7;
+}
+
+.history-item:last-child {
+  border-bottom: none;
+}
+
+.history-action {
+  font-size: 16px;
+  color: #000;
+  text-transform: capitalize;
+}
+
+.history-date {
+  font-size: 14px;
+  color: #8E8E93;
 }
 
 @keyframes slideUp {

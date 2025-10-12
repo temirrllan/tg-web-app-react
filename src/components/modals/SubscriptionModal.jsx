@@ -9,6 +9,7 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
   const { t } = useTranslation();
 
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [availablePlans, setAvailablePlans] = useState([]); // оставил на будущее
   const [currentSubscription, setCurrentSubscription] = useState(null);
   const [loading, setLoading] = useState(false);
   
@@ -26,6 +27,7 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
     try {
       const status = await habitService.checkSubscriptionLimits();
       setCurrentSubscription(status.subscription);
+      // console.log('Subscription modal - current status:', status);
     } catch (error) {
       console.error('Failed to load subscription info:', error);
     }
@@ -33,15 +35,18 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
 
   if (!isOpen) return null;
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!selectedPlan || loading) return;
-    
-    // Вместо активации подписки - переходим на страницу Subscription
-    console.log('Opening Subscription page with selected plan:', selectedPlan);
-    
-    // Передаем выбранный план и закрываем модалку
-    if (onContinue) {
-      onContinue(selectedPlan);
+    setLoading(true);
+    try {
+      await onContinue(selectedPlan);
+      // onContinue сам закроет модалку при успехе
+    } catch (error) {
+      console.error('Failed to activate subscription:', error);
+      setLoading(false);
+      if (window.Telegram?.WebApp?.showAlert) {
+        window.Telegram.WebApp.showAlert(t('subscriptionModal.errors.activateFailed'));
+      }
     }
   };
 
