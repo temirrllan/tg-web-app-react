@@ -7,6 +7,7 @@ import CreateHabitForm from "../components/habits/CreateHabitForm";
 import WeekNavigation from "../components/habits/WeekNavigation";
 import Profile from "./Profile";
 import HabitDetail from './HabitDetail';
+import Subscription from './Subscription';
 import Loader from "../components/common/Loader";
 import { useHabits } from "../hooks/useHabits";
 import { useTelegram } from "../hooks/useTelegram";
@@ -18,7 +19,7 @@ import SubscriptionModal from '../components/modals/SubscriptionModal';
 import { useTranslation } from '../hooks/useTranslation';
 
 const Today = () => {
-    const { t } = useTranslation(); // Получаем функцию перевода
+  const { t } = useTranslation();
 
   const { user } = useTelegram();
   const {
@@ -34,7 +35,10 @@ const Today = () => {
     refresh,
     refreshDateData
   } = useHabits();
+  
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [showSubscriptionPage, setShowSubscriptionPage] = useState(false);
+  const [preselectedPlan, setPreselectedPlan] = useState(null);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -68,7 +72,6 @@ const Today = () => {
   const [dateStats, setDateStats] = useState({ completed: 0, total: 0 });
   const [datePhrase, setDatePhrase] = useState(null);
 
-  // Проверяем подписку при загрузке
   useEffect(() => {
     checkUserSubscription();
   }, []);
@@ -87,30 +90,25 @@ const Today = () => {
   const handleFabClick = async () => {
     console.log('FAB clicked, checking subscription...');
     
-    // Проверяем актуальные лимиты
     const subscriptionStatus = await habitService.checkSubscriptionLimits();
     setUserSubscription(subscriptionStatus);
     
     console.log('Subscription status:', subscriptionStatus);
     
-    // Если пользователь может создавать привычки - открываем форму
     if (subscriptionStatus.canCreateMore) {
       setShowCreateForm(true);
     } else {
-      // Иначе показываем модалку подписки
       console.log('Limit reached, showing subscription modal');
       setShowSubscriptionModal(true);
     }
   };
 
-  // Обработчик клика на привычку
   const handleHabitClick = (habit) => {
     console.log('Habit clicked:', habit);
     setSelectedHabit(habit);
     setShowHabitDetail(true);
   };
 
-  // Обработчик редактирования
   const handleEditHabit = (habit) => {
     console.log('Edit habit:', habit);
     setHabitToEdit(habit);
@@ -118,12 +116,9 @@ const Today = () => {
     setShowHabitDetail(false);
   };
 
-  // Обработчик успешного редактирования
   const handleEditSuccess = async () => {
     setShowEditForm(false);
     setHabitToEdit(null);
-    
-    // Перезагружаем данные для текущей выбранной даты
     await reloadCurrentDateHabits();
   };
 
@@ -134,17 +129,13 @@ const Today = () => {
       setShowHabitDetail(false);
       setSelectedHabit(null);
       
-      // Перезагружаем данные для текущей выбранной даты
       await reloadCurrentDateHabits();
-      
-      // Обновляем статус подписки после удаления
       await checkUserSubscription();
     } catch (error) {
       console.error('Failed to delete habit:', error);
     }
   };
 
-  // КРИТИЧНО: Функция перезагрузки привычек для текущей даты
   const reloadCurrentDateHabits = useCallback(async () => {
     const todayStr = getTodayDate();
     
@@ -152,7 +143,6 @@ const Today = () => {
     setDateLoading(true);
     
     try {
-      // ВСЕГДА загружаем с сервера для любой даты
       const result = await loadHabitsForDate(selectedDate);
       
       if (result) {
@@ -160,7 +150,6 @@ const Today = () => {
         setDateStats(result.stats || { completed: 0, total: 0 });
         setDatePhrase(result.phrase);
         
-        // Если это сегодня, также обновляем основной хук
         if (selectedDate === todayStr) {
           await refresh();
         }
@@ -172,19 +161,14 @@ const Today = () => {
     }
   }, [selectedDate, loadHabitsForDate, refresh]);
 
-  // КРИТИЧНО: Обработчик выбора даты
   const handleDateSelect = useCallback(async (date, isEditable) => {
     console.log('Date selected:', date, 'isEditable:', isEditable);
     
-    // Сохраняем выбранную дату
     setSelectedDate(date);
     setIsEditableDate(isEditable);
-    
-    // Начинаем загрузку
     setDateLoading(true);
     
     try {
-      // ВСЕГДА загружаем с сервера для любой даты
       console.log(`Loading data from server for date: ${date}`);
       const result = await loadHabitsForDate(date);
       
@@ -212,7 +196,6 @@ const Today = () => {
     }
   }, [loadHabitsForDate]);
 
-  // При изменении todayHabits обновляем dateHabits ТОЛЬКО если выбран сегодня
   useEffect(() => {
     const today = getTodayDate();
     if (selectedDate === today && !dateLoading && !loading) {
@@ -223,7 +206,6 @@ const Today = () => {
     }
   }, [todayHabits, stats, phrase, selectedDate, dateLoading, loading]);
 
-  // Инициализация при загрузке
   useEffect(() => {
     const today = getTodayDate();
     if (!loading) {
@@ -240,13 +222,9 @@ const Today = () => {
       await createHabit(habitData);
       setShowCreateForm(false);
       
-      // Перезагружаем данные для текущей выбранной даты
       await reloadCurrentDateHabits();
-      
-      // Обновляем статус подписки после создания
       await checkUserSubscription();
       
-      // Проверяем, нужно ли показать подсказку о свайпах
       const currentCount = todayHabits.length + 1;
       if (currentCount === 1) {
         localStorage.removeItem('hasSeenSwipeHint');
@@ -257,11 +235,25 @@ const Today = () => {
     }
   };
 
-  const handleSubscriptionContinue = async (plan) => {
-    console.log('Selected subscription plan:', plan);
+  // НОВЫЙ обработчик для перехода на страницу Subscription из модального окна
+  const handleSubscriptionModalContinue = (selectedPlan) => {
+    console.log('Opening Subscription page from modal with plan:', selectedPlan);
     
+    // Сохраняем выбранный план
+    setPreselectedPlan(selectedPlan);
+    
+    // Закрываем модалку
+    setShowSubscriptionModal(false);
+    
+    // Открываем страницу подписки
+    setShowSubscriptionPage(true);
+  };
+
+  // Обработчик активации подписки на странице Subscription
+  const handleSubscriptionActivate = async (plan) => {
     try {
-      // Активируем премиум через API
+      console.log('Activating subscription with plan:', plan);
+      
       const result = await habitService.activatePremium(plan);
       
       if (result.success) {
@@ -270,13 +262,9 @@ const Today = () => {
         // Обновляем статус подписки
         await checkUserSubscription();
         
-        // Закрываем модалку подписки
-        setShowSubscriptionModal(false);
-        
-        // Если лимит был достигнут, теперь открываем форму создания
-        if (userSubscription && !userSubscription.canCreateMore) {
-          setShowCreateForm(true);
-        }
+        // Закрываем страницу подписки
+        setShowSubscriptionPage(false);
+        setPreselectedPlan(null);
         
         // Показываем уведомление
         if (window.Telegram?.WebApp?.showAlert) {
@@ -286,12 +274,8 @@ const Today = () => {
     } catch (error) {
       console.error('Failed to activate premium:', error);
       
-      setShowSubscriptionModal(false);
-      
       if (window.Telegram?.WebApp?.showAlert) {
         window.Telegram.WebApp.showAlert('Failed to activate premium. Please try again.');
-      } else {
-        alert('Failed to activate premium. Please try again.');
       }
     }
   };
@@ -404,7 +388,6 @@ const Today = () => {
     }
   }, [dateHabits.length, isEditableDate]);
 
-  // КРИТИЧНО: Обработчики с передачей даты
   const handleMark = useCallback(async (habitId, status) => {
     if (!isEditableDate) {
       console.log('Cannot edit habits for this date');
@@ -414,10 +397,7 @@ const Today = () => {
     console.log('Marking habit:', { habitId, status, date: selectedDate });
     
     try {
-      // КРИТИЧНО: Передаем дату в markHabit
       await markHabit(habitId, status, selectedDate);
-      
-      // ВАЖНО: Перезагружаем данные ТОЛЬКО для выбранной даты
       await reloadCurrentDateHabits();
     } catch (error) {
       console.error('Error marking habit:', error);
@@ -433,10 +413,7 @@ const Today = () => {
     console.log('Unmarking habit:', { habitId, date: selectedDate });
     
     try {
-      // КРИТИЧНО: Передаем дату в unmarkHabit
       await unmarkHabit(habitId, selectedDate);
-      
-      // ВАЖНО: Перезагружаем данные ТОЛЬКО для выбранной даты
       await reloadCurrentDateHabits();
     } catch (error) {
       console.error('Error unmarking habit:', error);
@@ -463,7 +440,6 @@ const Today = () => {
     return '#FFB3BA';
   };
 
-  // Показываем загрузку
   if (loading) {
     return (
       <Layout>
@@ -474,7 +450,6 @@ const Today = () => {
     );
   }
 
-  // Показываем детальную страницу привычки
   if (showHabitDetail && selectedHabit) {
     console.log('Rendering HabitDetail with habit:', selectedHabit);
     return (
@@ -490,9 +465,22 @@ const Today = () => {
     );
   }
 
-  // Показываем профиль
   if (showProfile) {
     return <Profile onClose={() => setShowProfile(false)} />;
+  }
+
+  // НОВОЕ: Показываем страницу Subscription
+  if (showSubscriptionPage) {
+    return (
+      <Subscription
+        onClose={() => {
+          setShowSubscriptionPage(false);
+          setPreselectedPlan(null);
+        }}
+        preselectedPlan={preselectedPlan}
+        onActivate={handleSubscriptionActivate}
+      />
+    );
   }
 
   const displayHabits = dateLoading ? [] : dateHabits;
@@ -589,7 +577,7 @@ const Today = () => {
       <SubscriptionModal
         isOpen={showSubscriptionModal}
         onClose={() => setShowSubscriptionModal(false)}
-        onContinue={handleSubscriptionContinue}
+        onContinue={handleSubscriptionModalContinue}
       />
     </>
   );
