@@ -67,12 +67,15 @@
       "payment": "Payment Policy"
     }
   },
-
+  "habit":{
+    "goal":"Goal"
+  },
   
   "common": {
     "yes": "Yes",
     "no": "No",
-    "done": "Done"
+    "done": "Done",
+    "loading": "Loading..."
   },
   "createHabit": {
     "habitName": "Habit name",
