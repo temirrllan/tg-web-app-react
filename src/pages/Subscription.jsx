@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigation } from '../hooks/useNavigation';
 import { habitService } from '../services/habits';
 import Loader from '../components/common/Loader';
+import SubscriptionModal from '../components/modals/SubscriptionModal';
 import './Subscription.css';
 
 const Subscription = ({ onClose }) => {
@@ -9,7 +10,7 @@ const Subscription = ({ onClose }) => {
   
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState(null);
-  const [history, setHistory] = useState([]);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   
   useEffect(() => {
     loadSubscriptionData();
@@ -19,18 +20,43 @@ const Subscription = ({ onClose }) => {
     try {
       const status = await habitService.checkSubscriptionLimits();
       setSubscription(status);
-      
-      // Загружаем историю если есть метод
-      try {
-        const historyData = await habitService.getSubscriptionHistory();
-        setHistory(historyData.history || []);
-      } catch (err) {
-        console.log('History not available');
-      }
     } catch (error) {
       console.error('Failed to load subscription:', error);
     } finally {
       setLoading(false);
+    }
+  };
+  
+  const handleUpgradeClick = () => {
+    setShowSubscriptionModal(true);
+  };
+  
+  const handleSubscriptionActivate = async (plan) => {
+    try {
+      const result = await habitService.activatePremium(plan);
+      
+      if (result.success) {
+        console.log('Premium activated successfully');
+        
+        // Обновляем статус подписки
+        await loadSubscriptionData();
+        
+        // Закрываем модалку
+        setShowSubscriptionModal(false);
+        
+        // Показываем уведомление
+        if (window.Telegram?.WebApp?.showAlert) {
+          window.Telegram.WebApp.showAlert('Premium activated! Now you can create unlimited habits! 🎉');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to activate premium:', error);
+      
+      setShowSubscriptionModal(false);
+      
+      if (window.Telegram?.WebApp?.showAlert) {
+        window.Telegram.WebApp.showAlert('Failed to activate premium. Please try again.');
+      }
     }
   };
   
@@ -57,19 +83,105 @@ const Subscription = ({ onClose }) => {
     );
   }
   
-  const renderSubscriptionStatus = () => {
-    if (!subscription || !subscription.subscription || !subscription.subscription.isActive) {
-      return (
-        <div className="subscription-status subscription-status--free">
-          <h3>Free Plan</h3>
-          <p>You can create up to 3 habits</p>
-          <p className="subscription-usage">
-            Using {subscription?.habitCount || 0} of 3 habits
-          </p>
+  // Проверяем статус подписки
+  const isPremium = subscription?.isPremium || false;
+  const isActive = subscription?.subscription?.isActive || false;
+  
+  // Если у пользователя нет премиум-подписки - показываем страницу оформления
+  if (!isPremium || !isActive) {
+    return (
+      <>
+        <div className="subscription-page subscription-page--upgrade">
+          <div className="subscription-upgrade">
+            <div className="subscription-upgrade__illustration">
+              <img 
+                src="/images/sub.png" 
+                alt="PRO Features" 
+                className="subscription-upgrade__image"
+              />
+            </div>
+            
+            <div className="subscription-upgrade__content">
+              <h1 className="subscription-upgrade__title">Start Like a PRO</h1>
+              <p className="subscription-upgrade__subtitle">Unlock All Features</p>
+              
+              <div className="subscription-upgrade__features">
+                <div className="subscription-upgrade__feature">
+                  <div className="subscription-upgrade__feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" fill="#A7D96C"/>
+                      <path d="M8 12l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <span className="subscription-upgrade__feature-text">Unlimited Habits</span>
+                </div>
+                
+                <div className="subscription-upgrade__feature">
+                  <div className="subscription-upgrade__feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" fill="#A7D96C"/>
+                      <path d="M8 12l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <span className="subscription-upgrade__feature-text">Advanced Statistics</span>
+                </div>
+                
+                <div className="subscription-upgrade__feature">
+                  <div className="subscription-upgrade__feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" fill="#A7D96C"/>
+                      <path d="M8 12l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <span className="subscription-upgrade__feature-text">Priority Support</span>
+                </div>
+              </div>
+              
+              <button 
+                className="subscription-upgrade__button"
+                onClick={handleUpgradeClick}
+              >
+                Upgrade to Premium
+              </button>
+              
+              <p className="subscription-upgrade__note">
+                Currently on Free plan: {subscription?.habitCount || 0} of {subscription?.limit || 3} habits used
+              </p>
+            </div>
+          </div>
         </div>
-      );
-    }
-    
+        
+        <SubscriptionModal
+          isOpen={showSubscriptionModal}
+          onClose={() => setShowSubscriptionModal(false)}
+          onContinue={handleSubscriptionActivate}
+        />
+      </>
+    );
+  }
+  
+  // Если у пользователя есть премиум - показываем стандартный интерфейс
+  /* КОММЕНТИРОВАННЫЙ КОД - СТАРЫЙ ДИЗАЙН ДЛЯ ПРЕМИУМ-ПОЛЬЗОВАТЕЛЕЙ
+  return (
+    <div className="subscription-page">
+      <div className="subscription-page__content">
+        {renderSubscriptionStatus()}
+        
+        {subscription?.subscription?.isActive && subscription?.subscription?.expiresAt && (
+          <button 
+            className="subscription-page__cancel-btn"
+            onClick={handleCancelSubscription}
+          >
+            Cancel Subscription
+          </button>
+        )}
+      </div>
+    </div>
+  );
+  */
+  
+  // ВРЕМЕННО: Показываем стандартный интерфейс для премиум-пользователей
+  const renderSubscriptionStatus = () => {
     const sub = subscription.subscription;
     
     return (
@@ -100,13 +212,6 @@ const Subscription = ({ onClose }) => {
   
   return (
     <div className="subscription-page">
-      {/* <div className="subscription-page__header">
-        <button className="subscription-page__close" onClick={onClose}>
-          Close
-        </button>
-        <h2>Subscription</h2>
-      </div> */}
-      
       <div className="subscription-page__content">
         {renderSubscriptionStatus()}
         
@@ -117,20 +222,6 @@ const Subscription = ({ onClose }) => {
           >
             Cancel Subscription
           </button>
-        )}
-        
-        {history.length > 0 && (
-          <div className="subscription-history">
-            <h3>History</h3>
-            {history.map((item, index) => (
-              <div key={index} className="history-item">
-                <span className="history-action">{item.action}</span>
-                <span className="history-date">
-                  {new Date(item.created_at).toLocaleDateString()}
-                </span>
-              </div>
-            ))}
-          </div>
         )}
       </div>
     </div>
