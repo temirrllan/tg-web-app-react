@@ -219,7 +219,18 @@ getSubscriptionHistory: async () => {
     return { success: false, history: [] };
   }
 },
-
+// НОВЫЙ упрощенный метод проверки статуса
+getSubscriptionStatus: async () => {
+  try {
+    console.log('📡 [Service] Getting simple subscription status');
+    const { data } = await api.get('/subscription/status');
+    console.log('✅ [Service] Status received:', data);
+    return data;
+  } catch (error) {
+    console.error('❌ [Service] Error getting status:', error);
+    throw error;
+  }
+},
 // Отменить подписку
 cancelSubscription: async () => {
   try {
