@@ -29,6 +29,7 @@ const Subscription = ({ onClose, preselectedPlan = null, onActivate }) => {
     try {
       const status = await habitService.checkSubscriptionLimits();
       setSubscription(status);
+      console.log('📊 Subscription data loaded:', status);
     } catch (error) {
       console.error('Failed to load subscription:', error);
     } finally {
@@ -86,6 +87,7 @@ const Subscription = ({ onClose, preselectedPlan = null, onActivate }) => {
     }
   };
   
+  // Показываем лоадер во время загрузки
   if (loading) {
     return (
       <div className="subscription-page subscription-page--loading">
@@ -97,8 +99,12 @@ const Subscription = ({ onClose, preselectedPlan = null, onActivate }) => {
   const isPremium = subscription?.isPremium || false;
   const isActive = subscription?.subscription?.isActive || false;
   
+  console.log('🔍 Render decision:', { isPremium, isActive });
+  
   // РЕЖИМ 1: Страница оформления подписки (для бесплатных пользователей)
   if (!isPremium || !isActive) {
+    console.log('✅ Rendering PURCHASE page');
+    
     return (
       <div className="subscription-page subscription-page--purchase">
         <div className="subscription-purchase">
@@ -296,55 +302,8 @@ const Subscription = ({ onClose, preselectedPlan = null, onActivate }) => {
   }
   
   // РЕЖИМ 2: Информация о текущей подписке (для премиум-пользователей)
-  /* ЗАКОММЕНТИРОВАННЫЙ КОД - СТАРЫЙ ДИЗАЙН ДЛЯ ПРЕМИУМ-ПОЛЬЗОВАТЕЛЕЙ
-  const renderSubscriptionStatus = () => {
-    const sub = subscription.subscription;
-    
-    return (
-      <div className="subscription-status subscription-status--premium">
-        <h3>{sub.planName}</h3>
-        {sub.expiresAt ? (
-          <>
-            <p>Expires: {new Date(sub.expiresAt).toLocaleDateString()}</p>
-            {sub.daysLeft !== null && (
-              <p className={sub.daysLeft <= 7 ? 'days-warning' : ''}>
-                {sub.daysLeft} days remaining
-              </p>
-            )}
-          </>
-        ) : (
-          <p>Lifetime access</p>
-        )}
-        <p className="subscription-usage">
-          {subscription.habitCount} habits created (unlimited)
-        </p>
-        
-        {sub.isTrial && (
-          <div className="trial-badge">TRIAL</div>
-        )}
-      </div>
-    );
-  };
+  console.log('✅ Rendering PREMIUM STATUS page');
   
-  return (
-    <div className="subscription-page">
-      <div className="subscription-page__content">
-        {renderSubscriptionStatus()}
-        
-        {subscription?.subscription?.isActive && subscription?.subscription?.expiresAt && (
-          <button 
-            className="subscription-page__cancel-btn"
-            onClick={handleCancelSubscription}
-          >
-            Cancel Subscription
-          </button>
-        )}
-      </div>
-    </div>
-  );
-  */
-  
-  // ВРЕМЕННАЯ ЗАГЛУШКА для премиум-пользователей
   const sub = subscription.subscription;
   
   return (
