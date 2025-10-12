@@ -15,43 +15,59 @@ const Subscription = ({ onClose, preselectedPlan = null, onActivate }) => {
   const [selectedPlan, setSelectedPlan] = useState(preselectedPlan);
   const [processing, setProcessing] = useState(false);
   
+  console.log('🎬 Subscription component mounted');
+  console.log('📦 Props:', { preselectedPlan, hasOnActivate: !!onActivate });
+  
   useEffect(() => {
+    console.log('🔄 useEffect: Loading subscription data');
     loadSubscriptionData();
   }, []);
   
   useEffect(() => {
     if (preselectedPlan) {
+      console.log('✅ Setting preselected plan:', preselectedPlan);
       setSelectedPlan(preselectedPlan);
     }
   }, [preselectedPlan]);
   
   const loadSubscriptionData = async () => {
     try {
+      console.log('📡 Fetching subscription status...');
       const status = await habitService.checkSubscriptionLimits();
+      console.log('📊 Subscription data received:', JSON.stringify(status, null, 2));
       setSubscription(status);
-      console.log('📊 Subscription data loaded:', status);
     } catch (error) {
-      console.error('Failed to load subscription:', error);
+      console.error('❌ Failed to load subscription:', error);
+      console.error('Error details:', error.message, error.stack);
     } finally {
+      console.log('✅ Loading complete, setting loading to false');
       setLoading(false);
     }
   };
   
   const handlePlanSelect = (plan) => {
     if (processing) return;
+    console.log('📝 Plan selected:', plan);
     setSelectedPlan(plan);
   };
   
   const handleSubscribe = async () => {
-    if (!selectedPlan || processing) return;
+    if (!selectedPlan || processing) {
+      console.log('⚠️ Cannot subscribe:', { selectedPlan, processing });
+      return;
+    }
     
+    console.log('💳 Starting subscription process for plan:', selectedPlan);
     setProcessing(true);
     
     try {
       if (onActivate) {
+        console.log('🔧 Using onActivate callback');
         await onActivate(selectedPlan);
       } else {
+        console.log('🔧 Using direct API call');
         const result = await habitService.activatePremium(selectedPlan);
+        console.log('✅ Premium activation result:', result);
         
         if (result.success) {
           await loadSubscriptionData();
@@ -62,7 +78,7 @@ const Subscription = ({ onClose, preselectedPlan = null, onActivate }) => {
         }
       }
     } catch (error) {
-      console.error('Failed to activate premium:', error);
+      console.error('❌ Failed to activate premium:', error);
       
       if (window.Telegram?.WebApp?.showAlert) {
         window.Telegram.WebApp.showAlert('Failed to activate premium. Please try again.');
@@ -87,8 +103,11 @@ const Subscription = ({ onClose, preselectedPlan = null, onActivate }) => {
     }
   };
   
+  console.log('🎨 Current render state:', { loading, subscription, selectedPlan, processing });
+  
   // Показываем лоадер во время загрузки
   if (loading) {
+    console.log('⏳ Rendering LOADER');
     return (
       <div className="subscription-page subscription-page--loading">
         <Loader size="large" />
@@ -96,14 +115,35 @@ const Subscription = ({ onClose, preselectedPlan = null, onActivate }) => {
     );
   }
   
+  // Проверяем, что данные загружены
+  if (!subscription) {
+    console.log('❌ No subscription data, showing error');
+    return (
+      <div className="subscription-page">
+        <div className="subscription-page__content">
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+            <h2>Error Loading Subscription</h2>
+            <p>Failed to load subscription data. Please try again.</p>
+            <button onClick={loadSubscriptionData}>Retry</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
   const isPremium = subscription?.isPremium || false;
   const isActive = subscription?.subscription?.isActive || false;
   
-  console.log('🔍 Render decision:', { isPremium, isActive });
+  console.log('🔍 Render decision:', { 
+    isPremium, 
+    isActive, 
+    hasSubscription: !!subscription?.subscription,
+    subscriptionObject: subscription?.subscription 
+  });
   
   // РЕЖИМ 1: Страница оформления подписки (для бесплатных пользователей)
   if (!isPremium || !isActive) {
-    console.log('✅ Rendering PURCHASE page');
+    console.log('✅ Rendering PURCHASE page (free user)');
     
     return (
       <div className="subscription-page subscription-page--purchase">
