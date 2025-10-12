@@ -176,19 +176,36 @@ unmarkHabit: async (id, date = null) => {
   return data;
 },
 // Проверка лимитов подписки
+// Проверка лимитов подписки
 checkSubscriptionLimits: async () => {
   try {
+    console.log('📡 [Service] Requesting subscription status from API');
     const { data } = await api.get('/subscription/check');
-    console.log('Subscription limits:', data);
+    console.log('📦 [Service] API response received:', JSON.stringify(data, null, 2));
+    
+    if (!data.success) {
+      console.error('❌ [Service] API returned success=false:', data);
+      throw new Error(data.error || 'Failed to check subscription');
+    }
+    
+    console.log('✅ [Service] Returning subscription data');
     return data;
   } catch (error) {
-    console.error('checkSubscriptionLimits error:', error);
+    console.error('💥 [Service] checkSubscriptionLimits error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    });
+    
+    // Возвращаем безопасные значения по умолчанию
     return {
       success: false,
       habitCount: 0,
       limit: 3,
       isPremium: false,
-      canCreateMore: true
+      canCreateMore: true,
+      error: error.message
     };
   }
 },

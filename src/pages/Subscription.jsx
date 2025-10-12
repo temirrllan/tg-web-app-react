@@ -11,63 +11,95 @@ const Subscription = ({ onClose, preselectedPlan = null, onActivate }) => {
   useNavigation(onClose);
   
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [subscription, setSubscription] = useState(null);
   const [selectedPlan, setSelectedPlan] = useState(preselectedPlan);
   const [processing, setProcessing] = useState(false);
   
-  console.log('🎬 Subscription component mounted');
-  console.log('📦 Props:', { preselectedPlan, hasOnActivate: !!onActivate });
+  console.log('═════════════════════════════════════════');
+  console.log('🎬 [Component] Subscription mounted');
+  console.log('📦 [Component] Props:', { 
+    preselectedPlan, 
+    hasOnActivate: !!onActivate,
+    hasOnClose: !!onClose 
+  });
+  console.log('═════════════════════════════════════════');
   
   useEffect(() => {
-    console.log('🔄 useEffect: Loading subscription data');
+    console.log('🔄 [Component] useEffect triggered - loading data');
     loadSubscriptionData();
   }, []);
   
   useEffect(() => {
     if (preselectedPlan) {
-      console.log('✅ Setting preselected plan:', preselectedPlan);
+      console.log('✅ [Component] Setting preselected plan:', preselectedPlan);
       setSelectedPlan(preselectedPlan);
     }
   }, [preselectedPlan]);
   
   const loadSubscriptionData = async () => {
     try {
-      console.log('📡 Fetching subscription status...');
+      console.log('📡 [Component] Starting subscription data fetch...');
+      setLoading(true);
+      setError(null);
+      
       const status = await habitService.checkSubscriptionLimits();
-      console.log('📊 Subscription data received:', JSON.stringify(status, null, 2));
+      
+      console.log('═════════════════════════════════════════');
+      console.log('📊 [Component] Subscription data received:');
+      console.log(JSON.stringify(status, null, 2));
+      console.log('═════════════════════════════════════════');
+      
+      if (!status) {
+        throw new Error('No data returned from API');
+      }
+      
+      if (status.error) {
+        throw new Error(status.error);
+      }
+      
       setSubscription(status);
-    } catch (error) {
-      console.error('❌ Failed to load subscription:', error);
-      console.error('Error details:', error.message, error.stack);
+      console.log('✅ [Component] Subscription state updated successfully');
+      
+    } catch (err) {
+      console.error('═════════════════════════════════════════');
+      console.error('❌ [Component] Failed to load subscription:');
+      console.error('Error message:', err.message);
+      console.error('Error stack:', err.stack);
+      console.error('═════════════════════════════════════════');
+      setError(err.message);
     } finally {
-      console.log('✅ Loading complete, setting loading to false');
+      console.log('✅ [Component] Setting loading to false');
       setLoading(false);
     }
   };
   
   const handlePlanSelect = (plan) => {
-    if (processing) return;
-    console.log('📝 Plan selected:', plan);
+    if (processing) {
+      console.log('⚠️ [Component] Cannot select plan - processing in progress');
+      return;
+    }
+    console.log('📝 [Component] Plan selected:', plan);
     setSelectedPlan(plan);
   };
   
   const handleSubscribe = async () => {
     if (!selectedPlan || processing) {
-      console.log('⚠️ Cannot subscribe:', { selectedPlan, processing });
+      console.log('⚠️ [Component] Cannot subscribe:', { selectedPlan, processing });
       return;
     }
     
-    console.log('💳 Starting subscription process for plan:', selectedPlan);
+    console.log('💳 [Component] Starting subscription process for plan:', selectedPlan);
     setProcessing(true);
     
     try {
       if (onActivate) {
-        console.log('🔧 Using onActivate callback');
+        console.log('🔧 [Component] Using onActivate callback');
         await onActivate(selectedPlan);
       } else {
-        console.log('🔧 Using direct API call');
+        console.log('🔧 [Component] Using direct API call');
         const result = await habitService.activatePremium(selectedPlan);
-        console.log('✅ Premium activation result:', result);
+        console.log('✅ [Component] Premium activation result:', result);
         
         if (result.success) {
           await loadSubscriptionData();
@@ -78,7 +110,7 @@ const Subscription = ({ onClose, preselectedPlan = null, onActivate }) => {
         }
       }
     } catch (error) {
-      console.error('❌ Failed to activate premium:', error);
+      console.error('❌ [Component] Failed to activate premium:', error);
       
       if (window.Telegram?.WebApp?.showAlert) {
         window.Telegram.WebApp.showAlert('Failed to activate premium. Please try again.');
@@ -103,47 +135,111 @@ const Subscription = ({ onClose, preselectedPlan = null, onActivate }) => {
     }
   };
   
-  console.log('🎨 Current render state:', { loading, subscription, selectedPlan, processing });
+  console.log('═════════════════════════════════════════');
+  console.log('🎨 [Component] Current render state:');
+  console.log('  - loading:', loading);
+  console.log('  - error:', error);
+  console.log('  - hasSubscription:', !!subscription);
+  console.log('  - subscriptionData:', subscription);
+  console.log('  - selectedPlan:', selectedPlan);
+  console.log('  - processing:', processing);
+  console.log('═════════════════════════════════════════');
   
-  // Показываем лоадер во время загрузки
+  // СОСТОЯНИЕ 1: ЗАГРУЗКА
   if (loading) {
-    console.log('⏳ Rendering LOADER');
+    console.log('⏳ [Component] RENDERING: LOADER');
     return (
       <div className="subscription-page subscription-page--loading">
         <Loader size="large" />
+        <p style={{ textAlign: 'center', marginTop: '20px', color: '#666' }}>
+          Loading subscription data...
+        </p>
       </div>
     );
   }
   
-  // Проверяем, что данные загружены
-  if (!subscription) {
-    console.log('❌ No subscription data, showing error');
+  // СОСТОЯНИЕ 2: ОШИБКА
+  if (error) {
+    console.log('❌ [Component] RENDERING: ERROR STATE');
     return (
       <div className="subscription-page">
-        <div className="subscription-page__content">
-          <div style={{ padding: '20px', textAlign: 'center' }}>
-            <h2>Error Loading Subscription</h2>
-            <p>Failed to load subscription data. Please try again.</p>
-            <button onClick={loadSubscriptionData}>Retry</button>
-          </div>
+        <div className="subscription-page__content" style={{ 
+          padding: '40px 20px', 
+          textAlign: 'center' 
+        }}>
+          <h2 style={{ color: '#FF3B30', marginBottom: '16px' }}>
+            ⚠️ Error Loading Subscription
+          </h2>
+          <p style={{ color: '#666', marginBottom: '24px' }}>
+            {error}
+          </p>
+          <button 
+            onClick={loadSubscriptionData}
+            style={{
+              padding: '12px 24px',
+              background: '#A7D96C',
+              color: '#1D1D1F',
+              border: 'none',
+              borderRadius: '12px',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: 'pointer'
+            }}
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
   }
   
+  // СОСТОЯНИЕ 3: НЕТ ДАННЫХ
+  if (!subscription) {
+    console.log('❌ [Component] RENDERING: NO DATA STATE');
+    return (
+      <div className="subscription-page">
+        <div className="subscription-page__content" style={{ 
+          padding: '40px 20px', 
+          textAlign: 'center' 
+        }}>
+          <h2 style={{ marginBottom: '16px' }}>📭 No Subscription Data</h2>
+          <p style={{ color: '#666', marginBottom: '24px' }}>
+            Failed to load subscription information.
+          </p>
+          <button 
+            onClick={loadSubscriptionData}
+            style={{
+              padding: '12px 24px',
+              background: '#A7D96C',
+              color: '#1D1D1F',
+              border: 'none',
+              borderRadius: '12px',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: 'pointer'
+            }}
+          >
+            Reload
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
+  // Определяем статус подписки
   const isPremium = subscription?.isPremium || false;
   const isActive = subscription?.subscription?.isActive || false;
   
-  console.log('🔍 Render decision:', { 
-    isPremium, 
-    isActive, 
-    hasSubscription: !!subscription?.subscription,
-    subscriptionObject: subscription?.subscription 
-  });
+  console.log('═════════════════════════════════════════');
+  console.log('🔍 [Component] Render decision:');
+  console.log('  - isPremium:', isPremium);
+  console.log('  - isActive:', isActive);
+  console.log('  - Will show:', (!isPremium || !isActive) ? 'PURCHASE PAGE' : 'PREMIUM STATUS');
+  console.log('═════════════════════════════════════════');
   
-  // РЕЖИМ 1: Страница оформления подписки (для бесплатных пользователей)
+  // СОСТОЯНИЕ 4: СТРАНИЦА ОФОРМЛЕНИЯ (бесплатный пользователь)
   if (!isPremium || !isActive) {
-    console.log('✅ Rendering PURCHASE page (free user)');
+    console.log('✅ [Component] RENDERING: PURCHASE PAGE');
     
     return (
       <div className="subscription-page subscription-page--purchase">
@@ -153,6 +249,10 @@ const Subscription = ({ onClose, preselectedPlan = null, onActivate }) => {
               src={sub} 
               alt="PRO Features" 
               className="subscription-purchase__image"
+              onError={(e) => {
+                console.error('❌ Failed to load image:', e);
+                e.target.style.display = 'none';
+              }}
             />
           </div>
           
@@ -196,6 +296,7 @@ const Subscription = ({ onClose, preselectedPlan = null, onActivate }) => {
             <div className="subscription-purchase__plans">
               <h3 className="subscription-purchase__section-title">Subscription Plans</h3>
               
+              {/* Plan 1: 1 Year */}
               <div 
                 className={`subscription-purchase__plan ${selectedPlan === '1_year' ? 'subscription-purchase__plan--selected' : ''}`}
                 onClick={() => handlePlanSelect('1_year')}
@@ -214,6 +315,7 @@ const Subscription = ({ onClose, preselectedPlan = null, onActivate }) => {
                 <div className="subscription-purchase__plan-price">83 ⭐/month</div>
               </div>
               
+              {/* Plan 2: 6 Months */}
               <div 
                 className={`subscription-purchase__plan ${selectedPlan === '6_months' ? 'subscription-purchase__plan--selected' : ''}`}
                 onClick={() => handlePlanSelect('6_months')}
@@ -232,6 +334,7 @@ const Subscription = ({ onClose, preselectedPlan = null, onActivate }) => {
                 <div className="subscription-purchase__plan-price">100 ⭐/month</div>
               </div>
               
+              {/* Plan 3: 3 Months */}
               <div 
                 className={`subscription-purchase__plan ${selectedPlan === '3_months' ? 'subscription-purchase__plan--selected' : ''}`}
                 onClick={() => handlePlanSelect('3_months')}
@@ -250,6 +353,7 @@ const Subscription = ({ onClose, preselectedPlan = null, onActivate }) => {
                 <div className="subscription-purchase__plan-price">117 ⭐/month</div>
               </div>
               
+              {/* Plan 4: 1 Month */}
               <div 
                 className={`subscription-purchase__plan ${selectedPlan === 'month' ? 'subscription-purchase__plan--selected' : ''}`}
                 onClick={() => handlePlanSelect('month')}
@@ -341,8 +445,8 @@ const Subscription = ({ onClose, preselectedPlan = null, onActivate }) => {
     );
   }
   
-  // РЕЖИМ 2: Информация о текущей подписке (для премиум-пользователей)
-  console.log('✅ Rendering PREMIUM STATUS page');
+  // СОСТОЯНИЕ 5: ИНФОРМАЦИЯ О ПОДПИСКЕ (премиум пользователь)
+  console.log('✅ [Component] RENDERING: PREMIUM STATUS PAGE');
   
   const sub = subscription.subscription;
   
