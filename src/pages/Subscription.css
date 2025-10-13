@@ -32,6 +32,7 @@
   color: #007AFF;
   font-size: 17px;
   padding: 0;
+  cursor: pointer;
 }
 
 .subscription-page__header h2 {
@@ -111,6 +112,12 @@
   font-size: 17px;
   font-weight: 600;
   margin-bottom: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.subscription-page__cancel-btn:active {
+  transform: scale(0.98);
 }
 
 .subscription-history {
