@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigation } from '../hooks/useNavigation';
 import { habitService } from '../services/habits';
 import Loader from '../components/common/Loader';
+import SubscriptionNew from './SubscriptionNew';
 import './Subscription.css';
 
-const Subscription = ({ onClose }) => {
+const Subscription = ({ onClose, preselectedPlan = null }) => {
   useNavigation(onClose);
   
   const [loading, setLoading] = useState(true);
@@ -20,12 +21,14 @@ const Subscription = ({ onClose }) => {
       const status = await habitService.checkSubscriptionLimits();
       setSubscription(status);
       
-      // Загружаем историю если есть метод
-      try {
-        const historyData = await habitService.getSubscriptionHistory();
-        setHistory(historyData.history || []);
-      } catch (err) {
-        console.log('History not available');
+      // Если у пользователя уже есть подписка, загружаем историю
+      if (status?.isPremium && status?.subscription?.isActive) {
+        try {
+          const historyData = await habitService.getSubscriptionHistory();
+          setHistory(historyData.history || []);
+        } catch (err) {
+          console.log('History not available');
+        }
       }
     } catch (error) {
       console.error('Failed to load subscription:', error);
@@ -57,60 +60,41 @@ const Subscription = ({ onClose }) => {
     );
   }
   
-  const renderSubscriptionStatus = () => {
-    if (!subscription || !subscription.subscription || !subscription.subscription.isActive) {
-      return (
-        <div className="subscription-status subscription-status--free">
-          <h3>Free Plan</h3>
-          <p>You can create up to 3 habits</p>
-          <p className="subscription-usage">
-            Using {subscription?.habitCount || 0} of 3 habits
-          </p>
-        </div>
-      );
-    }
-    
-    const sub = subscription.subscription;
-    
-    return (
-      <div className="subscription-status subscription-status--premium">
-        <h3>{sub.planName}</h3>
-        {sub.expiresAt ? (
-          <>
-            <p>Expires: {new Date(sub.expiresAt).toLocaleDateString()}</p>
-            {sub.daysLeft !== null && (
-              <p className={sub.daysLeft <= 7 ? 'days-warning' : ''}>
-                {sub.daysLeft} days remaining
-              </p>
-            )}
-          </>
-        ) : (
-          <p>Lifetime access</p>
-        )}
-        <p className="subscription-usage">
-          {subscription.habitCount} habits created (unlimited)
-        </p>
-        
-        {sub.isTrial && (
-          <div className="trial-badge">TRIAL</div>
-        )}
-      </div>
-    );
-  };
+  // Если у пользователя нет активной подписки - показываем новый интерфейс
+  if (!subscription?.isPremium || !subscription?.subscription?.isActive) {
+    return <SubscriptionNew onClose={onClose} preselectedPlan={preselectedPlan} />;
+  }
+  
+  // Если у пользователя есть активная подписка - показываем текущий интерфейс
+  const sub = subscription.subscription;
   
   return (
     <div className="subscription-page">
-      {/* <div className="subscription-page__header">
-        <button className="subscription-page__close" onClick={onClose}>
-          Close
-        </button>
-        <h2>Subscription</h2>
-      </div> */}
-      
       <div className="subscription-page__content">
-        {renderSubscriptionStatus()}
+        <div className="subscription-status subscription-status--premium">
+          <h3>{sub.planName}</h3>
+          {sub.expiresAt ? (
+            <>
+              <p>Expires: {new Date(sub.expiresAt).toLocaleDateString()}</p>
+              {sub.daysLeft !== null && (
+                <p className={sub.daysLeft <= 7 ? 'days-warning' : ''}>
+                  {sub.daysLeft} days remaining
+                </p>
+              )}
+            </>
+          ) : (
+            <p>Lifetime access</p>
+          )}
+          <p className="subscription-usage">
+            {subscription.habitCount} habits created (unlimited)
+          </p>
+          
+          {sub.isTrial && (
+            <div className="trial-badge">TRIAL</div>
+          )}
+        </div>
         
-        {subscription?.subscription?.isActive && subscription?.subscription?.expiresAt && (
+        {subscription?.subscription?.expiresAt && (
           <button 
             className="subscription-page__cancel-btn"
             onClick={handleCancelSubscription}

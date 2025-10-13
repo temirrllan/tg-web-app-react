@@ -15,10 +15,11 @@ import "./Today.css";
 import SwipeHint from '../components/habits/SwipeHint';
 import EditHabitForm from '../components/habits/EditHabitForm';
 import SubscriptionModal from '../components/modals/SubscriptionModal';
+import Subscription from './Subscription';
 import { useTranslation } from '../hooks/useTranslation';
 
 const Today = () => {
-    const { t } = useTranslation(); // Получаем функцию перевода
+    const { t } = useTranslation();
 
   const { user } = useTelegram();
   const {
@@ -35,6 +36,8 @@ const Today = () => {
     refreshDateData
   } = useHabits();
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [showSubscriptionPage, setShowSubscriptionPage] = useState(false);
+  const [selectedSubscriptionPlan, setSelectedSubscriptionPlan] = useState(null);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -51,7 +54,18 @@ const Today = () => {
     const day = String(today.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
+  // После всех useState определений добавьте:
+useEffect(() => {
+  const handleOpenSubscription = () => {
+    setShowSubscriptionPage(true);
+  };
+
+  window.addEventListener('openSubscriptionPage', handleOpenSubscription);
   
+  return () => {
+    window.removeEventListener('openSubscriptionPage', handleOpenSubscription);
+  };
+}, []);
   const getYesterdayDate = () => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
@@ -257,42 +271,25 @@ const Today = () => {
     }
   };
 
-  const handleSubscriptionContinue = async (plan) => {
-    console.log('Selected subscription plan:', plan);
+  // Обработчик выбора плана в модалке
+  const handleSubscriptionPlanSelect = (plan) => {
+    console.log('Plan selected in modal:', plan);
+    setSelectedSubscriptionPlan(plan);
+    setShowSubscriptionModal(false);
+    setShowSubscriptionPage(true);
+  };
+
+  // Обработчик закрытия страницы подписки
+  const handleSubscriptionPageClose = async () => {
+    setShowSubscriptionPage(false);
+    setSelectedSubscriptionPlan(null);
     
-    try {
-      // Активируем премиум через API
-      const result = await habitService.activatePremium(plan);
-      
-      if (result.success) {
-        console.log('Premium activated successfully');
-        
-        // Обновляем статус подписки
-        await checkUserSubscription();
-        
-        // Закрываем модалку подписки
-        setShowSubscriptionModal(false);
-        
-        // Если лимит был достигнут, теперь открываем форму создания
-        if (userSubscription && !userSubscription.canCreateMore) {
-          setShowCreateForm(true);
-        }
-        
-        // Показываем уведомление
-        if (window.Telegram?.WebApp?.showAlert) {
-          window.Telegram.WebApp.showAlert('Premium activated! Now you can create unlimited habits! 🎉');
-        }
-      }
-    } catch (error) {
-      console.error('Failed to activate premium:', error);
-      
-      setShowSubscriptionModal(false);
-      
-      if (window.Telegram?.WebApp?.showAlert) {
-        window.Telegram.WebApp.showAlert('Failed to activate premium. Please try again.');
-      } else {
-        alert('Failed to activate premium. Please try again.');
-      }
+    // Обновляем статус подписки
+    await checkUserSubscription();
+    
+    // Если после оформления подписки лимит больше не превышен, открываем форму создания
+    if (userSubscription && userSubscription.canCreateMore) {
+      setShowCreateForm(true);
     }
   };
 
@@ -474,6 +471,16 @@ const Today = () => {
     );
   }
 
+  // Показываем страницу подписки если нужно
+  if (showSubscriptionPage) {
+    return (
+      <Subscription
+        onClose={handleSubscriptionPageClose}
+        preselectedPlan={selectedSubscriptionPlan}
+      />
+    );
+  }
+
   // Показываем детальную страницу привычки
   if (showHabitDetail && selectedHabit) {
     console.log('Rendering HabitDetail with habit:', selectedHabit);
@@ -589,7 +596,7 @@ const Today = () => {
       <SubscriptionModal
         isOpen={showSubscriptionModal}
         onClose={() => setShowSubscriptionModal(false)}
-        onContinue={handleSubscriptionContinue}
+        onSelectPlan={handleSubscriptionPlanSelect}
       />
     </>
   );

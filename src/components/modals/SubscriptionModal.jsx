@@ -5,13 +5,11 @@ import { useNavigation } from '../../hooks/useNavigation';
 import { habitService } from '../../services/habits';
 import { useTranslation } from '../../hooks/useTranslation';
 
-const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
+const SubscriptionModal = ({ isOpen, onClose, onSelectPlan }) => {
   const { t } = useTranslation();
 
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const [availablePlans, setAvailablePlans] = useState([]); // оставил на будущее
   const [currentSubscription, setCurrentSubscription] = useState(null);
-  const [loading, setLoading] = useState(false);
   
   useNavigation(onClose, { isVisible: isOpen });
 
@@ -19,7 +17,6 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
     if (isOpen) {
       loadSubscriptionInfo();
       setSelectedPlan(null);
-      setLoading(false);
     }
   }, [isOpen]);
 
@@ -27,7 +24,6 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
     try {
       const status = await habitService.checkSubscriptionLimits();
       setCurrentSubscription(status.subscription);
-      // console.log('Subscription modal - current status:', status);
     } catch (error) {
       console.error('Failed to load subscription info:', error);
     }
@@ -35,30 +31,21 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
 
   if (!isOpen) return null;
 
-  const handleContinue = async () => {
-    if (!selectedPlan || loading) return;
-    setLoading(true);
-    try {
-      await onContinue(selectedPlan);
-      // onContinue сам закроет модалку при успехе
-    } catch (error) {
-      console.error('Failed to activate subscription:', error);
-      setLoading(false);
-      if (window.Telegram?.WebApp?.showAlert) {
-        window.Telegram.WebApp.showAlert(t('subscriptionModal.errors.activateFailed'));
-      }
-    }
+  const handleContinue = () => {
+    if (!selectedPlan) return;
+    
+    // Передаем выбранный план в родительский компонент
+    // который откроет страницу Subscription с выбранным планом
+    onSelectPlan(selectedPlan);
+    onClose();
   };
 
   const handlePlanSelect = (plan) => {
-    if (loading) return;
     setSelectedPlan(plan);
   };
 
   const handleClose = () => {
-    if (loading) return;
     setSelectedPlan(null);
-    setLoading(false);
     onClose();
   };
 
@@ -138,7 +125,6 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
               <div 
                 className={`subscription-modal__plan ${selectedPlan === '6_months' ? 'subscription-modal__plan--selected' : ''}`}
                 onClick={() => handlePlanSelect('6_months')}
-                style={{ opacity: loading ? 0.7 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}
               >
                 <div className="subscription-modal__plan-radio">
                   {selectedPlan === '6_months' && (
@@ -164,7 +150,6 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
               <div 
                 className={`subscription-modal__plan ${selectedPlan === '1_year' ? 'subscription-modal__plan--selected' : ''}`}
                 onClick={() => handlePlanSelect('1_year')}
-                style={{ opacity: loading ? 0.7 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}
               >
                 <div className="subscription-modal__plan-radio">
                   {selectedPlan === '1_year' && (
@@ -204,21 +189,12 @@ const SubscriptionModal = ({ isOpen, onClose, onContinue }) => {
             </div>
 
             <button 
-              className={`subscription-modal__continue ${(!selectedPlan || loading) ? 'subscription-modal__continue--disabled' : ''}`}
+              className={`subscription-modal__continue ${!selectedPlan ? 'subscription-modal__continue--disabled' : ''}`}
               onClick={handleContinue}
-              disabled={!selectedPlan || loading}
+              disabled={!selectedPlan}
             >
-              {loading ? t('subscriptionModal.processing') : t('subscriptionModal.continue')}
+              {t('subscriptionModal.continue')}
             </button>
-
-            <p style={{ 
-              fontSize: '12px', 
-              color: '#8E8E93', 
-              textAlign: 'center', 
-              marginTop: '12px' 
-            }}>
-              {t('subscriptionModal.testNote')}
-            </p>
           </div>
         </div>
       </div>

@@ -103,35 +103,40 @@ const Profile = ({ onClose }) => {
     { id: 'payment' }
   ];
 
-  const handleMenuClick = (itemId) => {
-    console.log('Menu item clicked:', itemId);
+ const handleMenuClick = (itemId) => {
+  console.log('Menu item clicked:', itemId);
 
-    switch (itemId) {
-      case 'subscription':
-        setShowSubscriptionPage(true);
-        break;
-      case 'purchase_history':
-        setShowPurchaseHistory(true);
-        break;
-      case 'settings':
-        setShowSettings(true);
-        break;
-      case 'support':
-        tg?.openLink?.('https://t.me/your_support_bot');
-        break;
-      case 'terms':
-        tg?.openLink?.('https://yoursite.com/terms');
-        break;
-      case 'privacy':
-        tg?.openLink?.('https://yoursite.com/privacy');
-        break;
-      case 'payment':
-        tg?.openLink?.('https://yoursite.com/payment-policy');
-        break;
-      default:
-        break;
-    }
-  };
+  switch (itemId) {
+    case 'subscription':
+      // Закрываем профиль и открываем страницу подписки
+      onClose();
+      // Здесь нужно добавить логику открытия страницы Subscription
+      // Это зависит от вашей архитектуры навигации
+      // Например, можно использовать событие или callback
+      window.dispatchEvent(new CustomEvent('openSubscriptionPage'));
+      break;
+    case 'purchase_history':
+      setShowPurchaseHistory(true);
+      break;
+    case 'settings':
+      setShowSettings(true);
+      break;
+    case 'support':
+      tg?.openLink?.('https://t.me/your_support_bot');
+      break;
+    case 'terms':
+      tg?.openLink?.('https://yoursite.com/terms');
+      break;
+    case 'privacy':
+      tg?.openLink?.('https://yoursite.com/privacy');
+      break;
+    case 'payment':
+      tg?.openLink?.('https://yoursite.com/payment-policy');
+      break;
+    default:
+      break;
+  }
+};
 
   if (showPurchaseHistory) {
     return (
