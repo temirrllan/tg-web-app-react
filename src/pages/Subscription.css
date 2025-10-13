@@ -17,32 +17,32 @@
   justify-content: center;
 }
 
-.subscription-page__header {
+/* .subscription-page__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 16px;
   background: white;
   border-bottom: 1px solid #E5E5EA;
-}
+} */
 
-.subscription-page__close {
+/* .subscription-page__close {
   background: none;
   border: none;
   color: #007AFF;
   font-size: 17px;
   padding: 0;
   cursor: pointer;
-}
+} */
 
-.subscription-page__header h2 {
+/* .subscription-page__header h2 {
   font-size: 17px;
   font-weight: 600;
   margin: 0;
   color: #000;
   text-align: center;
   flex: 1;
-}
+} */
 
 .subscription-page__content {
   flex: 1;
