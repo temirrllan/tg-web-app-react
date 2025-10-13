@@ -204,13 +204,27 @@ getSubscriptionHistory: async () => {
 },
 
 // Отменить подписку
+// В файле src/services/habits.js обновите метод cancelSubscription:
+
 cancelSubscription: async () => {
   try {
+    console.log('Calling cancel subscription API...');
     const { data } = await api.post('/subscription/cancel');
+    console.log('Cancel subscription response:', data);
+    
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to cancel subscription');
+    }
+    
     return data;
   } catch (error) {
     console.error('cancelSubscription error:', error);
-    throw error;
+    
+    // Возвращаем ошибку для обработки в компоненте
+    return {
+      success: false,
+      error: error.response?.data?.error || error.message || 'Failed to cancel subscription'
+    };
   }
 },
 

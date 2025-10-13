@@ -11,6 +11,7 @@ const Subscription = ({ onClose, preselectedPlan = null }) => {
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState(null);
   const [history, setHistory] = useState([]);
+  const [isCancelling, setIsCancelling] = useState(false);
   
   useEffect(() => {
     loadSubscriptionData();
@@ -18,7 +19,9 @@ const Subscription = ({ onClose, preselectedPlan = null }) => {
   
   const loadSubscriptionData = async () => {
     try {
+      setLoading(true);
       const status = await habitService.checkSubscriptionLimits();
+      console.log('Subscription status loaded:', status);
       setSubscription(status);
       
       // Если у пользователя уже есть подписка, загружаем историю
@@ -38,17 +41,54 @@ const Subscription = ({ onClose, preselectedPlan = null }) => {
   };
   
   const handleCancelSubscription = async () => {
-    if (window.confirm('Are you sure you want to cancel your subscription?')) {
-      try {
-        await habitService.cancelSubscription();
+    const confirmMessage = 'Are you sure you want to cancel your subscription? You will lose all premium features.';
+    
+    if (window.Telegram?.WebApp?.showConfirm) {
+      window.Telegram.WebApp.showConfirm(confirmMessage, async (confirmed) => {
+        if (confirmed) {
+          await performCancelSubscription();
+        }
+      });
+    } else {
+      if (window.confirm(confirmMessage)) {
+        await performCancelSubscription();
+      }
+    }
+  };
+  
+  const performCancelSubscription = async () => {
+    try {
+      setIsCancelling(true);
+      console.log('Cancelling subscription...');
+      
+      const result = await habitService.cancelSubscription();
+      console.log('Cancel result:', result);
+      
+      if (result.success) {
+        // Показываем уведомление об успешной отмене
+        if (window.Telegram?.WebApp?.showAlert) {
+          window.Telegram.WebApp.showAlert('Subscription cancelled successfully');
+        } else {
+          alert('Subscription cancelled successfully');
+        }
+        
+        // Перезагружаем данные подписки
         await loadSubscriptionData();
         
-        if (window.Telegram?.WebApp?.showAlert) {
-          window.Telegram.WebApp.showAlert('Subscription cancelled');
-        }
-      } catch (error) {
-        console.error('Failed to cancel subscription:', error);
+        // Если подписка больше не активна, компонент автоматически покажет SubscriptionNew
+      } else {
+        throw new Error(result.error || 'Failed to cancel subscription');
       }
+    } catch (error) {
+      console.error('Failed to cancel subscription:', error);
+      
+      if (window.Telegram?.WebApp?.showAlert) {
+        window.Telegram.WebApp.showAlert('Failed to cancel subscription. Please try again.');
+      } else {
+        alert('Failed to cancel subscription. Please try again.');
+      }
+    } finally {
+      setIsCancelling(false);
     }
   };
   
@@ -102,12 +142,14 @@ const Subscription = ({ onClose, preselectedPlan = null }) => {
           )}
         </div>
         
+        {/* Показываем кнопку отмены только если подписка не lifetime */}
         {subscription?.subscription?.expiresAt && (
           <button 
             className="subscription-page__cancel-btn"
             onClick={handleCancelSubscription}
+            disabled={isCancelling}
           >
-            Cancel Subscription
+            {isCancelling ? 'Cancelling...' : 'Cancel Subscription'}
           </button>
         )}
         

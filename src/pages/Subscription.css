@@ -159,3 +159,13 @@
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
+
+.subscription-page__cancel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.subscription-page__cancel-btn:not(:disabled):hover {
+  background: #FF3B30;
+  color: white;
+}
