@@ -280,18 +280,28 @@ useEffect(() => {
   };
 
   // Обработчик закрытия страницы подписки
-  const handleSubscriptionPageClose = async () => {
-    setShowSubscriptionPage(false);
-    setSelectedSubscriptionPlan(null);
+  // Обработчик закрытия страницы подписки
+const handleSubscriptionPageClose = async () => {
+  console.log('🔒 Closing subscription page');
+  
+  setShowSubscriptionPage(false);
+  setSelectedSubscriptionPlan(null);
+  
+  // Обновляем статус подписки
+  await checkUserSubscription();
+  
+  // ВАЖНО: НЕ открываем форму создания привычки автоматически
+  // Пользователь вернётся на главный экран Today
+  
+  // Если пользователь стал premium, показываем уведомление
+  const updatedSubscription = await habitService.checkSubscriptionLimits();
+  if (updatedSubscription && updatedSubscription.isPremium) {
+    console.log('✅ User is now premium');
     
-    // Обновляем статус подписки
-    await checkUserSubscription();
-    
-    // Если после оформления подписки лимит больше не превышен, открываем форму создания
-    if (userSubscription && userSubscription.canCreateMore) {
-      setShowCreateForm(true);
-    }
-  };
+    // Перезагружаем привычки на сегодня
+    await reloadCurrentDateHabits();
+  }
+};
 
   const getMotivationalMessage = () => {
     const currentStats = dateStats;

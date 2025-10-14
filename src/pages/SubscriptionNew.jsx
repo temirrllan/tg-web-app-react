@@ -72,7 +72,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
     }
   };
 
-  const handleSubscribe = async () => {
+const handleSubscribe = async () => {
   if (!agreedToTerms || isProcessing) return;
   
   setIsProcessing(true);
@@ -106,7 +106,8 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
       // Ждём немного чтобы webhook обработался
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Закрываем страницу подписки
+      // ВАЖНО: Закрываем страницу подписки БЕЗ открытия других страниц
+      // onClose вернёт на главную страницу Today
       onClose();
     }
     

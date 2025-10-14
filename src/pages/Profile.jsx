@@ -103,16 +103,15 @@ const Profile = ({ onClose }) => {
     { id: 'payment' }
   ];
 
- const handleMenuClick = (itemId) => {
+const handleMenuClick = (itemId) => {
   console.log('Menu item clicked:', itemId);
 
   switch (itemId) {
     case 'subscription':
       // Закрываем профиль и открываем страницу подписки
+      setShowProfile(false); // Добавь эту строку если её нет
       onClose();
-      // Здесь нужно добавить логику открытия страницы Subscription
-      // Это зависит от вашей архитектуры навигации
-      // Например, можно использовать событие или callback
+      // Используем событие для открытия страницы подписки
       window.dispatchEvent(new CustomEvent('openSubscriptionPage'));
       break;
     case 'purchase_history':
