@@ -115,7 +115,43 @@ function AppContent() {
       setLoading(false);
     }
   }, [webApp, tgUser, isReady, isLoading, tg, initializeLanguage]);
+// После useEffect с initAuth добавьте:
 
+useEffect(() => {
+  // Обработчик возврата в приложение (после оплаты)
+  const handleVisibilityChange = async () => {
+    if (document.visibilityState === 'visible' && user) {
+      console.log('🔄 App became visible, checking subscription status...');
+      
+      try {
+        // Перезагружаем данные пользователя
+        const response = await habitService.getUserProfile();
+        if (response) {
+          setUser(prevUser => ({
+            ...prevUser,
+            is_premium: response.is_premium,
+            subscription_type: response.subscription_type
+          }));
+          
+          // Если пользователь стал premium, показываем уведомление
+          if (response.is_premium && !user.is_premium) {
+            if (tg?.showAlert) {
+              tg.showAlert('🎉 Premium activated! Enjoy unlimited habits!');
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to refresh user data:', error);
+      }
+    }
+  };
+
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+
+  return () => {
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+  };
+}, [user, tg]);
   if (loading || isLoading) {
     return (
       <div className="app-loading">

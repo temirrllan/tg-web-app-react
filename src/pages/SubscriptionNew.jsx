@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigation } from '../hooks/useNavigation';
 import { habitService } from '../services/habits';
 import './SubscriptionNew.css';
-
+import { telegramStarsService } from '../services/telegramStars';
 const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
   useNavigation(onClose);
   
@@ -73,46 +73,80 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
   };
 
   const handleSubscribe = async () => {
-    if (!agreedToTerms || isProcessing) return;
-    
-    setIsProcessing(true);
-    
-    try {
-      // Маппинг планов на backend формат
-      let backendPlan = selectedPlan;
-      if (selectedPlan === 'year') {
-        backendPlan = '1_year';
-      } else if (selectedPlan === '6_months') {
-        backendPlan = '6_months';
-      } else if (selectedPlan === '3_months') {
-        // Для 3 месяцев используем 6_months как fallback
-        backendPlan = '6_months';
-      } else if (selectedPlan === 'month') {
-        // Для месячной подписки используем 6_months как fallback
-        backendPlan = '6_months';
-      }
-      
-      const result = await habitService.activatePremium(backendPlan);
-      
-      if (result.success) {
-        if (window.Telegram?.WebApp?.showAlert) {
-          window.Telegram.WebApp.showAlert('Premium activated successfully! 🎉');
-        }
-        
-        setTimeout(() => {
-          onClose();
-        }, 1500);
-      }
-    } catch (error) {
-      console.error('Failed to activate premium:', error);
-      
-      if (window.Telegram?.WebApp?.showAlert) {
-        window.Telegram.WebApp.showAlert('Failed to activate premium. Please try again.');
-      }
-    } finally {
-      setIsProcessing(false);
+  if (!agreedToTerms || isProcessing) return;
+  
+  setIsProcessing(true);
+  
+  try {
+    // Маппинг планов на backend формат
+    let backendPlan = selectedPlan;
+    if (selectedPlan === 'year') {
+      backendPlan = '1_year';
+    } else if (selectedPlan === '6_months') {
+      backendPlan = '6_months';
+    } else if (selectedPlan === '3_months') {
+      backendPlan = '6_months'; // fallback
+    } else if (selectedPlan === 'month') {
+      backendPlan = '6_months'; // fallback
     }
-  };
+    
+    console.log('💳 Initiating Telegram Stars payment for plan:', backendPlan);
+
+    // Используем Telegram Stars для оплаты
+    const result = await telegramStarsService.purchaseSubscription(backendPlan);
+    
+    if (result.success) {
+      console.log('✅ Payment successful!');
+      
+      // Показываем уведомление об успехе
+      if (window.Telegram?.WebApp?.showAlert) {
+        window.Telegram.WebApp.showAlert('🎉 Premium activated successfully!');
+      }
+      
+      // Ждём немного чтобы webhook обработался
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Закрываем страницу подписки
+      onClose();
+    }
+    
+  } catch (error) {
+    console.error('Payment error:', error);
+    
+    let errorMessage = 'Payment failed. Please try again.';
+    
+    if (error.message === 'Payment cancelled') {
+      errorMessage = 'Payment was cancelled.';
+    } else if (error.message === 'Payment timeout') {
+      errorMessage = 'Payment timed out. Please try again.';
+    } else if (error.message.includes('not available')) {
+      errorMessage = 'Please open the app through Telegram to make a purchase.';
+    }
+    
+    if (window.Telegram?.WebApp?.showAlert) {
+      window.Telegram.WebApp.showAlert(errorMessage);
+    } else {
+      alert(errorMessage);
+    }
+    
+    // Если не хватает звёзд, предлагаем купить
+    if (error.message.includes('insufficient')) {
+      if (window.Telegram?.WebApp?.showConfirm) {
+        window.Telegram.WebApp.showConfirm(
+          'Insufficient Telegram Stars. Would you like to purchase more?',
+          (confirmed) => {
+            if (confirmed) {
+              telegramStarsService.openStarsPurchase();
+            }
+          }
+        );
+      }
+    }
+    
+  } finally {
+    setIsProcessing(false);
+  }
+};
 
   return (
     <div className="subscription-new">
