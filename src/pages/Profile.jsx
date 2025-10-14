@@ -15,7 +15,6 @@ const Profile = ({ onClose }) => {
   const [showPurchaseHistory, setShowPurchaseHistory] = useState(false);
   const [showSubscriptionPage, setShowSubscriptionPage] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-const [showSubscriptionPage, setShowSubscriptionPage] = useState(false); // ДОЛЖНА БЫТЬ ЭТА СТРОКА
 
   const childOpen = showPurchaseHistory || showSubscriptionPage || showSettings;
   useNavigation(onClose, { isVisible: !childOpen });
