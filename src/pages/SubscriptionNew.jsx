@@ -116,16 +116,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
 
   return (
     <div className="subscription-new">
-      <div className="subscription-new__header">
-        <button className="subscription-new__close" onClick={onClose}>
-          Close
-        </button>
-        <div className="subscription-new__header-center">
-          <h1 className="subscription-new__header-title">Habit Tracker</h1>
-          <span className="subscription-new__header-subtitle">mini-app</span>
-        </div>
-        <button className="subscription-new__menu">⋯</button>
-      </div>
+      
 
       <div className="subscription-new__content">
         <div className="subscription-new__hero">
