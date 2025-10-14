@@ -1,81 +1,45 @@
 import api from './api';
 
 export const telegramStarsService = {
-  // Создать invoice и открыть форму оплаты
+  // Отправить invoice кнопку пользователю через бота
   async purchaseSubscription(planType) {
     try {
       console.log('💳 Starting purchase for plan:', planType);
 
-      // 1. Получаем invoice данные с backend
-      const { data } = await api.post('/payment/create-invoice', { planType });
+      // 1. Создаём invoice и отправляем кнопку через бота
+      const { data } = await api.post('/payment/request-invoice-button', { 
+        planType 
+      });
 
       if (!data.success) {
-        throw new Error(data.error || 'Failed to create invoice');
+        throw new Error(data.error || 'Failed to send invoice');
       }
 
-      const invoiceData = data.invoice;
-      console.log('Invoice created:', invoiceData);
+      console.log('✅ Invoice button sent to user');
 
-      // 2. Проверяем доступность Telegram WebApp
-      const tg = window.Telegram?.WebApp;
-      if (!tg) {
-        throw new Error('Telegram WebApp not available');
-      }
-
-      // 3. ИСПРАВЛЕНИЕ: Используем правильный метод openInvoice
-      // Telegram WebApp API требует URL вместо payload
-      
-      // Формируем правильные данные для invoice
-      const bot_username = '@trackeryourhabitbot'; // ЗАМЕНИ НА USERNAME СВОЕГО БОТА
-      
-      // Создаём invoice link
-      const invoiceLink = `https://t.me/${bot_username}?startattach=pay`;
-      
-      console.log('Opening invoice with link:', invoiceLink);
-
-      // 4. ПРАВИЛЬНЫЙ способ открытия оплаты через Telegram Stars
-      return new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          reject(new Error('Payment timeout'));
-        }, 5 * 60 * 1000); // 5 минут
-
-        // Используем sendData для отправки invoice payload
-        try {
-          // Отправляем данные о платеже
-          tg.sendData(JSON.stringify({
-            action: 'payment',
-            payload: invoiceData.payload,
-            amount: invoiceData.prices[0].amount,
-            currency: invoiceData.currency,
-            title: invoiceData.title,
-            description: invoiceData.description
-          }));
-
-          clearTimeout(timeout);
-          
-          console.log('✅ Payment initiated');
-          resolve({
-            success: true,
-            payload: invoiceData.payload
-          });
-
-        } catch (error) {
-          clearTimeout(timeout);
-          console.error('Failed to send payment data:', error);
-          reject(error);
-        }
-      });
+      return {
+        success: true,
+        message: 'Check your chat with the bot for payment',
+        needsStars: false
+      };
 
     } catch (error) {
       console.error('Purchase error:', error);
+      
+      // Проверяем тип ошибки
+      if (error.response?.status === 403) {
+        // Пользователь заблокировал бота
+        throw new Error('bot_blocked');
+      }
+      
       throw error;
     }
   },
 
-  // Проверить статус платежа на backend
-  async checkPaymentStatus(paymentId) {
+  // Проверить статус платежа
+  async checkPaymentStatus(invoicePayload) {
     try {
-      const { data } = await api.get(`/payment/status/${paymentId}`);
+      const { data } = await api.get(`/payment/check-status?payload=${invoicePayload}`);
       return data;
     } catch (error) {
       console.error('Check payment status error:', error);
@@ -83,25 +47,15 @@ export const telegramStarsService = {
     }
   },
 
-  // Проверить наличие достаточного количества звёзд
-  async checkStarsBalance() {
-    const tg = window.Telegram?.WebApp;
-    
-    if (!tg) {
-      return false;
-    }
-
-    return true;
-  },
-
   // Открыть страницу покупки Telegram Stars
   openStarsPurchase() {
     const tg = window.Telegram?.WebApp;
     
     if (tg && tg.openTelegramLink) {
-      tg.openTelegramLink('https://t.me/donate');
+      // Открываем Fragment для покупки Stars
+      tg.openTelegramLink('https://t.me/PremiumBot?start=stars');
     } else {
-      window.open('https://t.me/donate', '_blank');
+      window.open('https://t.me/PremiumBot?start=stars', '_blank');
     }
   }
 };

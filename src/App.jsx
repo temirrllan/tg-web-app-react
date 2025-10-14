@@ -124,20 +124,32 @@ useEffect(() => {
       console.log('🔄 App became visible, checking subscription status...');
       
       try {
+        // Небольшая задержка для обработки webhook
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
         // Перезагружаем данные пользователя
         const response = await habitService.getUserProfile();
         if (response) {
+          const wasPremium = user.is_premium;
+          
           setUser(prevUser => ({
             ...prevUser,
             is_premium: response.is_premium,
             subscription_type: response.subscription_type
           }));
           
-          // Если пользователь стал premium, показываем уведомление
-          if (response.is_premium && !user.is_premium) {
+          // Если пользователь СТАЛ premium (раньше не был)
+          if (response.is_premium && !wasPremium) {
+            console.log('✅ User became premium!');
+            
             if (tg?.showAlert) {
-              tg.showAlert('🎉 Premium activated! Enjoy unlimited habits!');
+              tg.showAlert('🎉 Premium activated successfully! Enjoy unlimited habits!');
             }
+          } else if (!response.is_premium && wasPremium) {
+            // Если перестал быть premium
+            console.log('⚠️ Premium expired or cancelled');
+          } else if (!response.is_premium) {
+            console.log('ℹ️ User still not premium (payment may have failed or was cancelled)');
           }
         }
       } catch (error) {

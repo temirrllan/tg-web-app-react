@@ -78,70 +78,84 @@ const handleSubscribe = async () => {
   setIsProcessing(true);
   
   try {
-    // Маппинг планов на backend формат
+    // Маппинг планов
     let backendPlan = selectedPlan;
     if (selectedPlan === 'year') {
       backendPlan = '1_year';
     } else if (selectedPlan === '6_months') {
       backendPlan = '6_months';
     } else if (selectedPlan === '3_months') {
-      backendPlan = '6_months'; // fallback
+      backendPlan = '6_months';
     } else if (selectedPlan === 'month') {
-      backendPlan = '6_months'; // fallback
+      backendPlan = '6_months';
     }
     
-    console.log('💳 Initiating Telegram Stars payment for plan:', backendPlan);
+    console.log('💳 Sending invoice to bot for plan:', backendPlan);
 
-    // Используем Telegram Stars для оплаты
+    // Отправляем запрос на отправку invoice кнопки
     const result = await telegramStarsService.purchaseSubscription(backendPlan);
     
     if (result.success) {
-      console.log('✅ Payment successful!');
+      console.log('✅ Invoice sent to bot');
       
-      // Показываем уведомление об успехе
-      if (window.Telegram?.WebApp?.showAlert) {
-        window.Telegram.WebApp.showAlert('🎉 Premium activated successfully!');
+      // Показываем инструкцию пользователю
+      if (window.Telegram?.WebApp?.showPopup) {
+        window.Telegram.WebApp.showPopup({
+          title: '💳 Payment',
+          message: 'Check your chat with @trackeryourhabitbot for the payment button.\n\nTap "Pay" to complete your purchase.',
+          buttons: [
+            { id: 'open_bot', type: 'default', text: 'Open Bot' },
+            { id: 'ok', type: 'close', text: 'OK' }
+          ]
+        }, (button_id) => {
+          if (button_id === 'open_bot') {
+            // Открываем бота
+            window.Telegram.WebApp.openTelegramLink('https://t.me/trackeryourhabitbot');
+          }
+        });
+      } else if (window.Telegram?.WebApp?.showAlert) {
+        window.Telegram.WebApp.showAlert(
+          '💳 Check your chat with @trackeryourhabitbot for the payment button.\n\nTap "Pay" to complete your purchase.'
+        );
       }
       
-      // Ждём немного чтобы webhook обработался
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // НЕ закрываем страницу сразу - пользователь должен перейти в бота
+      // Закроется автоматически когда вернётся после оплаты
       
-      // ВАЖНО: Закрываем страницу подписки БЕЗ открытия других страниц
-      // onClose вернёт на главную страницу Today
-      onClose();
     }
     
   } catch (error) {
     console.error('Payment error:', error);
     
-    let errorMessage = 'Payment failed. Please try again.';
+    let errorMessage = 'Failed to send payment request.';
+    let showStarsButton = false;
     
-    if (error.message === 'Payment cancelled') {
-      errorMessage = 'Payment was cancelled.';
-    } else if (error.message === 'Payment timeout') {
-      errorMessage = 'Payment timed out. Please try again.';
+    if (error.message === 'bot_blocked') {
+      errorMessage = 'Please start a chat with @trackeryourhabitbot first.\n\nTap OK to open the bot.';
+      showStarsButton = false;
     } else if (error.message.includes('not available')) {
       errorMessage = 'Please open the app through Telegram to make a purchase.';
+    } else {
+      errorMessage = 'Failed to send payment request. Please try again.';
     }
     
-    if (window.Telegram?.WebApp?.showAlert) {
+    if (window.Telegram?.WebApp?.showPopup && error.message === 'bot_blocked') {
+      window.Telegram.WebApp.showPopup({
+        title: '🤖 Bot Required',
+        message: errorMessage,
+        buttons: [
+          { id: 'open_bot', type: 'default', text: 'Open Bot' },
+          { id: 'cancel', type: 'close', text: 'Cancel' }
+        ]
+      }, (button_id) => {
+        if (button_id === 'open_bot') {
+          window.Telegram.WebApp.openTelegramLink('https://t.me/trackeryourhabitbot');
+        }
+      });
+    } else if (window.Telegram?.WebApp?.showAlert) {
       window.Telegram.WebApp.showAlert(errorMessage);
     } else {
       alert(errorMessage);
-    }
-    
-    // Если не хватает звёзд, предлагаем купить
-    if (error.message.includes('insufficient')) {
-      if (window.Telegram?.WebApp?.showConfirm) {
-        window.Telegram.WebApp.showConfirm(
-          'Insufficient Telegram Stars. Would you like to purchase more?',
-          (confirmed) => {
-            if (confirmed) {
-              telegramStarsService.openStarsPurchase();
-            }
-          }
-        );
-      }
     }
     
   } finally {
