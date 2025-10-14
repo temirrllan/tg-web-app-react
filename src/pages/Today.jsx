@@ -54,18 +54,7 @@ const Today = () => {
     const day = String(today.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
-  // После всех useState определений добавьте:
-useEffect(() => {
-  const handleOpenSubscription = () => {
-    setShowSubscriptionPage(true);
-  };
 
-  window.addEventListener('openSubscriptionPage', handleOpenSubscription);
-  
-  return () => {
-    window.removeEventListener('openSubscriptionPage', handleOpenSubscription);
-  };
-}, []);
   const getYesterdayDate = () => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);

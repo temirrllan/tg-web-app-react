@@ -15,6 +15,7 @@ const Profile = ({ onClose }) => {
   const [showPurchaseHistory, setShowPurchaseHistory] = useState(false);
   const [showSubscriptionPage, setShowSubscriptionPage] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+const [showSubscriptionPage, setShowSubscriptionPage] = useState(false); // ДОЛЖНА БЫТЬ ЭТА СТРОКА
 
   const childOpen = showPurchaseHistory || showSubscriptionPage || showSettings;
   useNavigation(onClose, { isVisible: !childOpen });
@@ -108,11 +109,9 @@ const handleMenuClick = (itemId) => {
 
   switch (itemId) {
     case 'subscription':
-      // Закрываем профиль и открываем страницу подписки
-      setShowProfile(false); // Добавь эту строку если её нет
-      onClose();
-      // Используем событие для открытия страницы подписки
-      window.dispatchEvent(new CustomEvent('openSubscriptionPage'));
+      console.log('Opening subscription page...');
+      // ВАЖНО: Сначала закрываем профиль, потом открываем подписку
+      setShowSubscriptionPage(true);
       break;
     case 'purchase_history':
       setShowPurchaseHistory(true);
@@ -137,37 +136,38 @@ const handleMenuClick = (itemId) => {
   }
 };
 
-  if (showPurchaseHistory) {
-    return (
-      <PurchaseHistory
-        onClose={() => {
-          setShowPurchaseHistory(false);
-          loadSubscriptionStatus();
-        }}
-      />
-    );
-  }
+  // ДОБАВЬ ЭТУ ПРОВЕРКУ ПЕРЕД ОСНОВНЫМ RETURN
+if (showSubscriptionPage) {
+  return (
+    <Subscription
+      onClose={() => {
+        setShowSubscriptionPage(false);
+        loadSubscriptionStatus();
+      }}
+    />
+  );
+}
 
-  if (showSubscriptionPage) {
-    return (
-      <Subscription
-        onClose={() => {
-          setShowSubscriptionPage(false);
-          loadSubscriptionStatus();
-        }}
-      />
-    );
-  }
+if (showPurchaseHistory) {
+  return (
+    <PurchaseHistory
+      onClose={() => {
+        setShowPurchaseHistory(false);
+        loadSubscriptionStatus();
+      }}
+    />
+  );
+}
 
-  if (showSettings) {
-    return (
-      <Settings
-        onClose={() => {
-          setShowSettings(false);
-        }}
-      />
-    );
-  }
+if (showSettings) {
+  return (
+    <Settings
+      onClose={() => {
+        setShowSettings(false);
+      }}
+    />
+  );
+}
 
   return (
     <div className="profile">
