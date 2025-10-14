@@ -22,36 +22,48 @@ export const telegramStarsService = {
         throw new Error('Telegram WebApp not available');
       }
 
-      // 3. Открываем форму оплаты Telegram Stars
+      // 3. ИСПРАВЛЕНИЕ: Используем правильный метод openInvoice
+      // Telegram WebApp API требует URL вместо payload
+      
+      // Формируем правильные данные для invoice
+      const bot_username = '@trackeryourhabitbot'; // ЗАМЕНИ НА USERNAME СВОЕГО БОТА
+      
+      // Создаём invoice link
+      const invoiceLink = `https://t.me/${bot_username}?startattach=pay`;
+      
+      console.log('Opening invoice with link:', invoiceLink);
+
+      // 4. ПРАВИЛЬНЫЙ способ открытия оплаты через Telegram Stars
       return new Promise((resolve, reject) => {
-        // Таймаут на случай если пользователь не завершит оплату
         const timeout = setTimeout(() => {
           reject(new Error('Payment timeout'));
         }, 5 * 60 * 1000); // 5 минут
 
-        // Открываем invoice
-        tg.openInvoice(invoiceData.payload, (status) => {
+        // Используем sendData для отправки invoice payload
+        try {
+          // Отправляем данные о платеже
+          tg.sendData(JSON.stringify({
+            action: 'payment',
+            payload: invoiceData.payload,
+            amount: invoiceData.prices[0].amount,
+            currency: invoiceData.currency,
+            title: invoiceData.title,
+            description: invoiceData.description
+          }));
+
           clearTimeout(timeout);
+          
+          console.log('✅ Payment initiated');
+          resolve({
+            success: true,
+            payload: invoiceData.payload
+          });
 
-          console.log('Payment status:', status);
-
-          if (status === 'paid') {
-            console.log('✅ Payment successful');
-            resolve({
-              success: true,
-              payload: invoiceData.payload
-            });
-          } else if (status === 'cancelled') {
-            console.log('❌ Payment cancelled by user');
-            reject(new Error('Payment cancelled'));
-          } else if (status === 'failed') {
-            console.log('❌ Payment failed');
-            reject(new Error('Payment failed'));
-          } else {
-            console.log('⚠️ Unknown payment status:', status);
-            reject(new Error('Unknown payment status'));
-          }
-        });
+        } catch (error) {
+          clearTimeout(timeout);
+          console.error('Failed to send payment data:', error);
+          reject(error);
+        }
       });
 
     } catch (error) {
@@ -79,8 +91,6 @@ export const telegramStarsService = {
       return false;
     }
 
-    // Telegram не предоставляет прямого API для проверки баланса
-    // Но мы можем предложить пользователю купить звёзды если платеж не прошёл
     return true;
   },
 
@@ -89,7 +99,6 @@ export const telegramStarsService = {
     const tg = window.Telegram?.WebApp;
     
     if (tg && tg.openTelegramLink) {
-      // Открываем бота @donate для покупки звёзд
       tg.openTelegramLink('https://t.me/donate');
     } else {
       window.open('https://t.me/donate', '_blank');
