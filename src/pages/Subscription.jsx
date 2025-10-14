@@ -57,40 +57,52 @@ const Subscription = ({ onClose, preselectedPlan = null }) => {
   };
   
   const performCancelSubscription = async () => {
-    try {
-      setIsCancelling(true);
-      console.log('Cancelling subscription...');
-      
-      const result = await habitService.cancelSubscription();
-      console.log('Cancel result:', result);
-      
-      if (result.success) {
-        // Показываем уведомление об успешной отмене
-        if (window.Telegram?.WebApp?.showAlert) {
-          window.Telegram.WebApp.showAlert('Subscription cancelled successfully');
-        } else {
-          alert('Subscription cancelled successfully');
-        }
-        
-        // Перезагружаем данные подписки
-        await loadSubscriptionData();
-        
-        // Если подписка больше не активна, компонент автоматически покажет SubscriptionNew
-      } else {
-        throw new Error(result.error || 'Failed to cancel subscription');
-      }
-    } catch (error) {
-      console.error('Failed to cancel subscription:', error);
+  try {
+    setIsCancelling(true);
+    console.log('Starting subscription cancellation...');
+    
+    const result = await habitService.cancelSubscription();
+    console.log('Cancellation result:', result);
+    
+    if (result.success) {
+      // Показываем уведомление об успешной отмене
+      const message = 'Subscription cancelled successfully! You are now on the free plan.';
       
       if (window.Telegram?.WebApp?.showAlert) {
-        window.Telegram.WebApp.showAlert('Failed to cancel subscription. Please try again.');
+        window.Telegram.WebApp.showAlert(message);
       } else {
-        alert('Failed to cancel subscription. Please try again.');
+        alert(message);
       }
-    } finally {
-      setIsCancelling(false);
+      
+      // Небольшая задержка перед перезагрузкой данных
+      setTimeout(async () => {
+        await loadSubscriptionData();
+      }, 500);
+      
+    } else {
+      // Показываем конкретную ошибку
+      const errorMessage = result.error || 'Failed to cancel subscription';
+      console.error('Cancellation failed:', errorMessage);
+      
+      if (window.Telegram?.WebApp?.showAlert) {
+        window.Telegram.WebApp.showAlert(`Error: ${errorMessage}`);
+      } else {
+        alert(`Error: ${errorMessage}`);
+      }
     }
-  };
+  } catch (error) {
+    console.error('Unexpected error during cancellation:', error);
+    
+    const errorMessage = 'An unexpected error occurred. Please try again.';
+    if (window.Telegram?.WebApp?.showAlert) {
+      window.Telegram.WebApp.showAlert(errorMessage);
+    } else {
+      alert(errorMessage);
+    }
+  } finally {
+    setIsCancelling(false);
+  }
+};
   
   if (loading) {
     return (

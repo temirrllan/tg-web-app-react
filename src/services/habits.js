@@ -206,25 +206,42 @@ getSubscriptionHistory: async () => {
 // Отменить подписку
 // В файле src/services/habits.js обновите метод cancelSubscription:
 
+// В файле src/services/habits.js обновите метод cancelSubscription:
+
 cancelSubscription: async () => {
   try {
     console.log('Calling cancel subscription API...');
     const { data } = await api.post('/subscription/cancel');
     console.log('Cancel subscription response:', data);
     
-    if (!data.success) {
-      throw new Error(data.error || 'Failed to cancel subscription');
-    }
-    
     return data;
   } catch (error) {
-    console.error('cancelSubscription error:', error);
+    console.error('cancelSubscription API error:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    });
     
-    // Возвращаем ошибку для обработки в компоненте
-    return {
-      success: false,
-      error: error.response?.data?.error || error.message || 'Failed to cancel subscription'
-    };
+    // Проверяем разные типы ошибок
+    if (error.response) {
+      // Сервер ответил с ошибкой
+      return {
+        success: false,
+        error: error.response.data?.error || error.response.data?.message || 'Server error'
+      };
+    } else if (error.request) {
+      // Запрос был отправлен, но ответа не получено
+      return {
+        success: false,
+        error: 'No response from server. Please check your connection.'
+      };
+    } else {
+      // Что-то произошло при настройке запроса
+      return {
+        success: false,
+        error: error.message || 'Failed to cancel subscription'
+      };
+    }
   }
 },
 
