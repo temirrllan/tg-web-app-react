@@ -47,7 +47,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
     { 
       id: 'month', 
       name: 'Per Month', 
-      total: 150, 
+      total: 1, 
       perMonth: 150,
       badge: null 
     }
