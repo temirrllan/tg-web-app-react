@@ -471,15 +471,15 @@ const handleSubscriptionPageClose = async () => {
   };
 
   // Показываем загрузку
-  if (loading) {
-    return (
-      <Layout>
-        <div className="today-loading">
-          <Loader size="large" />
-        </div>
-      </Layout>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <Layout>
+  //       <div className="today-loading">
+  //         <Loader size="large" />
+  //       </div>
+  //     </Layout>
+  //   );
+  // }
 
   // Показываем страницу подписки если нужно
   if (showSubscriptionPage) {
