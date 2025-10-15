@@ -124,18 +124,25 @@ useEffect(() => {
       console.log('🔄 App became visible, checking subscription status...');
       
       try {
-        // Небольшая задержка для обработки webhook
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Увеличенная задержка для обработки webhook
+        await new Promise(resolve => setTimeout(resolve, 3000));
         
         // Перезагружаем данные пользователя
         const response = await habitService.getUserProfile();
         if (response) {
           const wasPremium = user.is_premium;
           
+          console.log('📊 Subscription check:', {
+            wasPremium,
+            nowPremium: response.is_premium,
+            subscriptionType: response.subscription_type
+          });
+          
           setUser(prevUser => ({
             ...prevUser,
             is_premium: response.is_premium,
-            subscription_type: response.subscription_type
+            subscription_type: response.subscription_type,
+            subscription_expires_at: response.subscription_expires_at
           }));
           
           // Если пользователь СТАЛ premium (раньше не был)
@@ -145,10 +152,25 @@ useEffect(() => {
             if (tg?.showAlert) {
               tg.showAlert('🎉 Premium activated successfully! Enjoy unlimited habits!');
             }
+            
+            // Закрываем страницу подписки если она открыта
+            if (showSubscriptionPage) {
+              setShowSubscriptionPage(false);
+              setSelectedSubscriptionPlan(null);
+            }
+            
+            // Обновляем статус подписки во всех компонентах
+            await checkUserSubscription();
+            
           } else if (!response.is_premium && wasPremium) {
-            // Если перестал быть premium
             console.log('⚠️ Premium expired or cancelled');
-          } else if (!response.is_premium) {
+            
+            if (tg?.showAlert) {
+              tg.showAlert('ℹ️ Your premium subscription has ended.');
+            }
+          } else if (response.is_premium && wasPremium) {
+            console.log('ℹ️ User already has premium (no changes)');
+          } else {
             console.log('ℹ️ User still not premium (payment may have failed or was cancelled)');
           }
         }
@@ -158,12 +180,17 @@ useEffect(() => {
     }
   };
 
+  // Слушатель изменения видимости
   document.addEventListener('visibilitychange', handleVisibilityChange);
+
+  // Также слушаем focus события для надёжности
+  window.addEventListener('focus', handleVisibilityChange);
 
   return () => {
     document.removeEventListener('visibilitychange', handleVisibilityChange);
+    window.removeEventListener('focus', handleVisibilityChange);
   };
-}, [user, tg]);
+}, [user, tg, showSubscriptionPage]);
   if (loading || isLoading) {
     return (
       <div className="app-loading">

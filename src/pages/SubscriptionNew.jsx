@@ -73,8 +73,12 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
   };
 
 const handleSubscribe = async () => {
-  if (!agreedToTerms || isProcessing) return;
+  if (!agreedToTerms || isProcessing) {
+    console.log('⚠️ Cannot subscribe: terms not agreed or already processing');
+    return;
+  }
   
+  console.log('🔄 Starting subscription process...');
   setIsProcessing(true);
   
   try {
@@ -119,20 +123,15 @@ const handleSubscribe = async () => {
         );
       }
       
-      // НЕ закрываем страницу сразу - пользователь должен перейти в бота
-      // Закроется автоматически когда вернётся после оплаты
-      
     }
     
   } catch (error) {
     console.error('Payment error:', error);
     
     let errorMessage = 'Failed to send payment request.';
-    let showStarsButton = false;
     
     if (error.message === 'bot_blocked') {
       errorMessage = 'Please start a chat with @trackeryourhabitbot first.\n\nTap OK to open the bot.';
-      showStarsButton = false;
     } else if (error.message.includes('not available')) {
       errorMessage = 'Please open the app through Telegram to make a purchase.';
     } else {
@@ -159,9 +158,13 @@ const handleSubscribe = async () => {
     }
     
   } finally {
-    setIsProcessing(false);
+    // Задержка перед разблокировкой кнопки (защита от спама)
+    setTimeout(() => {
+      setIsProcessing(false);
+    }, 2000);
   }
 };
+    //
 
   return (
     <div className="subscription-new">
