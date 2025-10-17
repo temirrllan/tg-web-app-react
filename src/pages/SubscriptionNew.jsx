@@ -3,6 +3,7 @@ import { useNavigation } from '../hooks/useNavigation';
 import { habitService } from '../services/habits';
 import './SubscriptionNew.css';
 import { telegramStarsService } from '../services/telegramStars';
+
 const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
   useNavigation(onClose);
   
@@ -20,6 +21,22 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
       setSelectedPlan('6_months');
     }
   }, [preselectedPlan]);
+
+  // Слушаем событие успешной оплаты
+  useEffect(() => {
+    const handlePaymentSuccess = () => {
+      console.log('🎉 Payment success event received');
+      
+      // Закрываем страницу подписки
+      onClose();
+    };
+
+    window.addEventListener('payment_success', handlePaymentSuccess);
+    
+    return () => {
+      window.removeEventListener('payment_success', handlePaymentSuccess);
+    };
+  }, [onClose]);
 
   const plans = [
     { 
@@ -72,104 +89,79 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
     }
   };
 
-const handleSubscribe = async () => {
-  if (!agreedToTerms || isProcessing) {
-    console.log('⚠️ Cannot subscribe: terms not agreed or already processing');
-    return;
-  }
-  
-  console.log('🔄 Starting subscription process...');
-  setIsProcessing(true);
-  
-  try {
-    // Маппинг планов
-    let backendPlan = selectedPlan;
-    if (selectedPlan === 'year') {
-      backendPlan = '1_year';
-    } else if (selectedPlan === '6_months') {
-      backendPlan = '6_months';
-    } else if (selectedPlan === '3_months') {
-      backendPlan = '6_months';
-    } else if (selectedPlan === 'month') {
-      backendPlan = '6_months';
+  const handleSubscribe = async () => {
+    if (!agreedToTerms || isProcessing) {
+      console.log('⚠️ Cannot subscribe: terms not agreed or already processing');
+      return;
     }
     
-    console.log('💳 Sending invoice to bot for plan:', backendPlan);
-
-    // Отправляем запрос на отправку invoice кнопки
-    const result = await telegramStarsService.purchaseSubscription(backendPlan);
+    console.log('🔄 Starting subscription process...');
+    setIsProcessing(true);
     
-    if (result.success) {
-      console.log('✅ Invoice sent to bot');
+    try {
+      // Маппинг планов
+      let backendPlan = selectedPlan;
+      if (selectedPlan === 'year') {
+        backendPlan = '1_year';
+      } else if (selectedPlan === '6_months') {
+        backendPlan = '6_months';
+      } else if (selectedPlan === '3_months') {
+        backendPlan = '6_months';
+      } else if (selectedPlan === 'month') {
+        backendPlan = '6_months';
+      }
       
-      // Показываем инструкцию пользователю
-      if (window.Telegram?.WebApp?.showPopup) {
-        window.Telegram.WebApp.showPopup({
-          title: '💳 Payment',
-          message: 'Check your chat with @trackeryourhabitbot for the payment button.\n\nTap "Pay" to complete your purchase.',
+      console.log('💳 Opening payment form for plan:', backendPlan);
+
+      // ВАЖНО: Теперь открываем форму оплаты напрямую
+      // Telegram автоматически проверит баланс Stars
+      await telegramStarsService.purchaseSubscription(backendPlan);
+      
+      console.log('✅ Payment form opened');
+      
+    } catch (error) {
+      console.error('Payment error:', error);
+      
+      let errorMessage = 'Failed to open payment form.';
+      
+      if (error.message === 'bot_blocked') {
+        errorMessage = 'Please start a chat with @trackeryourhabitbot first.\n\nTap OK to open the bot.';
+      } else if (error.message.includes('not available')) {
+        errorMessage = 'Please open the app through Telegram to make a purchase.';
+      } else {
+        errorMessage = 'Failed to open payment form. Please try again.';
+      }
+      
+      const tg = window.Telegram?.WebApp;
+      
+      if (tg?.showPopup && error.message === 'bot_blocked') {
+        tg.showPopup({
+          title: '🤖 Bot Required',
+          message: errorMessage,
           buttons: [
             { id: 'open_bot', type: 'default', text: 'Open Bot' },
-            { id: 'ok', type: 'close', text: 'OK' }
+            { id: 'cancel', type: 'close', text: 'Cancel' }
           ]
         }, (button_id) => {
           if (button_id === 'open_bot') {
-            // Открываем бота
-            window.Telegram.WebApp.openTelegramLink('https://t.me/trackeryourhabitbot');
+            tg.openTelegramLink('https://t.me/trackeryourhabitbot');
           }
         });
-      } else if (window.Telegram?.WebApp?.showAlert) {
-        window.Telegram.WebApp.showAlert(
-          '💳 Check your chat with @trackeryourhabitbot for the payment button.\n\nTap "Pay" to complete your purchase.'
-        );
+      } else if (tg?.showAlert) {
+        tg.showAlert(errorMessage);
+      } else {
+        alert(errorMessage);
       }
       
+    } finally {
+      setTimeout(() => {
+        setIsProcessing(false);
+      }, 2000);
     }
-    
-  } catch (error) {
-    console.error('Payment error:', error);
-    
-    let errorMessage = 'Failed to send payment request.';
-    
-    if (error.message === 'bot_blocked') {
-      errorMessage = 'Please start a chat with @trackeryourhabitbot first.\n\nTap OK to open the bot.';
-    } else if (error.message.includes('not available')) {
-      errorMessage = 'Please open the app through Telegram to make a purchase.';
-    } else {
-      errorMessage = 'Failed to send payment request. Please try again.';
-    }
-    
-    if (window.Telegram?.WebApp?.showPopup && error.message === 'bot_blocked') {
-      window.Telegram.WebApp.showPopup({
-        title: '🤖 Bot Required',
-        message: errorMessage,
-        buttons: [
-          { id: 'open_bot', type: 'default', text: 'Open Bot' },
-          { id: 'cancel', type: 'close', text: 'Cancel' }
-        ]
-      }, (button_id) => {
-        if (button_id === 'open_bot') {
-          window.Telegram.WebApp.openTelegramLink('https://t.me/trackeryourhabitbot');
-        }
-      });
-    } else if (window.Telegram?.WebApp?.showAlert) {
-      window.Telegram.WebApp.showAlert(errorMessage);
-    } else {
-      alert(errorMessage);
-    }
-    
-  } finally {
-    // Задержка перед разблокировкой кнопки (защита от спама)
-    setTimeout(() => {
-      setIsProcessing(false);
-    }, 2000);
-  }
-};
-    //
+  };
 
   return (
     <div className="subscription-new">
-      
-
       <div className="subscription-new__content">
         <div className="subscription-new__hero">
           <h2 className="subscription-new__title">Start Like a PRO</h2>
@@ -318,7 +310,7 @@ const handleSubscribe = async () => {
           onClick={handleSubscribe}
           disabled={!agreedToTerms || isProcessing}
         >
-          {isProcessing ? 'Processing...' : `Subscribe for ${getSelectedPlanPrice()} ⭐ per year`}
+          {isProcessing ? 'Opening payment...' : `Subscribe for ${getSelectedPlanPrice()} ⭐ per year`}
         </button>
       </div>
     </div>
