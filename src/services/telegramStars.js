@@ -1,7 +1,7 @@
 import api from './api';
 
 export const telegramStarsService = {
-  // Отправить invoice и открыть платежную форму Telegram
+  // Купить подписку через Telegram Stars
   async purchaseSubscription(planType) {
     try {
       console.log('💳 Starting purchase for plan:', planType);
@@ -12,22 +12,10 @@ export const telegramStarsService = {
         throw new Error('Telegram WebApp not available');
       }
 
-      // Получаем цену плана
-      const planPrices = {
-        '6_months': 1,
-        '1_year': 1
-      };
-      
-      const price = planPrices[planType];
-      
-      if (!price) {
-        throw new Error('Invalid plan type');
-      }
+      console.log('📞 Requesting invoice from backend...');
 
-      console.log('💰 Plan price:', price, 'XTR');
-
-      // Создаём invoice payload на бэкенде
-      const { data } = await api.post('/payment/request-invoice-button', { 
+      // Создаём invoice на бэкенде и получаем invoice URL
+      const { data } = await api.post('/payment/create-invoice', { 
         planType 
       });
 
@@ -35,49 +23,45 @@ export const telegramStarsService = {
         throw new Error(data.error || 'Failed to create invoice');
       }
 
-      console.log('✅ Invoice created:', data.invoicePayload);
+      console.log('✅ Invoice created, URL:', data.invoiceUrl);
 
-      // Получаем информацию о плане для отображения
-      const planNames = {
-        '6_months': 'Premium for 6 Months',
-        '1_year': 'Premium for 1 Year'
-      };
-
-      // ВАЖНО: Открываем платежную форму Telegram напрямую
-      // Если у пользователя есть Stars - оплата пройдет сразу
-      // Если нет Stars - Telegram сам покажет кнопку пополнения
-      tg.openInvoice(
-        // URL invoice не нужен - используем внутренний механизм Telegram
-        `https://t.me/$telegramBotName?start=invoice_${data.invoicePayload}`,
-        (status) => {
-          console.log('💳 Payment status:', status);
+      // ВАЖНО: Открываем invoice через Telegram WebApp
+      // Telegram автоматически проверит баланс Stars
+      tg.openInvoice(data.invoiceUrl, (status) => {
+        console.log('💳 Invoice status:', status);
+        
+        if (status === 'paid') {
+          console.log('✅ Payment successful!');
           
-          if (status === 'paid') {
-            console.log('✅ Payment successful!');
-            
-            // Показываем успешное уведомление
-            if (tg.showAlert) {
-              tg.showAlert('🎉 Payment successful! Your Premium subscription is now active!');
-            }
-            
-            // Генерируем событие для обновления UI
-            window.dispatchEvent(new CustomEvent('payment_success'));
-            
-          } else if (status === 'cancelled') {
-            console.log('❌ Payment cancelled by user');
-          } else if (status === 'failed') {
-            console.log('❌ Payment failed');
-            
-            if (tg.showAlert) {
-              tg.showAlert('❌ Payment failed. Please try again.');
-            }
+          // Показываем уведомление об успехе
+          if (tg.showAlert) {
+            tg.showAlert('🎉 Payment successful! Your Premium subscription is now active!');
           }
+          
+          // Генерируем событие для обновления UI
+          window.dispatchEvent(new CustomEvent('payment_success'));
+          
+        } else if (status === 'cancelled') {
+          console.log('❌ Payment cancelled by user');
+          
+          if (tg.showAlert) {
+            tg.showAlert('Payment was cancelled.');
+          }
+          
+        } else if (status === 'failed') {
+          console.log('❌ Payment failed');
+          
+          if (tg.showAlert) {
+            tg.showAlert('❌ Payment failed. Please try again.');
+          }
+        } else if (status === 'pending') {
+          console.log('⏳ Payment is pending');
         }
-      );
+      });
 
       return {
         success: true,
-        message: 'Payment form opened',
+        message: 'Invoice opened',
         needsStars: false
       };
 
