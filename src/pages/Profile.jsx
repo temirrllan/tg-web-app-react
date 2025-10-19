@@ -50,34 +50,38 @@ const Profile = ({ onClose }) => {
     }
   };
 
-  const getSubscriptionLabel = () => {
-    if (loading) return t('common.loading');
+const getSubscriptionLabel = () => {
+  if (loading) return t('common.loading');
 
-    if (!subscription || !subscription.isPremium || !subscription.subscription) {
-      return t('profile.plan.free');
-    }
+  if (!subscription || !subscription.isPremium || !subscription.subscription) {
+    return t('profile.plan.free');
+  }
 
-    const sub = subscription.subscription;
-    if (!sub.isActive) {
-      return t('profile.plan.free');
-    }
+  const sub = subscription.subscription;
+  if (!sub.isActive) {
+    return t('profile.plan.free');
+  }
 
-    const planType = sub.planType || '';
+  // Используем display_name из плана
+  if (sub.planName) {
+    return sub.planName; // Будет "For 6 Months" или "For 1 Year"
+  }
 
-    // используем t с интерполяцией
-    switch (planType) {
-      case '6_months':
-        return t('profile.plan.sixMonths'); // "For 6 Months"
-      case '1_year':
-        return t('profile.plan.oneYear');   // "For 1 Year"
-      case 'lifetime':
-        return t('profile.plan.lifetime');  // "Lifetime"
-      case 'trial_7_days':
-        return t('profile.plan.trial', { days: sub.daysLeft || 0 }); // "Trial ({{days}} days)"
-      default:
-        return t('profile.plan.premium');   // "Premium"
-    }
-  };
+  // Fallback на старую логику
+  const planType = sub.planType || '';
+  switch (planType) {
+    case '6_months':
+      return t('profile.plan.sixMonths');
+    case '1_year':
+      return t('profile.plan.oneYear');
+    case 'lifetime':
+      return t('profile.plan.lifetime');
+    case 'trial_7_days':
+      return t('profile.plan.trial', { days: sub.daysLeft || 0 });
+    default:
+      return t('profile.plan.premium');
+  }
+};
 
   const isSubscriptionActive = () =>
     subscription?.isPremium && subscription?.subscription?.isActive;

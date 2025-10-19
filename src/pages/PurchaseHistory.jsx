@@ -81,34 +81,34 @@ const PurchaseHistory = ({ onClose }) => {
   };
   
   const formatValidityDate = (expiresAt) => {
-    if (!expiresAt) return 'Lifetime';
-    
-    const date = new Date(expiresAt);
-    return date.toLocaleDateString('en-US', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    }).toUpperCase();
-  };
+  if (!expiresAt) return 'Lifetime';
+  
+  const date = new Date(expiresAt);
+  const day = date.getDate();
+  const month = date.toLocaleDateString('en-US', { month: 'long' });
+  const year = date.getFullYear();
+  
+  return `until ${day} ${month} ${year}`;
+};
   
   const getPlanDetails = (planType) => {
-    const plans = {
-      '6_months': {
-        name: 'For 6 Month',
-        price: 117
-      },
-      '1_year': {
-        name: 'For 1 Year',
-        price: 350
-      },
-      'lifetime': {
-        name: 'Lifetime',
-        price: 1500
-      }
-    };
-    
-    return plans[planType] || { name: 'Subscription', price: 0 };
+  const plans = {
+    '6_months': {
+      name: 'For 6 Months',
+      price: 600
+    },
+    '1_year': {
+      name: 'For 1 Year',
+      price: 350
+    },
+    'lifetime': {
+      name: 'Lifetime',
+      price: 1500
+    }
   };
+  
+  return plans[planType] || { name: 'Subscription', price: 0 };
+};
   
   if (loading) {
     return (
