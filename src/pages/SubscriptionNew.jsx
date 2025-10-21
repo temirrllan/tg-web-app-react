@@ -58,8 +58,8 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
       name: 'Per Year', 
       total: 1,  // ТЕСТОВАЯ ЦЕНА - 1 звезда
       perMonth: 0.08,  // 1/12 ≈ 0.08
-      badge: 'TEST MODE',
-      testMode: true
+      badge: null,
+      // testMode: true
     },
     { 
       id: '6_months', 
