@@ -45,7 +45,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
     { 
       id: 'year', 
       name: 'Per Year', 
-      total: 350,  // Реальная цена
+      total: 1,  // Реальная цена
       perMonth: 29,  // 350/12 ≈ 29
       badge: 'SAVE 42%' 
     },
