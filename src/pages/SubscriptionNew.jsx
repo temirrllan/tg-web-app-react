@@ -13,6 +13,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
   const [promoCode, setPromoCode] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [starsBalance, setStarsBalance] = useState(null);
   
   useEffect(() => {
     if (preselectedPlan === '1_year') {
@@ -23,6 +24,16 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
       setSelectedPlan('3_months');
     }
   }, [preselectedPlan]);
+
+  // Получаем баланс Stars пользователя
+  useEffect(() => {
+    const tg = window.Telegram?.WebApp;
+    if (tg && tg.initDataUnsafe?.user) {
+      // Telegram не предоставляет API для получения баланса Stars напрямую
+      // Но мы можем показать подсказку о необходимости проверить баланс
+      console.log('User info:', tg.initDataUnsafe.user);
+    }
+  }, []);
 
   // Слушаем событие успешной оплаты
   useEffect(() => {
@@ -40,29 +51,37 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
     };
   }, [onClose]);
 
-  // ВАЖНО: Реальные цены для продакшена
+  // ТЕСТОВЫЕ ЦЕНЫ - синхронизированы с backend
   const plans = [
     { 
       id: 'year', 
       name: 'Per Year', 
-      total: 1,  // Реальная цена
-      perMonth: 29,  // 350/12 ≈ 29
-      badge: 'SAVE 42%' 
+      total: 1,  // ТЕСТОВАЯ ЦЕНА - 1 звезда
+      perMonth: 0.08,  // 1/12 ≈ 0.08
+      badge: 'TEST MODE',
+      testMode: true
     },
     { 
       id: '6_months', 
       name: 'For 6 Months', 
-      total: 600,  // Реальная цена
-      perMonth: 100,  // 600/6 = 100
+      total: 100,  // Минимум 100 звёзд
+      perMonth: 17,  // 100/6 ≈ 17
       badge: null,
       selected: true 
     },
     { 
       id: '3_months', 
       name: 'For 3 Months', 
-      total: 350,  // Реальная цена
-      perMonth: 117,  // 350/3 ≈ 117
+      total: 100,  // Минимум 100 звёзд
+      perMonth: 33,  // 100/3 ≈ 33
       badge: null 
+    },
+    { 
+      id: 'month', 
+      name: 'Per Month', 
+      total: 50,  // Минимальный тестовый тариф
+      perMonth: 50,
+      badge: 'MIN PLAN' 
     }
   ];
 
@@ -95,17 +114,45 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
     setIsProcessing(true);
     
     try {
+      const tg = window.Telegram?.WebApp;
+      
+      // Показываем предупреждение о тестовом режиме
+      const selectedPrice = getSelectedPlanPrice();
+      if (selectedPrice === 1) {
+        if (tg?.showPopup) {
+          await new Promise((resolve) => {
+            tg.showPopup({
+              title: '⚠️ Test Mode',
+              message: `This is a TEST purchase for 1 Star.\n\nIn production, this plan costs 350 Stars.\n\nContinue with test purchase?`,
+              buttons: [
+                { id: 'continue', type: 'default', text: 'Continue' },
+                { id: 'cancel', type: 'cancel', text: 'Cancel' }
+              ]
+            }, (button_id) => {
+              if (button_id === 'continue') {
+                resolve(true);
+              } else {
+                resolve(false);
+              }
+            });
+          }).then(shouldContinue => {
+            if (!shouldContinue) {
+              setIsProcessing(false);
+              return Promise.reject('cancelled');
+            }
+          });
+        }
+      }
+      
       // Маппинг планов
       let backendPlan = selectedPlan;
       if (selectedPlan === 'year') {
         backendPlan = '1_year';
-      } else if (selectedPlan === '6_months') {
-        backendPlan = '6_months';
-      } else if (selectedPlan === '3_months') {
-        backendPlan = '3_months';
+      } else if (selectedPlan === 'month') {
+        backendPlan = '6_months'; // Используем 6_months как минимальный план
       }
       
-      console.log('💳 Opening payment form for plan:', backendPlan);
+      console.log('💳 Opening payment form for plan:', backendPlan, 'Price:', selectedPrice);
 
       // Открываем форму оплаты
       await telegramStarsService.purchaseSubscription(backendPlan);
@@ -113,6 +160,12 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
       console.log('✅ Payment form opened');
       
     } catch (error) {
+      if (error === 'cancelled') {
+        console.log('User cancelled test purchase');
+        setIsProcessing(false);
+        return;
+      }
+      
       console.error('Payment error:', error);
       
       let errorMessage = 'Failed to open payment form.';
@@ -122,28 +175,45 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
       } else if (error.message.includes('not available')) {
         errorMessage = 'Please open the app through Telegram to make a purchase.';
       } else if (error.message.includes('insufficient')) {
-        errorMessage = 'Insufficient Telegram Stars balance. Please top up your balance and try again.';
+        const price = getSelectedPlanPrice();
+        errorMessage = `Insufficient Telegram Stars balance.\n\nRequired: ${price} ⭐\n\nYou can buy Stars starting from 50 ⭐ in Telegram Settings.`;
       } else {
         errorMessage = 'Failed to open payment form. Please try again.';
       }
       
       const tg = window.Telegram?.WebApp;
       
-      if (tg?.showPopup && error.message === 'bot_blocked') {
-        tg.showPopup({
-          title: '🤖 Bot Required',
-          message: errorMessage,
-          buttons: [
-            { id: 'open_bot', type: 'default', text: 'Open Bot' },
-            { id: 'cancel', type: 'close', text: 'Cancel' }
-          ]
-        }, (button_id) => {
-          if (button_id === 'open_bot') {
-            tg.openTelegramLink('https://t.me/trackeryourhabitbot');
-          }
-        });
-      } else if (tg?.showAlert) {
-        tg.showAlert(errorMessage);
+      if (tg?.showPopup) {
+        if (error.message === 'bot_blocked') {
+          tg.showPopup({
+            title: '🤖 Bot Required',
+            message: errorMessage,
+            buttons: [
+              { id: 'open_bot', type: 'default', text: 'Open Bot' },
+              { id: 'cancel', type: 'close', text: 'Cancel' }
+            ]
+          }, (button_id) => {
+            if (button_id === 'open_bot') {
+              tg.openTelegramLink('https://t.me/trackeryourhabitbot');
+            }
+          });
+        } else if (error.message.includes('insufficient')) {
+          tg.showPopup({
+            title: '💫 Insufficient Stars',
+            message: errorMessage,
+            buttons: [
+              { id: 'buy_stars', type: 'default', text: 'Buy Stars' },
+              { id: 'cancel', type: 'close', text: 'Cancel' }
+            ]
+          }, (button_id) => {
+            if (button_id === 'buy_stars') {
+              // Открываем покупку Stars
+              tg.openTelegramLink('https://t.me/PremiumBot');
+            }
+          });
+        } else {
+          tg.showAlert(errorMessage);
+        }
       } else {
         alert(errorMessage);
       }
@@ -155,6 +225,9 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
     }
   };
 
+  const selectedPrice = getSelectedPlanPrice();
+  const selectedPlanData = plans.find(p => p.id === selectedPlan);
+
   return (
     <div className="subscription-new">
       <div className="subscription-new__content">
@@ -163,6 +236,23 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
           <p className="subscription-new__subtitle">Unlock All Features</p>
         </div>
 
+        {/* Test Mode Warning */}
+        {selectedPlanData?.testMode && (
+          <div style={{
+            background: '#FFE4B5',
+            border: '1px solid #FFA500',
+            borderRadius: '12px',
+            padding: '12px',
+            marginBottom: '16px',
+            fontSize: '14px',
+            color: '#8B4513',
+            textAlign: 'center'
+          }}>
+            ⚠️ <strong>TEST MODE:</strong> This plan is set to 1 Star for testing.<br/>
+            Production price: 350 Stars
+          </div>
+        )}
+
         {/* Payment Method */}
         <div className="subscription-new__section">
           <h3 className="subscription-new__section-title">Payment Method</h3>
@@ -170,7 +260,10 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
             <span className="subscription-new__payment-icon">⭐</span>
             <div className="subscription-new__payment-info">
               <span className="subscription-new__payment-title">Telegram Stars</span>
-              <span className="subscription-new__payment-subtitle">Internal Telegram Currency</span>
+              <span className="subscription-new__payment-subtitle">
+                Internal Telegram Currency
+                {starsBalance !== null && ` • Balance: ${starsBalance} ⭐`}
+              </span>
             </div>
           </div>
         </div>
@@ -251,7 +344,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
                     <span style={{ 
                       marginLeft: '8px', 
                       padding: '2px 6px', 
-                      background: '#FF9500', 
+                      background: plan.testMode ? '#FFA500' : '#FF9500', 
                       borderRadius: '4px', 
                       fontSize: '12px',
                       color: 'white',
@@ -264,11 +357,27 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
                 <span className="subscription-new__plan-total">{plan.total} ⭐ total</span>
               </div>
               <span className="subscription-new__plan-price">
-                {plan.perMonth} ⭐/month
+                {plan.perMonth < 1 ? '<1' : Math.round(plan.perMonth)} ⭐/month
               </span>
             </label>
           ))}
         </div>
+
+        {/* Stars Info */}
+        {selectedPrice < 50 && (
+          <div style={{
+            background: '#E8F4FD',
+            border: '1px solid #007AFF',
+            borderRadius: '12px',
+            padding: '12px',
+            marginBottom: '16px',
+            fontSize: '14px',
+            color: '#007AFF'
+          }}>
+            ℹ️ <strong>Note:</strong> Minimum Stars purchase in Telegram is 50 ⭐<br/>
+            Current plan requires only {selectedPrice} ⭐
+          </div>
+        )}
 
         {/* Promo Code */}
         <div className="subscription-new__section">
@@ -301,7 +410,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
             Your subscription will be activated immediately after payment. 
             You can cancel your subscription at any time in your profile settings. 
             All your habits and data will be saved even if your subscription expires.
-            Telegram Stars are non-refundable after purchase.
+            {selectedPrice === 1 && '\n\n⚠️ TEST MODE: Real price will be 350 Stars in production.'}
           </p>
         </div>
 
@@ -327,7 +436,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
           onClick={handleSubscribe}
           disabled={!agreedToTerms || isProcessing}
         >
-          {isProcessing ? 'Opening payment...' : `Subscribe for ${getSelectedPlanPrice()} ⭐`}
+          {isProcessing ? 'Opening payment...' : `Subscribe for ${selectedPrice} ⭐`}
         </button>
       </div>
     </div>
