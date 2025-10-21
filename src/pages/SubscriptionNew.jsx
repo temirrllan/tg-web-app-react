@@ -363,7 +363,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
           ))}
         </div>
 
-        {/* Stars Info */}
+        {/* Stars Info
         {selectedPrice < 50 && (
           <div style={{
             background: '#E8F4FD',
@@ -377,7 +377,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
             ℹ️ <strong>Note:</strong> Minimum Stars purchase in Telegram is 50 ⭐<br/>
             Current plan requires only {selectedPrice} ⭐
           </div>
-        )}
+        )} */}
 
         {/* Promo Code */}
         <div className="subscription-new__section">
