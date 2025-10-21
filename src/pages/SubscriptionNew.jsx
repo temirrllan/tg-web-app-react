@@ -8,7 +8,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
   useNavigation(onClose);
   
   const [selectedPlan, setSelectedPlan] = useState('6_months');
-  const [quantity, setQuantity] = useState(3);
+  const [quantity, setQuantity] = useState(1);
   const [buyAsGift, setBuyAsGift] = useState(false);
   const [promoCode, setPromoCode] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -19,6 +19,8 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
       setSelectedPlan('year');
     } else if (preselectedPlan === '6_months') {
       setSelectedPlan('6_months');
+    } else if (preselectedPlan === '3_months') {
+      setSelectedPlan('3_months');
     }
   }, [preselectedPlan]);
 
@@ -38,48 +40,42 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
     };
   }, [onClose]);
 
+  // ВАЖНО: Реальные цены для продакшена
   const plans = [
     { 
       id: 'year', 
       name: 'Per Year', 
-      total: 1000, 
-      perMonth: 83,
-      badge: null 
+      total: 350,  // Реальная цена
+      perMonth: 29,  // 350/12 ≈ 29
+      badge: 'SAVE 42%' 
     },
     { 
       id: '6_months', 
-      name: 'For 6 Month', 
-      total: 600, 
-      perMonth: 100,
+      name: 'For 6 Months', 
+      total: 600,  // Реальная цена
+      perMonth: 100,  // 600/6 = 100
       badge: null,
       selected: true 
     },
     { 
       id: '3_months', 
-      name: 'For 3 Month', 
-      total: 350, 
-      perMonth: 117,
-      badge: null 
-    },
-    { 
-      id: 'month', 
-      name: 'Per Month', 
-      total: 1, 
-      perMonth: 150,
+      name: 'For 3 Months', 
+      total: 350,  // Реальная цена
+      perMonth: 117,  // 350/3 ≈ 117
       badge: null 
     }
   ];
 
   const benefits = [
-    'benefit 1',
-    'benefit 2',
-    'benefit 3',
-    'benefit 4'
+    'Unlimited habits',
+    'Unlimited friends',
+    'Advanced statistics',
+    'Priority support'
   ];
 
   const getSelectedPlanPrice = () => {
     const plan = plans.find(p => p.id === selectedPlan);
-    return plan ? plan.total : 0;
+    return plan ? plan.total * quantity : 0;
   };
 
   const handleQuantityChange = (delta) => {
@@ -106,15 +102,12 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
       } else if (selectedPlan === '6_months') {
         backendPlan = '6_months';
       } else if (selectedPlan === '3_months') {
-        backendPlan = '6_months';
-      } else if (selectedPlan === 'month') {
-        backendPlan = '6_months';
+        backendPlan = '3_months';
       }
       
       console.log('💳 Opening payment form for plan:', backendPlan);
 
-      // ВАЖНО: Теперь открываем форму оплаты напрямую
-      // Telegram автоматически проверит баланс Stars
+      // Открываем форму оплаты
       await telegramStarsService.purchaseSubscription(backendPlan);
       
       console.log('✅ Payment form opened');
@@ -128,6 +121,8 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
         errorMessage = 'Please start a chat with @trackeryourhabitbot first.\n\nTap OK to open the bot.';
       } else if (error.message.includes('not available')) {
         errorMessage = 'Please open the app through Telegram to make a purchase.';
+      } else if (error.message.includes('insufficient')) {
+        errorMessage = 'Insufficient Telegram Stars balance. Please top up your balance and try again.';
       } else {
         errorMessage = 'Failed to open payment form. Please try again.';
       }
@@ -180,31 +175,36 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
           </div>
         </div>
 
-        {/* Subscription Quantity */}
-        <div className="subscription-new__section">
-          <h3 className="subscription-new__section-title">Subscription Quantity</h3>
-          
-          <div className="subscription-new__quantity">
-            <span className="subscription-new__quantity-label">Quantity</span>
-            <div className="subscription-new__quantity-controls">
-              <button 
-                className="subscription-new__quantity-btn"
-                onClick={() => handleQuantityChange(-1)}
-                disabled={quantity <= 1}
-              >
-                −
-              </button>
-              <span className="subscription-new__quantity-value">{quantity}</span>
-              <button 
-                className="subscription-new__quantity-btn"
-                onClick={() => handleQuantityChange(1)}
-                disabled={quantity >= 10}
-              >
-                +
-              </button>
+        {/* Subscription Quantity (для подарков) */}
+        {buyAsGift && (
+          <div className="subscription-new__section">
+            <h3 className="subscription-new__section-title">Subscription Quantity</h3>
+            
+            <div className="subscription-new__quantity">
+              <span className="subscription-new__quantity-label">Quantity</span>
+              <div className="subscription-new__quantity-controls">
+                <button 
+                  className="subscription-new__quantity-btn"
+                  onClick={() => handleQuantityChange(-1)}
+                  disabled={quantity <= 1}
+                >
+                  −
+                </button>
+                <span className="subscription-new__quantity-value">{quantity}</span>
+                <button 
+                  className="subscription-new__quantity-btn"
+                  onClick={() => handleQuantityChange(1)}
+                  disabled={quantity >= 10}
+                >
+                  +
+                </button>
+              </div>
             </div>
           </div>
+        )}
 
+        {/* Gift Option */}
+        <div className="subscription-new__section">
           <label className="subscription-new__checkbox-container">
             <span className="subscription-new__checkbox-label">Buy as a gift</span>
             <input
@@ -216,10 +216,12 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
             <span className="subscription-new__checkbox-custom"></span>
           </label>
 
-          <p className="subscription-new__gift-note">
-            Purchase licenses for the whole team or as a gift<br/>
-            A discount applies when purchasing multiple at once
-          </p>
+          {buyAsGift && (
+            <p className="subscription-new__gift-note">
+              Purchase licenses for the whole team or as a gift<br/>
+              A discount applies when purchasing multiple at once
+            </p>
+          )}
         </div>
 
         {/* Subscription Plans */}
@@ -243,8 +245,23 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
                 {selectedPlan === plan.id && '✓'}
               </span>
               <div className="subscription-new__plan-info">
-                <span className="subscription-new__plan-name">{plan.name}</span>
-                <span className="subscription-new__plan-total">{plan.total} ⭐</span>
+                <div>
+                  <span className="subscription-new__plan-name">{plan.name}</span>
+                  {plan.badge && (
+                    <span style={{ 
+                      marginLeft: '8px', 
+                      padding: '2px 6px', 
+                      background: '#FF9500', 
+                      borderRadius: '4px', 
+                      fontSize: '12px',
+                      color: 'white',
+                      fontWeight: 'bold'
+                    }}>
+                      {plan.badge}
+                    </span>
+                  )}
+                </div>
+                <span className="subscription-new__plan-total">{plan.total} ⭐ total</span>
               </div>
               <span className="subscription-new__plan-price">
                 {plan.perMonth} ⭐/month
@@ -258,7 +275,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
           <input
             type="text"
             className="subscription-new__promo"
-            placeholder="Promo code"
+            placeholder="Promo code (optional)"
             value={promoCode}
             onChange={(e) => setPromoCode(e.target.value)}
           />
@@ -266,7 +283,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
 
         {/* Plan Benefits */}
         <div className="subscription-new__section">
-          <h3 className="subscription-new__section-title">Plan Benefits</h3>
+          <h3 className="subscription-new__section-title">What You Get</h3>
           <div className="subscription-new__benefits">
             {benefits.map((benefit, index) => (
               <div key={index} className="subscription-new__benefit">
@@ -281,10 +298,10 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
         <div className="subscription-new__section">
           <h3 className="subscription-new__section-title">About Subscription</h3>
           <p className="subscription-new__about">
-            t is a long established fact that a reader will be distracted by the readable content 
-            of a page when looking at its layout. The point of using Lorem Ipsum is that it has a 
-            more-or-less normal distribution of letters, as opposed to using 'Content here, 
-            content here', making it look like readable English.
+            Your subscription will be activated immediately after payment. 
+            You can cancel your subscription at any time in your profile settings. 
+            All your habits and data will be saved even if your subscription expires.
+            Telegram Stars are non-refundable after purchase.
           </p>
         </div>
 
@@ -310,7 +327,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
           onClick={handleSubscribe}
           disabled={!agreedToTerms || isProcessing}
         >
-          {isProcessing ? 'Opening payment...' : `Subscribe for ${getSelectedPlanPrice()} ⭐ per year`}
+          {isProcessing ? 'Opening payment...' : `Subscribe for ${getSelectedPlanPrice()} ⭐`}
         </button>
       </div>
     </div>
