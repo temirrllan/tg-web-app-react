@@ -370,7 +370,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
             border: '1px solid #007AFF',
             borderRadius: '12px',
             padding: '12px',
-            marginBottom: '16px',
+            marginBottom: '16px', 
             fontSize: '14px',
             color: '#007AFF'
           }}>
