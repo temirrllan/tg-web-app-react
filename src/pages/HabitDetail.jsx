@@ -109,7 +109,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       const shareCode = shareData.shareCode;
       
       const shareText = `Join my "${habit.title}" habit!\n\n📝 Goal: ${habit.goal}\n\nLet's build better habits together! 💪`;
-      const shareUrl = `https://t.me/trackeryourhabitbot?start=join_${shareCode}`;
+      const shareUrl = `https://t.me/CheckHabitlyBot?start=join_${shareCode}`;
       
       // Проверяем, показывали ли уже подсказку о друзьях
       const hasSeenFriendHint = localStorage.getItem('hasSeenFriendHint');
@@ -175,7 +175,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     try {
       const shareData = await habitService.createShareLink(habit.id);
       const shareCode = shareData.shareCode;
-      const inviteLink = `https://t.me/trackeryourhabitbot?start=join_${shareCode}`;
+      const inviteLink = `https://t.me/CheckHabitlyBot?start=join_${shareCode}`;
       
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(inviteLink);

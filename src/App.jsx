@@ -193,7 +193,7 @@ function AppContent() {
     return (
       <div className="app-error">
         <h2>Необходима авторизация</h2>
-        <p>Откройте приложение через Telegram бота @trackeryourhabitbot</p>
+        <p>Откройте приложение через Telegram бота @CheckHabitlyBot</p>
       </div>
     );
   }

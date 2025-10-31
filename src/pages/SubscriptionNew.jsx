@@ -171,7 +171,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
       let errorMessage = 'Failed to open payment form.';
       
       if (error.message === 'bot_blocked') {
-        errorMessage = 'Please start a chat with @trackeryourhabitbot first.\n\nTap OK to open the bot.';
+        errorMessage = 'Please start a chat with @CheckHabitlyBot first.\n\nTap OK to open the bot.';
       } else if (error.message.includes('not available')) {
         errorMessage = 'Please open the app through Telegram to make a purchase.';
       } else if (error.message.includes('insufficient')) {
@@ -194,7 +194,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
             ]
           }, (button_id) => {
             if (button_id === 'open_bot') {
-              tg.openTelegramLink('https://t.me/trackeryourhabitbot');
+              tg.openTelegramLink('https://t.me/CheckHabitlyBot');
             }
           });
         } else if (error.message.includes('insufficient')) {
