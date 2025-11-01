@@ -23,6 +23,31 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const [friendLimitData, setFriendLimitData] = useState(null);
   const { t } = useTranslation();
 
+
+  useNavigation(onClose);
+
+  // ✅ Telegram BackButton logic
+  useEffect(() => {
+    if (!tg) return;
+    try {
+      tg.BackButton.show();
+      tg.BackButton.onClick(onClose);
+
+      return () => {
+        tg.BackButton.offClick(onClose);
+        tg.BackButton.hide();
+      };
+    } catch (err) {
+      console.error('Failed to handle Telegram BackButton:', err);
+    }
+  }, [tg, onClose]);
+
+  useEffect(() => {
+    loadStatistics();
+    loadMembers();
+    checkFriendLimit();
+  }, [habit.id]);
+
   const [statistics, setStatistics] = useState({
     currentStreak: 0,
     weekDays: 0,

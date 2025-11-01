@@ -7,9 +7,8 @@ export const useNavigation = (onBack = null, options = {}) => {
   const isInitializedRef = useRef(false);
   const backButtonHandlerRef = useRef(null);
   
-  const goBack = useCallback(() => {
+   const goBack = useCallback(() => {
     console.log('Navigation: goBack called');
-    
     if (onBack) {
       onBack();
     } else {
@@ -22,64 +21,36 @@ export const useNavigation = (onBack = null, options = {}) => {
       console.log('Navigation: Telegram WebApp or BackButton not available');
       return;
     }
-    
-    // Предотвращаем повторную инициализацию
-    if (isInitializedRef.current && backButtonHandlerRef.current) {
-      console.log('Navigation: Already initialized, skipping');
-      return;
-    }
-    
+
     if (!isVisible) {
       tg.BackButton.hide();
       return;
     }
-    
-    // Создаем обработчик один раз
+
     const handleBack = () => {
       console.log('Navigation: BackButton clicked');
       goBack();
     };
-    
-    // Сохраняем ссылку на обработчик
-    backButtonHandlerRef.current = handleBack;
-    
-    // Небольшая задержка для стабилизации
-    const timeoutId = setTimeout(() => {
-      console.log('Navigation: Showing BackButton');
+
+    handlerRef.current = handleBack;
+
+    try {
+      console.log('Navigation: Showing BackButton immediately');
       tg.BackButton.show();
       tg.BackButton.onClick(handleBack);
-      isInitializedRef.current = true;
-    }, 100);
-    
-    // Cleanup при размонтировании компонента
-    return () => {
-      clearTimeout(timeoutId);
-      console.log('Navigation: Cleaning up BackButton');
-      
-      if (backButtonHandlerRef.current) {
-        tg.BackButton.offClick(backButtonHandlerRef.current);
-        backButtonHandlerRef.current = null;
-      }
-      
-      tg.BackButton.hide();
-      isInitializedRef.current = false;
-    };
-  }, [tg, isVisible]); // Убираем goBack из зависимостей
-  
-  // Обновляем обработчик при изменении onBack
-  useEffect(() => {
-    if (backButtonHandlerRef.current && tg && tg.BackButton) {
-      tg.BackButton.offClick(backButtonHandlerRef.current);
-      
-      const newHandler = () => {
-        console.log('Navigation: BackButton clicked (updated)');
-        goBack();
-      };
-      
-      backButtonHandlerRef.current = newHandler;
-      tg.BackButton.onClick(newHandler);
+    } catch (err) {
+      console.warn('Navigation: Failed to show BackButton', err);
     }
-  }, [goBack, tg]);
+
+    return () => {
+      console.log('Navigation: Cleaning up BackButton');
+      if (handlerRef.current) {
+        tg.BackButton.offClick(handlerRef.current);
+        handlerRef.current = null;
+      }
+      tg.BackButton.hide();
+    };
+  }, [tg, isVisible, goBack]);
   
   return { goBack };
 };
