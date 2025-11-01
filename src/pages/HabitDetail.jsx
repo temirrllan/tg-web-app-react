@@ -10,8 +10,7 @@ import SubscriptionModal from '../components/modals/SubscriptionModal';
 import './HabitDetail.css';
 import FriendSwipeHint from '../components/habits/FriendSwipeHint';
 import { useTranslation } from "../hooks/useTranslation";
-import { useNavigationStack } from '../context/NavigationContext';
-import { useNavigate } from 'react-router-dom';
+
 const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const { tg, user: currentUser } = useTelegram();
   const [loading, setLoading] = useState(true);
@@ -24,18 +23,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const [friendLimitData, setFriendLimitData] = useState(null);
   const { t } = useTranslation();
 
- const { push, pop } = useNavigationStack();
-  const navigate = useNavigate();
 
-  useNavigation(() => {
-    pop();
-    navigate('/'); // возвращаемся на Today
-  });
-
-  const editHabit = () => {
-    push('EditHabit');
-    navigate('/habit/edit');
-  };
   useNavigation(onClose);
 
   // ✅ Telegram BackButton logic
