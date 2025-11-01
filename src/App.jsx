@@ -8,6 +8,7 @@ import Today from './pages/Today';
 import Profile from './pages/Profile';
 import Loader from './components/common/Loader';
 import './App.css';
+import { NavigationProvider } from './context/NavigationContext';
 
 // Внутренний компонент для использования контекста языка
 function AppContent() {
@@ -217,9 +218,10 @@ function AppContent() {
 // Главный компонент App с LanguageProvider
 function App() {
   return (
+    <NavigationProvider>
     <LanguageProvider>
       <AppContent />
-    </LanguageProvider>
+    </LanguageProvider></NavigationProvider>
   );
 }
 

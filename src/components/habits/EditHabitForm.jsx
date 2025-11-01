@@ -4,10 +4,12 @@ import { DAYS_OF_WEEK } from '../../utils/constants';
 import './EditHabitForm.css';
 import { useNavigation } from '../../hooks/useNavigation';
 import { useTranslation } from '../../hooks/useTranslation';
-
+import { useNavigationStack } from '../context/NavigationContext';
+import { useNavigate } from 'react-router-dom';
 const EditHabitForm = ({ habit, onClose, onSuccess }) => {
   const { t } = useTranslation();
-
+const { pop } = useNavigationStack();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
