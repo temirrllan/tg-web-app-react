@@ -1,10 +1,19 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useTelegram } from './useTelegram';
-import { useNavigationStack } from '../context/NavigationContext';
+import { useNavigationStack } from '../context/NavigationContext.jsx';
 
 export const useNavigation = (onBack = null, options = {}) => {
   const { tg } = useTelegram();
-  const { pop } = useNavigationStack();
+
+  // 🔒 Безопасное обращение к контексту
+  let navigation;
+  try {
+    navigation = useNavigationStack();
+  } catch {
+    navigation = null;
+  }
+
+  const pop = navigation?.pop || (() => window.history.back());
   const { isVisible = true } = options;
   const backButtonHandlerRef = useRef(null);
   const intervalRef = useRef(null);
@@ -16,7 +25,7 @@ export const useNavigation = (onBack = null, options = {}) => {
   }, [onBack, pop]);
 
   useEffect(() => {
-    if (!tg || !tg.BackButton) {
+    if (!tg?.BackButton) {
       console.warn('Navigation: Telegram WebApp.BackButton not found');
       return;
     }
@@ -30,16 +39,17 @@ export const useNavigation = (onBack = null, options = {}) => {
 
     const showBackButton = () => {
       try {
-        if (!backButton.isVisible && isVisible) {
-          backButton.show();
-        }
-      } catch {}
+        if (isVisible) backButton.show();
+      } catch (err) {
+        console.warn('Failed to show BackButton:', err);
+      }
     };
 
     showBackButton();
     backButtonHandlerRef.current = handleBack;
     backButton.onClick(handleBack);
 
+    // 🔁 Проверяем стабильность кнопки раз в 0.5 сек
     intervalRef.current = setInterval(() => {
       try {
         if (isVisible && tg?.BackButton && !tg.BackButton.isVisible) {
@@ -50,8 +60,10 @@ export const useNavigation = (onBack = null, options = {}) => {
 
     return () => {
       clearInterval(intervalRef.current);
-      backButton.offClick?.(backButtonHandlerRef.current);
-      tg.BackButton.hide();
+      try {
+        backButton.offClick?.(backButtonHandlerRef.current);
+        tg.BackButton.hide();
+      } catch {}
     };
   }, [tg, goBack, isVisible]);
 
