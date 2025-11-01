@@ -1,24 +1,15 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState } from "react";
 
 const NavigationContext = createContext();
 
 export const NavigationProvider = ({ children }) => {
-  const [stack, setStack] = useState(['Today']); // Начальная страница
-
-  const push = useCallback((page) => {
-    setStack((prev) => [...prev, page]);
-  }, []);
-
-  const pop = useCallback(() => {
-    setStack((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev));
-  }, []);
-
-  const reset = useCallback(() => {
-    setStack(['Today']);
-  }, []);
-
+  const [stack, setStack] = useState([]);
   const current = stack[stack.length - 1];
-  const previous = stack.length > 1 ? stack[stack.length - 2] : null;
+  const previous = stack[stack.length - 2];
+
+  const push = (page) => setStack((prev) => [...prev, page]);
+  const pop = () => setStack((prev) => prev.slice(0, -1));
+  const reset = () => setStack([]);
 
   return (
     <NavigationContext.Provider value={{ stack, current, previous, push, pop, reset }}>
@@ -27,4 +18,4 @@ export const NavigationProvider = ({ children }) => {
   );
 };
 
-export const useNavigationStack = () => useContext(NavigationContext);
+export const useNavigation = () => useContext(NavigationContext);
