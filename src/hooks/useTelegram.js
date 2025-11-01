@@ -25,11 +25,11 @@ export const useTelegram = () => {
           }
 
           // По умолчанию скрываем BackButton только если метод доступен
-          try {
-            tg?.BackButton?.hide?.();
-          } catch (err) {
-            console.warn('useTelegram: BackButton hide failed', err);
-          }
+          // try {
+          //   tg?.BackButton?.hide?.();
+          // } catch (err) {
+          //   console.warn('useTelegram: BackButton hide failed', err);
+          // }
 
           setWebApp(tg);
 

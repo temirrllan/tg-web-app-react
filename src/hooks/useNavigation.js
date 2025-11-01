@@ -5,6 +5,7 @@ export const useNavigation = (onBack = null, options = {}) => {
   const { tg } = useTelegram();
   const { isVisible = true } = options;
   const handlerRef = useRef(null);
+  const backButton = tg?.BackButton;
 
   const goBack = useCallback(() => {
     console.log('Navigation: goBack called');
@@ -20,26 +21,21 @@ export const useNavigation = (onBack = null, options = {}) => {
   }, [onBack]);
 
   useEffect(() => {
-    if (!tg) {
-      console.log('Navigation: Telegram WebApp not available');
-      return;
-    }
+    if (!tg || !backButton) return;
 
-    // Защитно проверяем наличие BackButton API
-    const back = tg.BackButton;
-    if (!back || typeof back.show !== 'function' || typeof back.onClick !== 'function') {
-      console.log('Navigation: BackButton API not available on tg object');
-      return;
-    }
-
-    if (!isVisible) {
+    const safeShow = () => {
       try {
-        back.hide();
+        if (isVisible) {
+          backButton.show();
+          console.log('Navigation: BackButton shown');
+        } else {
+          backButton.hide();
+          console.log('Navigation: BackButton hidden');
+        }
       } catch (err) {
-        console.warn('Navigation: BackButton.hide failed', err);
+        console.warn('Navigation: show/hide failed', err);
       }
-      return;
-    }
+    };
 
     const handleBack = () => {
       console.log('Navigation: BackButton clicked');
@@ -48,33 +44,32 @@ export const useNavigation = (onBack = null, options = {}) => {
 
     handlerRef.current = handleBack;
 
-    try {
-      // Показать BackButton и повесить обработчик сразу
-      console.log('Navigation: Showing BackButton');
-      back.show();
-      back.onClick(handleBack);
-    } catch (err) {
-      console.warn('Navigation: Failed to show/onClick BackButton', err);
-    }
+    // Инициализация
+    safeShow();
+    backButton.onClick(handleBack);
 
+    // ⚙️ Дополнительно: Telegram иногда сам скрывает кнопку
+    // при themeChanged или viewportChanged — возвращаем её обратно
+    const eventsToWatch = ['themeChanged', 'viewportChanged', 'reinit', 'settingsButtonClicked'];
+    eventsToWatch.forEach((ev) => {
+      tg.onEvent?.(ev, safeShow);
+    });
+
+    // Cleanup
     return () => {
-      console.log('Navigation: Cleaning up BackButton');
       try {
-        if (handlerRef.current) {
-          back.offClick?.(handlerRef.current);
-          handlerRef.current = null;
-        }
+        backButton.offClick?.(handlerRef.current);
       } catch (err) {
-        console.warn('Navigation: Failed to offClick BackButton', err);
+        console.warn('Navigation: offClick failed', err);
       }
-      try {
-        back.hide();
-      } catch (err) {
-        console.warn('Navigation: Failed to hide BackButton during cleanup', err);
-      }
+
+      eventsToWatch.forEach((ev) => {
+        try {
+          tg.offEvent?.(ev, safeShow);
+        } catch (err) {}
+      });
     };
-  // isVisible and goBack included
-  }, [tg, isVisible, goBack]);
+  }, [tg, backButton, isVisible, goBack]);
 
   return { goBack };
 };
