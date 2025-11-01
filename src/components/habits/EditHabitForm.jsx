@@ -4,7 +4,7 @@ import { DAYS_OF_WEEK } from '../../utils/constants';
 import './EditHabitForm.css';
 import { useNavigation } from '../../hooks/useNavigation';
 import { useTranslation } from '../../hooks/useTranslation';
-import { useNavigationStack } from '../context/NavigationContext';
+import { useNavigationStack } from '../../context/NavigationContext';
 import { useNavigate } from 'react-router-dom';
 const EditHabitForm = ({ habit, onClose, onSuccess }) => {
   const { t } = useTranslation();
