@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from "react";
-import { useNavigation } from "../hooks/useNavigation";
-import { useTelegram } from "../hooks/useTelegram";
-import { habitService } from "../services/habits";
-import Loader from "../components/common/Loader";
-import DeleteConfirmModal from "../components/modals/DeleteConfirmModal";
-import CopyLinkModal from "../components/modals/CopyLinkModal";
-import Toast from "../components/common/Toast";
-import SubscriptionModal from "../components/modals/SubscriptionModal";
-import "./HabitDetail.css";
-import FriendSwipeHint from "../components/habits/FriendSwipeHint";
+import React, { useState, useEffect } from 'react';
+import { useNavigation } from '../hooks/useNavigation';
+import { useTelegram } from '../hooks/useTelegram';
+import { habitService } from '../services/habits';
+import Loader from '../components/common/Loader';
+import DeleteConfirmModal from '../components/modals/DeleteConfirmModal';
+import CopyLinkModal from '../components/modals/CopyLinkModal';
+import Toast from '../components/common/Toast';
+import SubscriptionModal from '../components/modals/SubscriptionModal';
+import './HabitDetail.css';
+import FriendSwipeHint from '../components/habits/FriendSwipeHint';
 import { useTranslation } from "../hooks/useTranslation";
-import { useNavigationStack } from "../context/NavigationContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigationStack } from '../context/NavigationContext';
+import { useNavigate } from 'react-router-dom';
 const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const { tg, user: currentUser } = useTelegram();
   const [loading, setLoading] = useState(true);
@@ -24,17 +24,17 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const [friendLimitData, setFriendLimitData] = useState(null);
   const { t } = useTranslation();
 
-  const { push, pop } = useNavigationStack();
+ const { push, pop } = useNavigationStack();
   const navigate = useNavigate();
 
   useNavigation(() => {
     pop();
-    navigate("/"); // возвращаемся на Today
+    navigate('/'); // возвращаемся на Today
   });
 
   const editHabit = () => {
-    push("EditHabit");
-    navigate("/habit/edit");
+    push('EditHabit');
+    navigate('/habit/edit');
   };
   useNavigation(onClose);
 
@@ -50,7 +50,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
         tg.BackButton.hide();
       };
     } catch (err) {
-      console.error("Failed to handle Telegram BackButton:", err);
+      console.error('Failed to handle Telegram BackButton:', err);
     }
   }, [tg, onClose]);
 
@@ -67,7 +67,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     monthDays: 0,
     monthTotal: 30,
     yearDays: 0,
-    yearTotal: 365,
+    yearTotal: 365
   });
 
   useNavigation(onClose);
@@ -82,7 +82,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     try {
       setLoading(true);
       const stats = await habitService.getHabitStatistics(habit.id);
-
+      
       if (stats) {
         setStatistics({
           currentStreak: stats.currentStreak || habit.streak_current || 0,
@@ -91,11 +91,11 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
           monthDays: stats.monthCompleted || 0,
           monthTotal: stats.monthTotal || 30,
           yearDays: stats.yearCompleted || 0,
-          yearTotal: 365,
+          yearTotal: 365
         });
       }
     } catch (error) {
-      console.error("Failed to load statistics:", error);
+      console.error('Failed to load statistics:', error);
     } finally {
       setLoading(false);
     }
@@ -106,7 +106,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       const data = await habitService.getHabitMembers(habit.id);
       setMembers(data.members || []);
     } catch (error) {
-      console.error("Failed to load members:", error);
+      console.error('Failed to load members:', error);
     }
   };
 
@@ -114,28 +114,28 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     try {
       const limitData = await habitService.checkFriendLimit(habit.id);
       setFriendLimitData(limitData);
-      console.log("Friend limit data:", limitData);
+      console.log('Friend limit data:', limitData);
     } catch (error) {
-      console.error("Failed to check friend limit:", error);
+      console.error('Failed to check friend limit:', error);
     }
   };
 
   const handleAddFriend = async () => {
-    console.log("Add Friend clicked, checking limits...");
-
+    console.log('Add Friend clicked, checking limits...');
+    
     // Проверяем актуальные лимиты
     const limitCheck = await habitService.checkFriendLimit(habit.id);
     setFriendLimitData(limitCheck);
-
-    console.log("Friend limit check result:", limitCheck);
-
+    
+    console.log('Friend limit check result:', limitCheck);
+    
     // Если достигнут лимит и пользователь не премиум - показываем модалку подписки
     if (limitCheck.showPremiumModal && !limitCheck.isPremium) {
-      console.log("Friend limit reached, showing subscription modal");
+      console.log('Friend limit reached, showing subscription modal');
       setShowSubscriptionModal(true);
       return;
     }
-
+    
     // Если можно добавлять друзей - продолжаем с шарингом
     await handleShare();
   };
@@ -144,79 +144,66 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     try {
       const shareData = await habitService.createShareLink(habit.id);
       const shareCode = shareData.shareCode;
-
+      
       const shareText = `Join my "${habit.title}" habit!\n\n📝 Goal: ${habit.goal}\n\nLet's build better habits together! 💪`;
       const shareUrl = `https://t.me/CheckHabitlyBot?start=join_${shareCode}`;
-
+      
       // Проверяем, показывали ли уже подсказку о друзьях
-      const hasSeenFriendHint = localStorage.getItem("hasSeenFriendHint");
+      const hasSeenFriendHint = localStorage.getItem('hasSeenFriendHint');
       if (!hasSeenFriendHint && members.length === 0) {
         // Показываем подсказку после первого добавления друга
         setTimeout(() => {
           setShowFriendHint(true);
-          localStorage.setItem("hasSeenFriendHint", "true");
+          localStorage.setItem('hasSeenFriendHint', 'true');
         }, 2000);
       }
-
+      
       if (tg?.openTelegramLink) {
-        tg.openTelegramLink(
-          `https://t.me/share/url?url=${encodeURIComponent(
-            shareUrl
-          )}&text=${encodeURIComponent(shareText)}`
-        );
+        tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`);
       } else {
-        window.open(
-          `https://t.me/share/url?url=${encodeURIComponent(
-            shareUrl
-          )}&text=${encodeURIComponent(shareText)}`,
-          "_blank"
-        );
+        window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
       }
     } catch (error) {
-      console.error("Failed to create share link:", error);
+      console.error('Failed to create share link:', error);
     }
   };
 
   const handleSubscriptionContinue = async (plan) => {
-    console.log("Selected subscription plan:", plan);
-
+    console.log('Selected subscription plan:', plan);
+    
     try {
       // Активируем премиум через API
       const result = await habitService.activatePremium(plan);
-
+      
       if (result.success) {
-        console.log("Premium activated successfully");
-
+        console.log('Premium activated successfully');
+        
         // Перезагружаем лимиты и членов
         await checkFriendLimit();
         await loadMembers();
-
+        
         // Закрываем модалку подписки
         setShowSubscriptionModal(false);
-
+        
         // Показываем уведомление
         if (window.Telegram?.WebApp?.showAlert) {
-          window.Telegram.WebApp.showAlert(
-            "Premium activated! Now you can invite unlimited friends! 🎉"
-          );
+          window.Telegram.WebApp.showAlert('Premium activated! Now you can invite unlimited friends! 🎉');
         }
-
+        
         // Теперь можно продолжить с добавлением друга
         setTimeout(() => {
           handleShare();
         }, 500);
       }
     } catch (error) {
-      console.error("Failed to activate premium:", error);
-
+      console.error('Failed to activate premium:', error);
+      
       setShowSubscriptionModal(false);
-
+      
       if (window.Telegram?.WebApp?.showAlert) {
-        window.Telegram.WebApp.showAlert(
-          "Failed to activate premium. Please try again."
-        );
+        window.Telegram.WebApp.showAlert('Failed to activate premium. Please try again.');
       } else {
-        alert("Failed to activate premium. Please try again.");
+        alert('Failed to activate premium. Please try again.');
       }
     }
   };
@@ -226,7 +213,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       const shareData = await habitService.createShareLink(habit.id);
       const shareCode = shareData.shareCode;
       const inviteLink = `https://t.me/CheckHabitlyBot?start=join_${shareCode}`;
-
+      
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(inviteLink);
       } else {
@@ -237,56 +224,52 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
-        document.execCommand("copy");
+        document.execCommand('copy');
         textArea.remove();
       }
-
+      
       setShowCopyModal(true);
-
+      
       if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.notificationOccurred("success");
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
       }
     } catch (err) {
-      console.error("Failed to copy link:", err);
+      console.error('Failed to copy link:', err);
     }
   };
 
   const handlePunchFriend = async (memberId) => {
     try {
       const result = await habitService.punchFriend(habit.id, memberId);
-
+      
       if (result.showToast) {
         setToast({
           message: result.toastMessage,
-          type: result.toastType || "info",
+          type: result.toastType || 'info'
         });
-
+        
         if (window.Telegram?.WebApp?.HapticFeedback) {
           if (result.alreadyCompleted) {
-            window.Telegram.WebApp.HapticFeedback.notificationOccurred(
-              "warning"
-            );
+            window.Telegram.WebApp.HapticFeedback.notificationOccurred('warning');
           } else if (result.success) {
-            window.Telegram.WebApp.HapticFeedback.impactOccurred("medium");
+            window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
           }
         }
       } else if (tg?.showAlert) {
         // Fallback для старых версий
         if (result.alreadyCompleted) {
-          tg.showAlert(
-            `Bro, ${result.friendName} already completed this habit today! 👌`
-          );
+          tg.showAlert(`Bro, ${result.friendName} already completed this habit today! 👌`);
         } else if (result.isSkipped) {
           tg.showAlert(`${result.friendName} skipped this habit today 😔`);
         } else if (result.success) {
-          tg.showAlert("Reminder sent to your friend! 👊");
+          tg.showAlert('Reminder sent to your friend! 👊');
         }
       }
     } catch (error) {
-      console.error("Failed to send punch:", error);
+      console.error('Failed to send punch:', error);
       setToast({
-        message: "Failed to send punch. Please try again.",
-        type: "error",
+        message: 'Failed to send punch. Please try again.',
+        type: 'error'
       });
     }
   };
@@ -294,43 +277,40 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const handleRemoveFriend = async (memberId) => {
     try {
       if (tg?.showConfirm) {
-        tg.showConfirm(
-          "Remove this friend from the habit?",
-          async (confirmed) => {
-            if (confirmed) {
-              await habitService.removeMember(habit.id, memberId);
-              await loadMembers();
-              await checkFriendLimit(); // Обновляем лимиты после удаления
-              setToast({
-                message: "Friend removed from habit",
-                type: "success",
-              });
-            }
+        tg.showConfirm('Remove this friend from the habit?', async (confirmed) => {
+          if (confirmed) {
+            await habitService.removeMember(habit.id, memberId);
+            await loadMembers();
+            await checkFriendLimit(); // Обновляем лимиты после удаления
+            setToast({
+              message: 'Friend removed from habit',
+              type: 'success'
+            });
           }
-        );
+        });
       } else {
-        const confirmed = window.confirm("Remove this friend from the habit?");
+        const confirmed = window.confirm('Remove this friend from the habit?');
         if (confirmed) {
           await habitService.removeMember(habit.id, memberId);
           await loadMembers();
           await checkFriendLimit(); // Обновляем лимиты после удаления
           setToast({
-            message: "Friend removed from habit",
-            type: "success",
+            message: 'Friend removed from habit',
+            type: 'success'
           });
         }
       }
     } catch (error) {
-      console.error("Failed to remove friend:", error);
+      console.error('Failed to remove friend:', error);
       setToast({
-        message: "Failed to remove friend. Please try again.",
-        type: "error",
+        message: 'Failed to remove friend. Please try again.',
+        type: 'error'
       });
     }
   };
 
   const getCategoryEmoji = () => {
-    return habit.category_icon || habit.icon || "🎯";
+    return habit.category_icon || habit.icon || '🎯';
   };
 
   const getProgressPercentage = (completed, total) => {
@@ -340,12 +320,12 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
 
   const getProgressColor = (type) => {
     const colors = {
-      streak: "#A7D96C",
-      week: "#7DD3C0",
-      month: "#C084FC",
-      year: "#FBBF24",
+      streak: '#A7D96C',
+      week: '#7DD3C0', 
+      month: '#C084FC',
+      year: '#FBBF24'
     };
-    return colors[type] || "#A7D96C";
+    return colors[type] || '#A7D96C';
   };
 
   if (loading) {
@@ -363,15 +343,10 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
           <div className="habit-detail__habit-info">
             <div className="habit-detail__habit-header">
               <div className="habit-detail__habit-title-section">
-                <span className="habit-detail__emoji">
-                  {getCategoryEmoji()}
-                </span>
+                <span className="habit-detail__emoji">{getCategoryEmoji()}</span>
                 <h2 className="habit-detail__habit-title">{habit.title}</h2>
               </div>
-              <button
-                className="habit-detail__edit-btn"
-                onClick={() => onEdit(habit)}
-              >
+              <button className="habit-detail__edit-btn" onClick={() => onEdit(habit)}>
                 Edit
               </button>
             </div>
@@ -382,85 +357,47 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
 
           <div className="habit-detail__statistics">
             <div className="habit-detail__stat-card">
-              <div
-                className="habit-detail__stat-circle"
-                style={{
-                  "--progress": getProgressPercentage(
-                    statistics.currentStreak,
-                    100
-                  ),
-                  "--color": getProgressColor("streak"),
-                }}
-              >
-                <span className="habit-detail__stat-value">
-                  {statistics.currentStreak}
-                </span>
+              <div className="habit-detail__stat-circle" style={{
+                '--progress': getProgressPercentage(statistics.currentStreak, 100),
+                '--color': getProgressColor('streak')
+              }}>
+                <span className="habit-detail__stat-value">{statistics.currentStreak}</span>
               </div>
               <h3 className="habit-detail__stat-title">Days Strike</h3>
               <p className="habit-detail__stat-subtitle">Days Strike</p>
             </div>
 
             <div className="habit-detail__stat-card">
-              <div
-                className="habit-detail__stat-circle"
-                style={{
-                  "--progress": getProgressPercentage(
-                    statistics.weekDays,
-                    statistics.weekTotal
-                  ),
-                  "--color": getProgressColor("week"),
-                }}
-              >
-                <span className="habit-detail__stat-value">
-                  {statistics.weekDays}
-                </span>
-                <span className="habit-detail__stat-total">
-                  {statistics.weekTotal}
-                </span>
+              <div className="habit-detail__stat-circle" style={{
+                '--progress': getProgressPercentage(statistics.weekDays, statistics.weekTotal),
+                '--color': getProgressColor('week')
+              }}>
+                <span className="habit-detail__stat-value">{statistics.weekDays}</span>
+                <span className="habit-detail__stat-total">{statistics.weekTotal}</span>
               </div>
               <h3 className="habit-detail__stat-title">Week</h3>
               <p className="habit-detail__stat-subtitle">Days Strike</p>
             </div>
 
             <div className="habit-detail__stat-card">
-              <div
-                className="habit-detail__stat-circle"
-                style={{
-                  "--progress": getProgressPercentage(
-                    statistics.monthDays,
-                    statistics.monthTotal
-                  ),
-                  "--color": getProgressColor("month"),
-                }}
-              >
-                <span className="habit-detail__stat-value">
-                  {statistics.monthDays}
-                </span>
-                <span className="habit-detail__stat-total">
-                  {statistics.monthTotal}
-                </span>
+              <div className="habit-detail__stat-circle" style={{
+                '--progress': getProgressPercentage(statistics.monthDays, statistics.monthTotal),
+                '--color': getProgressColor('month')
+              }}>
+                <span className="habit-detail__stat-value">{statistics.monthDays}</span>
+                <span className="habit-detail__stat-total">{statistics.monthTotal}</span>
               </div>
               <h3 className="habit-detail__stat-title">Month</h3>
               <p className="habit-detail__stat-subtitle">Days Strike</p>
             </div>
 
             <div className="habit-detail__stat-card">
-              <div
-                className="habit-detail__stat-circle"
-                style={{
-                  "--progress": getProgressPercentage(
-                    statistics.yearDays,
-                    statistics.yearTotal
-                  ),
-                  "--color": getProgressColor("year"),
-                }}
-              >
-                <span className="habit-detail__stat-value">
-                  {statistics.yearDays}
-                </span>
-                <span className="habit-detail__stat-total">
-                  {statistics.yearTotal}
-                </span>
+              <div className="habit-detail__stat-circle" style={{
+                '--progress': getProgressPercentage(statistics.yearDays, statistics.yearTotal),
+                '--color': getProgressColor('year')
+              }}>
+                <span className="habit-detail__stat-value">{statistics.yearDays}</span>
+                <span className="habit-detail__stat-total">{statistics.yearTotal}</span>
               </div>
               <h3 className="habit-detail__stat-title">Year</h3>
               <p className="habit-detail__stat-subtitle">Days Strike</p>
@@ -475,24 +412,21 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
 
           <div className="habit-detail__friends">
             <h3 className="habit-detail__friends-title">Habit Friends</h3>
-
+            
             {friendLimitData && !friendLimitData.isPremium && (
-              <p
-                style={{
-                  fontSize: "13px",
-                  color: "#8E8E93",
-                  marginBottom: "12px",
-                  textAlign: "center",
-                }}
-              >
-                {friendLimitData.currentFriendsCount}/{friendLimitData.limit}{" "}
-                friend{friendLimitData.limit !== 1 ? "s" : ""} added (Free plan)
+              <p style={{
+                fontSize: '13px',
+                color: '#8E8E93',
+                marginBottom: '12px',
+                textAlign: 'center'
+              }}>
+                {friendLimitData.currentFriendsCount}/{friendLimitData.limit} friend{friendLimitData.limit !== 1 ? 's' : ''} added (Free plan)
               </p>
             )}
-
+            
             {members.length > 0 ? (
               <div className="habit-detail__members-list">
-                {members.map((member) => (
+                {members.map(member => (
                   <FriendCard
                     key={member.id}
                     member={member}
@@ -503,12 +437,11 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
               </div>
             ) : (
               <p className="habit-detail__friends-subtitle">
-                Share the link with friends and invite them to track habits
-                together.
+                Share the link with friends and invite them to track habits together.
               </p>
             )}
-
-            <button
+            
+            <button 
               className="habit-detail__btn habit-detail__btn--add-friend"
               onClick={handleAddFriend}
             >
@@ -516,7 +449,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
             </button>
           </div>
 
-          <button
+          <button 
             className="habit-detail__btn habit-detail__btn--danger"
             onClick={() => setShowDeleteModal(true)}
           >
@@ -537,7 +470,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
         onClose={() => setShowCopyModal(false)}
       />
 
-      <FriendSwipeHint
+      <FriendSwipeHint 
         show={showFriendHint}
         onClose={() => setShowFriendHint(false)}
       />
@@ -565,7 +498,7 @@ const FriendCard = ({ member, onPunch, onRemove }) => {
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [startX, setStartX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
-
+  
   const SWIPE_THRESHOLD = 60;
   const MAX_SWIPE = 100;
 
@@ -576,7 +509,7 @@ const FriendCard = ({ member, onPunch, onRemove }) => {
 
   const handleTouchMove = (e) => {
     if (!isSwiping) return;
-
+    
     const currentX = e.touches[0].clientX;
     const diff = currentX - startX;
     const limitedDiff = Math.max(-MAX_SWIPE, Math.min(MAX_SWIPE, diff));
@@ -593,7 +526,7 @@ const FriendCard = ({ member, onPunch, onRemove }) => {
         onRemove();
       }
     }
-
+    
     setSwipeOffset(0);
     setIsSwiping(false);
   };
@@ -606,22 +539,19 @@ const FriendCard = ({ member, onPunch, onRemove }) => {
           <span>Remove</span>
         </div>
       )}
-
-      <div
+      
+      <div 
         className="friend-card"
         style={{
           transform: `translateX(${swipeOffset}px)`,
-          transition: isSwiping ? "none" : "transform 0.3s ease-out",
+          transition: isSwiping ? 'none' : 'transform 0.3s ease-out'
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        <img
-          src={
-            member.photo_url ||
-            `https://ui-avatars.com/api/?name=${member.first_name}`
-          }
+        <img 
+          src={member.photo_url || `https://ui-avatars.com/api/?name=${member.first_name}`} 
           alt={member.first_name}
           className="friend-card__avatar"
         />
@@ -629,7 +559,7 @@ const FriendCard = ({ member, onPunch, onRemove }) => {
           {member.first_name} {member.last_name}
         </span>
       </div>
-
+      
       {/* Кнопка Punch (свайп влево) */}
       {swipeOffset < -20 && (
         <div className="friend-action friend-action--punch">

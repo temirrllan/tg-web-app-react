@@ -57,13 +57,7 @@ const Today = () => {
     return `${year}-${month}-${day}`;
   };
 
-   const { push } = useNavigationStack();
-  const navigate = useNavigate();
-
-  const openHabit = (habitId) => {
-    push('HabitDetail');
-    navigate(`/habit/${habitId}`);
-  };
+  
 
 
 
