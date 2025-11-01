@@ -4,26 +4,40 @@ import { useTelegram } from './useTelegram';
 export const useNavigation = (onBack = null, options = {}) => {
   const { tg } = useTelegram();
   const { isVisible = true } = options;
-  const isInitializedRef = useRef(false);
-  const backButtonHandlerRef = useRef(null);
-  
-   const goBack = useCallback(() => {
+  const handlerRef = useRef(null);
+
+  const goBack = useCallback(() => {
     console.log('Navigation: goBack called');
-    if (onBack) {
-      onBack();
-    } else {
-      window.history.back();
+    try {
+      if (onBack) {
+        onBack();
+      } else {
+        window.history.back();
+      }
+    } catch (err) {
+      console.error('Navigation: goBack error', err);
     }
   }, [onBack]);
-  
+
   useEffect(() => {
-    if (!tg || !tg.BackButton) {
-      console.log('Navigation: Telegram WebApp or BackButton not available');
+    if (!tg) {
+      console.log('Navigation: Telegram WebApp not available');
+      return;
+    }
+
+    // Защитно проверяем наличие BackButton API
+    const back = tg.BackButton;
+    if (!back || typeof back.show !== 'function' || typeof back.onClick !== 'function') {
+      console.log('Navigation: BackButton API not available on tg object');
       return;
     }
 
     if (!isVisible) {
-      tg.BackButton.hide();
+      try {
+        back.hide();
+      } catch (err) {
+        console.warn('Navigation: BackButton.hide failed', err);
+      }
       return;
     }
 
@@ -35,22 +49,32 @@ export const useNavigation = (onBack = null, options = {}) => {
     handlerRef.current = handleBack;
 
     try {
-      console.log('Navigation: Showing BackButton immediately');
-      tg.BackButton.show();
-      tg.BackButton.onClick(handleBack);
+      // Показать BackButton и повесить обработчик сразу
+      console.log('Navigation: Showing BackButton');
+      back.show();
+      back.onClick(handleBack);
     } catch (err) {
-      console.warn('Navigation: Failed to show BackButton', err);
+      console.warn('Navigation: Failed to show/onClick BackButton', err);
     }
 
     return () => {
       console.log('Navigation: Cleaning up BackButton');
-      if (handlerRef.current) {
-        tg.BackButton.offClick(handlerRef.current);
-        handlerRef.current = null;
+      try {
+        if (handlerRef.current) {
+          back.offClick?.(handlerRef.current);
+          handlerRef.current = null;
+        }
+      } catch (err) {
+        console.warn('Navigation: Failed to offClick BackButton', err);
       }
-      tg.BackButton.hide();
+      try {
+        back.hide();
+      } catch (err) {
+        console.warn('Navigation: Failed to hide BackButton during cleanup', err);
+      }
     };
+  // isVisible and goBack included
   }, [tg, isVisible, goBack]);
-  
+
   return { goBack };
 };

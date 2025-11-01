@@ -9,39 +9,51 @@ export const useTelegram = () => {
     const initTelegram = () => {
       const tg = window.Telegram?.WebApp;
       const isProduction = window.location.hostname !== 'localhost';
-      
+
       if (tg) {
-        // Production mode - используем реальный Telegram WebApp
-        tg.ready();
-        tg.expand();
-        
-        // Настройка UI
-        tg.setHeaderColor('#ffffff');
-        tg.setBackgroundColor('#f3f4f6');
-        
-        // Скрываем кнопку Back по умолчанию
-        tg.BackButton.hide();
-        
-        setWebApp(tg);
-        
-        // Получаем данные пользователя
-        const tgUser = tg.initDataUnsafe?.user;
-        if (tgUser) {
-          setUser(tgUser);
+        try {
+          // Production mode - используем реальный Telegram WebApp
+          tg.ready?.();
+          tg.expand?.();
+
+          // Настройка UI (защитно)
+          try {
+            if (typeof tg.setHeaderColor === 'function') tg.setHeaderColor('#ffffff');
+            if (typeof tg.setBackgroundColor === 'function') tg.setBackgroundColor('#f3f4f6');
+          } catch (err) {
+            console.warn('useTelegram: Failed to set header/background color', err);
+          }
+
+          // По умолчанию скрываем BackButton только если метод доступен
+          try {
+            tg?.BackButton?.hide?.();
+          } catch (err) {
+            console.warn('useTelegram: BackButton hide failed', err);
+          }
+
+          setWebApp(tg);
+
+          // Получаем данные пользователя
+          const tgUser = tg.initDataUnsafe?.user;
+          if (tgUser) {
+            setUser(tgUser);
+          }
+
+          console.log('Telegram WebApp initialized:', {
+            version: tg.version,
+            platform: tg.platform,
+            hasUser: !!tgUser,
+            hasInitData: !!tg.initData
+          });
+        } catch (err) {
+          console.error('useTelegram: initialization failed', err);
+        } finally {
+          setIsLoading(false);
         }
-        
-        console.log('Telegram WebApp initialized:', {
-          version: tg.version,
-          platform: tg.platform,
-          hasUser: !!tgUser,
-          hasInitData: !!tg.initData
-        });
-        
-        setIsLoading(false);
       } else if (!isProduction) {
         // Development mode - эмулируем Telegram WebApp
         console.warn('🚧 Development mode: Telegram WebApp emulated');
-        
+
         const mockWebApp = {
           initData: 'test_init_data',
           initDataUnsafe: {
@@ -64,8 +76,8 @@ export const useTelegram = () => {
           BackButton: {
             show: () => console.log('Mock BackButton shown'),
             hide: () => console.log('Mock BackButton hidden'),
-            onClick: (callback) => console.log('Mock BackButton onClick registered'),
-            offClick: (callback) => console.log('Mock BackButton offClick registered'),
+            onClick: (callback) => { console.log('Mock BackButton onClick registered'); /* noop */ },
+            offClick: (callback) => { console.log('Mock BackButton offClick registered'); /* noop */ },
             isVisible: false
           },
           MainButton: {
@@ -85,7 +97,7 @@ export const useTelegram = () => {
             selectionChanged: () => console.log('Mock selection changed')
           }
         };
-        
+
         setWebApp(mockWebApp);
         setUser(mockWebApp.initDataUnsafe.user);
         setIsLoading(false);
@@ -101,9 +113,9 @@ export const useTelegram = () => {
       initTelegram();
     } else {
       const isProduction = window.location.hostname !== 'localhost';
-      
+
       if (isProduction) {
-        // В production ждем до 3 секунд
+        // В production ждем до 3 секунд появления объекта
         let attempts = 0;
         const checkInterval = setInterval(() => {
           attempts++;
@@ -124,25 +136,47 @@ export const useTelegram = () => {
   }, []);
 
   const showAlert = (message) => {
-    webApp?.showAlert?.(message) || alert(message);
+    try {
+      if (webApp?.showAlert) {
+        webApp.showAlert(message);
+      } else {
+        alert(message);
+      }
+    } catch (err) {
+      console.warn('useTelegram.showAlert failed', err);
+      alert(message);
+    }
   };
 
   const showConfirm = (message) => {
     if (webApp?.showConfirm) {
       return new Promise((resolve) => {
-        webApp.showConfirm(message, resolve);
+        try {
+          webApp.showConfirm(message, resolve);
+        } catch (err) {
+          console.warn('useTelegram.showConfirm failed', err);
+          resolve(window.confirm(message));
+        }
       });
     }
-    return Promise.resolve(confirm(message));
+    return Promise.resolve(window.confirm(message));
   };
 
   const close = () => {
-    webApp?.close?.();
+    try {
+      webApp?.close?.();
+    } catch (err) {
+      console.warn('useTelegram.close failed', err);
+    }
   };
 
   const vibrate = () => {
-    if (webApp?.HapticFeedback) {
-      webApp.HapticFeedback.impactOccurred('light');
+    try {
+      if (webApp?.HapticFeedback) {
+        webApp.HapticFeedback.impactOccurred('light');
+      }
+    } catch (err) {
+      console.warn('useTelegram.vibrate failed', err);
     }
   };
 
