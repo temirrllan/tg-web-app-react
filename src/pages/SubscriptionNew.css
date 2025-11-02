@@ -11,9 +11,6 @@
   overflow: hidden;
 }
 
-
-
-
 .subscription-new__menu {
   background: none;
   border: none;
@@ -194,11 +191,12 @@
   margin: 8px 0 0 0;
 }
 
+/* FIXED: Subscription Plans */
 .subscription-new__plan {
   display: flex;
   align-items: center;
   background: white;
-  border: 2px solid transparent;
+  border: 2px solid #E5E5EA;
   border-radius: 12px;
   padding: 14px 16px;
   margin-bottom: 8px;
@@ -208,7 +206,7 @@
 
 .subscription-new__plan--selected {
   border-color: #A7D96C;
-  background: #F8FFF4;
+  background: white;
 }
 
 .subscription-new__plan-radio {
@@ -218,6 +216,7 @@
 .subscription-new__plan-checkmark {
   width: 24px;
   height: 24px;
+  min-width: 24px;
   border-radius: 50%;
   border: 2px solid #C7C7CC;
   display: flex;
@@ -228,6 +227,7 @@
   font-weight: bold;
   font-size: 14px;
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 
 .subscription-new__plan--selected .subscription-new__plan-checkmark {
@@ -238,24 +238,40 @@
 .subscription-new__plan-info {
   flex: 1;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.subscription-new__plan-name-wrapper {
+  display: flex;
   align-items: center;
+  gap: 8px;
 }
 
 .subscription-new__plan-name {
   font-size: 17px;
+  font-weight: 400;
   color: #000;
 }
 
 .subscription-new__plan-total {
-  font-size: 15px;
+  font-size: 13px;
   color: #8E8E93;
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
 .subscription-new__plan-price {
-  font-size: 15px;
+  font-size: 17px;
   color: #000;
-  font-weight: 500;
+  font-weight: 400;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .subscription-new__promo {
