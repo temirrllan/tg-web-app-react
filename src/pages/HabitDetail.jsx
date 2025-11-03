@@ -67,59 +67,59 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
 
   // 🆕 Проверка владельца привычки
   // 🆕 ИСПРАВЛЕННАЯ проверка владельца привычки
+// 🆕 ИСПРАВЛЕННАЯ проверка владельца с использованием creator_id
 const checkOwnership = async () => {
-  if (currentUser && habit) {
-    console.log('🔐 Starting ownership check:', {
-      habitId: habit.id,
-      currentUserId: currentUser.id,
-      habitUserId: habit.user_id,
-      parentHabitId: habit.parent_habit_id
-    });
+  if (!currentUser || !habit) {
+    console.log('⚠️ Missing currentUser or habit data');
+    return;
+  }
 
-    // Если у привычки НЕТ parent_habit_id - это оригинальная привычка
-    // Проверяем: текущий пользователь = создатель этой привычки
-    if (!habit.parent_habit_id) {
-      const isCurrentUserOwner = habit.user_id === currentUser.id;
+  console.log('🔐 Starting ownership check:', {
+    habitId: habit.id,
+    currentUserId: currentUser.id,
+    habitUserId: habit.user_id,
+    parentHabitId: habit.parent_habit_id
+  });
+
+  try {
+    // Делаем запрос к API для получения информации о создателе
+    const response = await habitService.getHabitOwnerInfo(habit.id);
+    
+    if (response && response.success) {
+      const creatorId = response.creator_id;
+      const isCurrentUserOwner = creatorId === currentUser.id;
+      
       setIsOwner(isCurrentUserOwner);
+      setOwnerInfo(response);
       
-      console.log('✅ Original habit - ownership:', isCurrentUserOwner);
-      return;
-    }
-
-    // Если у привычки ЕСТЬ parent_habit_id - это копия для участника
-    // Нужно проверить: является ли текущий пользователь владельцем РОДИТЕЛЬСКОЙ привычки
-    try {
-      // Получаем информацию о родительской привычке
-      const response = await habitService.getHabitOwnerInfo(habit.parent_habit_id);
+      console.log('✅ Ownership check result:', {
+        creatorId: creatorId,
+        currentUserId: currentUser.id,
+        isOwner: isCurrentUserOwner,
+        creatorName: response.creator_name
+      });
+    } else {
+      // Fallback на старую логику если API недоступен
+      console.log('⚠️ API failed, using fallback logic');
       
-      if (response && response.success) {
-        const parentOwnerId = response.owner_user_id;
-        const isCurrentUserOwner = parentOwnerId === currentUser.id;
-        
-        setIsOwner(isCurrentUserOwner);
-        setOwnerInfo(response);
-        
-        console.log('✅ Shared habit - ownership check:', {
-          parentHabitId: habit.parent_habit_id,
-          parentOwnerId: parentOwnerId,
-          currentUserId: currentUser.id,
-          isOwner: isCurrentUserOwner
-        });
-      } else {
-        // Fallback: если не удалось получить информацию о родителе
-        // Проверяем текущую привычку
+      if (!habit.parent_habit_id) {
+        // Оригинальная привычка
         const isCurrentUserOwner = habit.user_id === currentUser.id;
         setIsOwner(isCurrentUserOwner);
-        
-        console.log('⚠️ Fallback ownership check:', isCurrentUserOwner);
+        console.log('📝 Original habit, owner:', isCurrentUserOwner);
+      } else {
+        // Копия привычки - не владелец
+        setIsOwner(false);
+        console.log('📋 Shared habit copy, not owner');
       }
-    } catch (error) {
-      console.error('❌ Error checking ownership:', error);
-      
-      // В случае ошибки делаем fallback проверку
-      const isCurrentUserOwner = habit.user_id === currentUser.id;
-      setIsOwner(isCurrentUserOwner);
     }
+  } catch (error) {
+    console.error('❌ Error checking ownership:', error);
+    
+    // В случае ошибки используем простую логику
+    const isCurrentUserOwner = !habit.parent_habit_id && habit.user_id === currentUser.id;
+    setIsOwner(isCurrentUserOwner);
+    console.log('🔄 Fallback ownership:', isCurrentUserOwner);
   }
 };
 useEffect(() => {
