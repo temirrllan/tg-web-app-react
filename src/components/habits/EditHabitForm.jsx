@@ -151,32 +151,43 @@ const EditHabitForm = ({ habit, onClose, onSuccess }) => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (formData.schedule_days.length === 0) {
-      alert(t('createHabit.errors.selectAtLeastOneDay'));
-      return;
+  if (formData.schedule_days.length === 0) {
+    alert(t('createHabit.errors.selectAtLeastOneDay'));
+    return;
+  }
+
+  setLoading(true);
+  try {
+    const dataToSubmit = {
+      ...formData,
+      reminder_time: formData.reminder_time ? `${formData.reminder_time}:00` : null
+    };
+
+    await habitService.updateHabit(habit.id, dataToSubmit);
+
+    if (onSuccess) {
+      await onSuccess();
     }
-
-    setLoading(true);
-    try {
-      const dataToSubmit = {
-        ...formData,
-        reminder_time: formData.reminder_time ? `${formData.reminder_time}:00` : null
-      };
-
-      await habitService.updateHabit(habit.id, dataToSubmit);
-
-      if (onSuccess) {
-        await onSuccess();
+    onClose();
+  } catch (error) {
+    console.error('Update habit error:', error);
+    
+    // 🆕 Обработка ошибки прав доступа
+    if (error.message === 'Only the habit creator can edit this habit') {
+      if (window.Telegram?.WebApp?.showAlert) {
+        window.Telegram.WebApp.showAlert('⚠️ Only the habit creator can edit this habit');
+      } else {
+        alert('⚠️ Only the habit creator can edit this habit');
       }
-      onClose();
-    } catch (error) {
+    } else {
       alert(`${t('editHabit.errors.updateFailed')}: ${error.message || t('createHabit.errors.unknown')}`);
-    } finally {
-      setLoading(false);
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
 
   const isFormValid = () => {
     return formData.title.trim() &&

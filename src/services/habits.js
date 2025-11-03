@@ -127,10 +127,29 @@ export const habitService = {
   },
 
   // Обновить привычку
-  updateHabit: async (id, updates) => {
+  // Обновить привычку
+updateHabit: async (id, updates) => {
+  try {
+    console.log('Updating habit:', { id, updates });
     const { data } = await api.patch(`/habits/${id}`, updates);
+    
+    // Проверяем, является ли пользователь владельцем
+    if (!data.success && data.isOwner === false) {
+      throw new Error('Only the habit creator can edit this habit');
+    }
+    
     return data;
-  },
+  } catch (error) {
+    console.error('updateHabit error:', error);
+    
+    // Если это ошибка прав доступа - пробрасываем специальное сообщение
+    if (error.response?.status === 403) {
+      throw new Error(error.response.data?.error || 'Only the habit creator can edit this habit');
+    }
+    
+    throw error;
+  }
+},
 
   // Удалить привычку
   deleteHabit: async (id) => {

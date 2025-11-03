@@ -133,13 +133,23 @@ useEffect(() => {
   };
 
   // Обработчик успешного редактирования
-  const handleEditSuccess = async () => {
-    setShowEditForm(false);
-    setHabitToEdit(null);
-    
-    // Перезагружаем данные для текущей выбранной даты
-    await reloadCurrentDateHabits();
-  };
+ // Обработчик успешного редактирования
+const handleEditSuccess = async () => {
+  setShowEditForm(false);
+  setHabitToEdit(null);
+  
+  // Перезагружаем данные для текущей выбранной даты
+  await reloadCurrentDateHabits();
+  
+  // Показываем уведомление об успешном обновлении
+  if (window.Telegram?.WebApp?.HapticFeedback) {
+    window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+  }
+  
+  // ВАЖНО: После редактирования обновления автоматически применятся
+  // у всех участников через webhook уведомления от бота
+  console.log('✅ Habit updated successfully. Notifications sent to all members.');
+};
 
   const handleDeleteHabit = async (habitId) => {
     try {

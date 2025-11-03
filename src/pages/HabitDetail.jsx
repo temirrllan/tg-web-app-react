@@ -22,11 +22,13 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const [toast, setToast] = useState(null);
   const [friendLimitData, setFriendLimitData] = useState(null);
   const { t } = useTranslation();
-
+  
+  // 🆕 Проверка владельца привычки
+  const [isOwner, setIsOwner] = useState(false);
+  const [ownerInfo, setOwnerInfo] = useState(null);
 
   useNavigation(onClose);
 
-  // ✅ Telegram BackButton logic
   useEffect(() => {
     if (!tg) return;
     try {
@@ -46,6 +48,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     loadStatistics();
     loadMembers();
     checkFriendLimit();
+    checkOwnership();
   }, [habit.id]);
 
   const [statistics, setStatistics] = useState({
@@ -58,13 +61,23 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     yearTotal: 365
   });
 
-  useNavigation(onClose);
-
-  useEffect(() => {
-    loadStatistics();
-    loadMembers();
-    checkFriendLimit();
-  }, [habit.id]);
+  // 🆕 Проверка владельца привычки
+  const checkOwnership = () => {
+    if (currentUser && habit) {
+      // Пользователь - владелец если у привычки нет parent_habit_id
+      // ИЛИ если habit.user_id совпадает с текущим пользователем
+      const isCurrentUserOwner = !habit.parent_habit_id || habit.user_id === currentUser.id;
+      setIsOwner(isCurrentUserOwner);
+      
+      console.log('🔐 Ownership check:', {
+        habitId: habit.id,
+        userId: currentUser.id,
+        habitUserId: habit.user_id,
+        hasParent: !!habit.parent_habit_id,
+        isOwner: isCurrentUserOwner
+      });
+    }
+  };
 
   const loadStatistics = async () => {
     try {
@@ -111,20 +124,17 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const handleAddFriend = async () => {
     console.log('Add Friend clicked, checking limits...');
     
-    // Проверяем актуальные лимиты
     const limitCheck = await habitService.checkFriendLimit(habit.id);
     setFriendLimitData(limitCheck);
     
     console.log('Friend limit check result:', limitCheck);
     
-    // Если достигнут лимит и пользователь не премиум - показываем модалку подписки
     if (limitCheck.showPremiumModal && !limitCheck.isPremium) {
       console.log('Friend limit reached, showing subscription modal');
       setShowSubscriptionModal(true);
       return;
     }
     
-    // Если можно добавлять друзей - продолжаем с шарингом
     await handleShare();
   };
 
@@ -136,10 +146,8 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       const shareText = `Join my "${habit.title}" habit!\n\n📝 Goal: ${habit.goal}\n\nLet's build better habits together! 💪`;
       const shareUrl = `https://t.me/CheckHabitlyBot?start=join_${shareCode}`;
       
-      // Проверяем, показывали ли уже подсказку о друзьях
       const hasSeenFriendHint = localStorage.getItem('hasSeenFriendHint');
       if (!hasSeenFriendHint && members.length === 0) {
-        // Показываем подсказку после первого добавления друга
         setTimeout(() => {
           setShowFriendHint(true);
           localStorage.setItem('hasSeenFriendHint', 'true');
@@ -160,25 +168,20 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     console.log('Selected subscription plan:', plan);
     
     try {
-      // Активируем премиум через API
       const result = await habitService.activatePremium(plan);
       
       if (result.success) {
         console.log('Premium activated successfully');
         
-        // Перезагружаем лимиты и членов
         await checkFriendLimit();
         await loadMembers();
         
-        // Закрываем модалку подписки
         setShowSubscriptionModal(false);
         
-        // Показываем уведомление
         if (window.Telegram?.WebApp?.showAlert) {
           window.Telegram.WebApp.showAlert('Premium activated! Now you can invite unlimited friends! 🎉');
         }
         
-        // Теперь можно продолжить с добавлением друга
         setTimeout(() => {
           handleShare();
         }, 500);
@@ -244,7 +247,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
           }
         }
       } else if (tg?.showAlert) {
-        // Fallback для старых версий
         if (result.alreadyCompleted) {
           tg.showAlert(`Bro, ${result.friendName} already completed this habit today! 👌`);
         } else if (result.isSkipped) {
@@ -269,7 +271,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
           if (confirmed) {
             await habitService.removeMember(habit.id, memberId);
             await loadMembers();
-            await checkFriendLimit(); // Обновляем лимиты после удаления
+            await checkFriendLimit();
             setToast({
               message: 'Friend removed from habit',
               type: 'success'
@@ -281,7 +283,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
         if (confirmed) {
           await habitService.removeMember(habit.id, memberId);
           await loadMembers();
-          await checkFriendLimit(); // Обновляем лимиты после удаления
+          await checkFriendLimit();
           setToast({
             message: 'Friend removed from habit',
             type: 'success'
@@ -294,6 +296,27 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
         message: 'Failed to remove friend. Please try again.',
         type: 'error'
       });
+    }
+  };
+
+  // 🆕 Обработчик редактирования с проверкой прав
+  const handleEditClick = () => {
+    if (!isOwner) {
+      setToast({
+        message: 'Only the habit creator can edit this habit',
+        type: 'warning'
+      });
+      
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('warning');
+      }
+      
+      return;
+    }
+    
+    // Если владелец - разрешаем редактирование
+    if (onEdit) {
+      onEdit(habit);
     }
   };
 
@@ -334,12 +357,31 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
                 <span className="habit-detail__emoji">{getCategoryEmoji()}</span>
                 <h2 className="habit-detail__habit-title">{habit.title}</h2>
               </div>
-              <button className="habit-detail__edit-btn" onClick={() => onEdit(habit)}>
-                Edit
+              {/* 🆕 Кнопка Edit доступна только владельцу */}
+              <button 
+                className="habit-detail__edit-btn" 
+                onClick={handleEditClick}
+                style={{
+                  opacity: isOwner ? 1 : 0.5,
+                  cursor: isOwner ? 'pointer' : 'not-allowed'
+                }}
+              >
+                {isOwner ? 'Edit' : 'View Only'}
               </button>
             </div>
             {habit.goal && (
               <p className="habit-detail__habit-goal">{habit.goal}</p>
+            )}
+            {/* 🆕 Показываем информацию о владельце для участников */}
+            {!isOwner && habit.parent_habit_id && (
+              <p style={{
+                fontSize: '13px',
+                color: '#8E8E93',
+                marginTop: '8px',
+                fontStyle: 'italic'
+              }}>
+                ℹ️ This is a shared habit. Only the creator can edit it.
+              </p>
             )}
           </div>
 
@@ -429,20 +471,38 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
               </p>
             )}
             
-            <button 
-              className="habit-detail__btn habit-detail__btn--add-friend"
-              onClick={handleAddFriend}
-            >
-              Add Friend
-            </button>
+            {/* 🆕 Кнопка Add Friend доступна только владельцу */}
+            {isOwner && (
+              <button 
+                className="habit-detail__btn habit-detail__btn--add-friend"
+                onClick={handleAddFriend}
+              >
+                Add Friend
+              </button>
+            )}
+            
+            {!isOwner && (
+              <p style={{
+                fontSize: '13px',
+                color: '#8E8E93',
+                textAlign: 'center',
+                marginTop: '12px',
+                fontStyle: 'italic'
+              }}>
+                Only the creator can add friends to this habit
+              </p>
+            )}
           </div>
 
-          <button 
-            className="habit-detail__btn habit-detail__btn--danger"
-            onClick={() => setShowDeleteModal(true)}
-          >
-            Remove Habit
-          </button>
+          {/* 🆕 Кнопка Remove доступна только владельцу */}
+          {isOwner && (
+            <button 
+              className="habit-detail__btn habit-detail__btn--danger"
+              onClick={() => setShowDeleteModal(true)}
+            >
+              Remove Habit
+            </button>
+          )}
         </div>
       </div>
 
@@ -507,10 +567,8 @@ const FriendCard = ({ member, onPunch, onRemove }) => {
   const handleTouchEnd = () => {
     if (Math.abs(swipeOffset) >= SWIPE_THRESHOLD) {
       if (swipeOffset < 0) {
-        // Свайп влево - Punch
         onPunch();
       } else {
-        // Свайп вправо - Remove
         onRemove();
       }
     }
@@ -521,7 +579,6 @@ const FriendCard = ({ member, onPunch, onRemove }) => {
 
   return (
     <div className="friend-card-container">
-      {/* Кнопка Remove (свайп вправо) */}
       {swipeOffset > 20 && (
         <div className="friend-action friend-action--remove">
           <span>Remove</span>
@@ -548,7 +605,6 @@ const FriendCard = ({ member, onPunch, onRemove }) => {
         </span>
       </div>
       
-      {/* Кнопка Punch (свайп влево) */}
       {swipeOffset < -20 && (
         <div className="friend-action friend-action--punch">
           <span>👊 Punch</span>
