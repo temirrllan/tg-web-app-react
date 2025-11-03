@@ -122,7 +122,25 @@ const checkOwnership = async () => {
     }
   }
 };
-
+useEffect(() => {
+  const initializeDetail = async () => {
+    await loadStatistics();
+    await loadMembers();
+    await checkFriendLimit();
+    await checkOwnership();
+    
+    // 🔍 ОТЛАДКА
+    console.log('🎯 Final ownership state:', {
+      isOwner,
+      habitId: habit.id,
+      habitUserId: habit.user_id,
+      parentHabitId: habit.parent_habit_id,
+      currentUserId: currentUser?.id
+    });
+  };
+  
+  initializeDetail();
+}, [habit.id, currentUser]);
   const loadStatistics = async () => {
     try {
       setLoading(true);
