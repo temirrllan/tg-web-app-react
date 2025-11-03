@@ -244,17 +244,7 @@ cancelSubscription: async () => {
     }
   }
 },
-// Проверить, является ли пользователь создателем привычки
-checkHabitOwnership: async (habitId) => {
-  try {
-    const { data } = await api.get(`/habits/${habitId}/check-ownership`);
-    return data.isOwner || false;
-  } catch (error) {
-    console.error('checkHabitOwnership error:', error);
-    // В случае ошибки считаем, что пользователь НЕ является владельцем
-    return false;
-  }
-},
+
 // Получить доступные планы
 getSubscriptionPlans: async () => {
   try {

@@ -10,32 +10,7 @@
   align-items: center;
   justify-content: center;
 }
-/* Owner badge */
-.habit-detail__owner-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  background: #A7D96C;
-  color: #1D1D1F;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-  margin-left: 8px;
-}
 
-.habit-detail__edit-btn--disabled {
-  background: #E5E5EA;
-  color: #8E8E93;
-  border-color: #E5E5EA;
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.habit-detail__edit-btn--disabled:hover {
-  background: #E5E5EA;
-  color: #8E8E93;
-}
 /* Header */
 .habit-detail__header {
   background: white;

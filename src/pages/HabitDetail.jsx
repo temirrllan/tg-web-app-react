@@ -22,25 +22,8 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const [toast, setToast] = useState(null);
   const [friendLimitData, setFriendLimitData] = useState(null);
   const { t } = useTranslation();
-// В функции HabitDetail добавляем состояние для проверки владельца
-const [isOwner, setIsOwner] = useState(false);
-const [checkingOwnership, setCheckingOwnership] = useState(true);
-// Добавляем useEffect для проверки владения при загрузке
-useEffect(() => {
-  const checkOwnership = async () => {
-    try {
-      const ownerStatus = await habitService.checkHabitOwnership(habit.id);
-      setIsOwner(ownerStatus);
-    } catch (error) {
-      console.error('Failed to check ownership:', error);
-      setIsOwner(false);
-    } finally {
-      setCheckingOwnership(false);
-    }
-  };
-  
-  checkOwnership();
-}, [habit.id]);
+
+
   useNavigation(onClose);
 
   // ✅ Telegram BackButton logic
@@ -349,18 +332,11 @@ useEffect(() => {
             <div className="habit-detail__habit-header">
               <div className="habit-detail__habit-title-section">
                 <span className="habit-detail__emoji">{getCategoryEmoji()}</span>
-                <h2 className="habit-detail__habit-title">{habit.title}{!checkingOwnership && isOwner && (
-          <span className="habit-detail__owner-badge">👑 Creator</span>
-        )}</h2>
+                <h2 className="habit-detail__habit-title">{habit.title}</h2>
               </div>
-              <button 
-    className={`habit-detail__edit-btn ${!isOwner ? 'habit-detail__edit-btn--disabled' : ''}`}
-    onClick={() => isOwner && handleEditHabit(habit)}
-    disabled={!isOwner || checkingOwnership}
-  >
-    {checkingOwnership ? '...' : 'Edit'}
-  </button>
-
+              <button className="habit-detail__edit-btn" onClick={() => onEdit(habit)}>
+                Edit
+              </button>
             </div>
             {habit.goal && (
               <p className="habit-detail__habit-goal">{habit.goal}</p>

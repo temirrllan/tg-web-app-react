@@ -125,51 +125,21 @@ useEffect(() => {
   };
 
   // Обработчик редактирования
-  // Обработчик редактирования с проверкой прав
-const handleEditHabit = async (habit) => {
-  console.log('Edit habit clicked:', habit);
-  
-  try {
-    // Проверяем, является ли пользователь создателем
-    const isOwner = await habitService.checkHabitOwnership(habit.id);
-    
-    if (!isOwner) {
-      // Показываем сообщение о том, что редактирование недоступно
-      if (tg?.showAlert) {
-        tg.showAlert('Only the habit creator can edit this habit. Changes made by the creator will be automatically synced to all members.');
-      } else {
-        alert('Only the habit creator can edit this habit. Changes made by the creator will be automatically synced to all members.');
-      }
-      return;
-    }
-    
-    // Если пользователь - создатель, открываем форму редактирования
+  const handleEditHabit = (habit) => {
+    console.log('Edit habit:', habit);
     setHabitToEdit(habit);
     setShowEditForm(true);
     setShowHabitDetail(false);
-  } catch (error) {
-    console.error('Failed to check habit ownership:', error);
-    
-    if (tg?.showAlert) {
-      tg.showAlert('Failed to check edit permissions. Please try again.');
-    }
-  }
-};
+  };
 
   // Обработчик успешного редактирования
- // Обработчик успешного редактирования
-const handleEditSuccess = async () => {
-  setShowEditForm(false);
-  setHabitToEdit(null);
-  
-  // Перезагружаем данные для текущей выбранной даты
-  await reloadCurrentDateHabits();
-  
-  // Показываем уведомление об успешной синхронизации
-  if (window.Telegram?.WebApp?.showAlert) {
-    window.Telegram.WebApp.showAlert('✅ Habit updated! Changes have been synced with all members.');
-  }
-};
+  const handleEditSuccess = async () => {
+    setShowEditForm(false);
+    setHabitToEdit(null);
+    
+    // Перезагружаем данные для текущей выбранной даты
+    await reloadCurrentDateHabits();
+  };
 
   const handleDeleteHabit = async (habitId) => {
     try {
