@@ -45,11 +45,15 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   }, [tg, onClose]);
 
   useEffect(() => {
-    loadStatistics();
-    loadMembers();
-    checkFriendLimit();
-    checkOwnership();
-  }, [habit.id]);
+  const initializeDetail = async () => {
+    await loadStatistics();
+    await loadMembers();
+    await checkFriendLimit();
+    await checkOwnership(); // Теперь это async функция
+  };
+  
+  initializeDetail();
+}, [habit.id, currentUser]);
 
   const [statistics, setStatistics] = useState({
     currentStreak: 0,
@@ -62,22 +66,62 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   });
 
   // 🆕 Проверка владельца привычки
-  const checkOwnership = () => {
-    if (currentUser && habit) {
-      // Пользователь - владелец если у привычки нет parent_habit_id
-      // ИЛИ если habit.user_id совпадает с текущим пользователем
-      const isCurrentUserOwner = !habit.parent_habit_id || habit.user_id === currentUser.id;
+  // 🆕 ИСПРАВЛЕННАЯ проверка владельца привычки
+const checkOwnership = async () => {
+  if (currentUser && habit) {
+    console.log('🔐 Starting ownership check:', {
+      habitId: habit.id,
+      currentUserId: currentUser.id,
+      habitUserId: habit.user_id,
+      parentHabitId: habit.parent_habit_id
+    });
+
+    // Если у привычки НЕТ parent_habit_id - это оригинальная привычка
+    // Проверяем: текущий пользователь = создатель этой привычки
+    if (!habit.parent_habit_id) {
+      const isCurrentUserOwner = habit.user_id === currentUser.id;
       setIsOwner(isCurrentUserOwner);
       
-      console.log('🔐 Ownership check:', {
-        habitId: habit.id,
-        userId: currentUser.id,
-        habitUserId: habit.user_id,
-        hasParent: !!habit.parent_habit_id,
-        isOwner: isCurrentUserOwner
-      });
+      console.log('✅ Original habit - ownership:', isCurrentUserOwner);
+      return;
     }
-  };
+
+    // Если у привычки ЕСТЬ parent_habit_id - это копия для участника
+    // Нужно проверить: является ли текущий пользователь владельцем РОДИТЕЛЬСКОЙ привычки
+    try {
+      // Получаем информацию о родительской привычке
+      const response = await habitService.getHabitOwnerInfo(habit.parent_habit_id);
+      
+      if (response && response.success) {
+        const parentOwnerId = response.owner_user_id;
+        const isCurrentUserOwner = parentOwnerId === currentUser.id;
+        
+        setIsOwner(isCurrentUserOwner);
+        setOwnerInfo(response);
+        
+        console.log('✅ Shared habit - ownership check:', {
+          parentHabitId: habit.parent_habit_id,
+          parentOwnerId: parentOwnerId,
+          currentUserId: currentUser.id,
+          isOwner: isCurrentUserOwner
+        });
+      } else {
+        // Fallback: если не удалось получить информацию о родителе
+        // Проверяем текущую привычку
+        const isCurrentUserOwner = habit.user_id === currentUser.id;
+        setIsOwner(isCurrentUserOwner);
+        
+        console.log('⚠️ Fallback ownership check:', isCurrentUserOwner);
+      }
+    } catch (error) {
+      console.error('❌ Error checking ownership:', error);
+      
+      // В случае ошибки делаем fallback проверку
+      const isCurrentUserOwner = habit.user_id === currentUser.id;
+      setIsOwner(isCurrentUserOwner);
+    }
+  }
+};
 
   const loadStatistics = async () => {
     try {

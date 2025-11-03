@@ -385,4 +385,15 @@ removeMember: async (habitId, userId) => {
     throw error;
   }
 },
+// Получить информацию о владельце привычки
+getHabitOwnerInfo: async (habitId) => {
+  try {
+    const { data } = await api.get(`/habits/${habitId}/owner`);
+    console.log('Owner info from API:', data);
+    return data;
+  } catch (error) {
+    console.error('getHabitOwnerInfo error:', error);
+    return { success: false };
+  }
+},
 };
