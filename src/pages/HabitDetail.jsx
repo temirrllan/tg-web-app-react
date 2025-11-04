@@ -81,7 +81,21 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     }
   }, [tg, onClose]);
 
+  // 🔥 ДОБАВЛЕНО: Загружаем информацию о владельце привычки при монтировании
+  const [ownerInfo, setOwnerInfo] = useState(null);
+
   useEffect(() => {
+    const loadOwnerInfo = async () => {
+      try {
+        const info = await habitService.getHabitOwner(habit.id);
+        console.log('📊 Habit owner info:', info);
+        setOwnerInfo(info);
+      } catch (error) {
+        console.error('Failed to load owner info:', error);
+      }
+    };
+
+    loadOwnerInfo();
     loadStatistics();
     loadMembers();
     checkFriendLimit();
