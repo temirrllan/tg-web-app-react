@@ -407,4 +407,19 @@ getHabitOwnerInfo: async (habitId) => {
     return { success: false };
   }
 },
+joinHabit: async (shareCode) => {
+    console.log('🔄 Attempting to join habit with code:', shareCode);
+    try {
+      const { data } = await api.post('/habits/join', { shareCode });
+      console.log('✅ Join habit response:', data);
+      return data;
+    } catch (error) {
+      console.error('❌ Join habit error:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      throw error;
+    }
+  },
 };

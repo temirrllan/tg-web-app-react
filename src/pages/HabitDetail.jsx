@@ -192,8 +192,20 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       const shareData = await habitService.createShareLink(habit.id);
       const shareCode = shareData.shareCode;
       
+      console.log('📤 Creating share link:', { 
+        habitId: habit.id, 
+        shareCode,
+        botUsername: 'CheckHabitlyBot' 
+      });
+      
       const shareText = `Join my "${habit.title}" habit!\n\n📝 Goal: ${habit.goal}\n\nLet's build better habits together! 💪`;
-      const shareUrl = `https://t.me/CheckHabitlyBot?start=join_${shareCode}`;
+      
+      // 🔥 КРИТИЧНО: Правильный формат deep link для Telegram Mini App
+      // Формат: https://t.me/BotUsername/AppName?startapp=PARAMETER
+      const shareUrl = `https://t.me/CheckHabitlyBot/habittracker?startapp=join_${shareCode}`;
+      
+      console.log('🔗 Share URL:', shareUrl);
+      console.log('📝 Share text:', shareText);
       
       const hasSeenFriendHint = localStorage.getItem('hasSeenFriendHint');
       if (!hasSeenFriendHint && members.length === 0) {
@@ -203,13 +215,29 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
         }, 2000);
       }
       
+      // Используем Telegram Share API
       if (tg?.openTelegramLink) {
-        tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`);
+        const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+        console.log('📲 Opening Telegram share:', telegramShareUrl);
+        tg.openTelegramLink(telegramShareUrl);
       } else {
-        window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
+        // Fallback для браузера
+        const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+        console.log('🌐 Opening in browser:', telegramShareUrl);
+        window.open(telegramShareUrl, '_blank');
       }
+      
+      // Показываем уведомление об успехе
+      setToast({
+        message: 'Share link created! 🎉',
+        type: 'success'
+      });
     } catch (error) {
-      console.error('Failed to create share link:', error);
+      console.error('❌ Failed to create share link:', error);
+      setToast({
+        message: 'Failed to create share link. Please try again.',
+        type: 'error'
+      });
     }
   };
 

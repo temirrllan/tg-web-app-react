@@ -9,7 +9,6 @@ import Profile from './pages/Profile';
 import Loader from './components/common/Loader';
 import './App.css';
 
-// Внутренний компонент для использования контекста языка
 function AppContent() {
   const { tg, user: tgUser, webApp, isReady, isLoading } = useTelegram();
   const [user, setUser] = useState(null);
@@ -18,7 +17,6 @@ function AppContent() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   
-  // Получаем функцию инициализации языка из контекста
   const { initializeLanguage, language } = useContext(LanguageContext);
 
   console.log('🔍 APP DEBUG: Current language in context:', language);
@@ -56,7 +54,6 @@ function AppContent() {
         if (response.success) {
           setUser(response.user);
           
-          // ВАЖНО: Инициализируем язык из данных пользователя
           if (response.user.language && initializeLanguage) {
             console.log('🔍 APP DEBUG: Initializing language from user data:', response.user.language);
             try {
@@ -68,12 +65,43 @@ function AppContent() {
             console.log('⚠️ APP DEBUG: No language in user data or initializeLanguage not available');
           }
           
-          // Проверяем, есть ли параметр join в URL
+          // 🔥 ОБРАБОТКА DEEP LINK (приглашения)
+          const startParam = webApp?.initDataUnsafe?.start_param;
+          console.log('🔗 Deep link start_param:', startParam);
+          
+          if (startParam && startParam.startsWith('join_')) {
+            const shareCode = startParam.replace('join_', '');
+            console.log('📨 Processing invitation with code:', shareCode);
+            
+            try {
+              const joinResult = await habitService.joinHabit(shareCode);
+              console.log('✅ Join habit result:', joinResult);
+              
+              if (joinResult.success) {
+                if (tg?.showAlert) {
+                  tg.showAlert('Successfully joined the habit! 🎉');
+                } else {
+                  alert('Successfully joined the habit! 🎉');
+                }
+              }
+            } catch (err) {
+              console.error('❌ Failed to join habit:', err);
+              if (tg?.showAlert) {
+                tg.showAlert('Failed to join habit. It may no longer exist.');
+              } else {
+                alert('Failed to join habit. It may no longer exist.');
+              }
+            }
+          }
+          
+          // 🔥 FALLBACK: Проверка URL параметров (для старых ссылок)
           const urlParams = new URLSearchParams(window.location.search);
           const action = urlParams.get('action');
           const code = urlParams.get('code');
           
-          if (action === 'join' && code) {
+          if (action === 'join' && code && !startParam) {
+            console.log('📨 Processing invitation from URL params:', code);
+            
             try {
               const joinResult = await habitService.joinHabit(code);
               if (joinResult.success) {
@@ -118,16 +146,13 @@ function AppContent() {
   }, [webApp, tgUser, isReady, isLoading, tg, initializeLanguage]);
 
   useEffect(() => {
-    // Обработчик возврата в приложение (после оплаты)
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible' && user) {
         console.log('🔄 App became visible, checking subscription status...');
         
         try {
-          // Небольшая задержка для обработки webhook
           await new Promise(resolve => setTimeout(resolve, 2000));
           
-          // Перезагружаем данные пользователя
           const response = await habitService.getUserProfile();
           if (response) {
             const wasPremium = user.is_premium;
@@ -138,7 +163,6 @@ function AppContent() {
               subscription_type: response.subscription_type
             }));
             
-            // Если пользователь СТАЛ premium (раньше не был)
             if (response.is_premium && !wasPremium) {
               console.log('✅ User became premium!');
               
@@ -214,7 +238,6 @@ function AppContent() {
   );
 }
 
-// Главный компонент App с LanguageProvider
 function App() {
   return (
     <LanguageProvider>
