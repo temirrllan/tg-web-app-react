@@ -38,10 +38,44 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
 
   // 🔥 КРИТИЧНО: Определяем isCreator через несколько проверок
   const isCreator = (() => {
+      console.group('🔍 DEBUGGING isCreator');
+
     if (!currentUser) {
       console.warn('⚠️ No current user');
+       console.error('❌ No currentUser found');
+    console.log('currentUser:', currentUser);
+    console.groupEnd();
       return false;
     }
+  // Получаем ID текущего пользователя из разных источников
+  const userDbId = localStorage.getItem('user_id');
+  const telegramId = currentUser.id;
+
+  console.log('📊 User identification:', {
+    localStorage_user_id: userDbId,
+    currentUser_telegram_id: telegramId,
+    currentUser_object: currentUser
+  });
+
+  // Получаем данные привычки
+  console.log('📋 Habit data:', {
+    habit_id: habit.id,
+    habit_user_id: habit.user_id,
+    habit_creator_id: habit.creator_id,
+    habit_parent_habit_id: habit.parent_habit_id,
+    full_habit_object: habit
+  });
+
+  // Получаем данные от API
+  console.log('🌐 Owner info from API:', ownerInfo);
+  // Если нет user_id в localStorage - это проблема
+  if (!userDbId) {
+    console.error('❌ CRITICAL: No user_id in localStorage!');
+    console.log('This means user was not properly authenticated');
+    console.groupEnd();
+    return false;
+  }
+
 
     console.log('🔍 Checking creator permissions:', {
       habit_id: habit.id,
@@ -54,42 +88,75 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
 
     // Метод 1: Проверка через ownerInfo от API (самый надёжный)
     if (ownerInfo && ownerInfo.creator_id) {
-      const userDbId = localStorage.getItem('user_id');
-      const creatorDbId = String(ownerInfo.creator_id);
-      
-      if (userDbId) {
-        const match = String(userDbId) === creatorDbId;
-        console.log('✅ Method 1 (API ownerInfo):', { userDbId, creatorDbId, match });
-        if (match) return true;
-      }
+    const creatorDbId = String(ownerInfo.creator_id);
+    const match = String(userDbId) === creatorDbId;
+    
+    console.log('✅ Method 1 (API ownerInfo):', {
+      userDbId: String(userDbId),
+      creatorDbId: creatorDbId,
+      match: match,
+      comparison: `"${String(userDbId)}" === "${creatorDbId}"`
+    });
+    
+    if (match) {
+      console.log('✅ USER IS CREATOR (via API ownerInfo)');
+      console.groupEnd();
+      return true;
     }
+  } else {
+    console.warn('⚠️ Method 1 skipped: No ownerInfo or creator_id');
+  }
 
     // Метод 2: Проверка через habit.creator_id
-    if (habit.creator_id !== undefined && habit.creator_id !== null) {
-      const userDbId = localStorage.getItem('user_id');
-      const creatorDbId = String(habit.creator_id);
-      
-      if (userDbId) {
-        const match = String(userDbId) === creatorDbId;
-        console.log('✅ Method 2 (habit.creator_id):', { userDbId, creatorDbId, match });
-        if (match) return true;
-      }
+  if (habit.creator_id !== undefined && habit.creator_id !== null) {
+    const creatorDbId = String(habit.creator_id);
+    const match = String(userDbId) === creatorDbId;
+    
+    console.log('✅ Method 2 (habit.creator_id):', {
+      userDbId: String(userDbId),
+      creatorDbId: creatorDbId,
+      match: match,
+      comparison: `"${String(userDbId)}" === "${creatorDbId}"`
+    });
+    
+    if (match) {
+      console.log('✅ USER IS CREATOR (via habit.creator_id)');
+      console.groupEnd();
+      return true;
     }
+  } else {
+    console.warn('⚠️ Method 2 skipped: No habit.creator_id');
+  }
 
-    // Метод 3: Проверка через habit.user_id (для обратной совместимости)
     if (habit.user_id !== undefined && habit.user_id !== null) {
-      const userDbId = localStorage.getItem('user_id');
-      const habitUserId = String(habit.user_id);
-      
-      if (userDbId) {
-        const match = String(userDbId) === habitUserId;
-        console.log('✅ Method 3 (habit.user_id):', { userDbId, habitUserId, match });
-        if (match) return true;
-      }
+    const habitUserId = String(habit.user_id);
+    const match = String(userDbId) === habitUserId;
+    
+    console.log('✅ Method 3 (habit.user_id fallback):', {
+      userDbId: String(userDbId),
+      habitUserId: habitUserId,
+      match: match,
+      comparison: `"${String(userDbId)}" === "${habitUserId}"`
+    });
+    
+    if (match) {
+      console.log('✅ USER IS CREATOR (via habit.user_id)');
+      console.groupEnd();
+      return true;
     }
+  } else {
+    console.warn('⚠️ Method 3 skipped: No habit.user_id');
+  }
 
-    console.warn('❌ No creator match found');
-    return false;
+     console.error('❌ ALL METHODS FAILED - USER IS NOT CREATOR');
+  console.log('Summary:', {
+    userDbId,
+    habit_creator_id: habit.creator_id,
+    habit_user_id: habit.user_id,
+    ownerInfo_creator_id: ownerInfo?.creator_id
+  });
+  console.groupEnd();
+  return false;
   })();
 
   console.log('🎯 FINAL isCreator:', isCreator);
@@ -435,14 +502,12 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
                 <h2 className="habit-detail__habit-title">{habit.title}</h2>
               </div>
               
-              {isCreator && (
-  <button 
-    className="habit-detail__edit-btn"
-    onClick={handleEditClick}
-  >
-    Edit
-  </button>
-)}
+              <button 
+                className={`habit-detail__edit-btn ${!isCreator ? 'habit-detail__edit-btn--disabled' : ''}`}
+                onClick={handleEditClick}
+              >
+                Edit
+              </button>
             </div>
             {habit.goal && (
               <p className="habit-detail__habit-goal">{habit.goal}</p>
