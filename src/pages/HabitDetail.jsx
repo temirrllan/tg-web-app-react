@@ -435,12 +435,14 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
                 <h2 className="habit-detail__habit-title">{habit.title}</h2>
               </div>
               
-              <button 
-                className={`habit-detail__edit-btn ${!isCreator ? 'habit-detail__edit-btn--disabled' : ''}`}
-                onClick={handleEditClick}
-              >
-                Edit
-              </button>
+              {isCreator && (
+  <button 
+    className="habit-detail__edit-btn"
+    onClick={handleEditClick}
+  >
+    Edit
+  </button>
+)}
             </div>
             {habit.goal && (
               <p className="habit-detail__habit-goal">{habit.goal}</p>
