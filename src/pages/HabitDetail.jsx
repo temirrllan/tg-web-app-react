@@ -1,3 +1,5 @@
+// HabitDetail.jsx - УПРОЩЕННАЯ И ИСПРАВЛЕННАЯ ВЕРСИЯ
+
 import React, { useState, useEffect } from 'react';
 import { useNavigation } from '../hooks/useNavigation';
 import { useTelegram } from '../hooks/useTelegram';
@@ -22,6 +24,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const [toast, setToast] = useState(null);
   const [friendLimitData, setFriendLimitData] = useState(null);
   const [ownerInfo, setOwnerInfo] = useState(null);
+  const [isCreator, setIsCreator] = useState(false);
   const { t } = useTranslation();
 
   const [statistics, setStatistics] = useState({
@@ -36,132 +39,62 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
 
   useNavigation(onClose);
 
-  // 🔥 КРИТИЧНО: Определяем isCreator через несколько проверок
-  const isCreator = (() => {
-      console.group('🔍 DEBUGGING isCreator');
+  // ✅ УЛУЧШЕННАЯ ПРОВЕРКА: Определяем isCreator
+  useEffect(() => {
+    const checkCreatorStatus = () => {
+      if (!currentUser) {
+        console.log('❌ No current user');
+        setIsCreator(false);
+        return;
+      }
 
-    if (!currentUser) {
-      console.warn('⚠️ No current user');
-       console.error('❌ No currentUser found');
-    console.log('currentUser:', currentUser);
-    console.groupEnd();
-      return false;
-    }
-  // Получаем ID текущего пользователя из разных источников
-  const userDbId = localStorage.getItem('user_id');
-  const telegramId = currentUser.id;
+      const userDbId = localStorage.getItem('user_id');
+      
+      if (!userDbId) {
+        console.error('❌ No user_id in localStorage');
+        setIsCreator(false);
+        return;
+      }
 
-  console.log('📊 User identification:', {
-    localStorage_user_id: userDbId,
-    currentUser_telegram_id: telegramId,
-    currentUser_object: currentUser
-  });
+      console.log('🔍 Checking creator status:', {
+        userDbId,
+        habit_creator_id: habit.creator_id,
+        habit_user_id: habit.user_id,
+        ownerInfo_creator_id: ownerInfo?.creator_id
+      });
 
-  // Получаем данные привычки
-  console.log('📋 Habit data:', {
-    habit_id: habit.id,
-    habit_user_id: habit.user_id,
-    habit_creator_id: habit.creator_id,
-    habit_parent_habit_id: habit.parent_habit_id,
-    full_habit_object: habit
-  });
+      // Метод 1: Проверка через ownerInfo (самый надёжный)
+      if (ownerInfo?.creator_id) {
+        const isOwner = String(userDbId) === String(ownerInfo.creator_id);
+        console.log(`✅ Method 1 (ownerInfo): ${isOwner ? 'IS CREATOR' : 'NOT CREATOR'}`);
+        setIsCreator(isOwner);
+        return;
+      }
 
-  // Получаем данные от API
-  console.log('🌐 Owner info from API:', ownerInfo);
-  // Если нет user_id в localStorage - это проблема
-  if (!userDbId) {
-    console.error('❌ CRITICAL: No user_id in localStorage!');
-    console.log('This means user was not properly authenticated');
-    console.groupEnd();
-    return false;
-  }
+      // Метод 2: Проверка через habit.creator_id
+      if (habit.creator_id !== undefined && habit.creator_id !== null) {
+        const isOwner = String(userDbId) === String(habit.creator_id);
+        console.log(`✅ Method 2 (habit.creator_id): ${isOwner ? 'IS CREATOR' : 'NOT CREATOR'}`);
+        setIsCreator(isOwner);
+        return;
+      }
 
+      // Метод 3: Fallback на habit.user_id
+      if (habit.user_id !== undefined && habit.user_id !== null) {
+        const isOwner = String(userDbId) === String(habit.user_id);
+        console.log(`✅ Method 3 (habit.user_id fallback): ${isOwner ? 'IS CREATOR' : 'NOT CREATOR'}`);
+        setIsCreator(isOwner);
+        return;
+      }
 
-    console.log('🔍 Checking creator permissions:', {
-      habit_id: habit.id,
-      habit_creator_id: habit.creator_id,
-      habit_user_id: habit.user_id,
-      currentUser_telegram_id: currentUser.id,
-      localStorage_user_id: localStorage.getItem('user_id'),
-      ownerInfo: ownerInfo
-    });
+      console.log('⚠️ Could not determine creator status, defaulting to false');
+      setIsCreator(false);
+    };
 
-    // Метод 1: Проверка через ownerInfo от API (самый надёжный)
-    if (ownerInfo && ownerInfo.creator_id) {
-    const creatorDbId = String(ownerInfo.creator_id);
-    const match = String(userDbId) === creatorDbId;
-    
-    console.log('✅ Method 1 (API ownerInfo):', {
-      userDbId: String(userDbId),
-      creatorDbId: creatorDbId,
-      match: match,
-      comparison: `"${String(userDbId)}" === "${creatorDbId}"`
-    });
-    
-    if (match) {
-      console.log('✅ USER IS CREATOR (via API ownerInfo)');
-      console.groupEnd();
-      return true;
-    }
-  } else {
-    console.warn('⚠️ Method 1 skipped: No ownerInfo or creator_id');
-  }
+    checkCreatorStatus();
+  }, [currentUser, habit, ownerInfo]);
 
-    // Метод 2: Проверка через habit.creator_id
-  if (habit.creator_id !== undefined && habit.creator_id !== null) {
-    const creatorDbId = String(habit.creator_id);
-    const match = String(userDbId) === creatorDbId;
-    
-    console.log('✅ Method 2 (habit.creator_id):', {
-      userDbId: String(userDbId),
-      creatorDbId: creatorDbId,
-      match: match,
-      comparison: `"${String(userDbId)}" === "${creatorDbId}"`
-    });
-    
-    if (match) {
-      console.log('✅ USER IS CREATOR (via habit.creator_id)');
-      console.groupEnd();
-      return true;
-    }
-  } else {
-    console.warn('⚠️ Method 2 skipped: No habit.creator_id');
-  }
-
-    if (habit.user_id !== undefined && habit.user_id !== null) {
-    const habitUserId = String(habit.user_id);
-    const match = String(userDbId) === habitUserId;
-    
-    console.log('✅ Method 3 (habit.user_id fallback):', {
-      userDbId: String(userDbId),
-      habitUserId: habitUserId,
-      match: match,
-      comparison: `"${String(userDbId)}" === "${habitUserId}"`
-    });
-    
-    if (match) {
-      console.log('✅ USER IS CREATOR (via habit.user_id)');
-      console.groupEnd();
-      return true;
-    }
-  } else {
-    console.warn('⚠️ Method 3 skipped: No habit.user_id');
-  }
-
-     console.error('❌ ALL METHODS FAILED - USER IS NOT CREATOR');
-  console.log('Summary:', {
-    userDbId,
-    habit_creator_id: habit.creator_id,
-    habit_user_id: habit.user_id,
-    ownerInfo_creator_id: ownerInfo?.creator_id
-  });
-  console.groupEnd();
-  return false;
-  })();
-
-  console.log('🎯 FINAL isCreator:', isCreator);
-
-  // ✅ Telegram BackButton logic
+  // Telegram BackButton logic
   useEffect(() => {
     if (!tg) return;
     try {
@@ -177,23 +110,30 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     }
   }, [tg, onClose]);
 
+  // Загрузка данных
   useEffect(() => {
-    const loadOwnerInfo = async () => {
-      try {
-        console.log('🔄 Loading owner info for habit:', habit.id);
-        const info = await habitService.getHabitOwner(habit.id);
-        console.log('📊 Habit owner info received:', info);
-        setOwnerInfo(info);
-      } catch (error) {
-        console.error('Failed to load owner info:', error);
-      }
+    const loadData = async () => {
+      await Promise.all([
+        loadOwnerInfo(),
+        loadStatistics(),
+        loadMembers(),
+        checkFriendLimit()
+      ]);
     };
-
-    loadOwnerInfo();
-    loadStatistics();
-    loadMembers();
-    checkFriendLimit();
+    
+    loadData();
   }, [habit.id]);
+
+  const loadOwnerInfo = async () => {
+    try {
+      console.log('🔄 Loading owner info for habit:', habit.id);
+      const info = await habitService.getHabitOwner(habit.id);
+      console.log('📊 Owner info received:', info);
+      setOwnerInfo(info);
+    } catch (error) {
+      console.error('Failed to load owner info:', error);
+    }
+  };
 
   const loadStatistics = async () => {
     try {
@@ -231,7 +171,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     try {
       const limitData = await habitService.checkFriendLimit(habit.id);
       setFriendLimitData(limitData);
-      console.log('Friend limit data:', limitData);
     } catch (error) {
       console.error('Failed to check friend limit:', error);
     }
@@ -242,8 +181,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     
     const limitCheck = await habitService.checkFriendLimit(habit.id);
     setFriendLimitData(limitCheck);
-    
-    console.log('Friend limit check result:', limitCheck);
     
     if (limitCheck.showPremiumModal && !limitCheck.isPremium) {
       console.log('Friend limit reached, showing subscription modal');
@@ -259,20 +196,8 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       const shareData = await habitService.createShareLink(habit.id);
       const shareCode = shareData.shareCode;
       
-      console.log('📤 Creating share link:', { 
-        habitId: habit.id, 
-        shareCode,
-        botUsername: 'CheckHabitlyBot' 
-      });
-      
       const shareText = `Join my "${habit.title}" habit!\n\n📝 Goal: ${habit.goal}\n\nLet's build better habits together! 💪`;
-      
-      // 🔥 КРИТИЧНО: Правильный формат deep link для Telegram Mini App
-      // Формат: https://t.me/BotUsername/AppName?startapp=PARAMETER
       const shareUrl = `https://t.me/CheckHabitlyBot/habittracker?startapp=join_${shareCode}`;
-      
-      console.log('🔗 Share URL:', shareUrl);
-      console.log('📝 Share text:', shareText);
       
       const hasSeenFriendHint = localStorage.getItem('hasSeenFriendHint');
       if (!hasSeenFriendHint && members.length === 0) {
@@ -282,19 +207,14 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
         }, 2000);
       }
       
-      // Используем Telegram Share API
       if (tg?.openTelegramLink) {
         const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
-        console.log('📲 Opening Telegram share:', telegramShareUrl);
         tg.openTelegramLink(telegramShareUrl);
       } else {
-        // Fallback для браузера
         const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
-        console.log('🌐 Opening in browser:', telegramShareUrl);
         window.open(telegramShareUrl, '_blank');
       }
       
-      // Показываем уведомление об успехе
       setToast({
         message: 'Share link created! 🎉',
         type: 'success'
@@ -316,10 +236,8 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       
       if (result.success) {
         console.log('Premium activated successfully');
-        
         await checkFriendLimit();
         await loadMembers();
-        
         setShowSubscriptionModal(false);
         
         if (window.Telegram?.WebApp?.showAlert) {
@@ -332,44 +250,11 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       }
     } catch (error) {
       console.error('Failed to activate premium:', error);
-      
       setShowSubscriptionModal(false);
       
       if (window.Telegram?.WebApp?.showAlert) {
         window.Telegram.WebApp.showAlert('Failed to activate premium. Please try again.');
-      } else {
-        alert('Failed to activate premium. Please try again.');
       }
-    }
-  };
-
-  const handleCopyLink = async () => {
-    try {
-      const shareData = await habitService.createShareLink(habit.id);
-      const shareCode = shareData.shareCode;
-      const inviteLink = `https://t.me/CheckHabitlyBot?start=join_${shareCode}`;
-      
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(inviteLink);
-      } else {
-        const textArea = document.createElement("textarea");
-        textArea.value = inviteLink;
-        textArea.style.position = "fixed";
-        textArea.style.left = "-999999px";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        document.execCommand('copy');
-        textArea.remove();
-      }
-      
-      setShowCopyModal(true);
-      
-      if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-      }
-    } catch (err) {
-      console.error('Failed to copy link:', err);
     }
   };
 
@@ -389,14 +274,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
           } else if (result.success) {
             window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
           }
-        }
-      } else if (tg?.showAlert) {
-        if (result.alreadyCompleted) {
-          tg.showAlert(`Bro, ${result.friendName} already completed this habit today! 👌`);
-        } else if (result.isSkipped) {
-          tg.showAlert(`${result.friendName} skipped this habit today 😔`);
-        } else if (result.success) {
-          tg.showAlert('Reminder sent to your friend! 👊');
         }
       }
     } catch (error) {
@@ -443,11 +320,15 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     }
   };
 
-  // 🔥 ОБРАБОТЧИК РЕДАКТИРОВАНИЯ
-  const handleEditClick = () => {
-    console.log('🖊️ Edit button clicked, isCreator:', isCreator);
+  // ✅ ОБРАБОТЧИК РЕДАКТИРОВАНИЯ
+  const handleEditClick = async () => {
+    console.log('🖊️ Edit button clicked');
+    console.log('isCreator:', isCreator);
+    console.log('ownerInfo:', ownerInfo);
     
     if (!isCreator) {
+      console.log('❌ User is not creator, showing warning');
+      
       setToast({
         message: 'Only the habit creator can edit this habit',
         type: 'warning'
@@ -458,6 +339,8 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       }
       return;
     }
+    
+    console.log('✅ User is creator, allowing edit');
     
     if (onEdit) {
       onEdit(habit);
@@ -502,26 +385,33 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
                 <h2 className="habit-detail__habit-title">{habit.title}</h2>
               </div>
               
+              {/* ✅ КНОПКА РЕДАКТИРОВАНИЯ - показывается только создателю */}
               {isCreator && (
-  <button 
-    className="habit-detail__edit-btn"
-    onClick={handleEditClick}
-  >
-    Edit
-  </button>
-)}
+                <button 
+                  className="habit-detail__edit-btn"
+                  onClick={handleEditClick}
+                >
+                  Edit
+                </button>
+              )}
             </div>
+            
             {habit.goal && (
               <p className="habit-detail__habit-goal">{habit.goal}</p>
             )}
             
+            {/* ℹ️ УВЕДОМЛЕНИЕ для участников (не создателей) */}
             {!isCreator && members.length > 0 && (
-              <p className="habit-detail__creator-notice">
-                ℹ️ This is a shared habit. Only the creator can edit it.
-              </p>
+              <div className="habit-detail__creator-notice">
+                <p>ℹ️ This is a shared habit. Only the creator can edit it.</p>
+                {ownerInfo?.creator_name && (
+                  <p>Creator: <strong>{ownerInfo.creator_name}</strong></p>
+                )}
+              </div>
             )}
           </div>
 
+          {/* Статистика */}
           <div className="habit-detail__statistics">
             <div className="habit-detail__stat-card">
               <div className="habit-detail__stat-circle" style={{
@@ -577,6 +467,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
             </p>
           </div>
 
+          {/* Друзья */}
           <div className="habit-detail__friends">
             <h3 className="habit-detail__friends-title">Habit Friends</h3>
             
@@ -599,6 +490,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
                     member={member}
                     onPunch={() => handlePunchFriend(member.id)}
                     onRemove={() => handleRemoveFriend(member.id)}
+                    canRemove={isCreator}
                   />
                 ))}
               </div>
@@ -608,14 +500,18 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
               </p>
             )}
             
-            <button 
-              className="habit-detail__btn habit-detail__btn--add-friend"
-              onClick={handleAddFriend}
-            >
-              Add Friend
-            </button>
+            {/* Кнопка "Add Friend" показывается только создателю */}
+            {isCreator && (
+              <button 
+                className="habit-detail__btn habit-detail__btn--add-friend"
+                onClick={handleAddFriend}
+              >
+                Add Friend
+              </button>
+            )}
           </div>
 
+          {/* Кнопка удаления показывается только создателю */}
           {isCreator && (
             <button 
               className="habit-detail__btn habit-detail__btn--danger"
@@ -662,8 +558,8 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   );
 };
 
-// Компонент карточки друга
-const FriendCard = ({ member, onPunch, onRemove }) => {
+// ✅ КОМПОНЕНТ КАРТОЧКИ ДРУГА С ПОДДЕРЖКОЙ canRemove
+const FriendCard = ({ member, onPunch, onRemove, canRemove = true }) => {
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [startX, setStartX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
@@ -689,7 +585,7 @@ const FriendCard = ({ member, onPunch, onRemove }) => {
     if (Math.abs(swipeOffset) >= SWIPE_THRESHOLD) {
       if (swipeOffset < 0) {
         onPunch();
-      } else {
+      } else if (canRemove) {
         onRemove();
       }
     }
@@ -700,7 +596,7 @@ const FriendCard = ({ member, onPunch, onRemove }) => {
 
   return (
     <div className="friend-card-container">
-      {swipeOffset > 20 && (
+      {canRemove && swipeOffset > 20 && (
         <div className="friend-action friend-action--remove">
           <span>Remove</span>
         </div>
