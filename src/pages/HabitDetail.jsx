@@ -255,58 +255,57 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   };
 
   const handleShare = async () => {
-    try {
-      const shareData = await habitService.createShareLink(habit.id);
-      const shareCode = shareData.shareCode;
-      
-      console.log('📤 Creating share link:', { 
-        habitId: habit.id, 
-        shareCode,
-        botUsername: 'CheckHabitlyBot' 
-      });
-      
-      const shareText = `Join my "${habit.title}" habit!\n\n📝 Goal: ${habit.goal}\n\nLet's build better habits together! 💪`;
-      
-      // 🔥 КРИТИЧНО: Правильный формат deep link для Telegram Mini App
-      // Формат: https://t.me/BotUsername/AppName?startapp=PARAMETER
-      const shareUrl = `https://t.me/CheckHabitlyBot/habittracker?startapp=join_${shareCode}`;
-      
-      console.log('🔗 Share URL:', shareUrl);
-      console.log('📝 Share text:', shareText);
-      
-      const hasSeenFriendHint = localStorage.getItem('hasSeenFriendHint');
-      if (!hasSeenFriendHint && members.length === 0) {
-        setTimeout(() => {
-          setShowFriendHint(true);
-          localStorage.setItem('hasSeenFriendHint', 'true');
-        }, 2000);
-      }
-      
-      // Используем Telegram Share API
-      if (tg?.openTelegramLink) {
-        const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
-        console.log('📲 Opening Telegram share:', telegramShareUrl);
-        tg.openTelegramLink(telegramShareUrl);
-      } else {
-        // Fallback для браузера
-        const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
-        console.log('🌐 Opening in browser:', telegramShareUrl);
-        window.open(telegramShareUrl, '_blank');
-      }
-      
-      // Показываем уведомление об успехе
-      setToast({
-        message: 'Share link created! 🎉',
-        type: 'success'
-      });
-    } catch (error) {
-      console.error('❌ Failed to create share link:', error);
-      setToast({
-        message: 'Failed to create share link. Please try again.',
-        type: 'error'
-      });
+  try {
+    const shareData = await habitService.createShareLink(habit.id);
+    const shareCode = shareData.shareCode;
+    
+    console.log('📤 Creating share link:', { 
+      habitId: habit.id, 
+      shareCode,
+      botUsername: 'CheckHabitlyBot' 
+    });
+    
+    const shareText = `Join my "${habit.title}" habit!\n\n📝 Goal: ${habit.goal}\n\nLet's build better habits together! 💪`;
+    
+    // 🔥 ПРАВИЛЬНЫЙ ФОРМАТ для Telegram Mini App
+    // Формат: https://t.me/BotUsername/AppName?startapp=PARAMETER
+    const shareUrl = `https://t.me/CheckHabitlyBot/habittracker?startapp=join_${shareCode}`;
+    
+    console.log('🔗 Share URL:', shareUrl);
+    console.log('📝 Share text:', shareText);
+    
+    const hasSeenFriendHint = localStorage.getItem('hasSeenFriendHint');
+    if (!hasSeenFriendHint && members.length === 0) {
+      setTimeout(() => {
+        setShowFriendHint(true);
+        localStorage.setItem('hasSeenFriendHint', 'true');
+      }, 2000);
     }
-  };
+    
+    // Используем Telegram Share API
+    if (tg?.openTelegramLink) {
+      const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+      console.log('📲 Opening Telegram share:', telegramShareUrl);
+      tg.openTelegramLink(telegramShareUrl);
+    } else {
+      // Fallback для браузера
+      const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+      console.log('🌐 Opening in browser:', telegramShareUrl);
+      window.open(telegramShareUrl, '_blank');
+    }
+    
+    setToast({
+      message: 'Share link created! Send it to your friends 🎉',
+      type: 'success'
+    });
+  } catch (error) {
+    console.error('❌ Failed to create share link:', error);
+    setToast({
+      message: 'Failed to create share link. Please try again.',
+      type: 'error'
+    });
+  }
+};
 
   const handleSubscriptionContinue = async (plan) => {
     console.log('Selected subscription plan:', plan);
