@@ -254,7 +254,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     await handleShare();
   };
 
-  const handleShare = async () => {
+const handleShare = async () => {
   try {
     const shareData = await habitService.createShareLink(habit.id);
     const shareCode = shareData.shareCode;
@@ -267,9 +267,9 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     
     const shareText = `Join my "${habit.title}" habit!\n\n📝 Goal: ${habit.goal}\n\nLet's build better habits together! 💪`;
     
-    // 🔥 ПРАВИЛЬНЫЙ ФОРМАТ для Telegram Mini App
-    // Формат: https://t.me/BotUsername/AppName?startapp=PARAMETER
-    const shareUrl = `https://t.me/CheckHabitlyBot/habittracker?startapp=join_${shareCode}`;
+    // 🔥 ПРАВИЛЬНЫЙ формат для ПРЯМОГО открытия Mini App:
+    // Вариант 1: Через t.me (работает если настроен Web App в BotFather)
+    const shareUrl = `https://t.me/CheckHabitlyBot/habittracker?startapp=${shareCode}`;
     
     console.log('🔗 Share URL:', shareUrl);
     console.log('📝 Share text:', shareText);
@@ -288,14 +288,13 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       console.log('📲 Opening Telegram share:', telegramShareUrl);
       tg.openTelegramLink(telegramShareUrl);
     } else {
-      // Fallback для браузера
       const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
       console.log('🌐 Opening in browser:', telegramShareUrl);
       window.open(telegramShareUrl, '_blank');
     }
     
     setToast({
-      message: 'Share link created! Send it to your friends 🎉',
+      message: 'Share link created! 🎉',
       type: 'success'
     });
   } catch (error) {
