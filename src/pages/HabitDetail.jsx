@@ -269,8 +269,8 @@ const handleShare = async () => {
     
     // 🔥 ПРАВИЛЬНЫЙ формат для ПРЯМОГО открытия Mini App:
     // Вариант 1: Через t.me (работает если настроен Web App в BotFather)
-    const shareUrl = `https://t.me/CheckHabitlyBot/habittracker?startapp=${shareCode}`;
-    
+// ✅ Правильно
+const shareUrl = `https://t.me/CheckHabitlyBot?start=${shareCode}`;    
     console.log('🔗 Share URL:', shareUrl);
     console.log('📝 Share text:', shareText);
     
