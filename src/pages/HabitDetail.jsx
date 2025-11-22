@@ -36,7 +36,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
 
   useNavigation(onClose);
 
-  // 🔥 УЛУЧШЕННАЯ ПРОВЕРКА: Определяем isCreator на основе ownerInfo из API
   const isCreator = (() => {
     console.group('🔍 DEBUGGING isCreator');
 
@@ -83,7 +82,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       ownerInfo: ownerInfo
     });
 
-    // Метод 1: Проверка через ownerInfo от API (самый надёжный)
     if (ownerInfo && ownerInfo.creator_id) {
       const creatorDbId = String(ownerInfo.creator_id);
       const match = String(userDbId) === creatorDbId;
@@ -104,7 +102,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       console.warn('⚠️ Method 1 skipped: No ownerInfo or creator_id');
     }
 
-    // Метод 2: Проверка через habit.creator_id
     if (habit.creator_id !== undefined && habit.creator_id !== null) {
       const creatorDbId = String(habit.creator_id);
       const match = String(userDbId) === creatorDbId;
@@ -125,7 +122,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       console.warn('⚠️ Method 2 skipped: No habit.creator_id');
     }
 
-    // Метод 3: Fallback через habit.user_id
     if (habit.user_id !== undefined && habit.user_id !== null) {
       const habitUserId = String(habit.user_id);
       const match = String(userDbId) === habitUserId;
@@ -253,6 +249,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
 
   const handleShare = async () => {
     try {
+      // Получаем share code от сервера
       const shareData = await habitService.createShareLink(habit.id);
       const shareCode = shareData.shareCode;
       
@@ -262,13 +259,17 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
         botUsername: 'CheckHabitlyBot' 
       });
       
+      // Формируем текст для отправки
       const shareText = `Join my "${habit.title}" habit!\n\n📝 Goal: ${habit.goal}\n\nLet's build better habits together! 💪`;
       
+      // 🔥 ПРАВИЛЬНЫЙ формат ссылки для Telegram бота
+      // Используем t.me/BOT?start=CODE - это передаст параметр боту как /start CODE
       const shareUrl = `https://t.me/CheckHabitlyBot?start=${shareCode}`;
       
       console.log('🔗 Generated share URL:', shareUrl);
       console.log('📝 Share text:', shareText);
       
+      // Показываем подсказку о свайпах (если первое приглашение)
       const hasSeenFriendHint = localStorage.getItem('hasSeenFriendHint');
       if (!hasSeenFriendHint && members.length === 0) {
         setTimeout(() => {
@@ -277,16 +278,22 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
         }, 2000);
       }
       
+      // Используем Telegram Share API для отправки ссылки
       if (tg?.openTelegramLink) {
+        // Формируем URL для Telegram Share
         const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
         console.log('📲 Opening Telegram share dialog:', telegramShareUrl);
+        
+        // Открываем диалог выбора чата в Telegram
         tg.openTelegramLink(telegramShareUrl);
       } else {
+        // Fallback для случаев, когда Telegram WebApp API недоступен
         const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
         console.log('🌐 Opening share in browser:', telegramShareUrl);
         window.open(telegramShareUrl, '_blank');
       }
       
+      // Показываем уведомление об успехе
       setToast({
         message: 'Share link created! 🎉',
         type: 'success'
@@ -342,6 +349,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       const shareData = await habitService.createShareLink(habit.id);
       const shareCode = shareData.shareCode;
       
+      // 🔥 ПРАВИЛЬНЫЙ формат для копирования ссылки
       const inviteLink = `https://t.me/CheckHabitlyBot?start=${shareCode}`;
       
       console.log('📋 Copying link to clipboard:', inviteLink);
@@ -446,39 +454,21 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     }
   };
 
-  // 🔥 РАННЯЯ ПРОВЕРКА: При нажатии на кнопку Edit
   const handleEditClick = () => {
-    console.log('🖊️ Edit button clicked, checking permissions...');
-    console.log('🔍 Current isCreator status:', isCreator);
-    console.log('🔍 Owner info:', ownerInfo);
+    console.log('🖊️ Edit button clicked, isCreator:', isCreator);
     
-    // Проверяем права доступа ДО открытия формы редактирования
     if (!isCreator) {
-      console.log('❌ User is NOT the creator - blocking edit access');
-      
-      // Показываем Toast уведомление
       setToast({
-        message: '⚠️ Only the habit creator can edit this habit',
+        message: 'Only the habit creator can edit this habit',
         type: 'warning'
       });
       
-      // Вибрация для обратной связи
       if (window.Telegram?.WebApp?.HapticFeedback) {
         window.Telegram.WebApp.HapticFeedback.notificationOccurred('warning');
       }
-      
-      // Показываем также Telegram Alert для большей заметности
-      if (tg?.showAlert) {
-        tg.showAlert('⚠️ Only the habit creator can edit this habit.\n\nYou are a shared member of this habit.');
-      }
-      
-      // НЕ открываем форму редактирования
       return;
     }
     
-    console.log('✅ User is the creator - allowing edit access');
-    
-    // Только если пользователь является создателем - открываем форму
     if (onEdit) {
       onEdit(habit);
     }
@@ -522,19 +512,19 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
                 <h2 className="habit-detail__habit-title">{habit.title}</h2>
               </div>
               
-              {/* 🔥 ПОКАЗЫВАЕМ КНОПКУ EDIT ВСЕГДА, но проверка внутри handleEditClick */}
-              <button 
-                className="habit-detail__edit-btn"
-                onClick={handleEditClick}
-              >
-                Edit
-              </button>
+              {isCreator && (
+                <button 
+                  className="habit-detail__edit-btn"
+                  onClick={handleEditClick}
+                >
+                  Edit
+                </button>
+              )}
             </div>
             {habit.goal && (
               <p className="habit-detail__habit-goal">{habit.goal}</p>
             )}
             
-            {/* 🔥 ПОКАЗЫВАЕМ ИНФОРМАЦИОННОЕ СООБЩЕНИЕ для НЕ-создателей */}
             {!isCreator && members.length > 0 && (
               <p className="habit-detail__creator-notice">
                 ℹ️ This is a shared habit. Only the creator can edit it.
@@ -636,7 +626,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
             </button>
           </div>
 
-          {/* 🔥 КНОПКА УДАЛЕНИЯ ТОЛЬКО ДЛЯ СОЗДАТЕЛЯ */}
           {isCreator && (
             <button 
               className="habit-detail__btn habit-detail__btn--danger"
