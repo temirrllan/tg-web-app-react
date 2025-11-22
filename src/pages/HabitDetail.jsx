@@ -446,39 +446,11 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     }
   };
 
-  // 🔥 РАННЯЯ ПРОВЕРКА: При нажатии на кнопку Edit
+  // 🔥 ОБРАБОТЧИК РЕДАКТИРОВАНИЯ (упрощённый, так как кнопка только для создателя)
   const handleEditClick = () => {
-    console.log('🖊️ Edit button clicked, checking permissions...');
-    console.log('🔍 Current isCreator status:', isCreator);
-    console.log('🔍 Owner info:', ownerInfo);
+    console.log('🖊️ Edit button clicked');
+    console.log('✅ User is the creator - opening edit form');
     
-    // Проверяем права доступа ДО открытия формы редактирования
-    if (!isCreator) {
-      console.log('❌ User is NOT the creator - blocking edit access');
-      
-      // Показываем Toast уведомление
-      setToast({
-        message: '⚠️ Only the habit creator can edit this habit',
-        type: 'warning'
-      });
-      
-      // Вибрация для обратной связи
-      if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.notificationOccurred('warning');
-      }
-      
-      // Показываем также Telegram Alert для большей заметности
-      if (tg?.showAlert) {
-        tg.showAlert('⚠️ Only the habit creator can edit this habit.\n\nYou are a shared member of this habit.');
-      }
-      
-      // НЕ открываем форму редактирования
-      return;
-    }
-    
-    console.log('✅ User is the creator - allowing edit access');
-    
-    // Только если пользователь является создателем - открываем форму
     if (onEdit) {
       onEdit(habit);
     }
@@ -522,13 +494,15 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
                 <h2 className="habit-detail__habit-title">{habit.title}</h2>
               </div>
               
-              {/* 🔥 ПОКАЗЫВАЕМ КНОПКУ EDIT ВСЕГДА, но проверка внутри handleEditClick */}
-              <button 
-                className="habit-detail__edit-btn"
-                onClick={handleEditClick}
-              >
-                Edit
-              </button>
+              {/* 🔥 КНОПКУ EDIT ПОКАЗЫВАЕМ ТОЛЬКО СОЗДАТЕЛЮ */}
+              {isCreator && (
+                <button 
+                  className="habit-detail__edit-btn"
+                  onClick={handleEditClick}
+                >
+                  Edit
+                </button>
+              )}
             </div>
             {habit.goal && (
               <p className="habit-detail__habit-goal">{habit.goal}</p>
