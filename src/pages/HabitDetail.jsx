@@ -14,6 +14,7 @@ import { useTranslation } from "../hooks/useTranslation";
 const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const { tg, user: currentUser } = useTelegram();
   const [loading, setLoading] = useState(true);
+  const [ownerInfoLoading, setOwnerInfoLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showCopyModal, setShowCopyModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
@@ -36,52 +37,44 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
 
   useNavigation(onClose);
 
-  // 🔥 УЛУЧШЕННАЯ ПРОВЕРКА: Определяем isCreator на основе ownerInfo из API
-  const isCreator = (() => {
-    console.group('🔍 DEBUGGING isCreator');
+  // 🔥 STATE для isCreator - обновляется когда загружается ownerInfo
+  const [isCreator, setIsCreator] = useState(false);
+
+  // 🔥 ВЫЧИСЛЕНИЕ isCreator при изменении ownerInfo
+  useEffect(() => {
+    console.group('🔍 CALCULATING isCreator');
 
     if (!currentUser) {
       console.warn('⚠️ No current user');
-      console.error('❌ No currentUser found');
-      console.log('currentUser:', currentUser);
       console.groupEnd();
-      return false;
+      setIsCreator(false);
+      return;
     }
 
     const userDbId = localStorage.getItem('user_id');
-    const telegramId = currentUser.id;
+
+    if (!userDbId) {
+      console.error('❌ CRITICAL: No user_id in localStorage!');
+      console.groupEnd();
+      setIsCreator(false);
+      return;
+    }
 
     console.log('📊 User identification:', {
       localStorage_user_id: userDbId,
-      currentUser_telegram_id: telegramId,
-      currentUser_object: currentUser
+      currentUser_telegram_id: currentUser.id
     });
 
     console.log('📋 Habit data:', {
       habit_id: habit.id,
       habit_user_id: habit.user_id,
       habit_creator_id: habit.creator_id,
-      habit_parent_habit_id: habit.parent_habit_id,
-      full_habit_object: habit
+      habit_parent_habit_id: habit.parent_habit_id
     });
 
     console.log('🌐 Owner info from API:', ownerInfo);
 
-    if (!userDbId) {
-      console.error('❌ CRITICAL: No user_id in localStorage!');
-      console.log('This means user was not properly authenticated');
-      console.groupEnd();
-      return false;
-    }
-
-    console.log('🔍 Checking creator permissions:', {
-      habit_id: habit.id,
-      habit_creator_id: habit.creator_id,
-      habit_user_id: habit.user_id,
-      currentUser_telegram_id: currentUser.id,
-      localStorage_user_id: localStorage.getItem('user_id'),
-      ownerInfo: ownerInfo
-    });
+    let creatorStatus = false;
 
     // Метод 1: Проверка через ownerInfo от API (самый надёжный)
     if (ownerInfo && ownerInfo.creator_id) {
@@ -91,42 +84,34 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       console.log('✅ Method 1 (API ownerInfo):', {
         userDbId: String(userDbId),
         creatorDbId: creatorDbId,
-        match: match,
-        comparison: `"${String(userDbId)}" === "${creatorDbId}"`
+        match: match
       });
       
       if (match) {
         console.log('✅ USER IS CREATOR (via API ownerInfo)');
-        console.groupEnd();
-        return true;
+        creatorStatus = true;
       }
-    } else {
-      console.warn('⚠️ Method 1 skipped: No ownerInfo or creator_id');
     }
 
-    // Метод 2: Проверка через habit.creator_id
-    if (habit.creator_id !== undefined && habit.creator_id !== null) {
+    // Метод 2: Проверка через habit.creator_id (если ownerInfo не дал результат)
+    if (!creatorStatus && habit.creator_id !== undefined && habit.creator_id !== null) {
       const creatorDbId = String(habit.creator_id);
       const match = String(userDbId) === creatorDbId;
       
       console.log('✅ Method 2 (habit.creator_id):', {
         userDbId: String(userDbId),
         creatorDbId: creatorDbId,
-        match: match,
-        comparison: `"${String(userDbId)}" === "${creatorDbId}"`
+        match: match
       });
       
       if (match) {
         console.log('✅ USER IS CREATOR (via habit.creator_id)');
-        console.groupEnd();
-        return true;
+        creatorStatus = true;
       }
-    } else {
-      console.warn('⚠️ Method 2 skipped: No habit.creator_id');
     }
 
-    // Метод 3: Fallback через habit.user_id
-    if (habit.user_id !== undefined && habit.user_id !== null) {
+    // Метод 3: Fallback через habit.user_id (только если это не shared habit)
+    if (!creatorStatus && !habit.parent_habit_id && habit.user_id !== undefined && habit.user_id !== null) {
       const habitUserId = String(habit.user_id);
       const match = String(userDbId) === habitUserId;
       
@@ -134,30 +119,20 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
         userDbId: String(userDbId),
         habitUserId: habitUserId,
         match: match,
-        comparison: `"${String(userDbId)}" === "${habitUserId}"`
+        isSharedHabit: !!habit.parent_habit_id
       });
       
       if (match) {
         console.log('✅ USER IS CREATOR (via habit.user_id)');
-        console.groupEnd();
-        return true;
+        creatorStatus = true;
       }
-    } else {
-      console.warn('⚠️ Method 3 skipped: No habit.user_id');
     }
 
-    console.error('❌ ALL METHODS FAILED - USER IS NOT CREATOR');
-    console.log('Summary:', {
-      userDbId,
-      habit_creator_id: habit.creator_id,
-      habit_user_id: habit.user_id,
-      ownerInfo_creator_id: ownerInfo?.creator_id
-    });
+    console.log('🎯 FINAL isCreator:', creatorStatus);
     console.groupEnd();
-    return false;
-  })();
-
-  console.log('🎯 FINAL isCreator:', isCreator);
+    
+    setIsCreator(creatorStatus);
+  }, [currentUser, ownerInfo, habit.id, habit.creator_id, habit.user_id, habit.parent_habit_id]);
 
   useEffect(() => {
     if (!tg) return;
@@ -177,12 +152,15 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   useEffect(() => {
     const loadOwnerInfo = async () => {
       try {
+        setOwnerInfoLoading(true);
         console.log('🔄 Loading owner info for habit:', habit.id);
         const info = await habitService.getHabitOwner(habit.id);
         console.log('📊 Habit owner info received:', info);
         setOwnerInfo(info);
       } catch (error) {
         console.error('Failed to load owner info:', error);
+      } finally {
+        setOwnerInfoLoading(false);
       }
     };
 
@@ -494,8 +472,8 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
                 <h2 className="habit-detail__habit-title">{habit.title}</h2>
               </div>
               
-              {/* 🔥 КНОПКУ EDIT ПОКАЗЫВАЕМ ТОЛЬКО СОЗДАТЕЛЮ */}
-              {isCreator && (
+              {/* 🔥 КНОПКУ EDIT ПОКАЗЫВАЕМ ТОЛЬКО СОЗДАТЕЛЮ после загрузки ownerInfo */}
+              {!ownerInfoLoading && isCreator && (
                 <button 
                   className="habit-detail__edit-btn"
                   onClick={handleEditClick}
