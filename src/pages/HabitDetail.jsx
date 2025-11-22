@@ -36,46 +36,42 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
 
   useNavigation(onClose);
 
-  // 🔥 КРИТИЧНО: Определяем isCreator через несколько проверок
   const isCreator = (() => {
-      console.group('🔍 DEBUGGING isCreator');
+    console.group('🔍 DEBUGGING isCreator');
 
     if (!currentUser) {
       console.warn('⚠️ No current user');
-       console.error('❌ No currentUser found');
-    console.log('currentUser:', currentUser);
-    console.groupEnd();
+      console.error('❌ No currentUser found');
+      console.log('currentUser:', currentUser);
+      console.groupEnd();
       return false;
     }
-  // Получаем ID текущего пользователя из разных источников
-  const userDbId = localStorage.getItem('user_id');
-  const telegramId = currentUser.id;
 
-  console.log('📊 User identification:', {
-    localStorage_user_id: userDbId,
-    currentUser_telegram_id: telegramId,
-    currentUser_object: currentUser
-  });
+    const userDbId = localStorage.getItem('user_id');
+    const telegramId = currentUser.id;
 
-  // Получаем данные привычки
-  console.log('📋 Habit data:', {
-    habit_id: habit.id,
-    habit_user_id: habit.user_id,
-    habit_creator_id: habit.creator_id,
-    habit_parent_habit_id: habit.parent_habit_id,
-    full_habit_object: habit
-  });
+    console.log('📊 User identification:', {
+      localStorage_user_id: userDbId,
+      currentUser_telegram_id: telegramId,
+      currentUser_object: currentUser
+    });
 
-  // Получаем данные от API
-  console.log('🌐 Owner info from API:', ownerInfo);
-  // Если нет user_id в localStorage - это проблема
-  if (!userDbId) {
-    console.error('❌ CRITICAL: No user_id in localStorage!');
-    console.log('This means user was not properly authenticated');
-    console.groupEnd();
-    return false;
-  }
+    console.log('📋 Habit data:', {
+      habit_id: habit.id,
+      habit_user_id: habit.user_id,
+      habit_creator_id: habit.creator_id,
+      habit_parent_habit_id: habit.parent_habit_id,
+      full_habit_object: habit
+    });
 
+    console.log('🌐 Owner info from API:', ownerInfo);
+
+    if (!userDbId) {
+      console.error('❌ CRITICAL: No user_id in localStorage!');
+      console.log('This means user was not properly authenticated');
+      console.groupEnd();
+      return false;
+    }
 
     console.log('🔍 Checking creator permissions:', {
       habit_id: habit.id,
@@ -86,82 +82,79 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       ownerInfo: ownerInfo
     });
 
-    // Метод 1: Проверка через ownerInfo от API (самый надёжный)
     if (ownerInfo && ownerInfo.creator_id) {
-    const creatorDbId = String(ownerInfo.creator_id);
-    const match = String(userDbId) === creatorDbId;
-    
-    console.log('✅ Method 1 (API ownerInfo):', {
-      userDbId: String(userDbId),
-      creatorDbId: creatorDbId,
-      match: match,
-      comparison: `"${String(userDbId)}" === "${creatorDbId}"`
-    });
-    
-    if (match) {
-      console.log('✅ USER IS CREATOR (via API ownerInfo)');
-      console.groupEnd();
-      return true;
+      const creatorDbId = String(ownerInfo.creator_id);
+      const match = String(userDbId) === creatorDbId;
+      
+      console.log('✅ Method 1 (API ownerInfo):', {
+        userDbId: String(userDbId),
+        creatorDbId: creatorDbId,
+        match: match,
+        comparison: `"${String(userDbId)}" === "${creatorDbId}"`
+      });
+      
+      if (match) {
+        console.log('✅ USER IS CREATOR (via API ownerInfo)');
+        console.groupEnd();
+        return true;
+      }
+    } else {
+      console.warn('⚠️ Method 1 skipped: No ownerInfo or creator_id');
     }
-  } else {
-    console.warn('⚠️ Method 1 skipped: No ownerInfo or creator_id');
-  }
 
-    // Метод 2: Проверка через habit.creator_id
-  if (habit.creator_id !== undefined && habit.creator_id !== null) {
-    const creatorDbId = String(habit.creator_id);
-    const match = String(userDbId) === creatorDbId;
-    
-    console.log('✅ Method 2 (habit.creator_id):', {
-      userDbId: String(userDbId),
-      creatorDbId: creatorDbId,
-      match: match,
-      comparison: `"${String(userDbId)}" === "${creatorDbId}"`
-    });
-    
-    if (match) {
-      console.log('✅ USER IS CREATOR (via habit.creator_id)');
-      console.groupEnd();
-      return true;
+    if (habit.creator_id !== undefined && habit.creator_id !== null) {
+      const creatorDbId = String(habit.creator_id);
+      const match = String(userDbId) === creatorDbId;
+      
+      console.log('✅ Method 2 (habit.creator_id):', {
+        userDbId: String(userDbId),
+        creatorDbId: creatorDbId,
+        match: match,
+        comparison: `"${String(userDbId)}" === "${creatorDbId}"`
+      });
+      
+      if (match) {
+        console.log('✅ USER IS CREATOR (via habit.creator_id)');
+        console.groupEnd();
+        return true;
+      }
+    } else {
+      console.warn('⚠️ Method 2 skipped: No habit.creator_id');
     }
-  } else {
-    console.warn('⚠️ Method 2 skipped: No habit.creator_id');
-  }
 
     if (habit.user_id !== undefined && habit.user_id !== null) {
-    const habitUserId = String(habit.user_id);
-    const match = String(userDbId) === habitUserId;
-    
-    console.log('✅ Method 3 (habit.user_id fallback):', {
-      userDbId: String(userDbId),
-      habitUserId: habitUserId,
-      match: match,
-      comparison: `"${String(userDbId)}" === "${habitUserId}"`
-    });
-    
-    if (match) {
-      console.log('✅ USER IS CREATOR (via habit.user_id)');
-      console.groupEnd();
-      return true;
+      const habitUserId = String(habit.user_id);
+      const match = String(userDbId) === habitUserId;
+      
+      console.log('✅ Method 3 (habit.user_id fallback):', {
+        userDbId: String(userDbId),
+        habitUserId: habitUserId,
+        match: match,
+        comparison: `"${String(userDbId)}" === "${habitUserId}"`
+      });
+      
+      if (match) {
+        console.log('✅ USER IS CREATOR (via habit.user_id)');
+        console.groupEnd();
+        return true;
+      }
+    } else {
+      console.warn('⚠️ Method 3 skipped: No habit.user_id');
     }
-  } else {
-    console.warn('⚠️ Method 3 skipped: No habit.user_id');
-  }
 
-     console.error('❌ ALL METHODS FAILED - USER IS NOT CREATOR');
-  console.log('Summary:', {
-    userDbId,
-    habit_creator_id: habit.creator_id,
-    habit_user_id: habit.user_id,
-    ownerInfo_creator_id: ownerInfo?.creator_id
-  });
-  console.groupEnd();
-  return false;
+    console.error('❌ ALL METHODS FAILED - USER IS NOT CREATOR');
+    console.log('Summary:', {
+      userDbId,
+      habit_creator_id: habit.creator_id,
+      habit_user_id: habit.user_id,
+      ownerInfo_creator_id: ownerInfo?.creator_id
+    });
+    console.groupEnd();
+    return false;
   })();
 
   console.log('🎯 FINAL isCreator:', isCreator);
 
-  // ✅ Telegram BackButton logic
   useEffect(() => {
     if (!tg) return;
     try {
@@ -254,57 +247,67 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     await handleShare();
   };
 
-const handleShare = async () => {
-  try {
-    const shareData = await habitService.createShareLink(habit.id);
-    const shareCode = shareData.shareCode;
-    
-    console.log('📤 Creating share link:', { 
-      habitId: habit.id, 
-      shareCode,
-      botUsername: 'CheckHabitlyBot' 
-    });
-    
-    const shareText = `Join my "${habit.title}" habit!\n\n📝 Goal: ${habit.goal}\n\nLet's build better habits together! 💪`;
-    
-    // 🔥 ПРАВИЛЬНЫЙ формат для ПРЯМОГО открытия Mini App:
-    // Вариант 1: Через t.me (работает если настроен Web App в BotFather)
-// ✅ Правильно
-const shareUrl = `https://t.me/CheckHabitlyBot?start=${shareCode}`;    
-    console.log('🔗 Share URL:', shareUrl);
-    console.log('📝 Share text:', shareText);
-    
-    const hasSeenFriendHint = localStorage.getItem('hasSeenFriendHint');
-    if (!hasSeenFriendHint && members.length === 0) {
-      setTimeout(() => {
-        setShowFriendHint(true);
-        localStorage.setItem('hasSeenFriendHint', 'true');
-      }, 2000);
+  const handleShare = async () => {
+    try {
+      // Получаем share code от сервера
+      const shareData = await habitService.createShareLink(habit.id);
+      const shareCode = shareData.shareCode;
+      
+      console.log('📤 Creating share link:', { 
+        habitId: habit.id, 
+        shareCode,
+        botUsername: 'CheckHabitlyBot' 
+      });
+      
+      // Формируем текст для отправки
+      const shareText = `Join my "${habit.title}" habit!\n\n📝 Goal: ${habit.goal}\n\nLet's build better habits together! 💪`;
+      
+      // 🔥 ПРАВИЛЬНЫЙ формат ссылки для Telegram бота
+      // Используем t.me/BOT?start=CODE - это передаст параметр боту как /start CODE
+      const shareUrl = `https://t.me/CheckHabitlyBot?start=${shareCode}`;
+      
+      console.log('🔗 Generated share URL:', shareUrl);
+      console.log('📝 Share text:', shareText);
+      
+      // Показываем подсказку о свайпах (если первое приглашение)
+      const hasSeenFriendHint = localStorage.getItem('hasSeenFriendHint');
+      if (!hasSeenFriendHint && members.length === 0) {
+        setTimeout(() => {
+          setShowFriendHint(true);
+          localStorage.setItem('hasSeenFriendHint', 'true');
+        }, 2000);
+      }
+      
+      // Используем Telegram Share API для отправки ссылки
+      if (tg?.openTelegramLink) {
+        // Формируем URL для Telegram Share
+        const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+        console.log('📲 Opening Telegram share dialog:', telegramShareUrl);
+        
+        // Открываем диалог выбора чата в Telegram
+        tg.openTelegramLink(telegramShareUrl);
+      } else {
+        // Fallback для случаев, когда Telegram WebApp API недоступен
+        const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+        console.log('🌐 Opening share in browser:', telegramShareUrl);
+        window.open(telegramShareUrl, '_blank');
+      }
+      
+      // Показываем уведомление об успехе
+      setToast({
+        message: 'Share link created! 🎉',
+        type: 'success'
+      });
+      
+      console.log('✅ Share dialog opened successfully');
+    } catch (error) {
+      console.error('❌ Failed to create share link:', error);
+      setToast({
+        message: 'Failed to create share link. Please try again.',
+        type: 'error'
+      });
     }
-    
-    // Используем Telegram Share API
-    if (tg?.openTelegramLink) {
-      const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
-      console.log('📲 Opening Telegram share:', telegramShareUrl);
-      tg.openTelegramLink(telegramShareUrl);
-    } else {
-      const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
-      console.log('🌐 Opening in browser:', telegramShareUrl);
-      window.open(telegramShareUrl, '_blank');
-    }
-    
-    setToast({
-      message: 'Share link created! 🎉',
-      type: 'success'
-    });
-  } catch (error) {
-    console.error('❌ Failed to create share link:', error);
-    setToast({
-      message: 'Failed to create share link. Please try again.',
-      type: 'error'
-    });
-  }
-};
+  };
 
   const handleSubscriptionContinue = async (plan) => {
     console.log('Selected subscription plan:', plan);
@@ -345,7 +348,11 @@ const shareUrl = `https://t.me/CheckHabitlyBot?start=${shareCode}`;
     try {
       const shareData = await habitService.createShareLink(habit.id);
       const shareCode = shareData.shareCode;
-      const inviteLink = `https://t.me/CheckHabitlyBot?start=join_${shareCode}`;
+      
+      // 🔥 ПРАВИЛЬНЫЙ формат для копирования ссылки
+      const inviteLink = `https://t.me/CheckHabitlyBot?start=${shareCode}`;
+      
+      console.log('📋 Copying link to clipboard:', inviteLink);
       
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(inviteLink);
@@ -366,8 +373,14 @@ const shareUrl = `https://t.me/CheckHabitlyBot?start=${shareCode}`;
       if (window.Telegram?.WebApp?.HapticFeedback) {
         window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
       }
+      
+      console.log('✅ Link copied to clipboard');
     } catch (err) {
       console.error('Failed to copy link:', err);
+      setToast({
+        message: 'Failed to copy link',
+        type: 'error'
+      });
     }
   };
 
@@ -441,7 +454,6 @@ const shareUrl = `https://t.me/CheckHabitlyBot?start=${shareCode}`;
     }
   };
 
-  // 🔥 ОБРАБОТЧИК РЕДАКТИРОВАНИЯ
   const handleEditClick = () => {
     console.log('🖊️ Edit button clicked, isCreator:', isCreator);
     
@@ -501,13 +513,13 @@ const shareUrl = `https://t.me/CheckHabitlyBot?start=${shareCode}`;
               </div>
               
               {isCreator && (
-  <button 
-    className="habit-detail__edit-btn"
-    onClick={handleEditClick}
-  >
-    Edit
-  </button>
-)}
+                <button 
+                  className="habit-detail__edit-btn"
+                  onClick={handleEditClick}
+                >
+                  Edit
+                </button>
+              )}
             </div>
             {habit.goal && (
               <p className="habit-detail__habit-goal">{habit.goal}</p>
@@ -660,7 +672,6 @@ const shareUrl = `https://t.me/CheckHabitlyBot?start=${shareCode}`;
   );
 };
 
-// Компонент карточки друга
 const FriendCard = ({ member, onPunch, onRemove }) => {
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [startX, setStartX] = useState(0);
