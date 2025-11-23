@@ -178,7 +178,49 @@
     "inboxNotificationsDescription": "Receive updates and service messages in your inbox",
     "on": "On",
     "off": "Off"
-  }
+  },
+  "habitDetail": {
+      "edit": "Edit",
+      "goal": "Goal",
+      "sharedHabitNotice": "ℹ️ This is a shared habit. Only the creator can edit it.",
+      "statistics": {
+        "daysStreak": "Days Streak",
+        "week": "Week",
+        "month": "Month",
+        "year": "Year"
+      },
+      "motivation": "Good Job My Friend! 🔥",
+      "friends": {
+        "title": "Habit Friends",
+        "friendsAdded": "friend added",
+        "friendsAddedPlural": "friends added",
+        "freePlan": "Free plan",
+        "subtitle": "Share the link with friends and invite them to track habits together.",
+        "addFriend": "Add Friend",
+        "remove": "Remove",
+        "punch": "👊 Punch"
+      },
+      "buttons": {
+        "removeHabit": "Remove Habit"
+      },
+      "toasts": {
+        "shareLinkCreated": "Share link created! 🎉",
+        "shareLinkFailed": "Failed to create share link. Please try again.",
+        "friendRemoved": "Friend removed from habit",
+        "friendRemoveFailed": "Failed to remove friend. Please try again.",
+        "punchFailed": "Failed to send punch. Please try again.",
+        "linkCopyFailed": "Failed to copy link",
+        "premiumActivated": "Premium activated! Now you can invite unlimited friends! 🎉",
+        "premiumFailed": "Failed to activate premium. Please try again."
+      },
+      "alerts": {
+        "alreadyCompleted": "Bro, {{name}} already completed this habit today! 👌",
+        "skipped": "{{name}} skipped this habit today 😔",
+        "reminderSent": "Reminder sent to your friend! 👊",
+        "removeFriendConfirm": "Remove this friend from the habit?"
+      }
+    }
+  
 
 
 

@@ -13,6 +13,7 @@ import { useTranslation } from "../hooks/useTranslation";
 
 const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const { tg, user: currentUser } = useTelegram();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [ownerInfoLoading, setOwnerInfoLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -23,7 +24,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const [toast, setToast] = useState(null);
   const [friendLimitData, setFriendLimitData] = useState(null);
   const [ownerInfo, setOwnerInfo] = useState(null);
-  const { t } = useTranslation();
 
   const [statistics, setStatistics] = useState({
     currentStreak: 0,
@@ -37,10 +37,8 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
 
   useNavigation(onClose);
 
-  // 🔥 STATE для isCreator - обновляется когда загружается ownerInfo
   const [isCreator, setIsCreator] = useState(false);
 
-  // 🔥 ВЫЧИСЛЕНИЕ isCreator при изменении ownerInfo
   useEffect(() => {
     console.group('🔍 CALCULATING isCreator');
 
@@ -76,7 +74,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
 
     let creatorStatus = false;
 
-    // Метод 1: Проверка через ownerInfo от API (самый надёжный)
     if (ownerInfo && ownerInfo.creator_id) {
       const creatorDbId = String(ownerInfo.creator_id);
       const match = String(userDbId) === creatorDbId;
@@ -93,7 +90,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       }
     }
 
-    // Метод 2: Проверка через habit.creator_id (если ownerInfo не дал результат)
     if (!creatorStatus && habit.creator_id !== undefined && habit.creator_id !== null) {
       const creatorDbId = String(habit.creator_id);
       const match = String(userDbId) === creatorDbId;
@@ -110,7 +106,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       }
     }
 
-    // Метод 3: Fallback через habit.user_id (только если это не shared habit)
     if (!creatorStatus && !habit.parent_habit_id && habit.user_id !== undefined && habit.user_id !== null) {
       const habitUserId = String(habit.user_id);
       const match = String(userDbId) === habitUserId;
@@ -240,7 +235,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
         botUsername: 'CheckHabitlyBot' 
       });
       
-      const shareText = `Join my "${habit.title}" habit!\n\n📝 Goal: ${habit.goal}\n\nLet's build better habits together! 💪`;
+      const shareText = `Join my "${habit.title}" habit!\n\n📝 ${t('habitDetail.goal')}: ${habit.goal}\n\nLet's build better habits together! 💪`;
       
       const shareUrl = `https://t.me/CheckHabitlyBot?start=${shareCode}`;
       
@@ -266,7 +261,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       }
       
       setToast({
-        message: 'Share link created! 🎉',
+        message: t('habitDetail.toasts.shareLinkCreated'),
         type: 'success'
       });
       
@@ -274,7 +269,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     } catch (error) {
       console.error('❌ Failed to create share link:', error);
       setToast({
-        message: 'Failed to create share link. Please try again.',
+        message: t('habitDetail.toasts.shareLinkFailed'),
         type: 'error'
       });
     }
@@ -295,7 +290,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
         setShowSubscriptionModal(false);
         
         if (window.Telegram?.WebApp?.showAlert) {
-          window.Telegram.WebApp.showAlert('Premium activated! Now you can invite unlimited friends! 🎉');
+          window.Telegram.WebApp.showAlert(t('habitDetail.toasts.premiumActivated'));
         }
         
         setTimeout(() => {
@@ -308,9 +303,9 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       setShowSubscriptionModal(false);
       
       if (window.Telegram?.WebApp?.showAlert) {
-        window.Telegram.WebApp.showAlert('Failed to activate premium. Please try again.');
+        window.Telegram.WebApp.showAlert(t('habitDetail.toasts.premiumFailed'));
       } else {
-        alert('Failed to activate premium. Please try again.');
+        alert(t('habitDetail.toasts.premiumFailed'));
       }
     }
   };
@@ -348,7 +343,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     } catch (err) {
       console.error('Failed to copy link:', err);
       setToast({
-        message: 'Failed to copy link',
+        message: t('habitDetail.toasts.linkCopyFailed'),
         type: 'error'
       });
     }
@@ -373,17 +368,17 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
         }
       } else if (tg?.showAlert) {
         if (result.alreadyCompleted) {
-          tg.showAlert(`Bro, ${result.friendName} already completed this habit today! 👌`);
+          tg.showAlert(t('habitDetail.alerts.alreadyCompleted', { name: result.friendName }));
         } else if (result.isSkipped) {
-          tg.showAlert(`${result.friendName} skipped this habit today 😔`);
+          tg.showAlert(t('habitDetail.alerts.skipped', { name: result.friendName }));
         } else if (result.success) {
-          tg.showAlert('Reminder sent to your friend! 👊');
+          tg.showAlert(t('habitDetail.alerts.reminderSent'));
         }
       }
     } catch (error) {
       console.error('Failed to send punch:', error);
       setToast({
-        message: 'Failed to send punch. Please try again.',
+        message: t('habitDetail.toasts.punchFailed'),
         type: 'error'
       });
     }
@@ -392,25 +387,25 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const handleRemoveFriend = async (memberId) => {
     try {
       if (tg?.showConfirm) {
-        tg.showConfirm('Remove this friend from the habit?', async (confirmed) => {
+        tg.showConfirm(t('habitDetail.alerts.removeFriendConfirm'), async (confirmed) => {
           if (confirmed) {
             await habitService.removeMember(habit.id, memberId);
             await loadMembers();
             await checkFriendLimit();
             setToast({
-              message: 'Friend removed from habit',
+              message: t('habitDetail.toasts.friendRemoved'),
               type: 'success'
             });
           }
         });
       } else {
-        const confirmed = window.confirm('Remove this friend from the habit?');
+        const confirmed = window.confirm(t('habitDetail.alerts.removeFriendConfirm'));
         if (confirmed) {
           await habitService.removeMember(habit.id, memberId);
           await loadMembers();
           await checkFriendLimit();
           setToast({
-            message: 'Friend removed from habit',
+            message: t('habitDetail.toasts.friendRemoved'),
             type: 'success'
           });
         }
@@ -418,13 +413,12 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     } catch (error) {
       console.error('Failed to remove friend:', error);
       setToast({
-        message: 'Failed to remove friend. Please try again.',
+        message: t('habitDetail.toasts.friendRemoveFailed'),
         type: 'error'
       });
     }
   };
 
-  // 🔥 ОБРАБОТЧИК РЕДАКТИРОВАНИЯ (упрощённый, так как кнопка только для создателя)
   const handleEditClick = () => {
     console.log('🖊️ Edit button clicked');
     console.log('✅ User is the creator - opening edit form');
@@ -472,13 +466,12 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
                 <h2 className="habit-detail__habit-title">{habit.title}</h2>
               </div>
               
-              {/* 🔥 КНОПКУ EDIT ПОКАЗЫВАЕМ ТОЛЬКО СОЗДАТЕЛЮ после загрузки ownerInfo */}
               {!ownerInfoLoading && isCreator && (
                 <button 
                   className="habit-detail__edit-btn"
                   onClick={handleEditClick}
                 >
-                  Edit
+                  {t('habitDetail.edit')}
                 </button>
               )}
             </div>
@@ -486,10 +479,9 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
               <p className="habit-detail__habit-goal">{habit.goal}</p>
             )}
             
-            {/* 🔥 ПОКАЗЫВАЕМ ИНФОРМАЦИОННОЕ СООБЩЕНИЕ для НЕ-создателей */}
             {!isCreator && members.length > 0 && (
               <p className="habit-detail__creator-notice">
-                ℹ️ This is a shared habit. Only the creator can edit it.
+                {t('habitDetail.sharedHabitNotice')}
               </p>
             )}
           </div>
@@ -502,8 +494,8 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
               }}>
                 <span className="habit-detail__stat-value">{statistics.currentStreak}</span>
               </div>
-              <h3 className="habit-detail__stat-title">Days Strike</h3>
-              <p className="habit-detail__stat-subtitle">Days Strike</p>
+              <h3 className="habit-detail__stat-title">{t('habitDetail.statistics.daysStreak')}</h3>
+              <p className="habit-detail__stat-subtitle">{t('habitDetail.statistics.daysStreak')}</p>
             </div>
 
             <div className="habit-detail__stat-card">
@@ -514,8 +506,8 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
                 <span className="habit-detail__stat-value">{statistics.weekDays}</span>
                 <span className="habit-detail__stat-total">{statistics.weekTotal}</span>
               </div>
-              <h3 className="habit-detail__stat-title">Week</h3>
-              <p className="habit-detail__stat-subtitle">Days Strike</p>
+              <h3 className="habit-detail__stat-title">{t('habitDetail.statistics.week')}</h3>
+              <p className="habit-detail__stat-subtitle">{t('habitDetail.statistics.daysStreak')}</p>
             </div>
 
             <div className="habit-detail__stat-card">
@@ -526,8 +518,8 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
                 <span className="habit-detail__stat-value">{statistics.monthDays}</span>
                 <span className="habit-detail__stat-total">{statistics.monthTotal}</span>
               </div>
-              <h3 className="habit-detail__stat-title">Month</h3>
-              <p className="habit-detail__stat-subtitle">Days Strike</p>
+              <h3 className="habit-detail__stat-title">{t('habitDetail.statistics.month')}</h3>
+              <p className="habit-detail__stat-subtitle">{t('habitDetail.statistics.daysStreak')}</p>
             </div>
 
             <div className="habit-detail__stat-card">
@@ -538,19 +530,19 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
                 <span className="habit-detail__stat-value">{statistics.yearDays}</span>
                 <span className="habit-detail__stat-total">{statistics.yearTotal}</span>
               </div>
-              <h3 className="habit-detail__stat-title">Year</h3>
-              <p className="habit-detail__stat-subtitle">Days Strike</p>
+              <h3 className="habit-detail__stat-title">{t('habitDetail.statistics.year')}</h3>
+              <p className="habit-detail__stat-subtitle">{t('habitDetail.statistics.daysStreak')}</p>
             </div>
           </div>
 
           <div className="habit-detail__motivation">
             <p className="habit-detail__motivation-text">
-              Good Job My Friend! 🔥
+              {t('habitDetail.motivation')}
             </p>
           </div>
 
           <div className="habit-detail__friends">
-            <h3 className="habit-detail__friends-title">Habit Friends</h3>
+            <h3 className="habit-detail__friends-title">{t('habitDetail.friends.title')}</h3>
             
             {friendLimitData && !friendLimitData.isPremium && (
               <p style={{
@@ -559,7 +551,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
                 marginBottom: '12px',
                 textAlign: 'center'
               }}>
-                {friendLimitData.currentFriendsCount}/{friendLimitData.limit} friend{friendLimitData.limit !== 1 ? 's' : ''} added (Free plan)
+                {friendLimitData.currentFriendsCount}/{friendLimitData.limit} {friendLimitData.limit === 1 ? t('habitDetail.friends.friendsAdded') : t('habitDetail.friends.friendsAddedPlural')} ({t('habitDetail.friends.freePlan')})
               </p>
             )}
             
@@ -571,12 +563,14 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
                     member={member}
                     onPunch={() => handlePunchFriend(member.id)}
                     onRemove={() => handleRemoveFriend(member.id)}
+                    removeText={t('habitDetail.friends.remove')}
+                    punchText={t('habitDetail.friends.punch')}
                   />
                 ))}
               </div>
             ) : (
               <p className="habit-detail__friends-subtitle">
-                Share the link with friends and invite them to track habits together.
+                {t('habitDetail.friends.subtitle')}
               </p>
             )}
             
@@ -584,17 +578,16 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
               className="habit-detail__btn habit-detail__btn--add-friend"
               onClick={handleAddFriend}
             >
-              Add Friend
+              {t('habitDetail.friends.addFriend')}
             </button>
           </div>
 
-          {/* 🔥 КНОПКА УДАЛЕНИЯ ТОЛЬКО ДЛЯ СОЗДАТЕЛЯ */}
           {isCreator && (
             <button 
               className="habit-detail__btn habit-detail__btn--danger"
               onClick={() => setShowDeleteModal(true)}
             >
-              Remove Habit
+              {t('habitDetail.buttons.removeHabit')}
             </button>
           )}
         </div>
@@ -635,7 +628,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   );
 };
 
-const FriendCard = ({ member, onPunch, onRemove }) => {
+const FriendCard = ({ member, onPunch, onRemove, removeText, punchText }) => {
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [startX, setStartX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
@@ -674,7 +667,7 @@ const FriendCard = ({ member, onPunch, onRemove }) => {
     <div className="friend-card-container">
       {swipeOffset > 20 && (
         <div className="friend-action friend-action--remove">
-          <span>Remove</span>
+          <span>{removeText}</span>
         </div>
       )}
       
@@ -700,7 +693,7 @@ const FriendCard = ({ member, onPunch, onRemove }) => {
       
       {swipeOffset < -20 && (
         <div className="friend-action friend-action--punch">
-          <span>👊 Punch</span>
+          <span>{punchText}</span>
         </div>
       )}
     </div>
