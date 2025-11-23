@@ -119,12 +119,12 @@
   
   "subscriptionModal": {
     "illustrationAlt": "PRO Features",
-    "title": "Start Like a PRO",
+    "title": "Boost your Better version!",
     "subtitle": "Unlock All Features",
     "features": {
-      "unlimited": "Unlimited Habits",
-      "stats": "Advanced Statistics",
-      "support": "Priority Support"
+      "unlimited": "Remove all limitations",
+      "stats": "Just track all your habits",
+      "support": "Motivate your friends & family"
     },
     "alreadyHave": "You already have {{plan}}",
     "alreadyHaveWithDays": "You already have {{plan}} ({{days}} days left)",
