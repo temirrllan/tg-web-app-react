@@ -56,31 +56,31 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
     { 
       id: 'year', 
       name: 'Per Year', 
-      total: 1,  // ТЕСТОВАЯ ЦЕНА - 1 звезда
-      perMonth: 0.08,  // 1/12 ≈ 0.08
+      total: 500,  // ТЕСТОВАЯ ЦЕНА - 1 звезда
+      perMonth: 41,  // 1/12 ≈ 0.08
       badge: null,
       // testMode: true
     },
     { 
       id: '6_months', 
       name: 'For 6 Months', 
-      total: 100,  // Минимум 100 звёзд
-      perMonth: 17,  // 100/6 ≈ 17
+      total: 299,  // Минимум 100 звёзд
+      perMonth: 49,  // 100/6 ≈ 17
       badge: null,
       selected: true 
     },
-    { 
-      id: '3_months', 
-      name: 'For 3 Months', 
-      total: 100,  // Минимум 100 звёзд
-      perMonth: 33,  // 100/3 ≈ 33
-      badge: null 
-    },
+    // { 
+    //   id: '3_months', 
+    //   name: 'For 3 Months', 
+    //   total: 100,  // Минимум 100 звёзд
+    //   perMonth: 33,  // 100/3 ≈ 33
+    //   badge: null 
+    // },
     { 
       id: 'month', 
       name: 'Per Month', 
-      total: 50,  // Минимальный тестовый тариф
-      perMonth: 50,
+      total: 59,  // Минимальный тестовый тариф
+      perMonth: 59,
       badge: 'MIN PLAN' 
     }
   ];

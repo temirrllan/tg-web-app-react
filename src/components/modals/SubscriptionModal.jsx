@@ -138,11 +138,11 @@ const SubscriptionModal = ({ isOpen, onClose, onSelectPlan }) => {
                 <div className="subscription-modal__plan-details">
                   <div className="subscription-modal__plan-name">{t('subscriptionModal.plans.sixMonths.name')}</div>
                   <div className="subscription-modal__plan-total">
-                    {t('subscriptionModal.plans.sixMonths.total', { stars: 600 })}
+                    {t('subscriptionModal.plans.sixMonths.total', { stars: 299 })}
                   </div>
                 </div>
                 <div className="subscription-modal__plan-price">
-                  {t('subscriptionModal.plans.sixMonths.perMonth', { stars: 100 })}
+                  {t('subscriptionModal.plans.sixMonths.perMonth', { stars: 49 })}
                 </div>
               </div>
 
@@ -163,7 +163,7 @@ const SubscriptionModal = ({ isOpen, onClose, onSelectPlan }) => {
                 <div className="subscription-modal__plan-details">
                   <div className="subscription-modal__plan-name">{t('subscriptionModal.plans.oneYear.name')}</div>
                   <div className="subscription-modal__plan-total">
-                    {t('subscriptionModal.plans.oneYear.total', { stars: 350 })}
+                    {t('subscriptionModal.plans.oneYear.total', { stars: 500 })}
                     <span style={{ 
                       marginLeft: '8px', 
                       padding: '2px 6px', 
@@ -178,7 +178,7 @@ const SubscriptionModal = ({ isOpen, onClose, onSelectPlan }) => {
                   </div>
                 </div>
                 <div className="subscription-modal__plan-price">
-                  {t('subscriptionModal.plans.oneYear.perMonth', { stars: 29 })}
+                  {t('subscriptionModal.plans.oneYear.perMonth', { stars: 41 })}
                 </div>
               </div>
             </div>
