@@ -87,9 +87,9 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
 
   const benefits = [
     'Unlimited habits',
-    'Unlimited friends',
-    'Advanced statistics',
-    'Priority support'
+    'Unlimited friends to habit',
+    'Priority Support',
+    'Personal insights'
   ];
 
   const getSelectedPlanPrice = () => {
@@ -407,9 +407,9 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
         <div className="subscription-new__section">
           <h3 className="subscription-new__section-title">About Subscription</h3>
           <p className="subscription-new__about">
-            Your subscription will be activated immediately after payment. 
-            You can cancel your subscription at any time in your profile settings. 
-            All your habits and data will be saved even if your subscription expires.
+            Premium subscription will take your personalized habit tracking to the next level.
+            You'll gain insight into yourself, but most importantly, motivate your loved ones to achieve their goals.
+            Step by step, every day, you'll become the best version of yourself, and we're happy to help!.
             {selectedPrice === 1 && '\n\n⚠️ TEST MODE: Real price will be 350 Stars in production.'}
           </p>
         </div>
