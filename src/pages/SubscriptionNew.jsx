@@ -13,34 +13,22 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
   const [promoCode, setPromoCode] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
-  const [starsBalance, setStarsBalance] = useState(null);
   
   useEffect(() => {
-    if (preselectedPlan === '1_year') {
-      setSelectedPlan('year');
+    if (preselectedPlan === '1_year' || preselectedPlan === 'year') {
+      setSelectedPlan('1_year');
     } else if (preselectedPlan === '6_months') {
       setSelectedPlan('6_months');
-    } else if (preselectedPlan === '3_months') {
-      setSelectedPlan('3_months');
+    } else if (preselectedPlan === 'month') {
+      setSelectedPlan('month');
+    } else if (preselectedPlan === 'test') {
+      setSelectedPlan('test');
     }
   }, [preselectedPlan]);
 
-  // Получаем баланс Stars пользователя
-  useEffect(() => {
-    const tg = window.Telegram?.WebApp;
-    if (tg && tg.initDataUnsafe?.user) {
-      // Telegram не предоставляет API для получения баланса Stars напрямую
-      // Но мы можем показать подсказку о необходимости проверить баланс
-      console.log('User info:', tg.initDataUnsafe.user);
-    }
-  }, []);
-
-  // Слушаем событие успешной оплаты
   useEffect(() => {
     const handlePaymentSuccess = () => {
       console.log('🎉 Payment success event received');
-      
-      // Закрываем страницу подписки
       onClose();
     };
 
@@ -51,37 +39,38 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
     };
   }, [onClose]);
 
-  // ТЕСТОВЫЕ ЦЕНЫ - синхронизированы с backend
+  // 🔥 ИСПРАВЛЕННЫЕ ТАРИФЫ - все 4 плана с правильными ценами
   const plans = [
     { 
-      id: 'year', 
-      name: 'Per Year', 
-      total: 500,  // ТЕСТОВАЯ ЦЕНА - 1 звезда
-      perMonth: 41,  // 1/12 ≈ 0.08
-      badge: null,
-      // testMode: true
+      id: 'test',
+      name: '⚠️ TEST PLAN', 
+      total: 1,
+      perMonth: 1,
+      badge: 'TEST ONLY',
+      testMode: true,
+      description: 'For testing purposes only'
+    },
+    { 
+      id: 'month',
+      name: 'Per Month', 
+      total: 59,
+      perMonth: 59,
+      badge: null
     },
     { 
       id: '6_months', 
       name: 'For 6 Months', 
-      total: 299,  // Минимум 100 звёзд
-      perMonth: 49,  // 100/6 ≈ 17
+      total: 299,
+      perMonth: 49,
       badge: null,
       selected: true 
     },
-    // { 
-    //   id: '3_months', 
-    //   name: 'For 3 Months', 
-    //   total: 100,  // Минимум 100 звёзд
-    //   perMonth: 33,  // 100/3 ≈ 33
-    //   badge: null 
-    // },
     { 
-      id: 'month', 
-      name: 'Per Month', 
-      total: 59,  // Минимальный тестовый тариф
-      perMonth: 59,
-      badge: 'MIN PLAN' 
+      id: '1_year', 
+      name: 'Per Year', 
+      total: 500,
+      perMonth: 41,
+      badge: 'SAVE 42%'
     }
   ];
 
@@ -115,44 +104,39 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
     
     try {
       const tg = window.Telegram?.WebApp;
-      
-      // Показываем предупреждение о тестовом режиме
       const selectedPrice = getSelectedPlanPrice();
-      if (selectedPrice === 1) {
+      
+      // Показываем предупреждение для тестового плана
+      if (selectedPlan === 'test') {
         if (tg?.showPopup) {
-          await new Promise((resolve) => {
+          const shouldContinue = await new Promise((resolve) => {
             tg.showPopup({
               title: '⚠️ Test Mode',
-              message: `This is a TEST purchase for 1 Star.\n\nIn production, this plan costs 350 Stars.\n\nContinue with test purchase?`,
+              message: `This is a TEST purchase for 1 Star.\n\nIn production, real plans cost from 59 to 500 Stars.\n\nContinue with test purchase?`,
               buttons: [
                 { id: 'continue', type: 'default', text: 'Continue' },
                 { id: 'cancel', type: 'cancel', text: 'Cancel' }
               ]
             }, (button_id) => {
-              if (button_id === 'continue') {
-                resolve(true);
-              } else {
-                resolve(false);
-              }
+              resolve(button_id === 'continue');
             });
-          }).then(shouldContinue => {
-            if (!shouldContinue) {
-              setIsProcessing(false);
-              return Promise.reject('cancelled');
-            }
           });
+          
+          if (!shouldContinue) {
+            setIsProcessing(false);
+            return;
+          }
         }
       }
       
-      // Маппинг планов
-      let backendPlan = selectedPlan;
-      if (selectedPlan === 'year') {
-        backendPlan = '1_year';
-      } else if (selectedPlan === 'month') {
-        backendPlan = '6_months'; // Используем 6_months как минимальный план
-      }
+      // 🔥 КРИТИЧНО: НЕ МЕНЯЕМ plan ID - отправляем как есть
+      const backendPlan = selectedPlan; // Не модифицируем!
       
-      console.log('💳 Opening payment form for plan:', backendPlan, 'Price:', selectedPrice);
+      console.log('💳 Opening payment form for plan:', {
+        frontendPlan: selectedPlan,
+        backendPlan: backendPlan,
+        price: selectedPrice
+      });
 
       // Открываем форму оплаты
       await telegramStarsService.purchaseSubscription(backendPlan);
@@ -207,7 +191,6 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
             ]
           }, (button_id) => {
             if (button_id === 'buy_stars') {
-              // Открываем покупку Stars
               tg.openTelegramLink('https://t.me/PremiumBot');
             }
           });
@@ -249,7 +232,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
             textAlign: 'center'
           }}>
             ⚠️ <strong>TEST MODE:</strong> This plan is set to 1 Star for testing.<br/>
-            Production price: 350 Stars
+            Production prices: 59/299/500 Stars
           </div>
         )}
 
@@ -262,7 +245,6 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
               <span className="subscription-new__payment-title">Telegram Stars</span>
               <span className="subscription-new__payment-subtitle">
                 Internal Telegram Currency
-                {starsBalance !== null && ` • Balance: ${starsBalance} ⭐`}
               </span>
             </div>
           </div>
@@ -354,7 +336,14 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
                     </span>
                   )}
                 </div>
-                <span className="subscription-new__plan-total">{plan.total} ⭐ total</span>
+                <span className="subscription-new__plan-total">
+                  {plan.total} ⭐ total
+                  {plan.description && (
+                    <span style={{ marginLeft: '8px', fontSize: '11px', color: '#999' }}>
+                      ({plan.description})
+                    </span>
+                  )}
+                </span>
               </div>
               <span className="subscription-new__plan-price">
                 {plan.perMonth < 1 ? '<1' : Math.round(plan.perMonth)} ⭐/month
@@ -362,22 +351,6 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
             </label>
           ))}
         </div>
-
-        {/* Stars Info
-        {selectedPrice < 50 && (
-          <div style={{
-            background: '#E8F4FD',
-            border: '1px solid #007AFF',
-            borderRadius: '12px',
-            padding: '12px',
-            marginBottom: '16px', 
-            fontSize: '14px',
-            color: '#007AFF'
-          }}>
-            ℹ️ <strong>Note:</strong> Minimum Stars purchase in Telegram is 50 ⭐<br/>
-            Current plan requires only {selectedPrice} ⭐
-          </div>
-        )} */}
 
         {/* Promo Code */}
         <div className="subscription-new__section">
@@ -409,8 +382,8 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
           <p className="subscription-new__about">
             Premium subscription will take your personalized habit tracking to the next level.
             You'll gain insight into yourself, but most importantly, motivate your loved ones to achieve their goals.
-            Step by step, every day, you'll become the best version of yourself, and we're happy to help!.
-            {selectedPrice === 1 && '\n\n⚠️ TEST MODE: Real price will be 350 Stars in production.'}
+            Step by step, every day, you'll become the best version of yourself, and we're happy to help!
+            {selectedPlanData?.testMode && '\n\n⚠️ TEST MODE: Real prices are 59/299/500 Stars in production.'}
           </p>
         </div>
 
