@@ -260,7 +260,7 @@
       },
       "oneYear": {
         "name": "За год",
-        "badge": "СКИДКА 42%"
+        "badge": "СКИДКА 30%"
       },
       "total": "Всего {{stars}} ⭐",
       "perMonth": "{{stars}} ⭐/мес"

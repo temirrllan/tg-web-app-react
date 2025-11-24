@@ -264,7 +264,7 @@
       },
       "oneYear": {
         "name": "Per Year",
-        "badge": "SAVE 42%"
+        "badge": "SAVE 30%"
       },
       "total": "{{stars}} ⭐ total",
       "perMonth": "{{stars}} ⭐/month"
