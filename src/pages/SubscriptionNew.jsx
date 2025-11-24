@@ -279,7 +279,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
         )}
 
         {/* Gift Option */}
-        <div className="subscription-new__section">
+        {/* <div className="subscription-new__section">
           <label className="subscription-new__checkbox-container">
             <span className="subscription-new__checkbox-label">Buy as a gift</span>
             <input
@@ -297,7 +297,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
               A discount applies when purchasing multiple at once
             </p>
           )}
-        </div>
+        </div> */}
 
         {/* Subscription Plans */}
         <div className="subscription-new__section">

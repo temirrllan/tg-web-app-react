@@ -136,11 +136,11 @@ const SubscriptionModal = ({ isOpen, onClose, onSelectPlan }) => {
                 <div className="subscription-modal__plan-details">
                   <div className="subscription-modal__plan-name">For 6 Month</div>
                   <div className="subscription-modal__plan-total">
-                    600 ⭐
+                    299 ⭐
                   </div>
                 </div>
                 <div className="subscription-modal__plan-price">
-                  100 ⭐/month
+                  49 ⭐/month
                 </div>
               </div>
 
@@ -161,11 +161,11 @@ const SubscriptionModal = ({ isOpen, onClose, onSelectPlan }) => {
                 <div className="subscription-modal__plan-details">
                   <div className="subscription-modal__plan-name">Per Year</div>
                   <div className="subscription-modal__plan-total">
-                    350 ⭐
+                    500 ⭐
                   </div>
                 </div>
                 <div className="subscription-modal__plan-price">
-                  117 ⭐/month
+                  41 ⭐/month
                 </div>
               </div>
             </div>
