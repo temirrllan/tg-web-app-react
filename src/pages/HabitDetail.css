@@ -64,29 +64,36 @@
   overflow-y: auto;
 }
 
-/* Habit Info */
+/* Habit Info - ИСПРАВЛЕНО */
 .habit-detail__habit-info {
   background: white;
   border-radius: 16px;
   padding: 20px;
   margin-bottom: 20px;
+  overflow: hidden;
 }
 
 .habit-detail__habit-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 8px;
+  gap: 12px;
 }
 
 .habit-detail__habit-title-section {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .habit-detail__emoji {
   font-size: 32px;
+  flex-shrink: 0;
+  line-height: 1;
 }
 
 .habit-detail__habit-title {
@@ -94,6 +101,13 @@
   font-weight: 600;
   margin: 0;
   color: #000;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.3;
 }
 
 .habit-detail__edit-btn {
@@ -106,6 +120,8 @@
   border-radius: 20px;
   cursor: pointer;
   transition: all 0.2s ease;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .habit-detail__edit-btn:hover {
@@ -118,6 +134,22 @@
   color: #8E8E93;
   margin: 0;
   margin-left: 44px;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  line-height: 1.4;
+}
+
+.habit-detail__creator-notice {
+  font-size: 14px;
+  color: #007AFF;
+  background: #E8F4FD;
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 12px;
+  line-height: 1.4;
+  word-wrap: break-word;
 }
 
 /* Statistics */
@@ -301,6 +333,35 @@
   .habit-detail__stat-title {
     font-size: 15px;
   }
+  
+  .habit-detail__habit-title {
+    font-size: 20px;
+  }
+  
+  .habit-detail__habit-goal {
+    font-size: 14px;
+    margin-left: 40px;
+  }
+  
+  .habit-detail__edit-btn {
+    font-size: 14px;
+    padding: 6px 16px;
+  }
+}
+
+@media (max-width: 320px) {
+  .habit-detail__habit-title {
+    font-size: 18px;
+  }
+  
+  .habit-detail__emoji {
+    font-size: 28px;
+  }
+  
+  .habit-detail__habit-goal {
+    font-size: 13px;
+    margin-left: 36px;
+  }
 }
 
 /* Friends Section Updates */
@@ -314,6 +375,7 @@
   width: 100%;
   margin-bottom: 16px;
 }
+
 /* Обновленные стили для Friend Card */
 .friend-card-container {
   position: relative;
