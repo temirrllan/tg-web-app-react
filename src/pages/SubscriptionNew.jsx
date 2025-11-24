@@ -3,8 +3,10 @@ import { useNavigation } from '../hooks/useNavigation';
 import { habitService } from '../services/habits';
 import './SubscriptionNew.css';
 import { telegramStarsService } from '../services/telegramStars';
+import { useTranslation } from '../hooks/useTranslation';
 
 const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
+  const { t } = useTranslation();
   useNavigation(onClose);
   
   const [selectedPlan, setSelectedPlan] = useState('6_months');
@@ -43,23 +45,23 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
   const plans = [
     { 
       id: 'test',
-      name: '⚠️ TEST PLAN', 
+      name: t('subscriptionNew.plans.test.name'), 
       total: 1,
       perMonth: 1,
-      badge: 'TEST ONLY',
+      badge: t('subscriptionNew.plans.test.badge'),
       testMode: true,
-      description: 'For testing purposes only'
+      description: t('subscriptionNew.plans.test.description')
     },
     { 
       id: 'month',
-      name: 'Per Month', 
+      name: t('subscriptionNew.plans.month.name'), 
       total: 59,
       perMonth: 59,
       badge: null
     },
     { 
       id: '6_months', 
-      name: 'For 6 Months', 
+      name: t('subscriptionNew.plans.sixMonths.name'), 
       total: 299,
       perMonth: 49,
       badge: null,
@@ -67,18 +69,18 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
     },
     { 
       id: '1_year', 
-      name: 'Per Year', 
+      name: t('subscriptionNew.plans.oneYear.name'), 
       total: 500,
       perMonth: 41,
-      badge: 'SAVE 42%'
+      badge: t('subscriptionNew.plans.oneYear.badge')
     }
   ];
 
   const benefits = [
-    'Unlimited habits',
-    'Unlimited friends to habit',
-    'Priority Support',
-    'Personal insights'
+    t('subscriptionNew.benefits.unlimited'),
+    t('subscriptionNew.benefits.friends'),
+    t('subscriptionNew.benefits.support'),
+    t('subscriptionNew.benefits.insights')
   ];
 
   const getSelectedPlanPrice = () => {
@@ -111,11 +113,11 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
         if (tg?.showPopup) {
           const shouldContinue = await new Promise((resolve) => {
             tg.showPopup({
-              title: '⚠️ Test Mode',
-              message: `This is a TEST purchase for 1 Star.\n\nIn production, real plans cost from 59 to 500 Stars.\n\nContinue with test purchase?`,
+              title: t('subscriptionNew.testMode.popup.title'),
+              message: t('subscriptionNew.testMode.popup.message'),
               buttons: [
-                { id: 'continue', type: 'default', text: 'Continue' },
-                { id: 'cancel', type: 'cancel', text: 'Cancel' }
+                { id: 'continue', type: 'default', text: t('subscriptionNew.testMode.popup.continue') },
+                { id: 'cancel', type: 'cancel', text: t('subscriptionNew.testMode.popup.cancel') }
               ]
             }, (button_id) => {
               resolve(button_id === 'continue');
@@ -152,17 +154,15 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
       
       console.error('Payment error:', error);
       
-      let errorMessage = 'Failed to open payment form.';
+      let errorMessage = t('subscriptionNew.errors.failed');
       
       if (error.message === 'bot_blocked') {
-        errorMessage = 'Please start a chat with @CheckHabitlyBot first.\n\nTap OK to open the bot.';
+        errorMessage = t('subscriptionNew.errors.botBlocked.message');
       } else if (error.message.includes('not available')) {
-        errorMessage = 'Please open the app through Telegram to make a purchase.';
+        errorMessage = t('subscriptionNew.errors.notAvailable');
       } else if (error.message.includes('insufficient')) {
         const price = getSelectedPlanPrice();
-        errorMessage = `Insufficient Telegram Stars balance.\n\nRequired: ${price} ⭐\n\nYou can buy Stars starting from 50 ⭐ in Telegram Settings.`;
-      } else {
-        errorMessage = 'Failed to open payment form. Please try again.';
+        errorMessage = t('subscriptionNew.errors.insufficientStars.message', { price });
       }
       
       const tg = window.Telegram?.WebApp;
@@ -170,11 +170,11 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
       if (tg?.showPopup) {
         if (error.message === 'bot_blocked') {
           tg.showPopup({
-            title: '🤖 Bot Required',
+            title: t('subscriptionNew.errors.botBlocked.title'),
             message: errorMessage,
             buttons: [
-              { id: 'open_bot', type: 'default', text: 'Open Bot' },
-              { id: 'cancel', type: 'close', text: 'Cancel' }
+              { id: 'open_bot', type: 'default', text: t('subscriptionNew.errors.botBlocked.openBot') },
+              { id: 'cancel', type: 'close', text: t('subscriptionNew.errors.botBlocked.cancel') }
             ]
           }, (button_id) => {
             if (button_id === 'open_bot') {
@@ -183,11 +183,11 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
           });
         } else if (error.message.includes('insufficient')) {
           tg.showPopup({
-            title: '💫 Insufficient Stars',
+            title: t('subscriptionNew.errors.insufficientStars.title'),
             message: errorMessage,
             buttons: [
-              { id: 'buy_stars', type: 'default', text: 'Buy Stars' },
-              { id: 'cancel', type: 'close', text: 'Cancel' }
+              { id: 'buy_stars', type: 'default', text: t('subscriptionNew.errors.insufficientStars.buyStars') },
+              { id: 'cancel', type: 'close', text: t('subscriptionNew.errors.insufficientStars.cancel') }
             ]
           }, (button_id) => {
             if (button_id === 'buy_stars') {
@@ -215,36 +215,36 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
     <div className="subscription-new">
       <div className="subscription-new__content">
         <div className="subscription-new__hero">
-          <h2 className="subscription-new__title">Start Like a PRO</h2>
-          <p className="subscription-new__subtitle">Unlock All Features</p>
+          <h2 className="subscription-new__title">{t('subscriptionNew.title')}</h2>
+          <p className="subscription-new__subtitle">{t('subscriptionNew.subtitle')}</p>
         </div>
 
         {/* Test Mode Warning */}
         {selectedPlanData?.testMode && (
-          <div style={{
-            background: '#FFE4B5',
-            border: '1px solid #FFA500',
-            borderRadius: '12px',
-            padding: '12px',
-            marginBottom: '16px',
-            fontSize: '14px',
-            color: '#8B4513',
-            textAlign: 'center'
-          }}>
-            ⚠️ <strong>TEST MODE:</strong> This plan is set to 1 Star for testing.<br/>
-            Production prices: 59/299/500 Stars
-          </div>
+          <div 
+            style={{
+              background: '#FFE4B5',
+              border: '1px solid #FFA500',
+              borderRadius: '12px',
+              padding: '12px',
+              marginBottom: '16px',
+              fontSize: '14px',
+              color: '#8B4513',
+              textAlign: 'center'
+            }}
+            dangerouslySetInnerHTML={{ __html: t('subscriptionNew.testMode.warning') }}
+          />
         )}
 
         {/* Payment Method */}
         <div className="subscription-new__section">
-          <h3 className="subscription-new__section-title">Payment Method</h3>
+          <h3 className="subscription-new__section-title">{t('subscriptionNew.sections.paymentMethod')}</h3>
           <div className="subscription-new__payment-method">
             <span className="subscription-new__payment-icon">⭐</span>
             <div className="subscription-new__payment-info">
-              <span className="subscription-new__payment-title">Telegram Stars</span>
+              <span className="subscription-new__payment-title">{t('subscriptionNew.paymentMethod.telegramStars')}</span>
               <span className="subscription-new__payment-subtitle">
-                Internal Telegram Currency
+                {t('subscriptionNew.paymentMethod.internalCurrency')}
               </span>
             </div>
           </div>
@@ -253,10 +253,10 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
         {/* Subscription Quantity (для подарков) */}
         {buyAsGift && (
           <div className="subscription-new__section">
-            <h3 className="subscription-new__section-title">Subscription Quantity</h3>
+            <h3 className="subscription-new__section-title">{t('subscriptionNew.sections.subscriptionQuantity')}</h3>
             
             <div className="subscription-new__quantity">
-              <span className="subscription-new__quantity-label">Quantity</span>
+              <span className="subscription-new__quantity-label">{t('subscriptionNew.quantity.label')}</span>
               <div className="subscription-new__quantity-controls">
                 <button 
                   className="subscription-new__quantity-btn"
@@ -278,10 +278,10 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
           </div>
         )}
 
-        {/* Gift Option */}
-        {/* <div className="subscription-new__section">
+        {/* Gift Option - закомментировано
+        <div className="subscription-new__section">
           <label className="subscription-new__checkbox-container">
-            <span className="subscription-new__checkbox-label">Buy as a gift</span>
+            <span className="subscription-new__checkbox-label">{t('subscriptionNew.gift.buyAsGift')}</span>
             <input
               type="checkbox"
               className="subscription-new__checkbox"
@@ -292,16 +292,17 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
           </label>
 
           {buyAsGift && (
-            <p className="subscription-new__gift-note">
-              Purchase licenses for the whole team or as a gift<br/>
-              A discount applies when purchasing multiple at once
-            </p>
+            <p 
+              className="subscription-new__gift-note"
+              dangerouslySetInnerHTML={{ __html: t('subscriptionNew.gift.note') }}
+            />
           )}
-        </div> */}
+        </div>
+        */}
 
         {/* Subscription Plans */}
         <div className="subscription-new__section">
-          <h3 className="subscription-new__section-title">Subscription Plans</h3>
+          <h3 className="subscription-new__section-title">{t('subscriptionNew.sections.subscriptionPlans')}</h3>
           
           {plans.map((plan) => (
             <label 
@@ -337,7 +338,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
                   )}
                 </div>
                 <span className="subscription-new__plan-total">
-                  {plan.total} ⭐ total
+                  {t('subscriptionNew.plans.total', { stars: plan.total })}
                   {plan.description && (
                     <span style={{ marginLeft: '8px', fontSize: '11px', color: '#999' }}>
                       ({plan.description})
@@ -346,7 +347,9 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
                 </span>
               </div>
               <span className="subscription-new__plan-price">
-                {plan.perMonth < 1 ? '<1' : Math.round(plan.perMonth)} ⭐/month
+                {t('subscriptionNew.plans.perMonth', { 
+                  stars: plan.perMonth < 1 ? '<1' : Math.round(plan.perMonth) 
+                })}
               </span>
             </label>
           ))}
@@ -357,7 +360,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
           <input
             type="text"
             className="subscription-new__promo"
-            placeholder="Promo code (optional)"
+            placeholder={t('subscriptionNew.promoCode')}
             value={promoCode}
             onChange={(e) => setPromoCode(e.target.value)}
           />
@@ -365,7 +368,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
 
         {/* Plan Benefits */}
         <div className="subscription-new__section">
-          <h3 className="subscription-new__section-title">What You Get</h3>
+          <h3 className="subscription-new__section-title">{t('subscriptionNew.sections.whatYouGet')}</h3>
           <div className="subscription-new__benefits">
             {benefits.map((benefit, index) => (
               <div key={index} className="subscription-new__benefit">
@@ -378,12 +381,12 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
 
         {/* About Subscription */}
         <div className="subscription-new__section">
-          <h3 className="subscription-new__section-title">About Subscription</h3>
+          <h3 className="subscription-new__section-title">{t('subscriptionNew.sections.aboutSubscription')}</h3>
           <p className="subscription-new__about">
-            Premium subscription will take your personalized habit tracking to the next level.
-            You'll gain insight into yourself, but most importantly, motivate your loved ones to achieve their goals.
-            Step by step, every day, you'll become the best version of yourself, and we're happy to help!
-            {selectedPlanData?.testMode && '\n\n⚠️ TEST MODE: Real prices are 59/299/500 Stars in production.'}
+            {selectedPlanData?.testMode 
+              ? t('subscriptionNew.aboutTestMode')
+              : t('subscriptionNew.about')
+            }
           </p>
         </div>
 
@@ -399,7 +402,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
             {agreedToTerms && '✓'}
           </span>
           <span className="subscription-new__agreement-text">
-            I agree to the user agreement, payment policy, and privacy policy.
+            {t('subscriptionNew.agreement')}
           </span>
         </label>
 
@@ -409,7 +412,10 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
           onClick={handleSubscribe}
           disabled={!agreedToTerms || isProcessing}
         >
-          {isProcessing ? 'Opening payment...' : `Subscribe for ${selectedPrice} ⭐`}
+          {isProcessing 
+            ? t('subscriptionNew.processing') 
+            : t('subscriptionNew.subscribe', { price: selectedPrice })
+          }
         </button>
       </div>
     </div>

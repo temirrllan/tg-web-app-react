@@ -219,7 +219,85 @@
         "reminderSent": "Reminder sent to your friend! 👊",
         "removeFriendConfirm": "Remove this friend from the habit?"
       }
+    },
+    "subscriptionNew": {
+    "title": "Start Like a PRO",
+    "subtitle": "Unlock All Features",
+    "testMode": {
+      "warning": "⚠️ <strong>TEST MODE:</strong> This plan is set to 1 Star for testing.<br/>Production prices: 59/299/500 Stars",
+      "popup": {
+        "title": "⚠️ Test Mode",
+        "message": "This is a TEST purchase for 1 Star.\n\nIn production, real plans cost from 59 to 500 Stars.\n\nContinue with test purchase?",
+        "continue": "Continue",
+        "cancel": "Cancel"
+      }
+    },
+    "sections": {
+      "paymentMethod": "Payment Method",
+      "subscriptionQuantity": "Subscription Quantity",
+      "subscriptionPlans": "Subscription Plans",
+      "whatYouGet": "What You Get",
+      "aboutSubscription": "About Subscription"
+    },
+    "paymentMethod": {
+      "telegramStars": "Telegram Stars",
+      "internalCurrency": "Internal Telegram Currency"
+    },
+    "quantity": {
+      "label": "Quantity"
+    },
+    "gift": {
+      "buyAsGift": "Buy as a gift",
+      "note": "Purchase licenses for the whole team or as a gift<br/>A discount applies when purchasing multiple at once"
+    },
+    "plans": {
+      "test": {
+        "name": "⚠️ TEST PLAN",
+        "badge": "TEST ONLY",
+        "description": "For testing purposes only"
+      },
+      "month": {
+        "name": "Per Month"
+      },
+      "sixMonths": {
+        "name": "For 6 Months"
+      },
+      "oneYear": {
+        "name": "Per Year",
+        "badge": "SAVE 42%"
+      },
+      "total": "{{stars}} ⭐ total",
+      "perMonth": "{{stars}} ⭐/month"
+    },
+    "promoCode": "Promo code (optional)",
+    "benefits": {
+      "unlimited": "Unlimited habits",
+      "friends": "Unlimited friends to habit",
+      "support": "Priority Support",
+      "insights": "Personal insights"
+    },
+    "about": "Premium subscription will take your personalized habit tracking to the next level. You'll gain insight into yourself, but most importantly, motivate your loved ones to achieve their goals. Step by step, every day, you'll become the best version of yourself, and we're happy to help!",
+    "aboutTestMode": "Premium subscription will take your personalized habit tracking to the next level. You'll gain insight into yourself, but most importantly, motivate your loved ones to achieve their goals. Step by step, every day, you'll become the best version of yourself, and we're happy to help!\n\n⚠️ TEST MODE: Real prices are 59/299/500 Stars in production.",
+    "agreement": "I agree to the user agreement, payment policy, and privacy policy.",
+    "subscribe": "Subscribe for {{price}} ⭐",
+    "processing": "Opening payment...",
+    "errors": {
+      "botBlocked": {
+        "title": "🤖 Bot Required",
+        "message": "Please start a chat with @CheckHabitlyBot first.\n\nTap OK to open the bot.",
+        "openBot": "Open Bot",
+        "cancel": "Cancel"
+      },
+      "insufficientStars": {
+        "title": "💫 Insufficient Stars",
+        "message": "Insufficient Telegram Stars balance.\n\nRequired: {{price}} ⭐\n\nYou can buy Stars starting from 50 ⭐ in Telegram Settings.",
+        "buyStars": "Buy Stars",
+        "cancel": "Cancel"
+      },
+      "notAvailable": "Please open the app through Telegram to make a purchase.",
+      "failed": "Failed to open payment form. Please try again."
     }
+  }
   
 
 
