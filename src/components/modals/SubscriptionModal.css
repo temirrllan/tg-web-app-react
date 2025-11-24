@@ -30,16 +30,18 @@
   flex-direction: column;
   position: relative;
   height: 100%;
+  overflow: hidden;
 }
 
 .subscription-modal__illustration {
-  height: 35%; 
+  height: 30%; 
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #5B9BD5;
   padding: 20px 20px 0;
+  flex-shrink: 0;
 }
 
 .subscription-modal__illustration img {
@@ -56,8 +58,19 @@
   padding: 32px 24px 24px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  height: 65%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.subscription-modal__info::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+.subscription-modal__info {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .subscription-modal__main-title {
@@ -196,7 +209,7 @@
   gap: 32px;
   margin-bottom: 20px;
   flex-shrink: 0;
-  margin-top: auto;
+  margin-top: 4px;
 }
 
 .subscription-modal__link {
@@ -219,6 +232,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   flex-shrink: 0;
+  margin-bottom: 8px;
 }
 
 .subscription-modal__continue--disabled {
@@ -242,15 +256,14 @@
   }
 }
 
-/* Адаптация для маленьких экранов */
-@media (max-height: 750px) {
+/* Адаптация для средних экранов */
+@media (max-height: 800px) {
   .subscription-modal__illustration {
-    height: 30%;
+    height: 28%;
   }
   
   .subscription-modal__info {
-    height: 70%;
-    padding: 28px 20px 20px;
+    padding: 28px 22px 22px;
   }
   
   .subscription-modal__main-title {
@@ -287,6 +300,14 @@
     height: 26px;
   }
   
+  .subscription-modal__plan-name {
+    font-size: 17px;
+  }
+  
+  .subscription-modal__plan-price {
+    font-size: 17px;
+  }
+  
   .subscription-modal__plans {
     gap: 10px;
     margin-bottom: 14px;
@@ -303,14 +324,14 @@
   }
 }
 
-@media (max-height: 680px) {
+/* Адаптация для маленьких экранов */
+@media (max-height: 700px) {
   .subscription-modal__illustration {
-    height: 28%;
+    height: 25%;
   }
   
   .subscription-modal__info {
-    height: 72%;
-    padding: 24px 20px 18px;
+    padding: 24px 20px 20px;
   }
   
   .subscription-modal__main-title {
@@ -338,7 +359,7 @@
   }
   
   .subscription-modal__plan {
-    padding: 12px;
+    padding: 12px 14px;
     min-height: 60px;
   }
   
@@ -348,11 +369,15 @@
   }
   
   .subscription-modal__plan-name {
-    font-size: 17px;
+    font-size: 16px;
+  }
+  
+  .subscription-modal__plan-total {
+    font-size: 14px;
   }
   
   .subscription-modal__plan-price {
-    font-size: 17px;
+    font-size: 16px;
   }
   
   .subscription-modal__plans {
@@ -375,26 +400,28 @@
   }
 }
 
-@media (max-height: 600px) {
+/* Адаптация для очень маленьких экранов */
+@media (max-height: 640px) {
   .subscription-modal__illustration {
-    height: 25%;
+    height: 22%;
   }
   
   .subscription-modal__info {
-    height: 75%;
-    padding: 20px 18px 16px;
+    padding: 20px 18px 18px;
   }
   
   .subscription-modal__main-title {
     font-size: 26px;
+    margin-bottom: 4px;
   }
   
   .subscription-modal__subtitle {
     font-size: 15px;
+    margin-bottom: 16px;
   }
   
   .subscription-modal__features {
-    gap: 4px;
+    gap: 5px;
     margin-bottom: 14px;
   }
   
@@ -409,41 +436,139 @@
   
   .subscription-modal__plan {
     padding: 10px 12px;
-    min-height: 55px;
+    min-height: 56px;
   }
   
   .subscription-modal__plan-radio {
     width: 22px;
     height: 22px;
+    margin-right: 12px;
+  }
+  
+  .subscription-modal__plan-name {
+    font-size: 15px;
+    margin-bottom: 2px;
+  }
+  
+  .subscription-modal__plan-total {
+    font-size: 13px;
+  }
+  
+  .subscription-modal__plan-price {
+    font-size: 15px;
+  }
+  
+  .subscription-modal__plans {
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  
+  .subscription-modal__links {
+    margin-bottom: 14px;
+    gap: 20px;
+  }
+  
+  .subscription-modal__link {
+    font-size: 13px;
+  }
+  
+  .subscription-modal__continue {
+    padding: 14px;
+    font-size: 16px;
+  }
+}
+
+/* Адаптация для узких экранов */
+@media (max-width: 375px) {
+  .subscription-modal__info {
+    padding: 28px 18px 20px;
+  }
+  
+  .subscription-modal__main-title {
+    font-size: 28px;
+  }
+  
+  .subscription-modal__subtitle {
+    font-size: 16px;
+  }
+  
+  .subscription-modal__feature-text {
+    font-size: 16px;
+  }
+  
+  .subscription-modal__plan {
+    padding: 12px;
   }
   
   .subscription-modal__plan-name {
     font-size: 16px;
   }
   
-  .subscription-modal__plan-total {
-    font-size: 14px;
-  }
-  
   .subscription-modal__plan-price {
     font-size: 16px;
   }
   
-  .subscription-modal__plans {
-    gap: 8px;
+  .subscription-modal__links {
+    gap: 20px;
   }
 }
 
-@media (max-width: 375px) {
+/* Адаптация для очень узких экранов */
+@media (max-width: 320px) {
   .subscription-modal__info {
-    padding: 28px 20px 20px;
+    padding: 24px 16px 18px;
   }
   
   .subscription-modal__main-title {
-    font-size: 30px;
+    font-size: 26px;
+  }
+  
+  .subscription-modal__subtitle {
+    font-size: 15px;
+  }
+  
+  .subscription-modal__feature-icon {
+    width: 22px;
+    height: 22px;
   }
   
   .subscription-modal__feature-text {
-    font-size: 17px;
+    font-size: 15px;
+  }
+  
+  .subscription-modal__plan {
+    padding: 10px;
+  }
+  
+  .subscription-modal__plan-radio {
+    width: 22px;
+    height: 22px;
+    margin-right: 10px;
+  }
+  
+  .subscription-modal__plan-name {
+    font-size: 15px;
+  }
+  
+  .subscription-modal__plan-total {
+    font-size: 13px;
+  }
+  
+  .subscription-modal__plan-price {
+    font-size: 15px;
+  }
+  
+  .subscription-modal__links {
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  
+  .subscription-modal__link {
+    font-size: 13px;
+  }
+  
+  .subscription-modal__continue {
+    padding: 14px;
+    font-size: 16px;
   }
 }
