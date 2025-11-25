@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigation } from '../hooks/useNavigation';
 import { habitService } from '../services/habits';
+import { useTranslation } from '../hooks/useTranslation';
 import Loader from '../components/common/Loader';
 import SubscriptionNew from './SubscriptionNew';
 import './Subscription.css';
 
 const Subscription = ({ onClose, preselectedPlan = null }) => {
+  const { t } = useTranslation();
   useNavigation(onClose);
   
   const [loading, setLoading] = useState(true);
@@ -24,7 +26,6 @@ const Subscription = ({ onClose, preselectedPlan = null }) => {
       console.log('Subscription status loaded:', status);
       setSubscription(status);
       
-      // Если у пользователя уже есть подписка, загружаем историю
       if (status?.isPremium && status?.subscription?.isActive) {
         try {
           const historyData = await habitService.getSubscriptionHistory();
@@ -57,52 +58,49 @@ const Subscription = ({ onClose, preselectedPlan = null }) => {
   };
   
   const performCancelSubscription = async () => {
-  try {
-    setIsCancelling(true);
-    console.log('Starting subscription cancellation...');
-    
-    const result = await habitService.cancelSubscription();
-    console.log('Cancellation result:', result);
-    
-    if (result.success) {
-      // Показываем уведомление об успешной отмене
-      const message = 'Subscription cancelled successfully! You are now on the free plan.';
+    try {
+      setIsCancelling(true);
+      console.log('Starting subscription cancellation...');
       
-      if (window.Telegram?.WebApp?.showAlert) {
-        window.Telegram.WebApp.showAlert(message);
+      const result = await habitService.cancelSubscription();
+      console.log('Cancellation result:', result);
+      
+      if (result.success) {
+        const message = 'Subscription cancelled successfully! You are now on the free plan.';
+        
+        if (window.Telegram?.WebApp?.showAlert) {
+          window.Telegram.WebApp.showAlert(message);
+        } else {
+          alert(message);
+        }
+        
+        setTimeout(async () => {
+          await loadSubscriptionData();
+        }, 500);
+        
       } else {
-        alert(message);
+        const errorMessage = result.error || 'Failed to cancel subscription';
+        console.error('Cancellation failed:', errorMessage);
+        
+        if (window.Telegram?.WebApp?.showAlert) {
+          window.Telegram.WebApp.showAlert(`Error: ${errorMessage}`);
+        } else {
+          alert(`Error: ${errorMessage}`);
+        }
       }
+    } catch (error) {
+      console.error('Unexpected error during cancellation:', error);
       
-      // Небольшая задержка перед перезагрузкой данных
-      setTimeout(async () => {
-        await loadSubscriptionData();
-      }, 500);
-      
-    } else {
-      // Показываем конкретную ошибку
-      const errorMessage = result.error || 'Failed to cancel subscription';
-      console.error('Cancellation failed:', errorMessage);
-      
+      const errorMessage = 'An unexpected error occurred. Please try again.';
       if (window.Telegram?.WebApp?.showAlert) {
-        window.Telegram.WebApp.showAlert(`Error: ${errorMessage}`);
+        window.Telegram.WebApp.showAlert(errorMessage);
       } else {
-        alert(`Error: ${errorMessage}`);
+        alert(errorMessage);
       }
+    } finally {
+      setIsCancelling(false);
     }
-  } catch (error) {
-    console.error('Unexpected error during cancellation:', error);
-    
-    const errorMessage = 'An unexpected error occurred. Please try again.';
-    if (window.Telegram?.WebApp?.showAlert) {
-      window.Telegram.WebApp.showAlert(errorMessage);
-    } else {
-      alert(errorMessage);
-    }
-  } finally {
-    setIsCancelling(false);
-  }
-};
+  };
   
   if (loading) {
     return (
@@ -112,56 +110,54 @@ const Subscription = ({ onClose, preselectedPlan = null }) => {
     );
   }
   
-  // Если у пользователя нет активной подписки - показываем новый интерфейс
   if (!subscription?.isPremium || !subscription?.subscription?.isActive) {
     return <SubscriptionNew onClose={onClose} preselectedPlan={preselectedPlan} />;
   }
   
-  // Если у пользователя есть активная подписка - показываем текущий интерфейс
   const sub = subscription.subscription;
   
   return (
     <div className="subscription-page">
-     
-      
       <div className="subscription-page__content">
         <div className="subscription-status subscription-status--premium">
           <h3>{sub.planName}</h3>
           {sub.expiresAt ? (
             <>
-              <p>Expires: {new Date(sub.expiresAt).toLocaleDateString()}</p>
+              <p>{t('subscriptionPage.premium.expires')}: {new Date(sub.expiresAt).toLocaleDateString()}</p>
               {sub.daysLeft !== null && (
                 <p className={sub.daysLeft <= 7 ? 'days-warning' : ''}>
-                  {sub.daysLeft} days remaining
+                  {t('subscriptionPage.premium.daysRemaining', { days: sub.daysLeft })}
                 </p>
               )}
             </>
           ) : (
-            <p>Lifetime access</p>
+            <p>{t('subscriptionPage.premium.lifetimeAccess')}</p>
           )}
           <p className="subscription-usage">
-            {subscription.habitCount} habits created (unlimited)
+            {t('subscriptionPage.premium.habitsCreated', { count: subscription.habitCount })}
           </p>
           
           {sub.isTrial && (
-            <div className="trial-badge">TRIAL</div>
+            <div className="trial-badge">{t('subscriptionPage.trial.badge')}</div>
           )}
         </div>
         
-        {/* Показываем кнопку отмены только если подписка не lifetime */}
         {subscription?.subscription?.expiresAt && (
           <button 
             className="subscription-page__cancel-btn"
             onClick={handleCancelSubscription}
             disabled={isCancelling}
           >
-            {isCancelling ? 'Cancelling...' : 'Cancel Subscription'}
+            {isCancelling 
+              ? t('subscriptionPage.buttons.cancelling') 
+              : t('subscriptionPage.buttons.cancelSubscription')
+            }
           </button>
         )}
         
         {history.length > 0 && (
           <div className="subscription-history">
-            <h3>History</h3>
+            <h3>{t('subscriptionPage.history.title')}</h3>
             {history.map((item, index) => (
               <div key={index} className="history-item">
                 <span className="history-action">{item.action}</span>

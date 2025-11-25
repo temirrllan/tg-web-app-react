@@ -1,5 +1,4 @@
 {
-  
   "todays": {
     "completed": "Completed",
     "outof": "out of",
@@ -35,14 +34,16 @@
   "swipe": {
     "left": "<strong>Swipe left</strong> to mark habit as completed",
     "right": "<strong>Swipe right</strong> to undo or mark as failed"
-
   },
   "habits": {
     "goal": "Goal"
   },
-  
   "common": {
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "yes": "Yes",
+    "no": "No",
+    "done": "Done",
+    "back": "Back"
   },
   "profile": {
     "appVersion": "App Version",
@@ -67,15 +68,19 @@
       "payment": "Payment Policy"
     }
   },
-  "habit":{
-    "goal":"Goal"
+  "habit": {
+    "goal": "Goal"
   },
-  
-  "common": {
-    "yes": "Yes",
-    "no": "No",
-    "done": "Done",
-    "loading": "Loading..."
+  "categories": {
+    "health": "Health",
+    "sport": "Sport",
+    "study": "Study",
+    "work": "Work",
+    "creativity": "Creativity",
+    "finance": "Finance",
+    "relationships": "Relationships",
+    "hobby": "Hobby",
+    "mindfulness": "Mindfulness"
   },
   "createHabit": {
     "habitName": "Habit name",
@@ -115,8 +120,6 @@
       "updateFailed": "Failed to update habit"
     }
   },
-
-  
   "subscriptionModal": {
     "illustrationAlt": "PRO Features",
     "title": "Boost your Better version!",
@@ -152,12 +155,6 @@
       "activateFailed": "Failed to activate subscription. Please try again."
     }
   },
-
-  "common": {
-    "back": "Back",
-    "no":"No",
-    "yes":"Yes"
-  },
   "languages": {
     "en": "English",
     "ru": "Russian",
@@ -180,47 +177,85 @@
     "off": "Off"
   },
   "habitDetail": {
-      "edit": "Edit",
-      "goal": "Goal",
-      "sharedHabitNotice": "ℹ️ This is a shared habit. Only the creator can edit it.",
-      "statistics": {
-        "daysStreak": "Days Streak",
-        "week": "Week",
-        "month": "Month",
-        "year": "Year"
-      },
-      "motivation": "Good Job My Friend! 🔥",
-      "friends": {
-        "title": "Habit Friends",
-        "friendsAdded": "friend added",
-        "friendsAddedPlural": "friends added",
-        "freePlan": "Free plan",
-        "subtitle": "Share the link with friends and invite them to track habits together.",
-        "addFriend": "Add Friend",
-        "remove": "Remove",
-        "punch": "👊 Punch"
-      },
-      "buttons": {
-        "removeHabit": "Remove Habit"
-      },
-      "toasts": {
-        "shareLinkCreated": "Share link created! 🎉",
-        "shareLinkFailed": "Failed to create share link. Please try again.",
-        "friendRemoved": "Friend removed from habit",
-        "friendRemoveFailed": "Failed to remove friend. Please try again.",
-        "punchFailed": "Failed to send punch. Please try again.",
-        "linkCopyFailed": "Failed to copy link",
-        "premiumActivated": "Premium activated! Now you can invite unlimited friends! 🎉",
-        "premiumFailed": "Failed to activate premium. Please try again."
-      },
-      "alerts": {
-        "alreadyCompleted": "Bro, {{name}} already completed this habit today! 👌",
-        "skipped": "{{name}} skipped this habit today 😔",
-        "reminderSent": "Reminder sent to your friend! 👊",
-        "removeFriendConfirm": "Remove this friend from the habit?"
-      }
+    "edit": "Edit",
+    "goal": "Goal",
+    "sharedHabitNotice": "ℹ️ This is a shared habit. Only the creator can edit it.",
+    "statistics": {
+      "daysStreak": "Days Streak",
+      "week": "Week",
+      "month": "Month",
+      "year": "Year"
     },
-    "subscriptionNew": {
+    "motivation": "Good Job My Friend! 🔥",
+    "friends": {
+      "title": "Habit Friends",
+      "friendsAdded": "friend added",
+      "friendsAddedPlural": "friends added",
+      "freePlan": "Free plan",
+      "subtitle": "Share the link with friends and invite them to track habits together.",
+      "addFriend": "Add Friend",
+      "remove": "Remove",
+      "punch": "👊 Punch"
+    },
+    "buttons": {
+      "removeHabit": "Remove Habit"
+    },
+    "toasts": {
+      "shareLinkCreated": "Share link created! 🎉",
+      "shareLinkFailed": "Failed to create share link. Please try again.",
+      "friendRemoved": "Friend removed from habit",
+      "friendRemoveFailed": "Failed to remove friend. Please try again.",
+      "punchFailed": "Failed to send punch. Please try again.",
+      "linkCopyFailed": "Failed to copy link",
+      "premiumActivated": "Premium activated! Now you can invite unlimited friends! 🎉",
+      "premiumFailed": "Failed to activate premium. Please try again."
+    },
+    "alerts": {
+      "alreadyCompleted": "Bro, {{name}} already completed this habit today! 👌",
+      "skipped": "{{name}} skipped this habit today 😔",
+      "reminderSent": "Reminder sent to your friend! 👊",
+      "removeFriendConfirm": "Remove this friend from the habit?"
+    }
+  },
+  "purchaseHistory": {
+    "title": "Purchase History",
+    "subtitle": "Your subscriptions",
+    "empty": {
+      "icon": "📋",
+      "text": "No purchases yet"
+    },
+    "item": {
+      "subscription": "Subscription",
+      "validTo": "Valid to",
+      "orderId": "Order ID",
+      "until": "until"
+    }
+  },
+  "subscriptionPage": {
+    "title": "Subscription",
+    "subtitle": "Your Premium plan",
+    "free": {
+      "title": "Free Plan",
+      "description": "Limited to 3 habits"
+    },
+    "premium": {
+      "expires": "Expires",
+      "daysRemaining": "{{days}} days remaining",
+      "lifetimeAccess": "Lifetime access",
+      "habitsCreated": "{{count}} habits created (unlimited)"
+    },
+    "trial": {
+      "badge": "TRIAL"
+    },
+    "buttons": {
+      "cancelSubscription": "Cancel Subscription",
+      "cancelling": "Cancelling..."
+    },
+    "history": {
+      "title": "History"
+    }
+  },
+  "subscriptionNew": {
     "title": "Start Like a PRO",
     "subtitle": "Unlock All Features",
     "testMode": {
@@ -298,8 +333,4 @@
       "failed": "Failed to open payment form. Please try again."
     }
   }
-  
-
-
-
 }
