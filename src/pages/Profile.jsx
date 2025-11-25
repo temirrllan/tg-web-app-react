@@ -123,7 +123,7 @@ const handleMenuClick = (itemId) => {
       setShowSettings(true);
       break;
     case 'support':
-      tg?.openLink?.('https://t.me/your_support_bot');
+      tg?.openLink?.('https://t.me/Migin_Sergey');
       break;
     case 'terms':
       tg?.openLink?.('https://yoursite.com/terms');
