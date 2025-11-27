@@ -460,6 +460,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       <div className="habit-detail">
         <div className="habit-detail__content">
           <div className="habit-detail__habit-info">
+
             <div className="habit-detail__habit-header">
               <div className="habit-detail__habit-title-section">
                 <span className="habit-detail__emoji">{getCategoryEmoji()}</span>
@@ -475,15 +476,16 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
                 </button>
               )}
             </div>
+
             {habit.goal && (
               <p className="habit-detail__habit-goal">{habit.goal}</p>
             )}
             
-            {!isCreator && members.length > 0 && (
+            {/* {!isCreator && members.length > 0 && (
               <p className="habit-detail__creator-notice">
                 {t('habitDetail.sharedHabitNotice')}
               </p>
-            )}
+            )} */}
           </div>
 
           <div className="habit-detail__statistics">
