@@ -8,10 +8,12 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [startX, setStartX] = useState(0);
+  const [startY, setStartY] = useState(0); // Добавляем Y координату
   const [isSwiping, setIsSwiping] = useState(false);
+  const [isScrolling, setIsScrolling] = useState(false); // Флаг скролла
   const [hasMoved, setHasMoved] = useState(false);
   const cardRef = useRef(null);
-    const { t } = useTranslation(); // Добавьте эту строку
+  const { t } = useTranslation();
 
   const currentStatus = habit.today_status || HABIT_STATUSES.PENDING;
   const isCompleted = currentStatus === HABIT_STATUSES.COMPLETED;
@@ -22,6 +24,7 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
   const SWIPE_THRESHOLD = 60;
   const MAX_SWIPE = 120;
   const MOVE_THRESHOLD = 5; // Минимальное движение для начала свайпа
+  const SCROLL_THRESHOLD = 10; // Порог для определения скролла
 
   useEffect(() => {
     setSwipeOffset(0);
@@ -96,53 +99,103 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
   // Touch handlers
   const handleTouchStart = (e) => {
     if (loading || readOnly) return;
-    setStartX(e.touches[0].clientX);
+    
+    const touch = e.touches[0];
+    setStartX(touch.clientX);
+    setStartY(touch.clientY);
     setIsSwiping(false);
+    setIsScrolling(false);
     setHasMoved(false);
   };
 
   const handleTouchMove = (e) => {
     if (loading || readOnly) return;
     
-    const currentX = e.touches[0].clientX;
-    const diff = currentX - startX;
+    const touch = e.touches[0];
+    const currentX = touch.clientX;
+    const currentY = touch.clientY;
     
-    // Определяем, начался ли свайп
-    if (Math.abs(diff) > MOVE_THRESHOLD) {
-      setHasMoved(true);
-      setIsSwiping(true);
+    const diffX = currentX - startX;
+    const diffY = currentY - startY;
+    
+    // Если еще не определили тип движения
+    if (!isSwiping && !isScrolling) {
+      const absX = Math.abs(diffX);
+      const absY = Math.abs(diffY);
+      
+      // Определяем направление движения
+      if (absX > SCROLL_THRESHOLD || absY > SCROLL_THRESHOLD) {
+        if (absY > absX) {
+          // Вертикальное движение = скролл
+          setIsScrolling(true);
+          return;
+        } else {
+          // Горизонтальное движение = свайп
+          setIsSwiping(true);
+          setHasMoved(true);
+        }
+      } else {
+        return; // Движение слишком маленькое
+      }
     }
     
-    if (!isSwiping) return;
-    
-    // Проверяем возможность свайпа
-    if (diff < 0 && !getNextStatusLeft()) return;
-    if (diff > 0 && !getNextStatusRight()) return;
-    
-    const limitedDiff = Math.max(-MAX_SWIPE, Math.min(MAX_SWIPE, diff));
-    setSwipeOffset(limitedDiff);
-  };
-
-  const handleTouchEnd = () => {
-    if (!isSwiping) {
-      // Если не было свайпа и есть обработчик клика - вызываем его
-      if (!hasMoved && onClick) {
-        onClick(habit);
-      }
+    // Если это скролл - не обрабатываем
+    if (isScrolling) {
       return;
     }
     
-    setIsSwiping(false);
-    
-    if (Math.abs(swipeOffset) >= SWIPE_THRESHOLD) {
-      if (swipeOffset < 0) {
-        handleSwipeComplete('left');
-      } else {
-        handleSwipeComplete('right');
-      }
-    } else {
-      setSwipeOffset(0);
+    // Если это свайп - обрабатываем
+    if (isSwiping) {
+      // Предотвращаем скролл при свайпе
+      e.preventDefault();
+      
+      setHasMoved(true);
+      
+      // Проверяем возможность свайпа
+      if (diffX < 0 && !getNextStatusLeft()) return;
+      if (diffX > 0 && !getNextStatusRight()) return;
+      
+      const limitedDiff = Math.max(-MAX_SWIPE, Math.min(MAX_SWIPE, diffX));
+      setSwipeOffset(limitedDiff);
     }
+  };
+
+  const handleTouchEnd = () => {
+    // Если был скролл - просто сбрасываем флаги
+    if (isScrolling) {
+      setIsScrolling(false);
+      setStartX(0);
+      setStartY(0);
+      return;
+    }
+    
+    // Если не было свайпа и не было движения - это клик
+    if (!isSwiping && !hasMoved && onClick) {
+      onClick(habit);
+      setStartX(0);
+      setStartY(0);
+      return;
+    }
+    
+    // Если был свайп - обрабатываем
+    if (isSwiping) {
+      if (Math.abs(swipeOffset) >= SWIPE_THRESHOLD) {
+        if (swipeOffset < 0) {
+          handleSwipeComplete('left');
+        } else {
+          handleSwipeComplete('right');
+        }
+      } else {
+        setSwipeOffset(0);
+      }
+    }
+    
+    // Сбрасываем флаги
+    setIsSwiping(false);
+    setIsScrolling(false);
+    setStartX(0);
+    setStartY(0);
+    setHasMoved(false);
   };
 
   // Mouse handlers для десктопа
@@ -150,7 +203,9 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
     if (loading || readOnly) return;
     e.preventDefault();
     setStartX(e.clientX);
+    setStartY(e.clientY);
     setIsSwiping(false);
+    setIsScrolling(false);
     setHasMoved(false);
   };
 
@@ -158,19 +213,19 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
     if (loading || readOnly || startX === 0) return;
     
     const currentX = e.clientX;
-    const diff = currentX - startX;
+    const diffX = currentX - startX;
     
-    if (Math.abs(diff) > MOVE_THRESHOLD) {
+    if (Math.abs(diffX) > MOVE_THRESHOLD) {
       setHasMoved(true);
       setIsSwiping(true);
     }
     
     if (!isSwiping) return;
     
-    if (diff < 0 && !getNextStatusLeft()) return;
-    if (diff > 0 && !getNextStatusRight()) return;
+    if (diffX < 0 && !getNextStatusLeft()) return;
+    if (diffX > 0 && !getNextStatusRight()) return;
     
-    const limitedDiff = Math.max(-MAX_SWIPE, Math.min(MAX_SWIPE, diff));
+    const limitedDiff = Math.max(-MAX_SWIPE, Math.min(MAX_SWIPE, diffX));
     setSwipeOffset(limitedDiff);
   };
 
@@ -206,6 +261,7 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
       setSwipeOffset(0);
     }
     setStartX(0);
+    setStartY(0);
     setHasMoved(false);
   };
 
@@ -218,7 +274,7 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
     
     switch(nextStatus) {
       case HABIT_STATUSES.COMPLETED:
-        return { icon: '✓', text:  t('button.done'), className: 'done-button' };
+        return { icon: '✓', text: t('button.done'), className: 'done-button' };
       case HABIT_STATUSES.SKIPPED:
         return { icon: '⟳', text: t('button.skip'), className: 'skip-button' };
       default:
@@ -272,6 +328,7 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
   const getCategoryEmoji = () => {
     return habit.category_icon || habit.icon || '🎯';
   };
+
   const hasMembers = habit.members_count && habit.members_count > 0;
 
   return (
@@ -291,7 +348,7 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
           </div>
         )}
 
-       <div 
+        <div 
           ref={cardRef}
           className={`habit-card ${getCardState()} ${isAnimating ? 'animating' : ''} ${isSwiping ? 'swiping' : ''}`}
           style={{
@@ -307,7 +364,7 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseLeave}
         >
-        <div className="habit-card-content">
+          <div className="habit-card-content">
             <div className={`habit-icon ${getCardState()}`}>
               <span className="habit-emoji">{getCategoryEmoji()}</span>
             </div>
@@ -326,9 +383,8 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
               </div>
             )}
           </div>
-      </div>
+        </div>
 
-      
         {leftButton && (
           <div 
             className={`swipe-action-button ${leftButton.className} ${showLeftButton ? 'visible' : ''}`}
@@ -342,14 +398,14 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
             <span className="swipe-action-text">{leftButton.text}</span>
           </div>
         )}
-    </div>
-    {/* Отображаем количество участников */}
+      </div>
+      
       {hasMembers && (
         <div className="habit-members-badge">
-  +{habit.members_count} {t('member.members')}
-</div>
+          +{habit.members_count} {t('member.members')}
+        </div>
       )}
-      </div>
+    </div>
   );
 }, (prevProps, nextProps) => {
   return (
