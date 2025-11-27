@@ -1,231 +1,363 @@
-import React, { useState, useRef } from 'react';
-import { useSwipeable } from 'react-swipeable';
+import React, { useState, useRef, useEffect } from 'react';
+import { HABIT_STATUSES } from '../../utils/constants';
 import './HabitCard.css';
-import { useTranslation } from '../../hooks/useTranslation';
+import { useTranslation } from "../../hooks/useTranslation";
 
-const HabitCard = ({ habit, onMark, onUnmark, onClick, readOnly = false }) => {
-  const { t } = useTranslation();
-  const [offset, setOffset] = useState(0);
+const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onClick }) => {
+  const [loading, setLoading] = useState(false);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [startX, setStartX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
+  const [hasMoved, setHasMoved] = useState(false);
+  const cardRef = useRef(null);
+    const { t } = useTranslation(); // Добавьте эту строку
+
+  const currentStatus = habit.today_status || HABIT_STATUSES.PENDING;
+  const isCompleted = currentStatus === HABIT_STATUSES.COMPLETED;
+  const isFailed = currentStatus === HABIT_STATUSES.FAILED;
+  const isSkipped = currentStatus === HABIT_STATUSES.SKIPPED;
+  const isPending = currentStatus === HABIT_STATUSES.PENDING;
   
-  // 🔥 НОВОЕ: Отслеживание движения для предотвращения ложных кликов
-  const touchStartRef = useRef(null);
-  const touchMoveRef = useRef(false);
-  const swipeStartTimeRef = useRef(null);
+  const SWIPE_THRESHOLD = 60;
+  const MAX_SWIPE = 120;
+  const MOVE_THRESHOLD = 5; // Минимальное движение для начала свайпа
 
-  const SWIPE_THRESHOLD = 80;
-  const MAX_SWIPE = 150;
-  const CLICK_MAX_MOVEMENT = 10; // Максимальное движение для клика (пикселей)
-  const CLICK_MAX_DURATION = 300; // Максимальная длительность для клика (мс)
+  useEffect(() => {
+    setSwipeOffset(0);
+  }, [habit.today_status]);
 
-  const status = habit.today_status || 'pending';
-  const isCompleted = status === 'completed';
-  const isFailed = status === 'failed';
-  const isSkipped = status === 'skipped';
-
-  // 🎯 Обработчик начала касания
-  const handleTouchStart = (e) => {
-    if (readOnly) return;
-    
-    touchStartRef.current = {
-      x: e.touches[0].clientX,
-      y: e.touches[0].clientY,
-      time: Date.now()
-    };
-    touchMoveRef.current = false;
-    swipeStartTimeRef.current = Date.now();
-    setIsSwiping(true);
-  };
-
-  // 🎯 Обработчик движения
-  const handleTouchMove = (e) => {
-    if (!isSwiping || readOnly || !touchStartRef.current) return;
-
-    const currentX = e.touches[0].clientX;
-    const currentY = e.touches[0].clientY;
-    
-    const deltaX = currentX - touchStartRef.current.x;
-    const deltaY = currentY - touchStartRef.current.y;
-    
-    // Определяем направление свайпа
-    const isHorizontalSwipe = Math.abs(deltaX) > Math.abs(deltaY);
-    
-    if (isHorizontalSwipe) {
-      // Это горизонтальный свайп - блокируем вертикальный скролл
-      e.preventDefault();
-      touchMoveRef.current = true;
-      
-      const limitedOffset = Math.max(-MAX_SWIPE, Math.min(MAX_SWIPE, deltaX));
-      setOffset(limitedOffset);
-    } else {
-      // Это вертикальный скролл - не мешаем
-      setIsSwiping(false);
-      setOffset(0);
-      touchStartRef.current = null;
+  const getNextStatusLeft = () => {
+    switch(currentStatus) {
+      case HABIT_STATUSES.PENDING:
+      case HABIT_STATUSES.SKIPPED:
+        return HABIT_STATUSES.COMPLETED;
+      case HABIT_STATUSES.FAILED:
+        return HABIT_STATUSES.SKIPPED;
+      case HABIT_STATUSES.COMPLETED:
+        return null;
+      default:
+        return null;
     }
   };
 
-  // 🎯 Обработчик конца касания
-  const handleTouchEnd = () => {
-    if (readOnly) {
-      resetSwipe();
+  const getNextStatusRight = () => {
+    switch(currentStatus) {
+      case HABIT_STATUSES.PENDING:
+      case HABIT_STATUSES.SKIPPED:
+        return HABIT_STATUSES.FAILED;
+      case HABIT_STATUSES.COMPLETED:
+        return HABIT_STATUSES.SKIPPED;
+      case HABIT_STATUSES.FAILED:
+        return null;
+      default:
+        return null;
+    }
+  };
+
+  const handleSwipeComplete = async (direction) => {
+    if (loading || readOnly) return;
+    
+    let nextStatus = null;
+    
+    if (direction === 'left') {
+      nextStatus = getNextStatusLeft();
+    } else if (direction === 'right') {
+      nextStatus = getNextStatusRight();
+    }
+    
+    if (!nextStatus) {
+      setSwipeOffset(0);
       return;
     }
-
-    const swipeDuration = Date.now() - (swipeStartTimeRef.current || 0);
-
-    // 🔥 ПРОВЕРКА: Был ли это клик или свайп?
-    if (touchStartRef.current && !touchMoveRef.current) {
-      // Это был клик (не было движения)
-      handleCardClick();
-    } else if (Math.abs(offset) >= SWIPE_THRESHOLD) {
-      // Это был свайп (достаточное расстояние)
-      handleSwipe();
-    }
-
-    resetSwipe();
-  };
-
-  // 🎯 Обработчик клика по карточке
-  const handleCardClick = () => {
-    console.log('Card clicked (not swiped):', habit.title);
-    if (onClick && !readOnly) {
-      onClick(habit);
-    }
-  };
-
-  // 🎯 Обработчик свайпа
-  const handleSwipe = () => {
-    console.log('Swipe detected:', { offset, status });
     
-    if (offset < -SWIPE_THRESHOLD) {
-      // Свайп влево - выполнено
-      if (status === 'pending' || status === 'failed' || status === 'skipped') {
-        onMark?.(habit.id, 'completed');
+    setLoading(true);
+    setIsAnimating(true);
+    
+    try {
+      if (nextStatus === HABIT_STATUSES.PENDING) {
+        await onUnmark(habit.id);
+      } else {
+        await onMark(habit.id, nextStatus);
       }
-    } else if (offset > SWIPE_THRESHOLD) {
-      // Свайп вправо - не выполнено
-      if (status === 'completed') {
-        onUnmark?.(habit.id);
-      } else if (status === 'pending') {
-        onMark?.(habit.id, 'failed');
+      
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
       }
+    } catch (error) {
+      console.error('Failed to update habit:', error);
+    } finally {
+      setLoading(false);
+      setIsAnimating(false);
+      setSwipeOffset(0);
     }
   };
 
-  // 🎯 Сброс состояния свайпа
-  const resetSwipe = () => {
-    setOffset(0);
+  // Touch handlers
+  const handleTouchStart = (e) => {
+    if (loading || readOnly) return;
+    setStartX(e.touches[0].clientX);
     setIsSwiping(false);
-    touchStartRef.current = null;
-    touchMoveRef.current = false;
-    swipeStartTimeRef.current = null;
+    setHasMoved(false);
   };
 
-  // 🎯 Клик по кнопке Skip
-  const handleSkipClick = (e) => {
-    e.stopPropagation();
-    if (!readOnly && status === 'pending') {
-      onMark?.(habit.id, 'skipped');
+  const handleTouchMove = (e) => {
+    if (loading || readOnly) return;
+    
+    const currentX = e.touches[0].clientX;
+    const diff = currentX - startX;
+    
+    // Определяем, начался ли свайп
+    if (Math.abs(diff) > MOVE_THRESHOLD) {
+      setHasMoved(true);
+      setIsSwiping(true);
+    }
+    
+    if (!isSwiping) return;
+    
+    // Проверяем возможность свайпа
+    if (diff < 0 && !getNextStatusLeft()) return;
+    if (diff > 0 && !getNextStatusRight()) return;
+    
+    const limitedDiff = Math.max(-MAX_SWIPE, Math.min(MAX_SWIPE, diff));
+    setSwipeOffset(limitedDiff);
+  };
+
+  const handleTouchEnd = () => {
+    if (!isSwiping) {
+      // Если не было свайпа и есть обработчик клика - вызываем его
+      if (!hasMoved && onClick) {
+        onClick(habit);
+      }
+      return;
+    }
+    
+    setIsSwiping(false);
+    
+    if (Math.abs(swipeOffset) >= SWIPE_THRESHOLD) {
+      if (swipeOffset < 0) {
+        handleSwipeComplete('left');
+      } else {
+        handleSwipeComplete('right');
+      }
+    } else {
+      setSwipeOffset(0);
+    }
+  };
+
+  // Mouse handlers для десктопа
+  const handleMouseDown = (e) => {
+    if (loading || readOnly) return;
+    e.preventDefault();
+    setStartX(e.clientX);
+    setIsSwiping(false);
+    setHasMoved(false);
+  };
+
+  const handleMouseMove = (e) => {
+    if (loading || readOnly || startX === 0) return;
+    
+    const currentX = e.clientX;
+    const diff = currentX - startX;
+    
+    if (Math.abs(diff) > MOVE_THRESHOLD) {
+      setHasMoved(true);
+      setIsSwiping(true);
+    }
+    
+    if (!isSwiping) return;
+    
+    if (diff < 0 && !getNextStatusLeft()) return;
+    if (diff > 0 && !getNextStatusRight()) return;
+    
+    const limitedDiff = Math.max(-MAX_SWIPE, Math.min(MAX_SWIPE, diff));
+    setSwipeOffset(limitedDiff);
+  };
+
+  const handleMouseUp = () => {
+    if (!isSwiping && !hasMoved && onClick) {
+      onClick(habit);
+      setStartX(0);
+      return;
+    }
+    
+    if (!isSwiping) {
+      setStartX(0);
+      return;
+    }
+    
+    setIsSwiping(false);
+    setStartX(0);
+    
+    if (Math.abs(swipeOffset) >= SWIPE_THRESHOLD) {
+      if (swipeOffset < 0) {
+        handleSwipeComplete('left');
+      } else {
+        handleSwipeComplete('right');
+      }
+    } else {
+      setSwipeOffset(0);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (isSwiping) {
+      setIsSwiping(false);
+      setSwipeOffset(0);
+    }
+    setStartX(0);
+    setHasMoved(false);
+  };
+
+  const showLeftButton = swipeOffset < -20 && getNextStatusLeft();
+  const showRightButton = swipeOffset > 20 && getNextStatusRight();
+
+  const getLeftButtonInfo = () => {
+    const nextStatus = getNextStatusLeft();
+    if (!nextStatus) return null;
+    
+    switch(nextStatus) {
+      case HABIT_STATUSES.COMPLETED:
+        return { icon: '✓', text:  t('button.done'), className: 'done-button' };
+      case HABIT_STATUSES.SKIPPED:
+        return { icon: '⟳', text: t('button.skip'), className: 'skip-button' };
+      default:
+        return null;
+    }
+  };
+
+  const getRightButtonInfo = () => {
+    const nextStatus = getNextStatusRight();
+    if (!nextStatus) return null;
+    
+    switch(nextStatus) {
+      case HABIT_STATUSES.FAILED:
+        return { icon: '✗', text: t('button.unDone'), className: 'undone-button' };
+      case HABIT_STATUSES.SKIPPED:
+        return { icon: '⟳', text: t('button.skip'), className: 'skip-button' };
+      default:
+        return null;
+    }
+  };
+
+  const leftButton = getLeftButtonInfo();
+  const rightButton = getRightButtonInfo();
+
+  const getCardState = () => {
+    switch(currentStatus) {
+      case HABIT_STATUSES.COMPLETED:
+        return 'completed';
+      case HABIT_STATUSES.FAILED:
+        return 'failed';
+      case HABIT_STATUSES.SKIPPED:
+        return '';
+      default:
+        return '';
+    }
+  };
+
+  const getStatusIcon = () => {
+    switch(currentStatus) {
+      case HABIT_STATUSES.COMPLETED:
+        return '✓';
+      case HABIT_STATUSES.FAILED:
+        return '✗';
+      case HABIT_STATUSES.SKIPPED:
+        return '⟳';
+      default:
+        return null;
     }
   };
 
   const getCategoryEmoji = () => {
     return habit.category_icon || habit.icon || '🎯';
   };
-
-  const getMembersDisplay = () => {
-    const count = habit.members_count || 0;
-    if (count === 0) return null;
-    return `👥 ${count}`;
-  };
+  const hasMembers = habit.members_count && habit.members_count > 0;
 
   return (
-    <div className="habit-card-container">
-      {/* Кнопка UNDONE (справа) */}
-      {offset < -20 && (
-        <div 
-          className={`swipe-action-button done-button ${offset < -SWIPE_THRESHOLD ? 'visible' : ''}`}
-          style={{ right: 0 }}
-        >
-          <span className="swipe-action-icon">✓</span>
-          <span className="swipe-action-text">{t('button.done')}</span>
-        </div>
-      )}
-
-      {/* Карточка привычки */}
-      <div
-        className={`habit-card ${status} ${isSwiping ? 'touching' : 'animating'}`}
-        style={{
-          transform: `translateX(${offset}px)`,
-          cursor: readOnly ? 'default' : 'pointer'
-        }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        <div className="habit-card-content">
-          <div className={`habit-icon ${status}`}>
-            <span className="habit-emoji">{getCategoryEmoji()}</span>
+    <div className={`habit-card-wrapper ${hasMembers ? 'has-members' : ''}`}>
+      <div className="habit-card-container">
+        {rightButton && (
+          <div 
+            className={`swipe-action-button ${rightButton.className} ${showRightButton ? 'visible' : ''}`}
+            style={{
+              left: 0,
+              opacity: showRightButton ? Math.min(swipeOffset / SWIPE_THRESHOLD, 1) : 0,
+              transform: `scale(${showRightButton ? Math.min(swipeOffset / SWIPE_THRESHOLD, 1) : 0.8})`
+            }}
+          >
+            <span className="swipe-action-icon">{rightButton.icon}</span>
+            <span className="swipe-action-text">{rightButton.text}</span>
           </div>
+        )}
 
-          <div className="habit-info">
-            <h3 className="habit-title">
-              {habit.title}
-              {getMembersDisplay() && (
-                <span style={{ 
-                  marginLeft: '8px', 
-                  fontSize: '14px',
-                  color: '#8E8E93'
-                }}>
-                  {getMembersDisplay()}
-                </span>
-              )}
-            </h3>
-            {habit.goal && (
-              <p className="habit-goal">{habit.goal}</p>
+       <div 
+          ref={cardRef}
+          className={`habit-card ${getCardState()} ${isAnimating ? 'animating' : ''} ${isSwiping ? 'swiping' : ''}`}
+          style={{
+            transform: `translateX(${swipeOffset}px)`,
+            transition: isSwiping ? 'none' : 'transform 0.3s ease-out',
+            cursor: onClick ? 'pointer' : 'grab'
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
+        >
+        <div className="habit-card-content">
+            <div className={`habit-icon ${getCardState()}`}>
+              <span className="habit-emoji">{getCategoryEmoji()}</span>
+            </div>
+            
+            <div className="habit-info">
+              <h3 className="habit-title">
+                {habit.is_bad_habit && '😈 '}
+                {habit.title}
+              </h3>
+              <p className="habit-goal">{t('habit.goal')}: {habit.goal}</p>
+            </div>
+
+            {!isPending && (
+              <div className={`status-indicator ${getCardState()}`}>
+                {getStatusIcon()}
+              </div>
             )}
           </div>
-
-          {!readOnly && status === 'pending' && (
-            <button 
-              className="skip-button-small"
-              onClick={handleSkipClick}
-              style={{
-                background: 'none',
-                border: 'none',
-                padding: '8px',
-                fontSize: '20px',
-                cursor: 'pointer',
-                color: '#FF9500'
-              }}
-            >
-              ⏭
-            </button>
-          )}
-
-          {(isCompleted || isFailed || isSkipped) && (
-            <div className={`status-indicator ${status}`}>
-              {isCompleted && '✓'}
-              {isFailed && '✗'}
-              {isSkipped && '⏭'}
-            </div>
-          )}
-        </div>
       </div>
 
-      {/* Кнопка FAILED (слева) */}
-      {offset > 20 && (
-        <div 
-          className={`swipe-action-button undone-button ${offset > SWIPE_THRESHOLD ? 'visible' : ''}`}
-          style={{ left: 0 }}
-        >
-          <span className="swipe-action-icon">✗</span>
-          <span className="swipe-action-text">{t('button.unDone')}</span>
-        </div>
-      )}
+      
+        {leftButton && (
+          <div 
+            className={`swipe-action-button ${leftButton.className} ${showLeftButton ? 'visible' : ''}`}
+            style={{
+              right: 0,
+              opacity: showLeftButton ? Math.min(Math.abs(swipeOffset) / SWIPE_THRESHOLD, 1) : 0,
+              transform: `scale(${showLeftButton ? Math.min(Math.abs(swipeOffset) / SWIPE_THRESHOLD, 1) : 0.8})`
+            }}
+          >
+            <span className="swipe-action-icon">{leftButton.icon}</span>
+            <span className="swipe-action-text">{leftButton.text}</span>
+          </div>
+        )}
     </div>
+    {/* Отображаем количество участников */}
+      {hasMembers && (
+        <div className="habit-members-badge">
+  +{habit.members_count} {t('member.members')}
+</div>
+      )}
+      </div>
   );
-};
+}, (prevProps, nextProps) => {
+  return (
+    prevProps.habit.id === nextProps.habit.id &&
+    prevProps.habit.today_status === nextProps.habit.today_status &&
+    prevProps.habit.members_count === nextProps.habit.members_count &&
+    prevProps.readOnly === nextProps.readOnly
+  );
+});
 
 export default HabitCard;
