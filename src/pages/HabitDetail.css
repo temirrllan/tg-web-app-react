@@ -66,7 +66,7 @@
 
 /* Habit Info - ИСПРАВЛЕНО */
 .habit-detail__habit-info {
-  background: white;
+  /* background: white; */
   border-radius: 16px;
   padding: 20px;
   margin-bottom: 20px;
@@ -85,6 +85,7 @@
 .habit-detail__habit-title-section {
   display: flex;
   align-items: flex-start;
+  align-content: center;
   gap: 12px;
   flex: 1;
   min-width: 0;
@@ -132,7 +133,7 @@
 
 .habit-detail__habit-goal {
   font-size: 16px;
-  color: #8E8E93;
+  color: #1D1D1F;
   margin: 0;
   /* margin-left: 44px; */
   word-wrap: break-word;
