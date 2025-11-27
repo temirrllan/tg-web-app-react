@@ -59,7 +59,7 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
   };
 
   const handleSwipeComplete = async (direction) => {
-    if (loading || readOnly) return;
+    if (loading) return
     
     let nextStatus = null;
     
@@ -98,7 +98,7 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
 
   // Touch handlers
   const handleTouchStart = (e) => {
-    if (loading || readOnly) return;
+    if (loading) return
     
     const touch = e.touches[0];
     setStartX(touch.clientX);
@@ -109,7 +109,7 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
   };
 
   const handleTouchMove = (e) => {
-    if (loading || readOnly) return;
+    if (loading) return
     
     const touch = e.touches[0];
     const currentX = touch.clientX;
@@ -130,9 +130,12 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
           setIsScrolling(true);
           return;
         } else {
-          // Горизонтальное движение = свайп
-          setIsSwiping(true);
-          setHasMoved(true);
+          if (!readOnly) {
+    setIsSwiping(true);
+  } else {
+    setIsScrolling(true); // readOnly = считаем скроллом
+  }
+          
         }
       } else {
         return; // Движение слишком маленькое
@@ -200,7 +203,7 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
 
   // Mouse handlers для десктопа
   const handleMouseDown = (e) => {
-    if (loading || readOnly) return;
+    if (loading) return
     e.preventDefault();
     setStartX(e.clientX);
     setStartY(e.clientY);
