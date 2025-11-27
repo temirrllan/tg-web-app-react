@@ -1,6 +1,107 @@
 import api from './api';
 
 export const habitService = {
+  // ============ МЕТОДЫ С КЭШИРОВАНИЕМ ============
+  
+  /**
+   * Получить категории (кэшируется на 30 минут)
+   */
+  async getCategories() {
+    return await cachedApi.getCategories();
+  },
+
+  /**
+   * Получить все привычки (кэшируется на 2 минуты)
+   */
+  async getAllHabits() {
+    return await cachedApi.getAllHabits();
+  },
+
+  /**
+   * Получить привычки на сегодня (кэшируется на 1 минуту)
+   */
+  async getTodayHabits() {
+    return await cachedApi.getTodayHabits();
+  },
+
+  /**
+   * Получить привычки для конкретной даты (кэшируется на 2 минуты)
+   */
+  async getHabitsForDate(date) {
+    return await cachedApi.getHabitsForDate(date);
+  },
+
+  /**
+   * Получить статистику привычки (кэшируется на 5 минут)
+   */
+  async getHabitStatistics(habitId) {
+    return await cachedApi.getHabitStatistics(habitId);
+  },
+
+  /**
+   * Получить участников привычки (кэшируется на 2 минуты)
+   */
+  async getHabitMembers(habitId) {
+    return await cachedApi.getHabitMembers(habitId);
+  },
+
+  /**
+   * Получить профиль пользователя (кэшируется на 10 минут)
+   */
+  async getUserProfile() {
+    return await cachedApi.getUserProfile();
+  },
+
+  /**
+   * Проверить лимиты подписки (кэшируется на 5 минут)
+   */
+  async checkSubscriptionLimits() {
+    return await cachedApi.checkSubscriptionLimits();
+  },
+
+  // ============ МЕТОДЫ БЕЗ КЭШИРОВАНИЯ (изменяют данные) ============
+
+  /**
+   * Создать привычку (инвалидирует кэш)
+   */
+  async createHabit(habitData) {
+    return await cachedApi.createHabit(habitData);
+  },
+
+  /**
+   * Обновить привычку (инвалидирует кэш)
+   */
+  async updateHabit(habitId, updates) {
+    return await cachedApi.updateHabit(habitId, updates);
+  },
+
+  /**
+   * Удалить привычку (инвалидирует кэш)
+   */
+  async deleteHabit(habitId) {
+    return await cachedApi.deleteHabit(habitId);
+  },
+
+  /**
+   * Отметить привычку (инвалидирует кэш)
+   */
+  async markHabit(habitId, status = 'completed', date = null) {
+    return await cachedApi.markHabit(habitId, status, date);
+  },
+
+  /**
+   * Снять отметку (инвалидирует кэш)
+   */
+  async unmarkHabit(habitId, date) {
+    return await cachedApi.unmarkHabit(habitId, date);
+  },
+
+  /**
+   * Обновить язык пользователя (инвалидирует кэш)
+   */
+  async updateUserLanguage(language) {
+    return await cachedApi.updateUserLanguage(language);
+  },
   // Категории
   getCategories: async () => {
     const { data } = await api.get('/categories');
@@ -422,4 +523,26 @@ joinHabit: async (shareCode) => {
       throw error;
     }
   },
+  // ============ УТИЛИТЫ ============
+
+  /**
+   * Очистить весь кэш
+   */
+  clearCache() {
+    cachedApi.clearAllCache();
+  },
+
+  /**
+   * Инвалидировать кэш привычек
+   */
+  invalidateHabitsCache() {
+    cachedApi.invalidateHabitsCache();
+  },
+
+  /**
+   * Инвалидировать кэш подписки
+   */
+  invalidateSubscriptionCache() {
+    cachedApi.invalidateSubscriptionCache();
+  }
 };
