@@ -272,9 +272,36 @@
 }
 
 .habit-detail__share-buttons {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
+  display: flex;
   gap: 12px;
+  margin-bottom: 16px;
+}
+
+.habit-detail__btn--copy-link {
+  flex: 0 0 auto;
+  min-width: 120px;
+  background: white;
+  color: #A7D96C;
+  border: 2px solid #A7D96C;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.habit-detail__btn--copy-link:hover {
+  background: #F8FFF4;
+}
+
+.habit-detail__btn--copy-link svg {
+  width: 20px;
+  height: 20px;
+}
+
+.habit-detail__btn--share {
+  flex: 1;
 }
 
 /* Buttons */
