@@ -1,71 +1,79 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useTelegram } from './useTelegram';
 
+/**
+ * useNavigation — управляет Telegram BackButton.
+ * - Показывает "Назад" при монтировании, скрывает при размонтировании.
+ * - Восстанавливает кнопку, если Telegram сбрасывает её (themeChanged, reinit и т.п.)
+ */
 export const useNavigation = (onBack = null, options = {}) => {
   const { tg } = useTelegram();
   const { isVisible = true } = options;
   const backButtonHandlerRef = useRef(null);
-  const shownRef = useRef(false); // предотвращает повторные show()
+  const intervalRef = useRef(null);
 
   const goBack = useCallback(() => {
+    console.log('Navigation: goBack called');
     if (onBack) onBack();
     else window.history.back();
   }, [onBack]);
 
   useEffect(() => {
-    if (!tg?.BackButton) return;
+    if (!tg || !tg.BackButton) {
+      console.warn('Navigation: Telegram WebApp.BackButton not found');
+      return;
+    }
 
     const backButton = tg.BackButton;
 
+    // Основной обработчик
     const handleBack = () => {
+      console.log('Navigation: BackButton clicked');
       goBack();
     };
 
-    // Показываем кнопку ОДИН раз
+    // Показываем кнопку "Назад"
     const showBackButton = () => {
-      if (!isVisible) return;
-
       try {
-        if (!shownRef.current) {
+        if (!backButton.isVisible && isVisible) {
           backButton.show();
-          shownRef.current = true;
+          console.log('Navigation: BackButton forced visible');
         }
-      } catch (e) {
-        console.warn('BackButton.show error', e);
+      } catch (err) {
+        console.warn('Navigation: BackButton.show() failed', err);
       }
     };
 
     // Инициализация
     showBackButton();
-
     backButtonHandlerRef.current = handleBack;
     backButton.onClick(handleBack);
 
-    // Telegram иногда сбрасывает кнопку → возвращаем ОДИН раз
-    const restoreEvents = ['reinit', 'themeChanged', 'viewportChanged', 'settingsButtonPressed'];
+    // 🔄 Слежение: Telegram иногда скрывает кнопку — возвращаем обратно
+    intervalRef.current = setInterval(() => {
+      try {
+        if (isVisible && tg?.BackButton && !tg.BackButton.isVisible) {
+          tg.BackButton.show();
+          console.log('Navigation: BackButton auto-restored');
+        }
+      } catch {}
+    }, 500);
 
-    restoreEvents.forEach(event =>
-      tg.onEvent?.(event, () => {
-        shownRef.current = false; // Telegram сбросил кнопку → показываем заново
-        showBackButton();
-      })
-    );
+    // Слушаем Telegram-события, чтобы повторно показывать кнопку
+    const restoreEvents = ['themeChanged', 'viewportChanged', 'reinit'];
+    restoreEvents.forEach((event) => tg.onEvent?.(event, showBackButton));
 
-    // cleanup
+    // Очистка
     return () => {
       try {
         backButton.offClick?.(backButtonHandlerRef.current);
       } catch {}
-
-      restoreEvents.forEach(event =>
-        tg.offEvent?.(event, showBackButton)
-      );
-
-      try {
-        backButton.hide();
-      } catch {}
-
-      shownRef.current = false;
+      restoreEvents.forEach((event) => tg.offEvent?.(event, showBackButton));
+      clearInterval(intervalRef.current);
+      if (tg?.BackButton) {
+        tg.BackButton.hide();
+        console.log('Navigation: BackButton hidden on cleanup');
+      }
     };
   }, [tg, goBack, isVisible]);
 
