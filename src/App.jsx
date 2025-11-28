@@ -138,12 +138,28 @@ function AppContent() {
           console.log('isNewUser == true:', response.isNewUser == true);
           console.log('Boolean(isNewUser):', Boolean(response.isNewUser));
           
+          // Проверяем по флагу isNewUser
           if (response.isNewUser === true) {
-            console.log('🆕 NEW USER DETECTED - SHOWING ONBOARDING');
+            console.log('🆕 NEW USER DETECTED (by flag) - SHOWING ONBOARDING');
             setShowOnboarding(true);
           } else {
-            console.log('👤 EXISTING USER - SKIPPING ONBOARDING');
-            console.log('Reason: isNewUser =', response.isNewUser);
+            // Альтернативная проверка: если пользователь без привычек
+            console.log('👤 Checking alternative: habit count');
+            try {
+              const habitsResponse = await habitService.getAllHabits();
+              const habitCount = habitsResponse?.habits?.length || 0;
+              console.log('Habit count:', habitCount);
+              
+              if (habitCount === 0) {
+                console.log('🆕 NEW USER DETECTED (by habit count) - SHOWING ONBOARDING');
+                setShowOnboarding(true);
+              } else {
+                console.log('👤 EXISTING USER WITH HABITS - SKIPPING ONBOARDING');
+              }
+            } catch (habitError) {
+              console.error('Failed to check habits:', habitError);
+              // В случае ошибки не показываем onboarding
+            }
           }
           
         } else {
