@@ -19,8 +19,14 @@ function AppContent() {
   
   const { initializeLanguage, language } = useContext(LanguageContext);
 
-  console.log('🔍 APP DEBUG: Current language in context:', language);
-  console.log('🔍 APP DEBUG: Telegram user:', tgUser);
+  console.log('🔍 APP STATE:', {
+    user: user?.id,
+    loading,
+    error,
+    showOnboarding,
+    isReady,
+    isLoading
+  });
 
   useEffect(() => {
     if (tg) {
@@ -40,7 +46,7 @@ function AppContent() {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        console.log('🔍 APP DEBUG: Starting authentication');
+        console.log('🔍 === STARTING AUTHENTICATION ===');
         const isProduction = window.location.hostname !== 'localhost';
         
         if (isProduction && !webApp?.initData) {
@@ -49,23 +55,30 @@ function AppContent() {
           return;
         }
 
+        console.log('📞 Calling authenticateUser...');
         const response = await authenticateUser(webApp?.initData, tgUser);
+        
+        console.log('📥 AUTH RESPONSE:', {
+          success: response.success,
+          userId: response.user?.id,
+          isNewUser: response.isNewUser,
+          isNewUserType: typeof response.isNewUser,
+          fullResponse: response
+        });
         
         if (response.success) {
           setUser(response.user);
           
           if (response.user.language && initializeLanguage) {
-            console.log('🔍 APP DEBUG: Initializing language from user data:', response.user.language);
+            console.log('🌍 Initializing language:', response.user.language);
             try {
               initializeLanguage(response.user.language);
             } catch (e) {
               console.error('Error initializing language:', e);
             }
-          } else {
-            console.log('⚠️ APP DEBUG: No language in user data or initializeLanguage not available');
           }
           
-          // 🔥 ОБРАБОТКА DEEP LINK (приглашения)
+          // 🔥 DEEP LINK HANDLING
           const startParam = webApp?.initDataUnsafe?.start_param;
           console.log('🔗 Deep link start_param:', startParam);
           
@@ -94,7 +107,7 @@ function AppContent() {
             }
           }
           
-          // 🔥 FALLBACK: Проверка URL параметров (для старых ссылок)
+          // URL параметры fallback
           const urlParams = new URLSearchParams(window.location.search);
           const action = urlParams.get('action');
           const code = urlParams.get('code');
@@ -118,14 +131,27 @@ function AppContent() {
             }
           }
           
-          if (response.isNewUser) {
+          // 🔥🔥🔥 КРИТИЧЕСКАЯ ПРОВЕРКА ONBOARDING 🔥🔥🔥
+          console.log('🔍 === ONBOARDING CHECK ===');
+          console.log('isNewUser value:', response.isNewUser);
+          console.log('isNewUser === true:', response.isNewUser === true);
+          console.log('isNewUser == true:', response.isNewUser == true);
+          console.log('Boolean(isNewUser):', Boolean(response.isNewUser));
+          
+          if (response.isNewUser === true) {
+            console.log('🆕 NEW USER DETECTED - SHOWING ONBOARDING');
             setShowOnboarding(true);
+          } else {
+            console.log('👤 EXISTING USER - SKIPPING ONBOARDING');
+            console.log('Reason: isNewUser =', response.isNewUser);
           }
+          
         } else {
+          console.error('❌ Auth failed:', response);
           setError('Ошибка аутентификации');
         }
       } catch (err) {
-        console.error('Auth error:', err);
+        console.error('💥 Auth error:', err);
         setError(err.message || 'Ошибка подключения к серверу');
       } finally {
         setLoading(false);
@@ -172,7 +198,7 @@ function AppContent() {
             } else if (!response.is_premium && wasPremium) {
               console.log('⚠️ Premium expired or cancelled');
             } else if (!response.is_premium) {
-              console.log('ℹ️ User still not premium (payment may have failed or was cancelled)');
+              console.log('ℹ️ User still not premium');
             }
           }
         } catch (error) {
@@ -188,7 +214,17 @@ function AppContent() {
     };
   }, [user, tg]);
 
+  // 🔥 ОТЛАДКА РЕНДЕРА
+  console.log('🎨 RENDER DECISION:', {
+    loading,
+    error: !!error,
+    user: !!user,
+    showOnboarding,
+    showProfile
+  });
+
   if (loading || isLoading) {
+    console.log('⏳ Rendering LOADER');
     return (
       <div className="app-loading">
         <Loader size="large" />
@@ -200,6 +236,7 @@ function AppContent() {
   }
 
   if (error) {
+    console.log('❌ Rendering ERROR');
     return (
       <div className="app-error">
         <h2>Ошибка</h2>
@@ -214,6 +251,7 @@ function AppContent() {
   }
 
   if (!user) {
+    console.log('🚫 Rendering NO USER');
     return (
       <div className="app-error">
         <h2>Необходима авторизация</h2>
@@ -222,17 +260,25 @@ function AppContent() {
     );
   }
 
+  if (showOnboarding) {
+    console.log('🆕 Rendering ONBOARDING');
+    return (
+      <Onboarding 
+        user={user} 
+        onComplete={() => {
+          console.log('✅ Onboarding completed');
+          setShowOnboarding(false);
+        }} 
+      />
+    );
+  }
+
+  console.log('📱 Rendering MAIN APP');
   return (
     <>
-      {showOnboarding ? (
-        <Onboarding user={user} onComplete={() => setShowOnboarding(false)} />
-      ) : (
-        <>
-          <Today />
-          {showProfile && (
-            <Profile onClose={() => setShowProfile(false)} />
-          )}
-        </>
+      <Today />
+      {showProfile && (
+        <Profile onClose={() => setShowProfile(false)} />
       )}
     </>
   );
