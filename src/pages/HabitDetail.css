@@ -86,7 +86,7 @@
   display: flex;
   align-items: flex-start;
   align-content: center;
-  /* gap: 12px; */
+  gap: 6px;
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -166,7 +166,7 @@
   background: white;
   border-radius: 16px;
   padding: 20px;
-  text-align: center;
+  text-align: left;
 }
 
 .habit-detail__stat-circle {
