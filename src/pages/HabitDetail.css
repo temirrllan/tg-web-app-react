@@ -276,13 +276,7 @@
   gap: 12px;
 }
 
-.habit-detail__btn--copy-link {
-  background: white;
-  color: #A7D96C;
-  border: 2px solid #A7D96C;
-  padding: 14px 16px;
-  font-size: 16px;
-}
+
 
 /* Buttons */
 .habit-detail__btn {
