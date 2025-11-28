@@ -75,8 +75,8 @@
 
 .habit-detail__habit-header {
   display: flex;
-  align-content: center;
-  /* align-items: flex-start; */
+  /* align-content: center; */
+  align-items: center;
   justify-content: space-between;
   margin-bottom: 4px;
   gap: 12px;
