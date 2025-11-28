@@ -571,25 +571,17 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
                 ))}
               </div>
             ) : (
-               <p className="habit-detail__friends-subtitle">
+              <p className="habit-detail__friends-subtitle">
                 {t('habitDetail.friends.subtitle')}
               </p>
             )}
-            <div className="habit-detail__share-buttons">
-              <button 
-                className="habit-detail__btn habit-detail__btn--outline habit-detail__btn--copy-link"
-                onClick={handleCopyLink}
-              >
-                {t('habitDetail.friends.copyLink')}
-              </button>
-              
             
-           <button 
+            <button 
               className="habit-detail__btn habit-detail__btn--add-friend"
               onClick={handleAddFriend}
             >
               {t('habitDetail.friends.addFriend')}
-            </button></div>
+            </button>
           </div>
 
           {isCreator && (
