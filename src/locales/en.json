@@ -195,7 +195,8 @@
       "subtitle": "Share the link with friends and invite them to track habits together.",
       "addFriend": "Add Friend",
       "remove": "Remove",
-      "punch": "👊 Punch"
+      "punch": "👊 Punch",
+      "copyLink": "Copy Link"
     },
     "buttons": {
       "removeHabit": "Remove Habit"

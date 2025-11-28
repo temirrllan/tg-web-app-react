@@ -582,19 +582,14 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
               >
                 {t('habitDetail.friends.copyLink')}
               </button>
-              <button 
-                className="habit-detail__btn habit-detail__btn--primary"
-                onClick={handleShare}
-              >
-                {t('habitDetail.friends.share')}
-              </button>
-            </div>
+              
+            
            <button 
               className="habit-detail__btn habit-detail__btn--add-friend"
               onClick={handleAddFriend}
             >
               {t('habitDetail.friends.addFriend')}
-            </button>
+            </button></div>
           </div>
 
           {isCreator && (
