@@ -575,7 +575,9 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
                 {t('habitDetail.friends.subtitle')}
               </p>
             )}
-            
+            <button className='habit-detail__share-buttons' onClick={handleShare}>
+              {t('habitDetail.friends.shareHabit')}
+            </button>
             <button 
               className="habit-detail__btn habit-detail__btn--add-friend"
               onClick={handleAddFriend}
