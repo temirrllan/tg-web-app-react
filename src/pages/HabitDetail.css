@@ -255,6 +255,7 @@
   border-radius: 16px;
   padding: 20px;
   margin-bottom: 20px;
+  text-align: left;
 }
 
 .habit-detail__friends-title {
