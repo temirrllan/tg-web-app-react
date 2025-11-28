@@ -311,17 +311,73 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   };
 
   const handleCopyLink = async () => {
-    try {
-      const shareData = await habitService.createShareLink(habit.id);
-      const shareCode = shareData.shareCode;
+  try {
+    console.log('📋 Creating share link for habit:', habit.id);
+    
+    // Создаём ссылку на backend
+    const shareData = await habitService.createShareLink(habit.id);
+    console.log('✅ Share data received:', shareData);
+    
+    if (!shareData || !shareData.shareCode) {
+      throw new Error('No share code received');
+    }
+    
+    const shareCode = shareData.shareCode;
+    const inviteLink = `https://t.me/CheckHabitlyBot?start=${shareCode}`;
+    
+    console.log('📋 Attempting to copy link:', inviteLink);
+    
+    // Telegram WebApp environment - используем специальный метод
+    if (window.Telegram?.WebApp) {
+      const tg = window.Telegram.WebApp;
       
-      const inviteLink = `https://t.me/CheckHabitlyBot?start=${shareCode}`;
-      
-      console.log('📋 Copying link to clipboard:', inviteLink);
-      
+      // Метод 1: Используем Telegram Clipboard API если доступен
+      if (tg.clipboard) {
+        try {
+          await tg.clipboard.writeText(inviteLink);
+          console.log('✅ Copied via Telegram API');
+        } catch (clipErr) {
+          console.warn('Telegram clipboard failed, trying fallback');
+          throw clipErr;
+        }
+      } else {
+        // Fallback для Telegram
+        const textArea = document.createElement("textarea");
+        textArea.value = inviteLink;
+        textArea.style.position = "absolute";
+        textArea.style.left = "-9999px";
+        textArea.style.top = "0";
+        textArea.setAttribute('readonly', '');
+        document.body.appendChild(textArea);
+        
+        // Для iOS нужны дополнительные действия
+        if (navigator.userAgent.match(/ipad|iphone/i)) {
+          const range = document.createRange();
+          range.selectNodeContents(textArea);
+          const selection = window.getSelection();
+          selection.removeAllRanges();
+          selection.addRange(range);
+          textArea.setSelectionRange(0, 999999);
+        } else {
+          textArea.select();
+        }
+        
+        const success = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        if (!success) {
+          throw new Error('execCommand failed');
+        }
+        
+        console.log('✅ Copied via execCommand');
+      }
+    } else {
+      // Browser environment - используем Clipboard API
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(inviteLink);
+        console.log('✅ Copied via Clipboard API');
       } else {
+        // Fallback для старых браузеров
         const textArea = document.createElement("textarea");
         textArea.value = inviteLink;
         textArea.style.position = "fixed";
@@ -329,25 +385,42 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
-        document.execCommand('copy');
-        textArea.remove();
+        
+        const success = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        if (!success) {
+          throw new Error('Copy failed');
+        }
+        
+        console.log('✅ Copied via fallback');
       }
-      
-      setShowCopyModal(true);
-      
-      if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-      }
-      
-      console.log('✅ Link copied to clipboard');
-    } catch (err) {
-      console.error('Failed to copy link:', err);
-      setToast({
-        message: t('habitDetail.toasts.linkCopyFailed'),
-        type: 'error'
-      });
     }
-  };
+    
+    // Показываем модалку успеха
+    setShowCopyModal(true);
+    
+    // Вибрация
+    if (window.Telegram?.WebApp?.HapticFeedback) {
+      window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    }
+    
+    console.log('✅ Link copied successfully:', inviteLink);
+    
+  } catch (err) {
+    console.error('❌ Failed to copy link:', err);
+    console.error('Error details:', {
+      message: err.message,
+      stack: err.stack
+    });
+    
+    // Показываем ошибку
+    setToast({
+      message: t('habitDetail.toasts.linkCopyFailed'),
+      type: 'error'
+    });
+  }
+};
 
   const handlePunchFriend = async (memberId) => {
     try {
