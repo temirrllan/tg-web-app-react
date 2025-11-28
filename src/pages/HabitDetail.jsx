@@ -551,7 +551,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
                 fontSize: '13px',
                 color: '#8E8E93',
                 marginBottom: '12px',
-                textAlign: 'center'
+                textAlign: 'left'
               }}>
                 {friendLimitData.currentFriendsCount}/{friendLimitData.limit} {friendLimitData.limit === 1 ? t('habitDetail.friends.friendsAdded') : t('habitDetail.friends.friendsAddedPlural')} ({t('habitDetail.friends.freePlan')})
               </p>
