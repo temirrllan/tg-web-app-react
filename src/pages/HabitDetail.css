@@ -249,6 +249,8 @@
 
 /* Friends Section */
 .habit-detail__friends {
+  display: flex;
+  flex-direction: column;
   background: white;
   border-radius: 16px;
   padding: 20px;
