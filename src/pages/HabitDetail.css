@@ -68,8 +68,8 @@
 .habit-detail__habit-info {
   /* background: white; */
   border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 20px;
+  /* padding: 20px; */
+  margin-bottom: 16px;
   overflow: hidden;
 }
 
