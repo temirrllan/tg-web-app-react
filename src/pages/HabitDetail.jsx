@@ -327,85 +327,22 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     
     console.log('📋 Attempting to copy link:', inviteLink);
     
-    // Telegram WebApp environment - используем специальный метод
-    if (window.Telegram?.WebApp) {
-      const tg = window.Telegram.WebApp;
+    // Универсальный метод копирования
+    const copySuccess = await copyToClipboard(inviteLink);
+    
+    if (copySuccess) {
+      console.log('✅ Link copied successfully:', inviteLink);
       
-      // Метод 1: Используем Telegram Clipboard API если доступен
-      if (tg.clipboard) {
-        try {
-          await tg.clipboard.writeText(inviteLink);
-          console.log('✅ Copied via Telegram API');
-        } catch (clipErr) {
-          console.warn('Telegram clipboard failed, trying fallback');
-          throw clipErr;
-        }
-      } else {
-        // Fallback для Telegram
-        const textArea = document.createElement("textarea");
-        textArea.value = inviteLink;
-        textArea.style.position = "absolute";
-        textArea.style.left = "-9999px";
-        textArea.style.top = "0";
-        textArea.setAttribute('readonly', '');
-        document.body.appendChild(textArea);
-        
-        // Для iOS нужны дополнительные действия
-        if (navigator.userAgent.match(/ipad|iphone/i)) {
-          const range = document.createRange();
-          range.selectNodeContents(textArea);
-          const selection = window.getSelection();
-          selection.removeAllRanges();
-          selection.addRange(range);
-          textArea.setSelectionRange(0, 999999);
-        } else {
-          textArea.select();
-        }
-        
-        const success = document.execCommand('copy');
-        document.body.removeChild(textArea);
-        
-        if (!success) {
-          throw new Error('execCommand failed');
-        }
-        
-        console.log('✅ Copied via execCommand');
+      // Показываем модалку успеха
+      setShowCopyModal(true);
+      
+      // Вибрация
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
       }
     } else {
-      // Browser environment - используем Clipboard API
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(inviteLink);
-        console.log('✅ Copied via Clipboard API');
-      } else {
-        // Fallback для старых браузеров
-        const textArea = document.createElement("textarea");
-        textArea.value = inviteLink;
-        textArea.style.position = "fixed";
-        textArea.style.left = "-999999px";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        
-        const success = document.execCommand('copy');
-        document.body.removeChild(textArea);
-        
-        if (!success) {
-          throw new Error('Copy failed');
-        }
-        
-        console.log('✅ Copied via fallback');
-      }
+      throw new Error('All copy methods failed');
     }
-    
-    // Показываем модалку успеха
-    setShowCopyModal(true);
-    
-    // Вибрация
-    if (window.Telegram?.WebApp?.HapticFeedback) {
-      window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-    }
-    
-    console.log('✅ Link copied successfully:', inviteLink);
     
   } catch (err) {
     console.error('❌ Failed to copy link:', err);
@@ -421,6 +358,80 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     });
   }
 };
+
+  // Универсальная функция копирования
+  const copyToClipboard = async (text) => {
+    // Метод 1: Современный Clipboard API
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        console.log('✅ Copied via Clipboard API');
+        return true;
+      } catch (err) {
+        console.warn('⚠️ Clipboard API failed:', err);
+      }
+    }
+    
+    // Метод 2: execCommand (работает в большинстве случаев)
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      
+      // Стили для невидимости
+      textArea.style.position = 'fixed';
+      textArea.style.top = '0';
+      textArea.style.left = '0';
+      textArea.style.width = '2em';
+      textArea.style.height = '2em';
+      textArea.style.padding = '0';
+      textArea.style.border = 'none';
+      textArea.style.outline = 'none';
+      textArea.style.boxShadow = 'none';
+      textArea.style.background = 'transparent';
+      
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      // Для iOS
+      textArea.setSelectionRange(0, 99999);
+      
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      if (successful) {
+        console.log('✅ Copied via execCommand');
+        return true;
+      }
+    } catch (err) {
+      console.warn('⚠️ execCommand failed:', err);
+    }
+    
+    // Метод 3: Telegram WebApp readTextFromClipboard (только для чтения, но попробуем)
+    const tg = window.Telegram?.WebApp;
+    if (tg && tg.readTextFromClipboard) {
+      try {
+        // Используем prompt как fallback
+        if (window.prompt) {
+          window.prompt('Copy this link:', text);
+          console.log('✅ Showed prompt for manual copy');
+          return true;
+        }
+      } catch (err) {
+        console.warn('⚠️ Telegram readTextFromClipboard failed:', err);
+      }
+    }
+    
+    // Метод 4: Последний fallback - пытаемся через alert
+    if (tg && tg.showAlert) {
+      tg.showAlert(`Copy this link:\n\n${text}`);
+      console.log('✅ Showed alert with link');
+      return true;
+    }
+    
+    console.error('❌ All copy methods failed');
+    return false;
+  };
 
   const handlePunchFriend = async (memberId) => {
     try {
