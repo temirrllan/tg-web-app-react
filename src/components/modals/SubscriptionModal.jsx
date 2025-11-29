@@ -5,7 +5,7 @@ import { useNavigation } from '../../hooks/useNavigation';
 import { habitService } from '../../services/habits';
 import { useTranslation } from '../../hooks/useTranslation';
 
-const SubscriptionModal = ({ isOpen, onClose, onSelectPlan }) => {
+const SubscriptionModal = ({ isOpen, onClose, onSelectPlan, lockedHabit = null }) => {
   const { t } = useTranslation();
 
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -77,66 +77,121 @@ const SubscriptionModal = ({ isOpen, onClose, onSelectPlan }) => {
     <div className="subscription-modal-overlay" onClick={handleClose}>
       <div className="subscription-modal" onClick={(e) => e.stopPropagation()}>
         <div className="subscription-modal__content">
-          
-          {/* Illustration */}
+          {/* 🔥 НОВОЕ: Показываем контекст заблокированной привычки */}
+          {lockedHabit && (
+            <div style={{
+              background: '#FFF3CD',
+              border: '2px solid #FFB020',
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>🔒</div>
+              <h3 style={{ 
+                fontSize: '18px', 
+                fontWeight: 'bold', 
+                marginBottom: '8px',
+                color: '#000'
+              }}>
+                "{lockedHabit.title}" is Locked
+              </h3>
+              <p style={{ 
+                fontSize: '14px', 
+                color: '#666',
+                lineHeight: '1.5'
+              }}>
+                This habit was created during your Premium subscription. 
+                Upgrade to Premium to unlock and continue tracking!
+              </p>
+            </div>
+          )}
+           {/* Illustration */}
           <div className="subscription-modal__illustration">
             <img src={sub} alt={t('subscriptionModal.illustrationAlt')} />
           </div>
 
           {/* Info */}
           <div className="subscription-modal__info">
-            <h1 className="subscription-modal__main-title">
-              {t('subscriptionModal.title')}
+           <h1 className="subscription-modal__main-title">
+              {lockedHabit 
+                ? 'Unlock Your Premium Habits' 
+                : t('subscriptionModal.title')
+              }
             </h1>
 
             <p className="subscription-modal__subtitle">
-              {t('subscriptionModal.subtitle')}
+              {lockedHabit
+                ? 'Get full access to all your habits and premium features'
+                : t('subscriptionModal.subtitle')
+              }
             </p>
 
             {/* Features */}
             <div className="subscription-modal__features">
               
-              <div className="subscription-modal__feature">
-                <div className="subscription-modal__feature-icon">
-                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                    <circle cx="14" cy="14" r="14" fill="#A7D96C"/>
-                    <path d="M9 14l3 3 7-7" 
-                      stroke="white" strokeWidth="2.5" 
-                      strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
+              {lockedHabit && (
+                <div className="subscription-modal__feature" style={{
+                  background: '#E8F5E9',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  marginBottom: '12px'
+                }}>
+                  <div className="subscription-modal__feature-icon">
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                      <circle cx="14" cy="14" r="14" fill="#4CAF50"/>
+                      <path d="M9 14l3 3 7-7" 
+                        stroke="white" strokeWidth="2.5" 
+                        strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <span className="subscription-modal__feature-text">
+                    <strong>Unlock "{lockedHabit.title}"</strong> and all your premium habits
+                  </span>
                 </div>
-                <span className="subscription-modal__feature-text">
-                  {t('subscriptionModal.features.unlimited')}
-                </span>
-              </div>
+              )},
 
-              <div className="subscription-modal__feature">
-                <div className="subscription-modal__feature-icon">
-                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                    <circle cx="14" cy="14" r="14" fill="#A7D96C"/>
-                    <path d="M9 14l3 3 7-7" 
-                      stroke="white" strokeWidth="2.5" 
-                      strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
+             {lockedHabit && (
+                <div className="subscription-modal__feature" style={{
+                  background: '#E8F5E9',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  marginBottom: '12px'
+                }}>
+                  <div className="subscription-modal__feature-icon">
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                      <circle cx="14" cy="14" r="14" fill="#4CAF50"/>
+                      <path d="M9 14l3 3 7-7" 
+                        stroke="white" strokeWidth="2.5" 
+                        strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <span className="subscription-modal__feature-text">
+                    <strong>Unlock "{lockedHabit.title}"</strong> and all your premium habits
+                  </span>
                 </div>
-                <span className="subscription-modal__feature-text">
-                  {t('subscriptionModal.features.stats')}
-                </span>
-              </div>
+              )},
 
-              <div className="subscription-modal__feature">
-                <div className="subscription-modal__feature-icon">
-                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                    <circle cx="14" cy="14" r="14" fill="#A7D96C"/>
-                    <path d="M9 14l3 3 7-7" 
-                      stroke="white" strokeWidth="2.5" 
-                      strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
+              {lockedHabit && (
+                <div className="subscription-modal__feature" style={{
+                  background: '#E8F5E9',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  marginBottom: '12px'
+                }}>
+                  <div className="subscription-modal__feature-icon">
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                      <circle cx="14" cy="14" r="14" fill="#4CAF50"/>
+                      <path d="M9 14l3 3 7-7" 
+                        stroke="white" strokeWidth="2.5" 
+                        strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <span className="subscription-modal__feature-text">
+                    <strong>Unlock "{lockedHabit.title}"</strong> and all your premium habits
+                  </span>
                 </div>
-                <span className="subscription-modal__feature-text">
-                  {t('subscriptionModal.features.support')}
-                </span>
-              </div>
+              )}
 
             </div>
 

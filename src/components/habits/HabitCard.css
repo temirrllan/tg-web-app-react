@@ -305,3 +305,85 @@
 .has-members .swipe-action-button {
   border-radius: 20px 20px 0 0;
 }
+
+/* src/components/habits/HabitCard.css - Добавить стили для заблокированных привычек */
+
+/* Заблокированная привычка */
+.habit-card.locked {
+  opacity: 0.5;
+  pointer-events: none;
+  position: relative;
+  background: #F5F5F5 !important;
+}
+
+.habit-card.locked::before {
+  content: '🔒';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 48px;
+  z-index: 10;
+  opacity: 0.3;
+}
+
+/* Overlay для заблокированной привычки */
+.habit-card.locked::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 20px;
+  z-index: 5;
+}
+
+/* Badge "Premium" на заблокированной привычке */
+.habit-card-wrapper.locked .habit-locked-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #000;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(255, 165, 0, 0.3);
+  letter-spacing: 0.5px;
+}
+
+/* Клик на заблокированную привычку */
+.habit-card.locked.clickable {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.habit-card.locked.clickable:active {
+  transform: scale(0.98);
+}
+
+/* Текст внутри заблокированной привычки */
+.habit-card.locked .habit-title,
+.habit-card.locked .habit-goal {
+  color: #999 !important;
+}
+
+/* Иконка заблокированной привычки */
+.habit-card.locked .habit-icon {
+  background: #E0E0E0 !important;
+}
+
+/* Анимация unlock при клике */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.habit-card.locked.shake {
+  animation: shake 0.3s ease-in-out;
+}

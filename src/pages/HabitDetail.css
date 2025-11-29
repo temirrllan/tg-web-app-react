@@ -232,19 +232,19 @@
 
 /* Motivation */
 .habit-detail__motivation {
-  background: #A7D96C;
+  background: #B8F091;
   border-radius: 16px;
-  padding: 24px;
+  padding: 21px;
   margin-bottom: 20px;
   text-align: center;
 }
 
 .habit-detail__motivation-text {
   font-size: 24px;
-  font-weight: 600;
+  /* font-weight: re; */
   color: #1D1D1F;
   margin: 0;
-  font-style: italic;
+  /* font-style: regular; */
 }
 
 /* Friends Section */

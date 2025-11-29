@@ -17,10 +17,41 @@ import EditHabitForm from '../components/habits/EditHabitForm';
 import SubscriptionModal from '../components/modals/SubscriptionModal';
 import Subscription from './Subscription';
 import { useTranslation } from '../hooks/useTranslation';
+import SubscriptionModal from '../components/modals/SubscriptionModal';
 
 const Today = () => {
     const { t } = useTranslation();
+const [showLockedHabitModal, setShowLockedHabitModal] = useState(false);
+  const [lockedHabit, setLockedHabit] = useState(null);
 
+
+  // 🔥 НОВОЕ: Обработчик клика на заблокированную привычку
+  const handleLockedHabitClick = (habit) => {
+    console.log('🔒 Locked habit clicked:', habit.title);
+    
+    setLockedHabit(habit);
+    setShowLockedHabitModal(true);
+    
+    // Показываем уведомление через Telegram
+    const tg = window.Telegram?.WebApp;
+    if (tg?.showPopup) {
+      tg.showPopup({
+        title: '🔒 Premium Required',
+        message: `"${habit.title}" is a premium habit.\n\nUpgrade to Premium to unlock this habit and continue tracking!`,
+        buttons: [
+          { id: 'upgrade', type: 'default', text: 'Upgrade to Premium' },
+          { id: 'cancel', type: 'cancel' }
+        ]
+      }, (button_id) => {
+        if (button_id === 'upgrade') {
+          setShowSubscriptionModal(true);
+        }
+      });
+    } else {
+      // Fallback для development
+      setShowSubscriptionModal(true);
+    }
+  };
   const { user } = useTelegram();
   const {
     todayHabits,
@@ -564,25 +595,26 @@ const handleSubscriptionPageClose = async () => {
           )}
 
           {dateLoading ? (
-            <div className="today__habits-loading">
-              <Loader size="medium" />
-            </div>
-          ) : displayHabits.length === 0 ? (
-            <EmptyState onCreateClick={() => handleFabClick()} />
-          ) : (
-            <div className="today__habits">
-              {displayHabits.map((habit) => (
-                <HabitCard
-                  key={`${habit.id}-${selectedDate}-${habit.today_status}`}
-                  habit={habit}
-                  onMark={isEditableDate ? handleMark : undefined}
-                  onUnmark={isEditableDate ? handleUnmark : undefined}
-                  onClick={handleHabitClick}
-                  readOnly={!isEditableDate}
-                />
-              ))}
-            </div>
-          )}
+          <div className="today__habits-loading">
+            <Loader size="medium" />
+          </div>
+        ) : displayHabits.length === 0 ? (
+          <EmptyState onCreateClick={() => handleFabClick()} />
+        ) : (
+          <div className="today__habits">
+            {displayHabits.map((habit) => (
+              <HabitCard
+                key={`${habit.id}-${selectedDate}-${habit.today_status}-${habit.locked_at}`}
+                habit={habit}
+                onMark={isEditableDate ? handleMark : undefined}
+                onUnmark={isEditableDate ? handleUnmark : undefined}
+                onClick={handleHabitClick}
+                onLockedClick={handleLockedHabitClick} // 🔥 НОВЫЙ PROP
+                readOnly={!isEditableDate}
+              />
+            ))}
+          </div>
+        )}
         </div>
 
         <SwipeHint 
@@ -614,9 +646,14 @@ const handleSubscriptionPageClose = async () => {
       )}
 
       <SubscriptionModal
-        isOpen={showSubscriptionModal}
-        onClose={() => setShowSubscriptionModal(false)}
+        isOpen={showSubscriptionModal || showLockedHabitModal}
+        onClose={() => {
+          setShowSubscriptionModal(false);
+          setShowLockedHabitModal(false);
+          setLockedHabit(null);
+        }}
         onSelectPlan={handleSubscriptionPlanSelect}
+        lockedHabit={lockedHabit} // Передаём информацию о заблокированной привычке
       />
     </>
   );
