@@ -6,7 +6,7 @@ import Loader from '../components/common/Loader';
 import './PurchaseHistory.css';
 
 const PurchaseHistory = ({ onClose }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   useNavigation(onClose);
   
   const [loading, setLoading] = useState(true);
@@ -21,9 +21,13 @@ const PurchaseHistory = ({ onClose }) => {
       setLoading(true);
       const result = await habitService.getSubscriptionHistory();
       
+      console.log('📥 Purchase history received:', result);
+      
       if (result.success && result.history) {
         const grouped = groupPurchasesByDate(result.history);
         setPurchases(grouped);
+        
+        console.log('📊 Grouped purchases:', grouped);
       }
     } catch (error) {
       console.error('Failed to load purchase history:', error);
@@ -79,10 +83,27 @@ const PurchaseHistory = ({ onClose }) => {
     return `MANUNYA${id.toString().padStart(5, '0')}`;
   };
   
-  const formatValidityDate = (expiresAt) => {
-    if (!expiresAt) return 'Lifetime';
+  const formatValidityDate = (item) => {
+    console.log('🔍 Formatting validity for:', {
+      subscription_id: item.subscription_id,
+      expires_at: item.expires_at,
+      is_active: item.is_active,
+      action: item.action
+    });
     
-    const date = new Date(expiresAt);
+    // 🔥 Если подписка отменена или истекла - показываем статус
+    if (!item.is_active || item.action === 'cancelled' || item.action === 'expired') {
+      if (language === 'ru') return 'Отменена';
+      if (language === 'kk') return 'Болдырмау';
+      return 'Cancelled';
+    }
+    
+    // Если нет даты истечения - Lifetime
+    if (!item.expires_at) {
+      return 'Lifetime';
+    }
+    
+    const date = new Date(item.expires_at);
     const day = date.getDate();
     const month = date.toLocaleDateString('en-US', { month: 'long' });
     const year = date.getFullYear();
@@ -91,26 +112,48 @@ const PurchaseHistory = ({ onClose }) => {
   };
   
   const getPlanDetails = (item) => {
-    // Используем реальную цену из истории, если она есть
-    const actualPrice = item.price_stars || 0;
+    console.log('🔍 Getting plan details for item:', {
+      subscription_id: item.subscription_id,
+      plan_type: item.plan_type,
+      plan_name: item.plan_name,
+      price_stars: item.price_stars
+    });
+    
+    // 🔥 ПРИОРИТЕТ 1: Используем реальную цену из истории
+    const actualPrice = parseInt(item.price_stars) || 0;
     
     // Если цена есть в записи - используем её
     if (actualPrice > 0) {
+      console.log(`✅ Using actual price from history: ${actualPrice} XTR`);
       return {
         name: item.plan_name || t('purchaseHistory.item.subscription'),
         price: actualPrice
       };
     }
     
-    // Fallback на старую логику (если вдруг цена не записалась)
+    // 🔥 FALLBACK: Если почему-то цена не записалась, берём из плана
+    console.warn(`⚠️ Price not found in history for subscription ${item.subscription_id}, using plan defaults`);
+    
     const plans = {
-      'test': { name: 'Test Plan', price: 1 },
-      'month': { name: t('profile.plan.month'), price: 59 },
-      '6_months': { name: t('profile.plan.sixMonths'), price: 299 },
-      '1_year': { name: t('profile.plan.oneYear'), price: 500 }
+      'test': { name: 'Test Plan (1 Star)', price: 1 },
+      'month': { name: 'Premium for 1 Month', price: 59 },
+      '6_months': { name: 'Premium for 6 Months', price: 299 },
+      '1_year': { name: 'Premium for 1 Year', price: 500 }
     };
     
-    return plans[item.plan_type] || { 
+    const fallbackPlan = plans[item.plan_type];
+    
+    if (fallbackPlan) {
+      console.log(`📦 Using fallback price for ${item.plan_type}: ${fallbackPlan.price} XTR`);
+      return {
+        name: item.plan_name || fallbackPlan.name,
+        price: fallbackPlan.price
+      };
+    }
+    
+    // Последний fallback
+    console.error(`❌ No plan found for ${item.plan_type}`);
+    return { 
       name: item.plan_name || t('purchaseHistory.item.subscription'), 
       price: 0 
     };
@@ -149,9 +192,25 @@ const PurchaseHistory = ({ onClose }) => {
                 <p className="purchase-history__date">{group.displayDate}</p>
                 <div className="purchase-history__items">
                   {group.items.map((item, index) => {
-                    const plan = getPlanDetails(item.plan_type);
-                    const validTo = formatValidityDate(item.expires_at);
+                    const plan = getPlanDetails(item);
+                    const validTo = formatValidityDate(item);
                     const orderId = formatOrderId(item.subscription_id);
+                    
+                    // 🔥 Определяем стиль в зависимости от статуса
+                    const isInactive = !item.is_active || item.action === 'cancelled' || item.action === 'expired';
+                    const validityStyle = isInactive ? { 
+                      color: '#999',
+                      textDecoration: 'line-through'
+                    } : {};
+                    
+                    console.log('📋 Rendering history item:', {
+                      subscription_id: item.subscription_id,
+                      plan_name: plan.name,
+                      price: plan.price,
+                      is_active: item.is_active,
+                      action: item.action,
+                      validity: validTo
+                    });
                     
                     return (
                       <div key={index}>
@@ -179,7 +238,10 @@ const PurchaseHistory = ({ onClose }) => {
                           <span className="purchase-history__validity-label">
                             {t('purchaseHistory.item.validTo')}
                           </span>
-                          <span className="purchase-history__validity-value">
+                          <span 
+                            className="purchase-history__validity-value"
+                            style={validityStyle}
+                          >
                             {validTo}
                           </span>
                           <div className="purchase-history__validity-order">
