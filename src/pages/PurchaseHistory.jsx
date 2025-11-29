@@ -90,24 +90,28 @@ const PurchaseHistory = ({ onClose }) => {
     return `${t('purchaseHistory.item.until')} ${day} ${month} ${year}`;
   };
   
-  const getPlanDetails = (planType) => {
+  const getPlanDetails = (item) => {
+    // Используем реальную цену из истории, если она есть
+    const actualPrice = item.price_stars || 0;
+    
+    // Если цена есть в записи - используем её
+    if (actualPrice > 0) {
+      return {
+        name: item.plan_name || t('purchaseHistory.item.subscription'),
+        price: actualPrice
+      };
+    }
+    
+    // Fallback на старую логику (если вдруг цена не записалась)
     const plans = {
-      '6_months': {
-        name: t('profile.plan.sixMonths'),
-        price: 600
-      },
-      '1_year': {
-        name: t('profile.plan.oneYear'),
-        price: 350
-      },
-      'lifetime': {
-        name: t('profile.plan.lifetime'),
-        price: 1500
-      }
+      'test': { name: 'Test Plan', price: 1 },
+      'month': { name: t('profile.plan.month'), price: 59 },
+      '6_months': { name: t('profile.plan.sixMonths'), price: 299 },
+      '1_year': { name: t('profile.plan.oneYear'), price: 500 }
     };
     
-    return plans[planType] || { 
-      name: t('purchaseHistory.item.subscription'), 
+    return plans[item.plan_type] || { 
+      name: item.plan_name || t('purchaseHistory.item.subscription'), 
       price: 0 
     };
   };
