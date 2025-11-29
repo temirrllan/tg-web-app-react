@@ -12,10 +12,9 @@ const EditHabitForm = ({ habit, onClose, onSuccess }) => {
   const [categories, setCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
 
-  // dropdown states
   const [showRepeatDropdown, setShowRepeatDropdown] = useState(false);
   const [showTimeDropdown, setShowTimeDropdown] = useState(false);
-  const [repeatActive, setRepeatActive] = useState(true); // редактируем — повтор активен
+  const [repeatActive, setRepeatActive] = useState(true);
   const [timeActive, setTimeActive] = useState(!!habit.reminder_time);
 
   const repeatRef = useRef(null);
@@ -23,10 +22,16 @@ const EditHabitForm = ({ habit, onClose, onSuccess }) => {
 
   useNavigation(onClose);
 
-  // анимация блока с днями
   const [showDaysAnimation, setShowDaysAnimation] = useState(false);
 
-  // форма инициализируется данными привычки
+  // 🆕 Счетчики символов
+  const [titleLength, setTitleLength] = useState(habit.title?.length || 0);
+  const [goalLength, setGoalLength] = useState(habit.goal?.length || 0);
+
+  // 🆕 Константы лимитов
+  const TITLE_MAX_LENGTH = 15;
+  const GOAL_MAX_LENGTH = 35;
+
   const [formData, setFormData] = useState({
     title: habit.title || '',
     goal: habit.goal || '',
@@ -42,7 +47,6 @@ const EditHabitForm = ({ habit, onClose, onSuccess }) => {
     loadCategories();
   }, []);
 
-  // закрытие dropdown при клике вне
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (repeatRef.current && !repeatRef.current.contains(event.target)) {
@@ -56,7 +60,6 @@ const EditHabitForm = ({ habit, onClose, onSuccess }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // анимация блока дней
   useEffect(() => {
     if (repeatActive) {
       setTimeout(() => setShowDaysAnimation(true), 50);
@@ -82,8 +85,21 @@ const EditHabitForm = ({ habit, onClose, onSuccess }) => {
     }
   };
 
+  // 🆕 Обновленный handleInputChange с проверкой длины
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    if (field === 'title') {
+      if (value.length <= TITLE_MAX_LENGTH) {
+        setFormData(prev => ({ ...prev, [field]: value }));
+        setTitleLength(value.length);
+      }
+    } else if (field === 'goal') {
+      if (value.length <= GOAL_MAX_LENGTH) {
+        setFormData(prev => ({ ...prev, [field]: value }));
+        setGoalLength(value.length);
+      }
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   const handleDayToggle = (dayId) => {
@@ -131,7 +147,6 @@ const EditHabitForm = ({ habit, onClose, onSuccess }) => {
     setShowTimeDropdown(false);
   };
 
-  // Метка повтора (i18n)
   const getRepeatLabel = () => {
     const days = formData.schedule_days;
     if (days.length === 7) return t('createHabit.repeat.everyDay');
@@ -140,7 +155,6 @@ const EditHabitForm = ({ habit, onClose, onSuccess }) => {
     return t('createHabit.repeat.custom');
   };
 
-  // AM/PM формат со строками i18n
   const getTimeLabel = () => {
     if (!timeActive || !formData.reminder_time) return t('createHabit.default');
     const [hours, minutes] = formData.reminder_time.split(':');
@@ -151,43 +165,42 @@ const EditHabitForm = ({ habit, onClose, onSuccess }) => {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (formData.schedule_days.length === 0) {
-    alert(t('createHabit.errors.selectAtLeastOneDay'));
-    return;
-  }
-
-  setLoading(true);
-  try {
-    const dataToSubmit = {
-      ...formData,
-      reminder_time: formData.reminder_time ? `${formData.reminder_time}:00` : null
-    };
-
-    await habitService.updateHabit(habit.id, dataToSubmit);
-
-    if (onSuccess) {
-      await onSuccess();
+    if (formData.schedule_days.length === 0) {
+      alert(t('createHabit.errors.selectAtLeastOneDay'));
+      return;
     }
-    onClose();
-  } catch (error) {
-    console.error('Update habit error:', error);
-    
-    // 🆕 Обработка ошибки прав доступа
-    if (error.message === 'Only the habit creator can edit this habit') {
-      if (window.Telegram?.WebApp?.showAlert) {
-        window.Telegram.WebApp.showAlert('⚠️ Only the habit creator can edit this habit');
-      } else {
-        alert('⚠️ Only the habit creator can edit this habit');
+
+    setLoading(true);
+    try {
+      const dataToSubmit = {
+        ...formData,
+        reminder_time: formData.reminder_time ? `${formData.reminder_time}:00` : null
+      };
+
+      await habitService.updateHabit(habit.id, dataToSubmit);
+
+      if (onSuccess) {
+        await onSuccess();
       }
-    } else {
-      alert(`${t('editHabit.errors.updateFailed')}: ${error.message || t('createHabit.errors.unknown')}`);
+      onClose();
+    } catch (error) {
+      console.error('Update habit error:', error);
+      
+      if (error.message === 'Only the habit creator can edit this habit') {
+        if (window.Telegram?.WebApp?.showAlert) {
+          window.Telegram.WebApp.showAlert('⚠️ Only the habit creator can edit this habit');
+        } else {
+          alert('⚠️ Only the habit creator can edit this habit');
+        }
+      } else {
+        alert(`${t('editHabit.errors.updateFailed')}: ${error.message || t('createHabit.errors.unknown')}`);
+      }
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const isFormValid = () => {
     return formData.title.trim() &&
@@ -200,17 +213,26 @@ const EditHabitForm = ({ habit, onClose, onSuccess }) => {
     <div className="edit-habit">
       <form className="edit-habit__form" onSubmit={handleSubmit}>
         <div className="edit-habit__content">
-          {/* Habit name */}
+          {/* Habit name with character counter */}
           <div className="form-section">
             <label className="form-label">
-              <span className="form-label-title">{t('createHabit.habitName')}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span className="form-label-title">{t('createHabit.habitName')}</span>
+                <span style={{ 
+                  fontSize: '13px', 
+                  color: titleLength >= TITLE_MAX_LENGTH ? '#FF3B30' : '#8E8E93',
+                  fontWeight: titleLength >= TITLE_MAX_LENGTH ? '600' : '400'
+                }}>
+                  {titleLength}/{TITLE_MAX_LENGTH}
+                </span>
+              </div>
               <input
                 type="text"
                 className="form-input"
                 placeholder={t('createHabit.habitNamePlaceholder')}
                 value={formData.title}
                 onChange={(e) => handleInputChange('title', e.target.value)}
-                maxLength={255}
+                maxLength={TITLE_MAX_LENGTH}
                 required
               />
             </label>
@@ -219,22 +241,32 @@ const EditHabitForm = ({ habit, onClose, onSuccess }) => {
             </p>
           </div>
 
-          {/* Goal */}
+          {/* Goal with character counter */}
           <div className="form-section">
             <label className="form-label">
-              <span className="form-label-title">{t('createHabit.goal')}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span className="form-label-title">{t('createHabit.goal')}</span>
+                <span style={{ 
+                  fontSize: '13px', 
+                  color: goalLength >= GOAL_MAX_LENGTH ? '#FF3B30' : '#8E8E93',
+                  fontWeight: goalLength >= GOAL_MAX_LENGTH ? '600' : '400'
+                }}>
+                  {goalLength}/{GOAL_MAX_LENGTH}
+                </span>
+              </div>
               <textarea
                 className="form-textarea"
                 placeholder={t('createHabit.goalPlaceholder')}
                 value={formData.goal}
                 onChange={(e) => handleInputChange('goal', e.target.value)}
+                maxLength={GOAL_MAX_LENGTH}
                 rows={3}
                 required
               />
             </label>
           </div>
 
-          {/* Category (только для good habits) */}
+          {/* Category */}
           {!formData.is_bad_habit && (
             <div className="form-section">
               <span className="form-label-title">{t('createHabit.category')}</span>
@@ -344,7 +376,7 @@ const EditHabitForm = ({ habit, onClose, onSuccess }) => {
                         }}
                         type="button"
                       >
-                        {day.short /* при желании можно локализовать через t('weekday.monShort') и т.д. */}
+                        {day.short}
                       </button>
                     ))}
                   </div>

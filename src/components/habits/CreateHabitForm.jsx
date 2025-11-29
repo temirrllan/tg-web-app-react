@@ -23,6 +23,10 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
 
   const [showDaysAnimation, setShowDaysAnimation] = useState(false);
 
+  // 🆕 Счетчики символов
+  const [titleLength, setTitleLength] = useState(0);
+  const [goalLength, setGoalLength] = useState(0);
+
   const [formData, setFormData] = useState({
     title: '',
     goal: '',
@@ -34,8 +38,11 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
     is_bad_habit: false
   });
 
-  // режим повтора: 'everyday' | 'weekdays' | 'weekend' | 'custom'
   const [repeatMode, setRepeatMode] = useState('everyday');
+
+  // 🆕 Константы лимитов
+  const TITLE_MAX_LENGTH = 15;
+  const GOAL_MAX_LENGTH = 35;
 
   useEffect(() => {
     loadCategories();
@@ -79,8 +86,23 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
     }
   };
 
+  // 🆕 Обновленный handleInputChange с проверкой длины
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    if (field === 'title') {
+      // Ограничиваем длину title до 15 символов
+      if (value.length <= TITLE_MAX_LENGTH) {
+        setFormData(prev => ({ ...prev, [field]: value }));
+        setTitleLength(value.length);
+      }
+    } else if (field === 'goal') {
+      // Ограничиваем длину goal до 35 символов
+      if (value.length <= GOAL_MAX_LENGTH) {
+        setFormData(prev => ({ ...prev, [field]: value }));
+        setGoalLength(value.length);
+      }
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   const handleDayToggle = (dayId) => {
@@ -197,17 +219,26 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
     <div className="create-habit">
       <form className="create-habit__form" onSubmit={handleSubmit}>
         <div className="create-habit__content">
-          {/* Habit name */}
+          {/* Habit name with character counter */}
           <div className="form-section">
             <label className="form-label">
-              <span className="form-label-title">{t('createHabit.habitName')}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span className="form-label-title">{t('createHabit.habitName')}</span>
+                <span style={{ 
+                  fontSize: '13px', 
+                  color: titleLength >= TITLE_MAX_LENGTH ? '#FF3B30' : '#8E8E93',
+                  fontWeight: titleLength >= TITLE_MAX_LENGTH ? '600' : '400'
+                }}>
+                  {titleLength}/{TITLE_MAX_LENGTH}
+                </span>
+              </div>
               <input
                 type="text"
                 className="form-input"
                 placeholder={t('createHabit.habitNamePlaceholder')}
                 value={formData.title}
                 onChange={(e) => handleInputChange('title', e.target.value)}
-                maxLength={255}
+                maxLength={TITLE_MAX_LENGTH}
                 required
               />
             </label>
@@ -216,16 +247,25 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
             </p>
           </div>
 
-          {/* Goal */}
+          {/* Goal with character counter */}
           <div className="form-section">
             <label className="form-label">
-              <span className="form-label-title">{t('createHabit.goal')}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span className="form-label-title">{t('createHabit.goal')}</span>
+                <span style={{ 
+                  fontSize: '13px', 
+                  color: goalLength >= GOAL_MAX_LENGTH ? '#FF3B30' : '#8E8E93',
+                  fontWeight: goalLength >= GOAL_MAX_LENGTH ? '600' : '400'
+                }}>
+                  {goalLength}/{GOAL_MAX_LENGTH}
+                </span>
+              </div>
               <input
                 className="form-textarea"
                 placeholder={t('createHabit.goalPlaceholder')}
                 value={formData.goal}
                 onChange={(e) => handleInputChange('goal', e.target.value)}
-                rows={3}
+                maxLength={GOAL_MAX_LENGTH}
                 required
               />
             </label>
@@ -309,7 +349,7 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
                         onClick={(e) => { e.preventDefault(); handleDayToggle(day.id); }}
                         type="button"
                       >
-                        {day.short /* если нужно i18n — маппинг по ключам */}
+                        {day.short}
                       </button>
                     ))}
                   </div>
@@ -395,3 +435,4 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
 };
 
 export default CreateHabitForm;
+
