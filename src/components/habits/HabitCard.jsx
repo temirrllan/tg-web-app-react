@@ -3,7 +3,7 @@ import { HABIT_STATUSES } from '../../utils/constants';
 import './HabitCard.css';
 import { useTranslation } from "../../hooks/useTranslation";
 
-const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onClick, onLockedClick  }) => {
+const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onClick }) => {
   const [loading, setLoading] = useState(false);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -25,32 +25,6 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
   const MAX_SWIPE = 120;
   const MOVE_THRESHOLD = 5; // Минимальное движение для начала свайпа
   const SCROLL_THRESHOLD = 10; // Порог для определения скролла
-
-
-  const isLocked = habit.locked_at !== null;
-  const isPremiumHabit = habit.is_premium_habit === true;
-
-   const handleLockedClick = () => {
-    if (isLocked && onLockedClick) {
-      // Анимация shake
-      const cardElement = cardRef.current;
-      if (cardElement) {
-        cardElement.classList.add('shake');
-        setTimeout(() => {
-          cardElement.classList.remove('shake');
-        }, 300);
-      }
-      
-      // Вызываем callback для показа модалки премиум
-      onLockedClick(habit);
-    }
-  }
-
-
-
-
-
-
 
   useEffect(() => {
     setSwipeOffset(0);
@@ -124,10 +98,6 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
 
   // Touch handlers
   const handleTouchStart = (e) => {
-    if (isLocked) {
-      handleLockedClick();
-      return;
-    }
     if (loading) return
     
     const touch = e.touches[0];
@@ -233,10 +203,6 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
 
   // Mouse handlers для десктопа
   const handleMouseDown = (e) => {
-    if (isLocked) {
-      handleLockedClick();
-      return;
-    }
     if (loading) return
     e.preventDefault();
     setStartX(e.clientX);
@@ -365,25 +331,13 @@ const HabitCard = React.memo(({ habit, onMark, onUnmark, readOnly = false, onCli
   const getCategoryEmoji = () => {
     return habit.category_icon || habit.icon || '🎯';
   };
-const cardClassName = `
-    habit-card 
-    ${getCardState()} 
-    ${isAnimating ? 'animating' : ''} 
-    ${isSwiping ? 'swiping' : ''}
-    ${isLocked ? 'locked clickable' : ''}
-  `.trim();
 
   const hasMembers = habit.members_count && habit.members_count > 0;
 
   return (
-    <div className={`habit-card-wrapper ${hasMembers ? 'has-members' : ''} ${isLocked ? 'locked' : ''}`}>
-      {isLocked && isPremiumHabit && (
-        <div className="habit-locked-badge">
-          ⭐ PREMIUM
-        </div>
-      )}
+    <div className={`habit-card-wrapper ${hasMembers ? 'has-members' : ''}`}>
       <div className="habit-card-container">
-        {!isLocked && rightButton && (
+        {rightButton && (
           <div 
             className={`swipe-action-button ${rightButton.className} ${showRightButton ? 'visible' : ''}`}
             style={{
@@ -399,11 +353,11 @@ const cardClassName = `
 
         <div 
           ref={cardRef}
-          className={cardClassName}
+          className={`habit-card ${getCardState()} ${isAnimating ? 'animating' : ''} ${isSwiping ? 'swiping' : ''}`}
           style={{
-            transform: isLocked ? 'translateX(0)' : `translateX(${swipeOffset}px)`,
+            transform: `translateX(${swipeOffset}px)`,
             transition: isSwiping ? 'none' : 'transform 0.3s ease-out',
-            cursor: isLocked ? 'pointer' : (onClick ? 'pointer' : 'grab')
+            cursor: onClick ? 'pointer' : 'grab'
           }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -422,18 +376,11 @@ const cardClassName = `
               <h3 className="habit-title">
                 {habit.is_bad_habit && '😈 '}
                 {habit.title}
-                {/* 🔥 НОВОЕ: Иконка замка для заблокированных */}
-                {isLocked && ' 🔒'}
               </h3>
-              <p className="habit-goal">
-                {isLocked 
-                  ? t('habit.premiumRequired', { default: 'Premium subscription required' })
-                  : `${t('habit.goal')}: ${habit.goal}`
-                }
-              </p>
+              <p className="habit-goal">{t('habit.goal')}: {habit.goal}</p>
             </div>
 
-           {!isPending && !isLocked && (
+            {!isPending && (
               <div className={`status-indicator ${getCardState()}`}>
                 {getStatusIcon()}
               </div>
@@ -441,7 +388,7 @@ const cardClassName = `
           </div>
         </div>
 
-         {!isLocked && leftButton && (
+        {leftButton && (
           <div 
             className={`swipe-action-button ${leftButton.className} ${showLeftButton ? 'visible' : ''}`}
             style={{
@@ -456,7 +403,7 @@ const cardClassName = `
         )}
       </div>
       
-      {hasMembers && !isLocked && (
+      {hasMembers && (
         <div className="habit-members-badge">
           +{habit.members_count} {t('member.members')}
         </div>
@@ -468,7 +415,6 @@ const cardClassName = `
     prevProps.habit.id === nextProps.habit.id &&
     prevProps.habit.today_status === nextProps.habit.today_status &&
     prevProps.habit.members_count === nextProps.habit.members_count &&
-    prevProps.habit.locked_at === nextProps.habit.locked_at && // 🔥 НОВОЕ
     prevProps.readOnly === nextProps.readOnly
   );
 });
