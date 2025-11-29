@@ -607,7 +607,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
               <h3 className="habit-detail__stat-title">{t('habitDetail.statistics.month')}</h3>
               <p className="habit-detail__stat-subtitle">{t('habitDetail.statistics.daysStreak')}</p>
             </div>
-
             <div className="habit-detail__stat-card">
               <div className="habit-detail__stat-circle" style={{
                 '--progress': getProgressPercentage(statistics.yearDays, statistics.yearTotal),
