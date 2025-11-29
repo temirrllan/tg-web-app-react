@@ -660,7 +660,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
             )}
             
             <div className="habit-detail__share-buttons">
-  <button 
+  {/* <button 
     className="habit-detail__btn habit-detail__btn--copy-link"
     onClick={handleCopyLink}
   >
@@ -669,7 +669,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
     </svg>
     {t('habitDetail.friends.copyLink')}
-  </button>
+  </button> */}
   
   <button 
     className="habit-detail__btn habit-detail__btn--primary habit-detail__btn--share"
