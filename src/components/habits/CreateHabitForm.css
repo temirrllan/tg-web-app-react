@@ -231,8 +231,9 @@
 
 /* Dropdown menu */
 .dropdown-button {
-  width: 150px;
-  flex-shrink: 0;
+  flex: 1;
+  min-width: 0; /* Позволяет flex-элементу сжиматься меньше содержимого */
+  max-width: 150px;
   padding: 12px 16px;
   font-size: 17px;
   border: 1px solid #C6C6C8;
