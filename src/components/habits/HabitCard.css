@@ -273,7 +273,7 @@
 /* Wrapper для карточек с участниками */
 .habit-card-wrapper {
   position: relative;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
 }
 
 .habit-card-wrapper.has-members {
