@@ -555,12 +555,12 @@
   background: #E5E5EA;
   border-radius: 16px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all  0.3s ease;
   flex-shrink: 0;
 }
 
 .toggle-switch--active {
-  background: #34C759;
+  background: linear-gradient(90deg, #93DF72 0%, #EF73FF 100%);
 }
 
 .toggle-switch__slider {
