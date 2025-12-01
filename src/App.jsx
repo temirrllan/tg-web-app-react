@@ -54,7 +54,15 @@ function AppContent() {
           setLoading(false);
           return;
         }
-
+console.log('🔍 === FULL DEBUG ===');
+console.log('window.Telegram:', window.Telegram);
+console.log('WebApp:', window.Telegram?.WebApp);
+console.log('initData:', window.Telegram?.WebApp?.initData);
+console.log('initData length:', window.Telegram?.WebApp?.initData?.length);
+console.log('initDataUnsafe:', window.Telegram?.WebApp?.initDataUnsafe);
+console.log('user:', window.Telegram?.WebApp?.initDataUnsafe?.user);
+console.log('isReady:', isReady);
+console.log('isLoading:', isLoading);
         console.log('📞 Calling authenticateUser...');
         const response = await authenticateUser(webApp?.initData, tgUser);
         
