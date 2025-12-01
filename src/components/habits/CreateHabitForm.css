@@ -231,8 +231,9 @@
 
 /* Dropdown menu */
 .dropdown-button {
-  width: 150px; /* Фиксированная ширина для всех кнопок */
-  flex-shrink: 0; /* Запрещаем сжатие */
+  flex: 1;
+  min-width: 0; /* Позволяет flex-элементу сжиматься меньше содержимого */
+  max-width: 150px;
   padding: 12px 16px;
   font-size: 17px;
   border: 1px solid #C6C6C8;
@@ -244,9 +245,9 @@
   cursor: pointer;
   position: relative;
   transition: all 0.2s;
-  white-space: nowrap; /* Запрещаем перенос текста */
-  overflow: hidden; /* Скрываем переполнение */
-  text-overflow: ellipsis; /* Добавляем троеточие если текст не помещается */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .dropdown-button.active {
   color: #000;
