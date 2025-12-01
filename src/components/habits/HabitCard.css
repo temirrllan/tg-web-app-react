@@ -10,7 +10,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
   height: 80px;
   /* Критически важно для мобильных */
   touch-action: pan-y;
@@ -277,7 +277,7 @@
 }
 
 .habit-card-wrapper.has-members {
-  margin-bottom: 20px; /* Дополнительный отступ для badge */
+  margin-bottom: 10px; /* Дополнительный отступ для badge */
 }
 
 /* Badge с количеством участников */
