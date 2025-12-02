@@ -8,7 +8,7 @@ import WeekNavigation from "../components/habits/WeekNavigation";
 import Profile from "./Profile";
 import HabitDetail from './HabitDetail';
 import Loader from "../components/common/Loader";
-import { useHabitsOptimized as useHabits } from '../hooks/useHabitsOptimized';
+import { useHabits } from "../hooks/useHabits";
 import { useTelegram } from "../hooks/useTelegram";
 import { habitService } from '../services/habits';
 import "./Today.css";
