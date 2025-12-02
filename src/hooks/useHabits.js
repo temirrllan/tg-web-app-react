@@ -1,7 +1,7 @@
-// src/hooks/useHabits.js - ОПТИМИЗИРОВАННАЯ ВЕРСИЯ
+// src/hooks/useHabits.js - МГНОВЕННАЯ ЗАГРУЗКА
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { habitService } from '../services/habitsOptimized';
+import { habitService } from '../services/habits';
 import { vibrate } from '../utils/helpers';
 
 export const useHabits = () => {
@@ -9,17 +9,13 @@ export const useHabits = () => {
   const [todayHabits, setTodayHabits] = useState([]);
   const [stats, setStats] = useState({ completed: 0, total: 0 });
   const [phrase, setPhrase] = useState({ text: '', emoji: '' });
-  const [loading, setLoading] = useState(false); // НЕ показываем loader при первой загрузке из кэша
+  const [loading, setLoading] = useState(false); // 🔥 НЕ показываем loader при загрузке из кэша
   const [error, setError] = useState(null);
   
-  // Флаг первой загрузки
   const isFirstLoad = useRef(true);
-  
-  // Таймер для дебаунса обновлений
-  const updateTimer = useRef(null);
 
   /**
-   * Загрузка привычек на сегодня (с кэшем)
+   * 🚀 МГНОВЕННАЯ ЗАГРУЗКА - без loader
    */
   const loadTodayHabits = useCallback(async (showLoading = false) => {
     try {
@@ -30,7 +26,7 @@ export const useHabits = () => {
       const today = new Date().toISOString().split('T')[0];
       console.log(`📊 Loading habits for TODAY: ${today}`);
       
-      // Загружаем с кэшем
+      // 🔥 Загружаем с кэшем - МГНОВЕННО
       const data = await habitService.getTodayHabits();
 
       const normalizedHabits = data?.habits || [];
@@ -60,9 +56,6 @@ export const useHabits = () => {
     }
   }, []);
 
-  /**
-   * Загрузка привычек для конкретной даты
-   */
   const loadHabitsForDate = useCallback(async (date) => {
     try {
       console.log(`📊 Loading habits for date ${date}`);
@@ -91,9 +84,6 @@ export const useHabits = () => {
     }
   }, []);
 
-  /**
-   * Загрузка всех привычек
-   */
   const loadAllHabits = useCallback(async () => {
     try {
       const data = await habitService.getAllHabits();
@@ -103,9 +93,6 @@ export const useHabits = () => {
     }
   }, []);
 
-  /**
-   * Отметка привычки с оптимистичным обновлением
-   */
   const markHabit = useCallback(async (habitId, status = 'completed', date) => {
     try {
       vibrate();
@@ -125,7 +112,7 @@ export const useHabits = () => {
         );
       });
       
-      // Обновляем статистику оптимистично
+      // Обновляем статистику
       setStats(prev => {
         const newCompleted = status === 'completed' 
           ? prev.completed + 1 
@@ -150,9 +137,6 @@ export const useHabits = () => {
     }
   }, [loadTodayHabits]);
 
-  /**
-   * Отмена отметки с оптимистичным обновлением
-   */
   const unmarkHabit = useCallback(async (habitId, date) => {
     try {
       vibrate();
@@ -172,7 +156,7 @@ export const useHabits = () => {
         );
       });
       
-      // Обновляем статистику оптимистично
+      // Обновляем статистику
       setStats(prev => ({
         ...prev,
         completed: Math.max(0, prev.completed - 1)
@@ -195,9 +179,6 @@ export const useHabits = () => {
     }
   }, [loadTodayHabits]);
 
-  /**
-   * Создание привычки
-   */
   const createHabit = useCallback(async (habitData) => {
     try {
       const result = await habitService.createHabit(habitData);
@@ -215,9 +196,6 @@ export const useHabits = () => {
     }
   }, [loadTodayHabits, loadAllHabits]);
 
-  /**
-   * Удаление привычки
-   */
   const deleteHabit = useCallback(async (habitId) => {
     try {
       await habitService.deleteHabit(habitId);
@@ -233,15 +211,11 @@ export const useHabits = () => {
     }
   }, [loadAllHabits, loadTodayHabits]);
 
-  /**
-   * Перезагрузка данных для конкретной даты
-   */
   const refreshDateData = useCallback(async (date) => {
     console.log(`🔄 Refreshing data for date: ${date}`);
     const today = new Date().toISOString().split('T')[0];
     
     if (date === today) {
-      // Для сегодня принудительно обновляем
       await loadTodayHabits(false);
       return {
         habits: todayHabits,
@@ -249,23 +223,19 @@ export const useHabits = () => {
         phrase: phrase
       };
     } else {
-      // Для других дат загружаем заново
       return await loadHabitsForDate(date);
     }
   }, [loadTodayHabits, loadHabitsForDate, todayHabits, stats, phrase]);
 
-  /**
-   * Принудительное обновление (pull-to-refresh)
-   */
   const forceRefresh = useCallback(async () => {
     console.log('🔄 Force refresh');
     habitService.invalidateHabitsCache();
     await loadTodayHabits(true);
   }, [loadTodayHabits]);
 
-  // Загрузка при монтировании (без loader)
+  // 🚀 Загрузка при монтировании - БЕЗ LOADER
   useEffect(() => {
-    loadTodayHabits(false);
+    loadTodayHabits(false); // showLoading = false
     loadAllHabits();
   }, [loadTodayHabits, loadAllHabits]);
 
@@ -274,7 +244,7 @@ export const useHabits = () => {
     const interval = setInterval(() => {
       console.log('⏰ Auto-refresh (background)');
       loadTodayHabits(false);
-    }, 30000); // 30 секунд
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [loadTodayHabits]);
