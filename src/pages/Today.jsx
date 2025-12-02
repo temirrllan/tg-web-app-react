@@ -17,6 +17,7 @@ import EditHabitForm from '../components/habits/EditHabitForm';
 import SubscriptionModal from '../components/modals/SubscriptionModal';
 import Subscription from './Subscription';
 import { useTranslation } from '../hooks/useTranslation';
+import PullToRefresh from '../components/common/PullToRefresh';
 
 const Today = () => {
     const { t } = useTranslation();
@@ -33,7 +34,8 @@ const Today = () => {
     deleteHabit,
     loadHabitsForDate,
     refresh,
-    refreshDateData
+    refreshDateData,
+    forceRefresh
   } = useHabits();
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [showSubscriptionPage, setShowSubscriptionPage] = useState(false);
@@ -247,6 +249,30 @@ const handleEditSuccess = async () => {
     }
   }, [todayHabits, stats, phrase, selectedDate, dateLoading, loading]);
 
+
+const handleRefresh = useCallback(async () => {
+    console.log('🔄 Pull-to-refresh triggered');
+    
+    try {
+      // Добавляем вибрацию для обратной связи
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+      }
+      
+      // Принудительно обновляем данные
+      await forceRefresh();
+      
+      // Обновляем текущую дату если не сегодня
+      if (selectedDate !== getTodayDate()) {
+        await reloadCurrentDateHabits();
+      }
+      
+      console.log('✅ Refresh complete');
+    } catch (error) {
+      console.error('❌ Refresh failed:', error);
+    }
+  }, [forceRefresh, selectedDate]);
+
   // Инициализация при загрузке
   useEffect(() => {
     const today = getTodayDate();
@@ -422,43 +448,61 @@ const handleSubscriptionPageClose = async () => {
   }, [dateHabits.length, isEditableDate]);
 
   // КРИТИЧНО: Обработчики с передачей даты
+ // Обработчики mark/unmark с оптимистичным обновлением
   const handleMark = useCallback(async (habitId, status) => {
     if (!isEditableDate) {
       console.log('Cannot edit habits for this date');
       return;
     }
     
-    console.log('Marking habit:', { habitId, status, date: selectedDate });
+    console.log('✏️ Marking habit:', { habitId, status, date: selectedDate });
     
     try {
-      // КРИТИЧНО: Передаем дату в markHabit
-      await markHabit(habitId, status, selectedDate);
+      // Оптимистично обновляем UI
+      setDateHabits(prev => 
+        prev.map(h => h.id === habitId ? { ...h, today_status: status } : h)
+      );
       
-      // ВАЖНО: Перезагружаем данные ТОЛЬКО для выбранной даты
-      await reloadCurrentDateHabits();
+      // Обновляем статистику
+      const newCompleted = status === 'completed' 
+        ? dateStats.completed + 1 
+        : dateStats.completed;
+      setDateStats(prev => ({ ...prev, completed: newCompleted }));
+      
+      // Отправляем на сервер
+      await markHabit(habitId, status, selectedDate);
     } catch (error) {
       console.error('Error marking habit:', error);
+      // Откат произойдет автоматически через useHabits
     }
-  }, [isEditableDate, selectedDate, markHabit, reloadCurrentDateHabits]);
+  }, [isEditableDate, selectedDate, markHabit, dateStats]);
 
-  const handleUnmark = useCallback(async (habitId) => {
+   const handleUnmark = useCallback(async (habitId) => {
     if (!isEditableDate) {
       console.log('Cannot edit habits for this date');
       return;
     }
     
-    console.log('Unmarking habit:', { habitId, date: selectedDate });
+    console.log('↩️ Unmarking habit:', { habitId, date: selectedDate });
     
     try {
-      // КРИТИЧНО: Передаем дату в unmarkHabit
-      await unmarkHabit(habitId, selectedDate);
+      // Оптимистично обновляем UI
+      setDateHabits(prev => 
+        prev.map(h => h.id === habitId ? { ...h, today_status: 'pending' } : h)
+      );
       
-      // ВАЖНО: Перезагружаем данные ТОЛЬКО для выбранной даты
-      await reloadCurrentDateHabits();
+      // Обновляем статистику
+      setDateStats(prev => ({ 
+        ...prev, 
+        completed: Math.max(0, prev.completed - 1) 
+      }));
+      
+      // Отправляем на сервер
+      await unmarkHabit(habitId, selectedDate);
     } catch (error) {
       console.error('Error unmarking habit:', error);
     }
-  }, [isEditableDate, selectedDate, unmarkHabit, reloadCurrentDateHabits]);
+  }, [isEditableDate, selectedDate, unmarkHabit]);
 
   const getMotivationalBackgroundColor = () => {
     const currentPhrase = datePhrase;
@@ -490,7 +534,15 @@ const handleSubscriptionPageClose = async () => {
   //     </Layout>
   //   );
   // }
-
+ if (loading && dateHabits.length === 0) {
+    return (
+      <Layout>
+        <div className="today-loading">
+          <p>Loading...</p>
+        </div>
+      </Layout>
+    );
+  }
   // Показываем страницу подписки если нужно
   if (showSubscriptionPage) {
     return (
@@ -529,6 +581,7 @@ const handleSubscriptionPageClose = async () => {
   return (
     <>
       <Layout>
+        <PullToRefresh onRefresh={handleRefresh}>
         <Header user={user} onProfileClick={() => setShowProfile(true)} />
 
         <div className="today">
@@ -563,28 +616,28 @@ const handleSubscriptionPageClose = async () => {
             </div>
           )}
 
-          {dateLoading ? (
-            <div className="today__habits-loading">
-              <Loader size="medium" />
-            </div>
-          ) : displayHabits.length === 0 ? (
-            <EmptyState onCreateClick={() => handleFabClick()} />
-          ) : (
-            <div className="today__habits">
-              {displayHabits.map((habit) => (
-                <HabitCard
-                  key={`${habit.id}-${selectedDate}-${habit.today_status}`}
-                  habit={habit}
-                  onMark={isEditableDate ? handleMark : undefined}
-                  onUnmark={isEditableDate ? handleUnmark : undefined}
-                  onClick={handleHabitClick}
-                  readOnly={!isEditableDate}
-                />
-              ))}
-            </div>
-          )}
+           {dateLoading ? (
+              <div className="today__habits-loading">
+                <HabitsSkeleton />
+              </div>
+            ) : displayHabits.length === 0 ? (
+              <EmptyState onCreateClick={() => handleFabClick()} />
+            ) : (
+              <div className="today__habits">
+                {displayHabits.map((habit) => (
+                  <HabitCard
+                    key={`${habit.id}-${selectedDate}-${habit.today_status}`}
+                    habit={habit}
+                    onMark={isEditableDate ? handleMark : undefined}
+                    onUnmark={isEditableDate ? handleUnmark : undefined}
+                    onClick={handleHabitClick}
+                    readOnly={!isEditableDate}
+                  />
+                ))}
+              </div>
+            )}
         </div>
-
+</PullToRefresh>
         <SwipeHint 
           show={showSwipeHint} 
           onClose={() => setShowSwipeHint(false)} 
@@ -621,5 +674,18 @@ const handleSubscriptionPageClose = async () => {
     </>
   );
 };
-
+// Скелетон для плавной загрузки
+const HabitsSkeleton = () => (
+  <div className="habits-skeleton">
+    {[1, 2, 3].map(i => (
+      <div key={i} className="skeleton-card">
+        <div className="skeleton-icon"></div>
+        <div className="skeleton-content">
+          <div className="skeleton-title"></div>
+          <div className="skeleton-goal"></div>
+        </div>
+      </div>
+    ))}
+  </div>
+);
 export default Today;
