@@ -1,4 +1,4 @@
-// src/services/habitsOptimized.js - ВЕРСИЯ 2.0 с stale-while-revalidate
+// src/services/habitsOptimized.js
 
 import api from './api';
 import cacheService from './cacheService';
@@ -21,16 +21,15 @@ const CACHE_KEYS = {
  * TTL для разных типов данных
  */
 const CACHE_TTL = {
-  INSTANT: 30 * 1000,       // 30 секунд - для часто меняющихся данных
-  FAST: 2 * 60 * 1000,      // 2 минуты - для обычных данных
-  MEDIUM: 5 * 60 * 1000,    // 5 минут - для редко меняющихся данных
-  SLOW: 15 * 60 * 1000,     // 15 минут - для стабильных данных
+  FAST: 1 * 60 * 1000,      // 1 минута - для часто меняющихся данных
+  MEDIUM: 5 * 60 * 1000,    // 5 минут - для обычных данных
+  SLOW: 30 * 60 * 1000,     // 30 минут - для редко меняющихся данных
   STATIC: 60 * 60 * 1000    // 1 час - для статических данных
 };
 
 export const habitService = {
   /**
-   * 🚀 Получить привычки на сегодня (МГНОВЕННО с stale-while-revalidate)
+   * Получить привычки на сегодня (с кэшированием)
    */
   async getTodayHabits(forceRefresh = false) {
     const key = CACHE_KEYS.todayHabits();
@@ -38,15 +37,10 @@ export const habitService = {
     return cacheService.fetch(
       key,
       async () => {
-        console.log('🌐 Fetching today habits from API...');
         const { data } = await api.get('/habits/today');
         return data;
       },
-      { 
-        ttl: CACHE_TTL.INSTANT, 
-        forceRefresh,
-        staleWhileRevalidate: true // 🔥 Показываем старые данные пока грузим новые
-      }
+      { ttl: CACHE_TTL.FAST, forceRefresh }
     );
   },
 
@@ -59,15 +53,10 @@ export const habitService = {
     return cacheService.fetch(
       key,
       async () => {
-        console.log(`🌐 Fetching habits for date ${date} from API...`);
         const { data } = await api.get(`/habits/date/${date}`);
         return data;
       },
-      { 
-        ttl: CACHE_TTL.FAST, 
-        forceRefresh,
-        staleWhileRevalidate: true
-      }
+      { ttl: CACHE_TTL.MEDIUM, forceRefresh }
     );
   },
 
@@ -80,15 +69,10 @@ export const habitService = {
     return cacheService.fetch(
       key,
       async () => {
-        console.log('🌐 Fetching all habits from API...');
         const { data } = await api.get('/habits');
         return data;
       },
-      { 
-        ttl: CACHE_TTL.FAST, 
-        forceRefresh,
-        staleWhileRevalidate: true
-      }
+      { ttl: CACHE_TTL.MEDIUM, forceRefresh }
     );
   },
 
@@ -101,15 +85,10 @@ export const habitService = {
     return cacheService.fetch(
       key,
       async () => {
-        console.log(`🌐 Fetching statistics for habit ${habitId}...`);
         const { data } = await api.get(`/habits/${habitId}/statistics`);
         return data;
       },
-      { 
-        ttl: CACHE_TTL.MEDIUM, 
-        forceRefresh,
-        staleWhileRevalidate: true
-      }
+      { ttl: CACHE_TTL.MEDIUM, forceRefresh }
     );
   },
 
@@ -122,15 +101,10 @@ export const habitService = {
     return cacheService.fetch(
       key,
       async () => {
-        console.log(`🌐 Fetching members for habit ${habitId}...`);
         const { data } = await api.get(`/habits/${habitId}/members`);
         return data;
       },
-      { 
-        ttl: CACHE_TTL.FAST, 
-        forceRefresh,
-        staleWhileRevalidate: true
-      }
+      { ttl: CACHE_TTL.FAST, forceRefresh }
     );
   },
 
@@ -143,15 +117,10 @@ export const habitService = {
     return cacheService.fetch(
       key,
       async () => {
-        console.log('🌐 Fetching categories from API...');
         const { data } = await api.get('/categories');
         return data;
       },
-      { 
-        ttl: CACHE_TTL.STATIC, 
-        forceRefresh,
-        staleWhileRevalidate: false // Категории не меняются
-      }
+      { ttl: CACHE_TTL.STATIC, forceRefresh }
     );
   },
 
@@ -164,15 +133,10 @@ export const habitService = {
     return cacheService.fetch(
       key,
       async () => {
-        console.log('🌐 Fetching user profile from API...');
         const { data } = await api.get('/user/profile');
         return data.user;
       },
-      { 
-        ttl: CACHE_TTL.SLOW, 
-        forceRefresh,
-        staleWhileRevalidate: true
-      }
+      { ttl: CACHE_TTL.SLOW, forceRefresh }
     );
   },
 
@@ -185,155 +149,63 @@ export const habitService = {
     return cacheService.fetch(
       key,
       async () => {
-        console.log('🌐 Checking subscription limits...');
         const { data } = await api.get('/subscription/check');
         return data;
       },
-      { 
-        ttl: CACHE_TTL.MEDIUM, 
-        forceRefresh,
-        staleWhileRevalidate: true
-      }
+      { ttl: CACHE_TTL.MEDIUM, forceRefresh }
     );
   },
 
-  // ============ МЕТОДЫ С ОПТИМИСТИЧНЫМИ ОБНОВЛЕНИЯМИ ============
+  // ============ МЕТОДЫ БЕЗ КЭША (изменяют данные) ============
 
   /**
-   * 🔥 Создать привычку (с оптимистичным обновлением)
+   * Создать привычку (с инвалидацией кэша)
    */
   async createHabit(habitData) {
-    console.log('➕ Creating habit (optimistic)...');
+    const { data } = await api.post('/habits', habitData);
     
-    // Создаём временную привычку для UI
-    const tempHabit = {
-      id: `temp_${Date.now()}`,
-      ...habitData,
-      today_status: 'pending',
-      created_at: new Date().toISOString()
-    };
+    // Инвалидируем связанные кэши
+    cacheService.invalidate('habits_');
+    cacheService.invalidate('subscription_');
     
-    // Оптимистично обновляем кэш
-    const todayKey = CACHE_KEYS.todayHabits();
-    const currentData = cacheService.get(todayKey);
-    
-    if (currentData) {
-      const optimisticData = {
-        ...currentData,
-        habits: [...currentData.habits, tempHabit],
-        stats: {
-          ...currentData.stats,
-          total: currentData.stats.total + 1
-        }
-      };
-      
-      cacheService.setOptimistic(todayKey, optimisticData);
-    }
-    
-    try {
-      // Отправляем на сервер
-      const { data } = await api.post('/habits', habitData);
-      
-      // Инвалидируем и обновляем кэш
-      cacheService.invalidate('habits_');
-      cacheService.invalidate('subscription_');
-      
-      // Загружаем свежие данные в фоне
-      this.getTodayHabits(true);
-      
-      return data;
-    } catch (error) {
-      // Откатываем оптимистичное обновление
-      cacheService.invalidate('habits_');
-      throw error;
-    }
+    return data;
   },
 
   /**
-   * 🔥 Обновить привычку
+   * Обновить привычку
    */
   async updateHabit(habitId, updates) {
-    console.log(`✏️ Updating habit ${habitId} (optimistic)...`);
+    const { data } = await api.patch(`/habits/${habitId}`, updates);
     
-    // Оптимистично обновляем в кэше
-    const todayKey = CACHE_KEYS.todayHabits();
-    const currentData = cacheService.get(todayKey);
+    // Инвалидируем связанные кэши
+    cacheService.invalidate('habits_');
+    cacheService.invalidate(`habit_stats_${habitId}`);
+    cacheService.invalidate(`habit_members_${habitId}`);
     
-    if (currentData) {
-      const optimisticData = {
-        ...currentData,
-        habits: currentData.habits.map(h =>
-          h.id === habitId ? { ...h, ...updates } : h
-        )
-      };
-      
-      cacheService.setOptimistic(todayKey, optimisticData);
-    }
-    
-    try {
-      const { data } = await api.patch(`/habits/${habitId}`, updates);
-      
-      // Инвалидируем связанные кэши
-      cacheService.invalidate('habits_');
-      cacheService.invalidate(`habit_stats_${habitId}`);
-      cacheService.invalidate(`habit_members_${habitId}`);
-      
-      return data;
-    } catch (error) {
-      // Откатываем
-      cacheService.invalidate('habits_');
-      throw error;
-    }
+    return data;
   },
 
   /**
-   * 🔥 Удалить привычку
+   * Удалить привычку
    */
   async deleteHabit(habitId) {
-    console.log(`🗑️ Deleting habit ${habitId} (optimistic)...`);
+    const { data } = await api.delete(`/habits/${habitId}`);
     
-    // Оптимистично удаляем из кэша
-    const todayKey = CACHE_KEYS.todayHabits();
-    const currentData = cacheService.get(todayKey);
+    // Инвалидируем все кэши привычек
+    cacheService.invalidate('habits_');
+    cacheService.invalidate(`habit_`);
+    cacheService.invalidate('subscription_');
     
-    if (currentData) {
-      const optimisticData = {
-        ...currentData,
-        habits: currentData.habits.filter(h => h.id !== habitId),
-        stats: {
-          ...currentData.stats,
-          total: Math.max(0, currentData.stats.total - 1)
-        }
-      };
-      
-      cacheService.setOptimistic(todayKey, optimisticData);
-    }
-    
-    try {
-      const { data } = await api.delete(`/habits/${habitId}`);
-      
-      // Инвалидируем все кэши
-      cacheService.invalidate('habits_');
-      cacheService.invalidate(`habit_`);
-      cacheService.invalidate('subscription_');
-      
-      return data;
-    } catch (error) {
-      // Откатываем
-      cacheService.invalidate('habits_');
-      throw error;
-    }
+    return data;
   },
 
   /**
-   * 🔥 Отметить привычку (МГНОВЕННО)
+   * Отметить привычку (с оптимистичным обновлением)
    */
   async markHabit(habitId, status = 'completed', date) {
     const markDate = date || new Date().toISOString().split('T')[0];
     
-    console.log(`✅ Marking habit ${habitId} as ${status} (optimistic)`);
-    
-    // Оптимистично обновляем UI
+    // Оптимистичное обновление кэша
     const todayKey = CACHE_KEYS.todayHabits();
     const dateKey = CACHE_KEYS.habitsForDate(markDate);
     
@@ -346,31 +218,27 @@ export const habitService = {
         date: markDate
       });
       
-      // Фоновое обновление
-      setTimeout(() => {
-        this.getTodayHabits(true);
-        if (markDate !== new Date().toISOString().split('T')[0]) {
-          this.getHabitsForDate(markDate, true);
-        }
-      }, 100);
+      // Принудительно обновляем кэш с сервера
+      await this.getTodayHabits(true);
+      if (markDate !== new Date().toISOString().split('T')[0]) {
+        await this.getHabitsForDate(markDate, true);
+      }
       
       return data;
     } catch (error) {
-      console.error('❌ Mark failed, rolling back:', error);
+      // Откатываем оптимистичное обновление
       cacheService.invalidate('habits_');
       throw error;
     }
   },
 
   /**
-   * 🔥 Снять отметку (МГНОВЕННО)
+   * Снять отметку
    */
   async unmarkHabit(habitId, date) {
     const unmarkDate = date || new Date().toISOString().split('T')[0];
     
-    console.log(`↩️ Unmarking habit ${habitId} (optimistic)`);
-    
-    // Оптимистично обновляем
+    // Оптимистичное обновление
     const todayKey = CACHE_KEYS.todayHabits();
     const dateKey = CACHE_KEYS.habitsForDate(unmarkDate);
     
@@ -380,17 +248,14 @@ export const habitService = {
     try {
       const { data } = await api.delete(`/habits/${habitId}/mark?date=${unmarkDate}`);
       
-      // Фоновое обновление
-      setTimeout(() => {
-        this.getTodayHabits(true);
-        if (unmarkDate !== new Date().toISOString().split('T')[0]) {
-          this.getHabitsForDate(unmarkDate, true);
-        }
-      }, 100);
+      // Обновляем с сервера
+      await this.getTodayHabits(true);
+      if (unmarkDate !== new Date().toISOString().split('T')[0]) {
+        await this.getHabitsForDate(unmarkDate, true);
+      }
       
       return data;
     } catch (error) {
-      console.error('❌ Unmark failed, rolling back:', error);
       cacheService.invalidate('habits_');
       throw error;
     }
@@ -416,11 +281,11 @@ export const habitService = {
       stats: this.recalculateStats(updatedHabits)
     };
 
-    cacheService.setOptimistic(cacheKey, updatedData);
+    cacheService.set(cacheKey, updatedData, CACHE_TTL.FAST);
   },
 
   /**
-   * Пересчёт статистики
+   * Пересчёт статистики для оптимистичного обновления
    */
   recalculateStats(habits) {
     const completed = habits.filter(h => h.today_status === 'completed').length;
@@ -437,7 +302,10 @@ export const habitService = {
    */
   async updateUserLanguage(language) {
     const { data } = await api.patch('/user/language', { language });
+    
+    // Инвалидируем кэш профиля
     cacheService.invalidate('user_profile');
+    
     return data;
   },
 
@@ -446,7 +314,10 @@ export const habitService = {
    */
   async joinHabit(shareCode) {
     const { data } = await api.post('/habits/join', { shareCode });
+    
+    // Инвалидируем все кэши привычек
     cacheService.invalidate('habits_');
+    
     return data;
   },
 
@@ -471,7 +342,10 @@ export const habitService = {
    */
   async removeMember(habitId, userId) {
     const { data } = await api.delete(`/habits/${habitId}/members/${userId}`);
+    
+    // Инвалидируем кэш участников
     cacheService.invalidate(`habit_members_${habitId}`);
+    
     return data;
   },
 
@@ -490,8 +364,6 @@ export const habitService = {
     const { data } = await api.get(`/habits/${habitId}/owner`);
     return data;
   },
-
-  // ============ УТИЛИТЫ ============
 
   /**
    * Очистить весь кэш
@@ -512,13 +384,6 @@ export const habitService = {
    */
   invalidateSubscriptionCache() {
     cacheService.invalidate('subscription_');
-  },
-
-  /**
-   * 🆕 Получить статистику кэша
-   */
-  getCacheStats() {
-    return cacheService.getStats();
   }
 };
 

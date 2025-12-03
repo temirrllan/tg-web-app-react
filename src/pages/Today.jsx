@@ -1,4 +1,4 @@
-// src/pages/Today.jsx - МГНОВЕННАЯ ЗАГРУЗКА БЕЗ LOADER
+// src/pages/Today.jsx - МГНОВЕННАЯ ЗАГРУЗКА
 
 import React, { useEffect, useState, useCallback } from "react";
 import Layout from "../components/layout/Layout";
@@ -28,7 +28,7 @@ const Today = () => {
     todayHabits,
     stats,
     phrase,
-    loading, // 🔥 Используется ТОЛЬКО для pull-to-refresh
+    loading, // 🔥 Этот loading теперь почти всегда false
     markHabit,
     unmarkHabit,
     createHabit,
@@ -50,12 +50,6 @@ const Today = () => {
   const [showEditForm, setShowEditForm] = useState(false);
   const [habitToEdit, setHabitToEdit] = useState(null);
   const [userSubscription, setUserSubscription] = useState(null);
-  
-  // 🆕 Флаг для первой загрузки (показываем skeleton один раз)
-  const [isFirstRender, setIsFirstRender] = useState(true);
-  
-  // 🆕 Индикатор фонового обновления
-  const [isBackgroundUpdating, setIsBackgroundUpdating] = useState(false);
 
   const getTodayDate = () => {
     const today = new Date();
@@ -80,14 +74,6 @@ const Today = () => {
   const [dateLoading, setDateLoading] = useState(false);
   const [dateStats, setDateStats] = useState({ completed: 0, total: 0 });
   const [datePhrase, setDatePhrase] = useState(null);
-
-  // 🔥 УБИРАЕМ isFirstRender после первой загрузки данных
-  useEffect(() => {
-    if (todayHabits.length > 0 && isFirstRender) {
-      console.log('✅ First data loaded - hiding skeleton');
-      setIsFirstRender(false);
-    }
-  }, [todayHabits, isFirstRender]);
 
   useEffect(() => {
     checkUserSubscription();
@@ -203,22 +189,13 @@ const Today = () => {
         window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
       }
       
-      // 🆕 Показываем индикатор фонового обновления
-      setIsBackgroundUpdating(true);
-      
       await forceRefresh();
       
       if (selectedDate !== getTodayDate()) {
         await reloadCurrentDateHabits();
       }
-      
-      // Скрываем индикатор через 1 секунду
-      setTimeout(() => {
-        setIsBackgroundUpdating(false);
-      }, 1000);
     } catch (error) {
       console.error('❌ Refresh failed:', error);
-      setIsBackgroundUpdating(false);
     }
   }, [forceRefresh, selectedDate, reloadCurrentDateHabits]);
 
@@ -364,18 +341,34 @@ const Today = () => {
     if (!isEditableDate) return;
     
     try {
-      // UI обновляется мгновенно внутри markHabit
+      setDateHabits(prev => 
+        prev.map(h => h.id === habitId ? { ...h, today_status: status } : h)
+      );
+      
+      const newCompleted = status === 'completed' 
+        ? dateStats.completed + 1 
+        : dateStats.completed;
+      setDateStats(prev => ({ ...prev, completed: newCompleted }));
+      
       await markHabit(habitId, status, selectedDate);
     } catch (error) {
       console.error('Error marking habit:', error);
     }
-  }, [isEditableDate, selectedDate, markHabit]);
+  }, [isEditableDate, selectedDate, markHabit, dateStats]);
 
   const handleUnmark = useCallback(async (habitId) => {
     if (!isEditableDate) return;
     
     try {
-      // UI обновляется мгновенно внутри unmarkHabit
+      setDateHabits(prev => 
+        prev.map(h => h.id === habitId ? { ...h, today_status: 'pending' } : h)
+      );
+      
+      setDateStats(prev => ({ 
+        ...prev, 
+        completed: Math.max(0, prev.completed - 1) 
+      }));
+      
       await unmarkHabit(habitId, selectedDate);
     } catch (error) {
       console.error('Error unmarking habit:', error);
@@ -398,8 +391,7 @@ const Today = () => {
     return '#FFB3BA';
   };
 
-  // 🔥 РЕНДЕР БЕЗ LOADER
-  
+  // 🔥 УБИРАЕМ LOADER - показываем контент сразу
   if (showSubscriptionPage) {
     return (
       <Subscription
@@ -437,13 +429,6 @@ const Today = () => {
         <PullToRefresh onRefresh={handleRefresh}>
           <Header user={user} onProfileClick={() => setShowProfile(true)} />
 
-          {/* 🆕 Индикатор фонового обновления */}
-          {isBackgroundUpdating && (
-            <div className="today__updating-indicator">
-              🔄 Updating...
-            </div>
-          )}
-
           <div className="today">
             <div className="today__stats">
               <div className="today__container">
@@ -474,8 +459,7 @@ const Today = () => {
               </div>
             )}
 
-            {/* 🔥 SKELETON только при первом рендере И нет данных */}
-            {isFirstRender && displayHabits.length === 0 ? (
+            {dateLoading ? (
               <div className="today__habits-loading">
                 <HabitsSkeleton />
               </div>
@@ -535,7 +519,6 @@ const Today = () => {
   );
 };
 
-// 🔥 МИНИМАЛИСТИЧНЫЙ SKELETON (показываем только один раз)
 const HabitsSkeleton = () => (
   <div className="habits-skeleton">
     {[1, 2, 3].map(i => (
