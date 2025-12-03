@@ -1,4 +1,4 @@
-// src/hooks/useHabits.js - МГНОВЕННАЯ ЗАГРУЗКА
+// src/hooks/useHabits.js - МГНОВЕННАЯ ЗАГРУЗКА БЕЗ LOADER
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { habitService } from '../services/habits';
@@ -9,16 +9,18 @@ export const useHabits = () => {
   const [todayHabits, setTodayHabits] = useState([]);
   const [stats, setStats] = useState({ completed: 0, total: 0 });
   const [phrase, setPhrase] = useState({ text: '', emoji: '' });
-  const [loading, setLoading] = useState(false); // 🔥 НЕ показываем loader при загрузке из кэша
+  const [loading, setLoading] = useState(false); // 🔥 НИКОГДА не показываем loader
   const [error, setError] = useState(null);
   
   const isFirstLoad = useRef(true);
+  const isMounted = useRef(true);
 
   /**
-   * 🚀 МГНОВЕННАЯ ЗАГРУЗКА - без loader
+   * 🚀 МГНОВЕННАЯ ЗАГРУЗКА - показываем кэш сразу
    */
   const loadTodayHabits = useCallback(async (showLoading = false) => {
     try {
+      // 🔥 Loader только для pull-to-refresh
       if (showLoading) {
         setLoading(true);
       }
@@ -26,8 +28,10 @@ export const useHabits = () => {
       const today = new Date().toISOString().split('T')[0];
       console.log(`📊 Loading habits for TODAY: ${today}`);
       
-      // 🔥 Загружаем с кэшем - МГНОВЕННО
+      // 🚀 МГНОВЕННО - показываем кэш (даже устаревший)
       const data = await habitService.getTodayHabits();
+
+      if (!isMounted.current) return;
 
       const normalizedHabits = data?.habits || [];
       const normalizedStats = data?.stats || { 
@@ -39,7 +43,8 @@ export const useHabits = () => {
       console.log('✅ Today habits loaded:', {
         date: today,
         count: normalizedHabits.length,
-        fromCache: true
+        completed: normalizedStats.completed,
+        cached: true
       });
 
       setTodayHabits(normalizedHabits);
@@ -50,9 +55,13 @@ export const useHabits = () => {
       isFirstLoad.current = false;
     } catch (err) {
       console.error('❌ loadTodayHabits error:', err);
-      setError(err.message || 'Failed to load today habits');
+      if (isMounted.current) {
+        setError(err.message || 'Failed to load today habits');
+      }
     } finally {
-      setLoading(false);
+      if (isMounted.current) {
+        setLoading(false);
+      }
     }
   }, []);
 
@@ -62,7 +71,7 @@ export const useHabits = () => {
       
       const today = new Date().toISOString().split('T')[0];
       
-      // Загружаем с кэшем
+      // 🚀 Загружаем с кэшем (stale-while-revalidate)
       const result = date === today 
         ? await habitService.getTodayHabits()
         : await habitService.getHabitsForDate(date);
@@ -87,9 +96,14 @@ export const useHabits = () => {
   const loadAllHabits = useCallback(async () => {
     try {
       const data = await habitService.getAllHabits();
-      setHabits(data.habits || []);
+      if (isMounted.current) {
+        setHabits(data.habits || []);
+      }
     } catch (err) {
-      setError(err.message);
+      console.error('❌ loadAllHabits error:', err);
+      if (isMounted.current) {
+        setError(err.message);
+      }
     }
   }, []);
 
@@ -103,7 +117,7 @@ export const useHabits = () => {
       
       console.log(`✏️ Marking habit ${habitId} as ${status} for ${date}`);
       
-      // Оптимистично обновляем UI
+      // 🔥 ОПТИМИСТИЧНО обновляем UI МГНОВЕННО
       setTodayHabits(prev => {
         return prev.map(h => 
           h.id === habitId 
@@ -120,7 +134,7 @@ export const useHabits = () => {
         return { ...prev, completed: newCompleted };
       });
       
-      // Отправляем на сервер
+      // 🌐 Отправляем на сервер (в фоне)
       const result = await habitService.markHabit(habitId, status, date);
       
       console.log('✅ Mark habit response:', result);
@@ -129,10 +143,12 @@ export const useHabits = () => {
     } catch (err) {
       console.error('❌ markHabit error:', err);
       
-      // Откатываем при ошибке
+      // Откатываем только если запрос не прошёл
       await loadTodayHabits(false);
       
-      setError(err.message || 'Failed to mark habit');
+      if (isMounted.current) {
+        setError(err.message || 'Failed to mark habit');
+      }
       throw err;
     }
   }, [loadTodayHabits]);
@@ -147,7 +163,7 @@ export const useHabits = () => {
       
       console.log(`↩️ Unmarking habit ${habitId} for ${date}`);
       
-      // Оптимистично обновляем UI
+      // 🔥 ОПТИМИСТИЧНО обновляем UI МГНОВЕННО
       setTodayHabits(prev => {
         return prev.map(h => 
           h.id === habitId 
@@ -162,7 +178,7 @@ export const useHabits = () => {
         completed: Math.max(0, prev.completed - 1)
       }));
       
-      // Отправляем на сервер
+      // 🌐 Отправляем на сервер (в фоне)
       const result = await habitService.unmarkHabit(habitId, date);
       
       console.log('✅ Unmark habit response:', result);
@@ -174,7 +190,9 @@ export const useHabits = () => {
       // Откатываем при ошибке
       await loadTodayHabits(false);
       
-      setError(err.message || 'Failed to unmark habit');
+      if (isMounted.current) {
+        setError(err.message || 'Failed to unmark habit');
+      }
       throw err;
     }
   }, [loadTodayHabits]);
@@ -183,7 +201,7 @@ export const useHabits = () => {
     try {
       const result = await habitService.createHabit(habitData);
       
-      // Обновляем данные после создания
+      // Обновляем данные после создания (в фоне)
       await Promise.all([
         loadTodayHabits(false),
         loadAllHabits()
@@ -191,7 +209,10 @@ export const useHabits = () => {
       
       return result;
     } catch (err) {
-      setError(err.message || 'Failed to create habit');
+      console.error('❌ createHabit error:', err);
+      if (isMounted.current) {
+        setError(err.message || 'Failed to create habit');
+      }
       throw err;
     }
   }, [loadTodayHabits, loadAllHabits]);
@@ -200,13 +221,16 @@ export const useHabits = () => {
     try {
       await habitService.deleteHabit(habitId);
       
-      // Обновляем данные после удаления
+      // Обновляем данные после удаления (в фоне)
       await Promise.all([
         loadAllHabits(),
         loadTodayHabits(false)
       ]);
     } catch (err) {
-      setError(err.message);
+      console.error('❌ deleteHabit error:', err);
+      if (isMounted.current) {
+        setError(err.message);
+      }
       throw err;
     }
   }, [loadAllHabits, loadTodayHabits]);
@@ -228,32 +252,43 @@ export const useHabits = () => {
   }, [loadTodayHabits, loadHabitsForDate, todayHabits, stats, phrase]);
 
   const forceRefresh = useCallback(async () => {
-    console.log('🔄 Force refresh');
+    console.log('🔄 Force refresh (clearing cache)');
     habitService.invalidateHabitsCache();
     await loadTodayHabits(true);
   }, [loadTodayHabits]);
 
-  // 🚀 Загрузка при монтировании - БЕЗ LOADER
+  // 🚀 МГНОВЕННАЯ загрузка при монтировании - БЕЗ LOADER
   useEffect(() => {
-    loadTodayHabits(false); // showLoading = false
+    console.log('🚀 useHabits mounted - loading data instantly');
+    
+    isMounted.current = true;
+    
+    // Загружаем БЕЗ loader
+    loadTodayHabits(false);
     loadAllHabits();
+    
+    return () => {
+      isMounted.current = false;
+    };
   }, [loadTodayHabits, loadAllHabits]);
 
-  // Автообновление каждые 30 секунд (в фоне)
+  // Автообновление каждые 30 секунд (в фоне, БЕЗ loader)
   useEffect(() => {
     const interval = setInterval(() => {
-      console.log('⏰ Auto-refresh (background)');
-      loadTodayHabits(false);
+      console.log('⏰ Auto-refresh (background, no loader)');
+      if (isMounted.current) {
+        loadTodayHabits(false);
+      }
     }, 30000);
 
     return () => clearInterval(interval);
   }, [loadTodayHabits]);
 
-  // Обновление при возврате на вкладку
+  // Обновление при возврате на вкладку (БЕЗ loader)
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        console.log('👀 Tab became visible, refreshing...');
+      if (document.visibilityState === 'visible' && isMounted.current) {
+        console.log('👀 Tab became visible, refreshing (no loader)');
         loadTodayHabits(false);
       }
     };
@@ -267,7 +302,7 @@ export const useHabits = () => {
     todayHabits,
     stats,
     phrase,
-    loading,
+    loading, // Всегда false, кроме pull-to-refresh
     error,
     markHabit,
     unmarkHabit,
