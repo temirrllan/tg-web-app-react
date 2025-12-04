@@ -433,22 +433,14 @@ const EditHabitForm = ({ habit, onClose, onSuccess }) => {
               <div className="bad-habit-label">
                 <span className="form-label-title">{t('createHabit.badHabit')} 😈</span>
               </div>
-              <div className="toggle-buttons">
-                <button
-                  type="button"
-                  className={`toggle-button ${!formData.is_bad_habit ? 'toggle-button--active' : ''}`}
-                  onClick={() => handleInputChange('is_bad_habit', false)}
-                >
-                  {t('common.no')}
-                </button>
-                <button
-                  type="button"
-                  className={`toggle-button ${formData.is_bad_habit ? 'toggle-button--active' : ''}`}
-                  onClick={() => handleInputChange('is_bad_habit', true)}
-                >
-                  {t('common.yes')}
-                </button>
-              </div>
+              <button
+                type="button"
+                className={`toggle-switch ${formData.is_bad_habit ? 'toggle-switch--active' : ''}`}
+                onClick={() => handleInputChange('is_bad_habit', !formData.is_bad_habit)}
+                aria-label="Toggle bad habit"
+              >
+                <div className="toggle-switch__slider" />
+              </button>
             </div>
             <p className="form-hint">
               {formData.is_bad_habit

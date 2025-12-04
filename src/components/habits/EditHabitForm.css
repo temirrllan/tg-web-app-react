@@ -291,11 +291,12 @@
   border-radius: 8px;
 }
 
-/* Bad habit toggle */
+/* Bad habit toggle switch */
 .bad-habit-toggle {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
   margin-bottom: 8px;
 }
 
@@ -305,29 +306,37 @@
   gap: 8px;
 }
 
-.toggle-buttons {
-  display: flex;
-  background: white;
-  border-radius: 12px;
-  padding: 2px;
-  gap: 0;
-}
-
-.toggle-button {
-  padding: 10px 32px;
-  font-size: 15px;
-  font-weight: 600;
-  background: transparent;
-  border: none;
-  border-radius: 10px;
-  color: #8E8E93;
+/* iOS-style toggle switch */
+.toggle-switch {
+  position: relative;
+  width: 51px;
+  height: 31px;
+  background: #E5E5EA;
+  border-radius: 16px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  border: none;
 }
 
-.toggle-button--active {
-  background: #007AFF;
-  color: white;
+.toggle-switch--active {
+  background: linear-gradient(90deg, #93DF72 0%, #EF73FF 100%);
+}
+
+.toggle-switch__slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 27px;
+  height: 27px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch--active .toggle-switch__slider {
+  transform: translateX(20px);
 }
 
 /* Footer */
