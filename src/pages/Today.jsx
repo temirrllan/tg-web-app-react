@@ -28,7 +28,7 @@ const Today = () => {
     todayHabits,
     stats,
     phrase,
-    loading, // 🔥 Этот loading теперь почти всегда false
+    loading, // 🔥 Теперь это false если есть кэш
     markHabit,
     unmarkHabit,
     createHabit,
@@ -391,7 +391,9 @@ const Today = () => {
     return '#FFB3BA';
   };
 
-  // 🔥 УБИРАЕМ LOADER - показываем контент сразу
+  // 🔥 УБИРАЕМ LOADER ПОЛНОСТЬЮ
+  // Показываем контент сразу, даже если loading=true
+  
   if (showSubscriptionPage) {
     return (
       <Subscription

@@ -1,24 +1,73 @@
-// src/hooks/useHabits.js - МГНОВЕННАЯ ЗАГРУЗКА
+// src/hooks/useHabits.js - МГНОВЕННАЯ ЗАГРУЗКА БЕЗ LOADER
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { habitService } from '../services/habits';
 import { vibrate } from '../utils/helpers';
 
+/**
+ * 🔥 СИНХРОННАЯ загрузка из localStorage при инициализации
+ */
+function loadInitialCacheSync() {
+  try {
+    const cacheKey = 'cache_habits_today';
+    const stored = localStorage.getItem(cacheKey);
+    
+    if (!stored) {
+      return null;
+    }
+    
+    const cached = JSON.parse(stored);
+    
+    // Проверяем свежесть (принимаем даже устаревший кэш)
+    const age = Date.now() - (cached.timestamp || 0);
+    const maxAge = 10 * 60 * 1000; // 10 минут максимум
+    
+    if (age > maxAge) {
+      console.log('⚠️ Cache too old, skipping');
+      return null;
+    }
+    
+    console.log('✅ INSTANT LOAD from localStorage:', {
+      habits: cached.data?.habits?.length || 0,
+      age: Math.round(age / 1000) + 's'
+    });
+    
+    return cached.data;
+  } catch (error) {
+    console.error('❌ Failed to load initial cache:', error);
+    return null;
+  }
+}
+
 export const useHabits = () => {
+  // 🔥 МГНОВЕННАЯ инициализация из кэша
+  const initialCache = loadInitialCacheSync();
+  
   const [habits, setHabits] = useState([]);
-  const [todayHabits, setTodayHabits] = useState([]);
-  const [stats, setStats] = useState({ completed: 0, total: 0 });
-  const [phrase, setPhrase] = useState({ text: '', emoji: '' });
-  const [loading, setLoading] = useState(false); // 🔥 НЕ показываем loader при загрузке из кэша
+  const [todayHabits, setTodayHabits] = useState(initialCache?.habits || []);
+  const [stats, setStats] = useState(initialCache?.stats || { completed: 0, total: 0 });
+  const [phrase, setPhrase] = useState(initialCache?.phrase || { text: '', emoji: '' });
+  
+  // 🔥 НЕ показываем loader если есть кэш
+  const [loading, setLoading] = useState(!initialCache);
   const [error, setError] = useState(null);
   
   const isFirstLoad = useRef(true);
+  const isFetching = useRef(false);
 
   /**
-   * 🚀 МГНОВЕННАЯ ЗАГРУЗКА - без loader
+   * 🚀 Фоновая загрузка (без блокировки UI)
    */
   const loadTodayHabits = useCallback(async (showLoading = false) => {
+    // Предотвращаем дублирование запросов
+    if (isFetching.current) {
+      console.log('⏳ Already fetching, skipping...');
+      return;
+    }
+    
     try {
+      isFetching.current = true;
+      
       if (showLoading) {
         setLoading(true);
       }
@@ -50,11 +99,16 @@ export const useHabits = () => {
       isFirstLoad.current = false;
     } catch (err) {
       console.error('❌ loadTodayHabits error:', err);
-      setError(err.message || 'Failed to load today habits');
+      
+      // При ошибке НЕ стираем кэш
+      if (todayHabits.length === 0) {
+        setError(err.message || 'Failed to load today habits');
+      }
     } finally {
       setLoading(false);
+      isFetching.current = false;
     }
-  }, []);
+  }, [todayHabits.length]);
 
   const loadHabitsForDate = useCallback(async (date) => {
     try {
@@ -233,11 +287,20 @@ export const useHabits = () => {
     await loadTodayHabits(true);
   }, [loadTodayHabits]);
 
-  // 🚀 Загрузка при монтировании - БЕЗ LOADER
+  // 🚀 Загрузка при монтировании
   useEffect(() => {
-    loadTodayHabits(false); // showLoading = false
+    // Если уже есть кэш - загружаем в фоне
+    if (initialCache) {
+      console.log('⚡ Initial cache loaded, fetching updates in background...');
+      loadTodayHabits(false); // showLoading = false
+    } else {
+      // Если нет кэша - показываем loader
+      console.log('📡 No cache, loading with loader...');
+      loadTodayHabits(true);
+    }
+    
     loadAllHabits();
-  }, [loadTodayHabits, loadAllHabits]);
+  }, []); // Пустой массив - выполняем только один раз
 
   // Автообновление каждые 30 секунд (в фоне)
   useEffect(() => {
@@ -267,7 +330,7 @@ export const useHabits = () => {
     todayHabits,
     stats,
     phrase,
-    loading,
+    loading, // Будет false если есть initialCache
     error,
     markHabit,
     unmarkHabit,
