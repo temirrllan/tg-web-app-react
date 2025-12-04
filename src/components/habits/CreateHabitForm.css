@@ -33,7 +33,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
 }
 .form-section-rw2{
   margin-bottom: 16px;
@@ -41,8 +41,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  
+  gap: 8px;
 }
 .form-label {
   display: block;
@@ -232,11 +231,11 @@
 
 /* Dropdown menu */
 .dropdown-button {
-  flex: 1;
-  min-width: 100px; /* Позволяет flex-элементу сжиматься меньше содержимого */
-  max-width: 150px;
-  padding: 12px 16px;
-  font-size: 17px;
+  flex: 0 1 auto;
+  min-width: 85px;
+  max-width: 140px;
+  padding: 12px 10px;
+  font-size: 15px;
   border: 1px solid #C6C6C8;
   border-radius: 10px;
   background: #FFFFFF;
@@ -250,6 +249,42 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+
+
+@media (max-width: 375px) {
+  .dropdown-button {
+    min-width: 75px;
+    max-width: 120px;
+    padding: 10px 8px;
+    font-size: 14px;
+  }
+  
+  .form-section-row,
+  .form-section-rw2 {
+    gap: 6px;
+  }
+}
+
+@media (max-width: 320px) {
+  .dropdown-button {
+    min-width: 65px;
+    max-width: 100px;
+    padding: 10px 6px;
+    font-size: 13px;
+  }
+  
+  .form-section-row,
+  .form-section-rw2 {
+    gap: 4px;
+  }
+}
+
+
+
+
+
+
 .dropdown-button.active {
   color: #000;
   border-color: #007AFF;
