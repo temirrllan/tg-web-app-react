@@ -231,9 +231,8 @@
 
 /* Dropdown menu */
 .dropdown-button {
-  flex: 0 1 auto;
-  min-width: 85px;
-  max-width: 140px;
+  flex: 0 0 140px;
+  width: 140px;
   padding: 12px 10px;
   font-size: 15px;
   border: 1px solid #C6C6C8;
@@ -250,12 +249,10 @@
   text-overflow: ellipsis;
 }
 
-
-
 @media (max-width: 375px) {
   .dropdown-button {
-    min-width: 75px;
-    max-width: 120px;
+    flex: 0 0 120px;
+    width: 120px;
     padding: 10px 8px;
     font-size: 14px;
   }
@@ -268,8 +265,8 @@
 
 @media (max-width: 320px) {
   .dropdown-button {
-    min-width: 65px;
-    max-width: 100px;
+    flex: 0 0 100px;
+    width: 100px;
     padding: 10px 6px;
     font-size: 13px;
   }
