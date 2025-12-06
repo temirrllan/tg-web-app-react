@@ -1,7 +1,7 @@
 .create-habit {
   position: fixed;
   inset: 0;
-  background: var(--bg-primary, #F2F2F7);
+  background: #F2F2F7;
   z-index: 1000;
   display: flex;
   flex-direction: column;
@@ -27,8 +27,7 @@
   margin-bottom: 16px;
   position: relative;
 }
-
-.form-section-row {
+.form-section-row{
   margin-bottom: 16px;
   position: relative;
   display: flex;
@@ -36,8 +35,7 @@
   justify-content: space-between;
   gap: 8px;
 }
-
-.form-section-rw2 {
+.form-section-rw2{
   margin-bottom: 16px;
   position: relative;
   display: flex;
@@ -45,7 +43,6 @@
   justify-content: space-between;
   gap: 8px;
 }
-
 .form-label {
   display: block;
 }
@@ -54,9 +51,9 @@
   display: block;
   font-size: 17px;
   font-weight: 600;
-  color: var(--text-primary, #000);
+  color: #000;
   margin-bottom: 12px;
-  white-space: nowrap;
+  white-space: nowrap; /* Предотвращаем перенос текста */
   flex-shrink: 0;
 }
 
@@ -68,8 +65,8 @@
   font-size: 17px;
   border: none;
   border-radius: 12px;
-  background: var(--card-bg, #FFFFFF);
-  color: var(--text-primary, #000);
+  background: #FFFFFF;
+  color: #000;
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
   -webkit-appearance: none;
   transition: all 0.2s;
@@ -77,31 +74,30 @@
 
 .form-input::placeholder,
 .form-textarea::placeholder {
-  color: var(--input-placeholder, #C7C7CC);
+  color: #C7C7CC;
 }
 
 .form-input:focus,
 .form-textarea:focus {
   outline: none;
-  box-shadow: 0 0 0 2px var(--color-info, #007AFF);
+  box-shadow: 0 0 0 2px #007AFF;
 }
-
 /* Специальные стили для label в строках */
 .form-section-row .form-label-title,
 .form-section-rw2 .form-label-title {
-  margin-bottom: 0;
-  min-width: fit-content;
+  margin-bottom: 0; /* Убираем нижний отступ в строках */
+  min-width: fit-content; /* Минимальная ширина по содержимому */
 }
-
 .form-textarea {
   resize: none;
+  /* min-height: 100px; */
   line-height: 1.4;
 }
 
 /* Hints */
 .form-hint {
   font-size: 13px;
-  color: var(--text-tertiary, #6E6E73);
+  color: #6E6E73;
   line-height: 18px;
   margin-top: 8px;
 }
@@ -113,7 +109,6 @@
   margin-right: -16px;
   padding: 0 16px;
 }
-
 .category-scroll {
   display: flex;
   gap: 12px;
@@ -122,7 +117,6 @@
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
-
 .category-scroll::-webkit-scrollbar {
   display: none;
 }
@@ -140,33 +134,34 @@
   align-items: center;
   justify-content: center;
   padding: 6px 15px;
-  background: var(--card-bg, white);
+  background: white;
   border: 2px solid transparent;
   border-radius: 16px;
   cursor: pointer;
   transition: all 0.2s;
+  /* min-width: 100px; */
   flex-shrink: 0;
 }
 
+
 .category-item--selected {
-  border-color: var(--color-info, #007AFF);
-  background: var(--color-info, #E8F4FD);
+  border-color: #007AFF;
+  background: #E8F4FD;
 }
 
 .category-item__icon {
   font-size: 24px;
   margin-bottom: 4px;
 }
-
 .category-item__name {
   font-size: 12px;
   font-weight: 500;
   text-align: center;
-  color: var(--text-primary, #000);
-  transition: color 0.2s;
-}
+  color: #000;
+    transition: color 0.2s;
 
-/* Белый цвет текста для выбранной категории с цветным фоном */
+}
+/* ДОБАВЛЯЕМ: Белый цвет текста для выбранной категории с цветным фоном */
 .category-item--selected.category-item--colored {
   color: white !important;
 }
@@ -174,7 +169,6 @@
 .category-item--selected.category-item--colored .category-item__name {
   color: white !important;
 }
-
 /* Days selector with animation */
 .days-section {
   max-height: 0;
@@ -202,8 +196,8 @@
   height: 52px;
   border-radius: 12px;
   border: none;
-  background: var(--card-bg, white);
-  color: var(--text-primary, #000);
+  background: white;
+  color: #000;
   font-weight: 600;
   font-size: 15px;
   cursor: pointer;
@@ -211,7 +205,7 @@
 }
 
 .day-button--selected {
-  background: var(--color-info, #007AFF);
+  background: #007AFF;
   color: white;
 }
 
@@ -222,8 +216,8 @@
   font-size: 17px;
   border: none;
   border-radius: 12px;
-  background: var(--card-bg, #FFFFFF);
-  color: var(--text-primary, #000);
+  background: #FFFFFF;
+  color: #000;
   text-align: center;
   font-weight: 400;
   cursor: pointer;
@@ -232,48 +226,79 @@
 }
 
 .form-dropdown-button:active {
-  background: var(--card-bg-hover, #E5E5EA);
+  background: #E5E5EA;
 }
 
-/* Dropdown button - ИСПРАВЛЕННАЯ ВЕРСТКА */
+/* Dropdown menu */
 .dropdown-button {
-  flex: 0 0 auto;
-  min-width: 140px;
-  padding: 12px 16px;
+  flex: 0 0 140px;
+  width: 140px;
+  padding: 12px 10px;
   font-size: 15px;
-  border: 1px solid var(--border-color, #C6C6C8);
+  border: 1px solid #C6C6C8;
   border-radius: 10px;
-  background: var(--card-bg, #FFFFFF);
-  color: var(--text-tertiary, #8E8E93);
+  background: #FFFFFF;
+  color: #8E8E93;
   text-align: center;
   font-weight: 400;
   cursor: pointer;
   position: relative;
   transition: all 0.2s;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
+@media (max-width: 375px) {
+  .dropdown-button {
+    flex: 0 0 120px;
+    width: 120px;
+    padding: 10px 8px;
+    font-size: 14px;
+  }
+  
+  .form-section-row,
+  .form-section-rw2 {
+    gap: 6px;
+  }
+}
+
+@media (max-width: 320px) {
+  .dropdown-button {
+    flex: 0 0 100px;
+    width: 100px;
+    padding: 10px 6px;
+    font-size: 13px;
+  }
+  
+  .form-section-row,
+  .form-section-rw2 {
+    gap: 4px;
+  }
+}
+
+
+
+
+
 
 .dropdown-button.active {
-  color: var(--text-primary, #000);
-  border-color: var(--color-info, #007AFF);
+  color: #000;
+  border-color: #007AFF;
 }
-
 .dropdown-button:active {
-  background: var(--bg-tertiary, #F2F2F7);
+  background: #F2F2F7;
 }
-
-/* Dropdown menu - НОВЫЙ СТИЛЬ КАК НА МАКЕТЕ */
 .dropdown-menu {
   position: absolute;
   top: calc(100% + 8px);
+  left: 0;
   right: 0;
-  min-width: 180px;
-  background: var(--card-bg, white);
+  background: white;
   border-radius: 12px;
-  box-shadow: var(--shadow-md, 0 10px 40px rgba(0, 0, 0, 0.12));
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
   overflow: hidden;
   z-index: 1000;
-  border: 1px solid var(--border-color, transparent);
 }
 
 .dropdown-item {
@@ -283,10 +308,10 @@
   text-align: center;
   background: none;
   border: none;
-  border-bottom: 1px solid var(--border-color, #E5E5EA);
+  border-bottom: 1px solid #E5E5EA;
   cursor: pointer;
   transition: background 0.1s;
-  color: var(--color-info, #007AFF);
+  color: #007AFF;
 }
 
 .dropdown-item:last-child {
@@ -294,69 +319,63 @@
 }
 
 .dropdown-item:active {
-  background: var(--bg-tertiary, #F2F2F7);
+  background: #F2F2F7;
 }
 
 /* iOS Style Time Picker */
 .time-picker-dropdown {
   position: absolute;
   top: calc(100% + 4px);
+  left: 0;
   right: 0;
-  min-width: 280px;
-  background: var(--card-bg, white);
+  background: white;
   border-radius: 12px;
-  box-shadow: var(--shadow-md, 0 4px 20px rgba(0, 0, 0, 0.15));
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   padding: 16px;
   z-index: 1000;
-  border: 1px solid var(--border-color, transparent);
 }
-
 .time-picker-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
 }
-
 .time-picker-header span {
   font-size: 17px;
   font-weight: 600;
-  color: var(--text-primary, #000);
 }
 
-.time-picker-close,
-.time-picker-done {
+.time-picker-close {
   background: none;
   border: none;
-  font-size: 17px;
-  color: var(--color-info, #007AFF);
+  font-size: 20px;
+  color: #8E8E93;
   padding: 0;
-  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-
 .time-picker {
   position: absolute;
   top: calc(100% + 8px);
   left: 0;
   right: 0;
-  background: var(--card-bg, white);
+  background: white;
   border-radius: 12px;
-  box-shadow: var(--shadow-md, 0 10px 40px rgba(0, 0, 0, 0.12));
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
   padding: 16px;
   z-index: 1000;
   max-height: 280px;
-  border: 1px solid var(--border-color, transparent);
 }
-
 .time-picker-input {
   width: 100%;
   padding: 12px;
   font-size: 17px;
-  border: 1px solid var(--border-color, #E5E5EA);
+  border: 1px solid #E5E5EA;
   border-radius: 8px;
   margin-bottom: 12px;
-  background: var(--input-bg, white);
-  color: var(--text-primary, #000);
 }
 
 .time-picker-preset {
@@ -367,18 +386,16 @@
 
 .time-picker-preset button {
   padding: 10px;
-  background: var(--bg-tertiary, #F2F2F7);
+  background: #F2F2F7;
   border: none;
   border-radius: 8px;
   font-size: 15px;
   cursor: pointer;
-  color: var(--text-primary, #000);
 }
 
 .time-picker-preset button:active {
-  background: var(--border-color, #E5E5EA);
+  background: #E5E5EA;
 }
-
 .time-picker__columns {
   display: flex;
   height: 240px;
@@ -426,14 +443,14 @@
   align-items: center;
   justify-content: center;
   font-size: 20px;
-  color: var(--text-tertiary, #8E8E93);
+  color: #8E8E93;
   cursor: pointer;
   scroll-snap-align: center;
   transition: all 0.2s;
 }
 
 .time-picker__item--selected {
-  color: var(--text-primary, #000);
+  color: #000;
   font-weight: 600;
   font-size: 22px;
 }
@@ -446,6 +463,109 @@
   margin-bottom: 8px;
 }
 
+/* Bad habit toggle - СТАРЫЙ СТИЛЬ */
+.bad-habit-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.bad-habit-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle-buttons {
+  display: flex;
+  gap: 0;
+  background: #F2F2F7;
+  border-radius: 9px;
+  padding: 2px;
+}
+
+.toggle-button {
+  padding: 6px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  color: #000;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toggle-button--active {
+  background: #007AFF;
+  color: white;
+}
+.bad-habit-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle-buttons {
+  display: flex;
+  background: white;
+  border-radius: 12px;
+  padding: 2px;
+  gap: 0;
+}
+
+.toggle-button {
+  padding: 10px 32px;
+  font-size: 15px;
+  font-weight: 600;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: #000;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toggle-button--active {
+  background: #007AFF;
+  color: white;
+}
+
+.toggle-button--inactive {
+  color: #8E8E93;
+}
+
+/* Footer */
+.form-footer {
+  padding: 16px;
+  background: #F2F2F7;
+  border-top: 1px solid #E5E5EA;
+}
+
+.submit-button {
+  width: 100%;
+  padding: 17px;
+  font-size: 17px;
+  font-weight: 600;
+  background: #C8C8CD;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.submit-button:not(:disabled) {
+  background: #007AFF;
+}
+
+.submit-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+/* Bad habit toggle switch */
 .bad-habit-toggle {
   display: flex;
   justify-content: space-between;
@@ -465,10 +585,10 @@
   position: relative;
   width: 51px;
   height: 31px;
-  background: var(--border-color, #E5E5EA);
+  background: #E5E5EA;
   border-radius: 16px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all  0.3s ease;
   flex-shrink: 0;
 }
 
@@ -491,57 +611,13 @@
 .toggle-switch--active .toggle-switch__slider {
   transform: translateX(20px);
 }
-
-/* Footer */
-.form-footer {
-  padding: 16px;
-  background: var(--bg-primary, #F2F2F7);
-  border-top: 1px solid var(--border-color, #E5E5EA);
-}
-
-.submit-button {
-  width: 100%;
-  padding: 17px;
-  font-size: 17px;
-  font-weight: 600;
-  background: #C8C8CD;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.submit-button:not(:disabled) {
-  background: var(--color-success, #A7D96C);
-  color: #000000;
-}
-
-.submit-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
 /* Animation */
 @keyframes slideUp {
   from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+  to   { transform: translateY(0); }
 }
 
 /* Responsive */
-@media (max-width: 375px) {
-  .dropdown-button {
-    min-width: 120px;
-    padding: 10px 12px;
-    font-size: 14px;
-  }
-  
-  .form-section-row,
-  .form-section-rw2 {
-    gap: 6px;
-  }
-}
-
 @media (max-width: 320px) {
   .category-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -549,16 +625,5 @@
   
   .days-selector {
     flex-wrap: wrap;
-  }
-  
-  .dropdown-button {
-    min-width: 100px;
-    padding: 10px 8px;
-    font-size: 13px;
-  }
-  
-  .form-section-row,
-  .form-section-rw2 {
-    gap: 4px;
   }
 }
