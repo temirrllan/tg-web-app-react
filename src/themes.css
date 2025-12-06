@@ -1,8 +1,4 @@
-
-/* Временно добавьте в начало themes.css */
-* {
-  transition: none !important;
-}/* src/themes.css */
+/* src/themes.css */
 
 /* ==================== ВАЖНО ==================== 
    Светлая тема = ваши текущие стили (НЕ трогаем!)
@@ -84,6 +80,7 @@
 }
 
 /* ==================== ПЕРЕХОДЫ ==================== */
+/* Плавные переходы для всех элементов */
 * {
   transition: background-color 0.3s ease, 
               color 0.3s ease, 
@@ -91,9 +88,10 @@
               box-shadow 0.3s ease;
 }
 
-/* Отключаем переходы для элементов где они не нужны */
+/* Отключаем переходы для элементов где они мешают */
 button:active,
 .habit-card.swiping,
-.habit-card.animating {
+.habit-card.animating,
+.habit-card.touching {
   transition: none !important;
 }
