@@ -1,18 +1,20 @@
-/* ==================== СВЕТЛАЯ ТЕМА (по умолчанию) ==================== */
 
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  
+  /* padding: 40px 20px; */
   text-align: center;
+  /* min-height: 400px; */
 }
 
 .empty-state__image {
   width: 250px;
   height: 250px;
+  /* margin-bottom: 24px; */
   opacity: 0.8;
-  transition: opacity 0.3s ease;
 }
 
 .empty-state__image img {
@@ -24,28 +26,13 @@
 .empty-state__title {
   font-size: 24px;
   font-weight: 700;
-  color: #1D1D1F;
+  color: var(--gray-900);
   margin-bottom: 12px;
-  transition: color 0.3s ease;
 }
 
 .empty-state__text {
   font-size: 16px;
-  color: #8E8E93;
+  color: var(--gray-500);
   line-height: 1.5;
   margin-bottom: 32px;
-  transition: color 0.3s ease;
-}
-
-/* ==================== ТЕМНАЯ ТЕМА ==================== */
-.dark-theme .empty-state__image {
-  opacity: 0.6;
-}
-
-.dark-theme .empty-state__title {
-  color: #FFFFFF;
-}
-
-.dark-theme .empty-state__text {
-  color: #EBEBF5;
 }

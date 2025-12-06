@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: var(--modal-overlay, rgba(0, 0, 0, 0.75));
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -14,12 +14,12 @@
 }
 
 .modal-content {
-  background: var(--modal-bg, white);
+  background: white;
   border-radius: 20px;
   padding: 32px 24px;
   max-width: 340px;
   width: 100%;
-  box-shadow: var(--shadow-lg, 0 20px 60px rgba(0, 0, 0, 0.3));
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   animation: slideUp 0.3s ease-out;
 }
 
@@ -47,7 +47,7 @@
 .delete-modal__title {
   font-size: 24px;
   font-weight: 700;
-  color: var(--text-primary, #000);
+  color: #000;
   text-align: center;
   margin: 0 0 32px 0;
   line-height: 1.3;
@@ -67,8 +67,8 @@
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
-  background: var(--color-success, #A7D96C);
-  color: #000000;
+  background: #A7D96C;
+  color: #1D1D1F;
 }
 
 .delete-modal__button:active {
@@ -76,27 +76,27 @@
 }
 
 .delete-modal__button--yes {
-  background: var(--color-success, #A7D96C);
-  color: #000000;
+  background: #A7D96C;
+  color: #1D1D1F;
 }
 
 .delete-modal__button--no {
-  background: var(--color-success, #A7D96C);
-  color: #000000;
+  background: #A7D96C;
+  color: #1D1D1F;
 }
 
 /* Copy Link Modal Styles */
 .copy-modal__title {
   font-size: 28px;
   font-weight: 700;
-  color: var(--text-primary, #000);
+  color: #000;
   text-align: center;
   margin: 0 0 12px 0;
 }
 
 .copy-modal__subtitle {
   font-size: 18px;
-  color: var(--text-tertiary, #8E8E93);
+  color: #8E8E93;
   text-align: center;
   margin: 0 0 32px 0;
 }
@@ -106,8 +106,8 @@
   padding: 20px;
   border: none;
   border-radius: 16px;
-  background: var(--color-success, #A7D96C);
-  color: #000000;
+  background: #A7D96C;
+  color: #1D1D1F;
   font-size: 20px;
   font-weight: 700;
   cursor: pointer;

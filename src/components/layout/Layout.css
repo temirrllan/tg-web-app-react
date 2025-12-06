@@ -1,13 +1,6 @@
-/* ==================== СВЕТЛАЯ ТЕМА (по умолчанию) ==================== */
 
 .layout {
   min-height: 100vh;
-  background: #F2F2F7;
+  /* background: var(--gray-100); */
   padding: 16px 0;
-  transition: background-color 0.3s ease;
-}
-
-/* ==================== ТЕМНАЯ ТЕМА ==================== */
-.dark-theme .layout {
-  background: #000000;
 }

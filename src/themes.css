@@ -1,11 +1,81 @@
 /* src/themes.css */
 
-/* ==================== ВАЖНО ==================== 
-   Светлая тема = ваши текущие стили (НЕ трогаем!)
-   Темная тема = новые переменные (только для .dark-theme)
-================================================= */
+/* ==================== LIGHT THEME (по умолчанию) ==================== */
+:root,
+.light-theme {
+  /* Основные цвета фона */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F2F2F7;
+  --bg-tertiary: #FFFFFF;
+  
+  /* Цвета текста */
+  --text-primary: #000000;
+  --text-secondary: #8E8E93;
+  --text-tertiary: #C7C7CC;
+  --text-inverse: #FFFFFF;
+  
+  /* Акцентные цвета */
+  --color-success: #A7D96C;
+  --color-success-dark: #95C55D;
+  --color-danger: #FF3B30;
+  --color-warning: #FF9500;
+  --color-info: #007AFF;
+  
+  /* Границы и разделители */
+  --border-color: #E5E5EA;
+  --border-color-hover: #007AFF;
+  
+  /* Тени */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.12);
+  
+  /* Градиенты */
+  --gradient-bad-habit: linear-gradient(90deg, #93DF72 0%, #EF73FF 100%);
+  
+  /* Карточки */
+  --card-bg: #FFFFFF;
+  --card-bg-completed: #E8F5E9;
+  --card-bg-failed: #FFEBEE;
+  --card-bg-hover: #F8F8FA;
+  
+  /* Иконки привычек */
+  --habit-icon-bg: #E8F4F9;
+  --habit-icon-bg-completed: #34C759;
+  --habit-icon-bg-failed: #FF3B30;
+  
+  /* Кнопки свайпа */
+  --swipe-done-bg: #A7D96C;
+  --swipe-done-text: #1D1D1F;
+  --swipe-undone-bg: #456486;
+  --swipe-undone-text: #FFFFFF;
+  --swipe-skip-bg: #FF9500;
+  --swipe-skip-text: #FFFFFF;
+  
+  /* Модальные окна */
+  --modal-overlay: rgba(0, 0, 0, 0.5);
+  --modal-bg: #FFFFFF;
+  
+  /* Inputs */
+  --input-bg: #FFFFFF;
+  --input-border: #C6C6C8;
+  --input-border-focus: #007AFF;
+  --input-placeholder: #C7C7CC;
+  
+  /* Подписка */
+  --subscription-banner-bg: #FEF3C7;
+  --subscription-banner-border: #F59E0B;
+  --subscription-banner-text: #92400E;
+  
+  /* Навигация по неделе */
+  --week-nav-bg: transparent;
+  --week-nav-text: #8E8E93;
+  --week-nav-active-bg: #A7D96C;
+  --week-nav-active-text: #FFFFFF;
+  --week-nav-today-text: #111827;
+}
 
-/* ==================== ТЕМНАЯ ТЕМА ==================== */
+/* ==================== DARK THEME ==================== */
 .dark-theme {
   /* Основные цвета фона */
   --bg-primary: #1C1C1E;
@@ -34,7 +104,7 @@
   --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
   
-  /* Градиенты */
+  /* Градиенты (более насыщенные) */
   --gradient-bad-habit: linear-gradient(90deg, #A7D96C 0%, #FF6BF7 100%);
   
   /* Карточки */
@@ -80,7 +150,6 @@
 }
 
 /* ==================== ПЕРЕХОДЫ ==================== */
-/* Плавные переходы для всех элементов */
 * {
   transition: background-color 0.3s ease, 
               color 0.3s ease, 
@@ -88,10 +157,9 @@
               box-shadow 0.3s ease;
 }
 
-/* Отключаем переходы для элементов где они мешают */
+/* Отключаем переходы для элементов где они не нужны */
 button:active,
 .habit-card.swiping,
-.habit-card.animating,
-.habit-card.touching {
+.habit-card.animating {
   transition: none !important;
 }
