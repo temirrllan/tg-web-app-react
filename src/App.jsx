@@ -3,6 +3,7 @@ import { authenticateUser } from './services/auth';
 import { habitService } from './services/habits';
 import { useTelegram } from './hooks/useTelegram';
 import { LanguageProvider, LanguageContext } from './context/LanguageContext';
+import { ThemeProvider } from './context/ThemeContext'; // 🆕 ДОБАВИЛИ
 import Onboarding from './components/Onboarding';
 import Today from './pages/Today';
 import Profile from './pages/Profile';
@@ -54,15 +55,7 @@ function AppContent() {
           setLoading(false);
           return;
         }
-console.log('🔍 === FULL DEBUG ===');
-console.log('window.Telegram:', window.Telegram);
-console.log('WebApp:', window.Telegram?.WebApp);
-console.log('initData:', window.Telegram?.WebApp?.initData);
-console.log('initData length:', window.Telegram?.WebApp?.initData?.length);
-console.log('initDataUnsafe:', window.Telegram?.WebApp?.initDataUnsafe);
-console.log('user:', window.Telegram?.WebApp?.initDataUnsafe?.user);
-console.log('isReady:', isReady);
-console.log('isLoading:', isLoading);
+
         console.log('📞 Calling authenticateUser...');
         const response = await authenticateUser(webApp?.initData, tgUser);
         
@@ -86,7 +79,7 @@ console.log('isLoading:', isLoading);
             }
           }
           
-          // 🔥 DEEP LINK HANDLING
+          // Deep link handling
           const startParam = webApp?.initDataUnsafe?.start_param;
           console.log('🔗 Deep link start_param:', startParam);
           
@@ -139,19 +132,14 @@ console.log('isLoading:', isLoading);
             }
           }
           
-          // 🔥🔥🔥 КРИТИЧЕСКАЯ ПРОВЕРКА ONBOARDING 🔥🔥🔥
+          // Onboarding check
           console.log('🔍 === ONBOARDING CHECK ===');
           console.log('isNewUser value:', response.isNewUser);
-          console.log('isNewUser === true:', response.isNewUser === true);
-          console.log('isNewUser == true:', response.isNewUser == true);
-          console.log('Boolean(isNewUser):', Boolean(response.isNewUser));
           
-          // Проверяем по флагу isNewUser
           if (response.isNewUser === true) {
             console.log('🆕 NEW USER DETECTED (by flag) - SHOWING ONBOARDING');
             setShowOnboarding(true);
           } else {
-            // Альтернативная проверка: если пользователь без привычек
             console.log('👤 Checking alternative: habit count');
             try {
               const habitsResponse = await habitService.getAllHabits();
@@ -166,7 +154,6 @@ console.log('isLoading:', isLoading);
               }
             } catch (habitError) {
               console.error('Failed to check habits:', habitError);
-              // В случае ошибки не показываем onboarding
             }
           }
           
@@ -238,21 +225,12 @@ console.log('isLoading:', isLoading);
     };
   }, [user, tg]);
 
-  // 🔥 ОТЛАДКА РЕНДЕРА
-  console.log('🎨 RENDER DECISION:', {
-    loading,
-    error: !!error,
-    user: !!user,
-    showOnboarding,
-    showProfile
-  });
-
   if (loading || isLoading) {
     console.log('⏳ Rendering LOADER');
     return (
       <div className="app-loading">
         <Loader size="large" />
-        <p style={{ marginTop: '20px', color: '#666' }}>
+        <p style={{ marginTop: '20px', color: 'var(--text-secondary)' }}>
           Загрузка Habit Tracker...
         </p>
       </div>
@@ -310,9 +288,11 @@ console.log('isLoading:', isLoading);
 
 function App() {
   return (
-    <LanguageProvider>
-      <AppContent />
-    </LanguageProvider>
+    <ThemeProvider> {/* 🆕 ОБЕРНУЛИ В ThemeProvider */}
+      <LanguageProvider>
+        <AppContent />
+      </LanguageProvider>
+    </ThemeProvider>
   );
 }
 

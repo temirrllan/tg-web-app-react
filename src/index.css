@@ -1,6 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap');
+@import './themes.css'; /* 🆕 ИМПОРТИРУЕМ ТЕМЫ */
 
 :root {
+  /* Старые переменные оставляем для обратной совместимости */
   --primary-color: #0088cc;
   --success-color: #A7D96C;
   --danger-color: #ef4444;
@@ -17,15 +19,13 @@
   
   line-height: 1.5;
   font-weight: 400;
-overflow-y: auto;
+  overflow-y: auto;
   scrollbar-width: none; 
   color-scheme: light;
-  color: var(--gray-900);
-  background-color: var(--gray-100);
-    font-family: "Space Grotesk", sans-serif;
-
- overflow-y: scroll;         /* Скролл остаётся */
-  scrollbar-width: none;      /* Firefox */
+  font-family: "Space Grotesk", sans-serif;
+  
+  overflow-y: scroll;
+  scrollbar-width: none;
   -ms-overflow-style: none; 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -33,11 +33,18 @@ overflow-y: auto;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* 🆕 Динамические цвета из themes.css */
+:root {
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
+
 .today__habits {
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -54,12 +61,14 @@ body {
   width: 100%;
   height: 100%;
   overflow: auto;
+  background-color: var(--bg-secondary); /* 🆕 Динамический фон */
 }
 
 #root {
   height: 100%;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
+  background-color: var(--bg-secondary); /* 🆕 Динамический фон */
 }
 
 button {
@@ -69,9 +78,11 @@ button {
   font-size: inherit;
   transition: all 0.2s;
 }
+
 html {
   touch-action: manipulation;
 }
+
 button:active {
   transform: scale(0.98);
 }
@@ -79,16 +90,22 @@ button:active {
 input, textarea, select {
   font-family: inherit;
   font-size: inherit;
-  border: 1px solid var(--gray-300);
+  border: 1px solid var(--input-border); /* 🆕 Динамическая граница */
   border-radius: 8px;
   padding: 12px;
   width: 100%;
   transition: border-color 0.2s;
+  background-color: var(--input-bg); /* 🆕 Динамический фон */
+  color: var(--text-primary); /* 🆕 Динамический текст */
 }
 
 input:focus, textarea:focus, select:focus {
   outline: none;
-  border-color: var(--primary-color);
+  border-color: var(--input-border-focus); /* 🆕 Динамический фокус */
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--input-placeholder); /* 🆕 Динамический placeholder */
 }
 
 .container {
@@ -114,27 +131,13 @@ input:focus, textarea:focus, select:focus {
   animation: fadeIn 0.3s ease-out;
 }
 
-/* Скроллбар */
+/* Скроллбар - СКРЫВАЕМ */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent;
+  display: none;
 }
-
-::-webkit-scrollbar-track {
-  background: var(--gray-200);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--gray-400);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--gray-500);
-}
-
-
-/* ... существующие стили ... */
 
 /* Отключаем выделение текста при свайпе */
 .habit-card {
@@ -161,35 +164,22 @@ input:focus, textarea:focus, select:focus {
 .swipe-indicator {
   animation: pulse 1s ease-in-out infinite;
 }
-/* Скрыть визуальный скроллбар (Chrome, Safari, Edge) */
-::-webkit-scrollbar {
-  width: 0 !important;
-  height: 0 !important;
-  background: transparent;
-  display: none;
-}
 
 /* Специальные стили для мобильных устройств */
 @media (hover: none) and (pointer: coarse) {
-  /* Это мобильное устройство */
-  
   .habit-card-container {
-    /* Разрешаем только вертикальный скролл страницы */
     touch-action: pan-y;
   }
   
   .habit-card {
-    /* Убираем задержку касания на iOS */
     -webkit-tap-highlight-color: transparent;
   }
   
-  /* Оптимизация для плавности */
   .today__habits {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
   }
   
-  /* Предотвращаем зум при двойном тапе */
   button,
   input,
   select,
