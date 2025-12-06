@@ -249,7 +249,7 @@
 .habit-detail__friends {
   display: flex;
   flex-direction: column;
-  background: var(--card-bg, white);
+  background: var( white);
   border-radius: 16px;
   padding: 20px;
   margin-bottom: 20px;
