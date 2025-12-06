@@ -1,17 +1,18 @@
 /* DeleteConfirmModal.css */
 
-.delete-modal__content {
-  background: var(--bg-tertiary, #3A3A3C);
+/* Переопределяем стили modal-content для delete-modal */
+.delete-modal.modal-content {
+  background: var(--bg-tertiary, #3A3A3C) !important;
   border-radius: 20px;
   padding: 40px 24px 32px;
   text-align: center;
-  width: 100%;
-  max-width: 500px;
-  margin: 0 16px;
+  max-width: 640px;
+  width: 90%;
+  box-shadow: var(--shadow-lg, 0 20px 60px rgba(0, 0, 0, 0.5));
 }
 
 .delete-modal__title {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 600;
   color: var(--text-primary, #FFFFFF);
   margin: 0 0 40px 0;
@@ -27,14 +28,14 @@
 
 .delete-modal__button {
   flex: 1;
-  padding: 18px 24px;
+  padding: 20px 24px;
   border-radius: 16px;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-height: 60px;
+  min-height: 64px;
 }
 
 .delete-modal__button--yes {
@@ -44,7 +45,6 @@
 
 .delete-modal__button--yes:hover {
   background: var(--color-success-dark, #95C55D);
-  transform: scale(0.98);
 }
 
 .delete-modal__button--yes:active {
@@ -58,7 +58,6 @@
 
 .delete-modal__button--no:hover {
   background: var(--color-success-dark, #95C55D);
-  transform: scale(0.98);
 }
 
 .delete-modal__button--no:active {
@@ -66,8 +65,8 @@
 }
 
 /* Light theme specific */
-.light-theme .delete-modal__content {
-  background: #FFFFFF;
+.light-theme .delete-modal.modal-content {
+  background: #FFFFFF !important;
 }
 
 .light-theme .delete-modal__title {
@@ -76,9 +75,9 @@
 
 /* Responsive */
 @media (max-width: 375px) {
-  .delete-modal__content {
+  .delete-modal.modal-content {
     padding: 36px 20px 28px;
-    margin: 0 12px;
+    max-width: 90%;
   }
 
   .delete-modal__title {
@@ -87,9 +86,9 @@
   }
 
   .delete-modal__button {
-    font-size: 17px;
-    padding: 16px 20px;
-    min-height: 56px;
+    font-size: 18px;
+    padding: 18px 20px;
+    min-height: 60px;
   }
 
   .delete-modal__buttons {
@@ -98,7 +97,7 @@
 }
 
 @media (max-width: 320px) {
-  .delete-modal__content {
+  .delete-modal.modal-content {
     padding: 32px 16px 24px;
   }
 
@@ -108,8 +107,8 @@
   }
 
   .delete-modal__button {
-    font-size: 16px;
-    padding: 14px 16px;
-    min-height: 52px;
+    font-size: 17px;
+    padding: 16px 16px;
+    min-height: 56px;
   }
 }
