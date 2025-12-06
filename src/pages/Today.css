@@ -122,6 +122,11 @@
   font-weight: bold;
   color: white;
 }
+.today {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
 .today__stats {
   text-align: center;
   margin-bottom: 4px;

@@ -2,6 +2,6 @@
 .layout {
   min-height: 100vh;
   /* background: var(--gray-100); */
-   overflow-x: hidden
+  
   padding: 16px 0;
 }
