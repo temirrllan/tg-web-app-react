@@ -2,41 +2,24 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigation } from '../hooks/useNavigation';
 import { useTranslation } from '../hooks/useTranslation';
+import { useTheme } from '../hooks/useTheme'; // 🆕 ДОБАВИЛИ
 import LanguageSelector from './LanguageSelector';
 import './Settings.css';
 
 const Settings = ({ onClose }) => {
   useNavigation(onClose);
   const { t, language } = useTranslation();
+  const { isDark, toggleTheme } = useTheme(); // 🆕 ИСПОЛЬЗУЕМ ThemeContext
   
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
-  const [nightTheme, setNightTheme] = useState(false);
   const [inboxNotifications, setInboxNotifications] = useState(true);
   
   useEffect(() => {
-    const savedTheme = localStorage.getItem('nightTheme') === 'true';
     const savedNotifications = localStorage.getItem('inboxNotifications') !== 'false';
-    setNightTheme(savedTheme);
     setInboxNotifications(savedNotifications);
-
-    // применить сохранённую тему при входе
-    if (savedTheme) {
-      document.documentElement.classList.add('dark-theme');
-    } else {
-      document.documentElement.classList.remove('dark-theme');
-    }
   }, []);
   
-  const handleThemeToggle = () => {
-    const newTheme = !nightTheme;
-    setNightTheme(newTheme);
-    localStorage.setItem('nightTheme', String(newTheme));
-    if (newTheme) {
-      document.documentElement.classList.add('dark-theme');
-    } else {
-      document.documentElement.classList.remove('dark-theme');
-    }
-  };
+  // 🔥 УДАЛИЛИ весь код с localStorage для темы - теперь через ThemeContext
 
   const handleInboxToggle = () => {
     const next = !inboxNotifications;
@@ -52,8 +35,6 @@ const Settings = ({ onClose }) => {
   
   return (
     <div className="settings">
-      
-      
       <div className="settings__content">
         <div className="settings__section">
           <h3 className="settings__section-title">{t('settings.applicationSettings')}</h3>
@@ -85,18 +66,19 @@ const Settings = ({ onClose }) => {
           </div>
         </div>
         
+        {/* 🆕 Обновленный переключатель темы */}
         <div className="settings__theme-section">
           <div className="settings__theme-item">
             <span className="settings__theme-label">{t('settings.nightTheme')}</span>
             <button 
-              className={`settings__toggle ${nightTheme ? 'settings__toggle--active' : ''}`}
-              onClick={handleThemeToggle}
-              aria-pressed={nightTheme}
+              className={`settings__toggle ${isDark ? 'settings__toggle--active' : ''}`}
+              onClick={toggleTheme} // 🆕 Используем toggleTheme из контекста
+              aria-pressed={isDark}
               aria-label={t('settings.nightTheme')}
             >
               <div className="settings__toggle-slider">
                 <span className="settings__toggle-icon">
-                  {nightTheme ? '🌙' : '☀️'}
+                  {isDark ? '🌙' : '☀️'}
                 </span>
               </div>
             </button>

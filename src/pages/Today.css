@@ -1,3 +1,5 @@
+/* ==================== СВЕТЛАЯ ТЕМА (по умолчанию) ==================== */
+
 .habit-card-container {
   position: relative;
   display: flex;
@@ -20,7 +22,7 @@
   -webkit-touch-callout: none;
   z-index: 2;
   will-change: transform;
-  transition: transform 0.3s ease-out;
+  transition: transform 0.3s ease-out, background-color 0.3s ease;
 }
 
 .habit-card.touching {
@@ -96,6 +98,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: color 0.3s ease;
 }
 
 .habit-goal {
@@ -105,6 +108,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: color 0.3s ease;
 }
 
 /* Индикатор статуса */
@@ -122,11 +126,7 @@
   font-weight: bold;
   color: white;
 }
-.today {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
-}
+
 .today__stats {
   text-align: center;
   margin-bottom: 4px;
@@ -140,6 +140,7 @@
   font-size: 24px;
   color: #1D1D1F;
   margin-bottom: 4px;
+  transition: color 0.3s ease;
 }
 
 .today__container2 {
@@ -148,25 +149,29 @@
   justify-content: space-between;
   font-weight: 700;
   color: #1D1D1F;
+  transition: color 0.3s ease;
 }
 
 .today__title {
   font-size: 24px;
   font-weight: 700;
-  color: var(--gray-900);
+  color: #1D1D1F;
   line-height: 1.3;
+  transition: color 0.3s ease;
 }
 
 .today__count {
   font-size: 24px;
   font-weight: 700;
   color: #1D1D1F;
+  transition: color 0.3s ease;
 }
 
 .today__subtitle {
   font-size: 24px;
   color: #C3C3C3;
   margin-top: 4px;
+  transition: color 0.3s ease;
 }
 
 .today__motivation {
@@ -176,13 +181,15 @@
   padding: 10px;
   text-align: center;
   font-size: 16px;
-  /* font-weight: 700; */
   color: #1D1D1F;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
+
 .today__motivation--updating {
   animation: motivationPulse 0.5s ease;
 }
+
 @keyframes motivationPulse {
   0% {
     transform: scale(1);
@@ -194,6 +201,7 @@
     transform: scale(1);
   }
 }
+
 @media (max-width: 375px) {
   .today__motivation {
     max-width: 160px;
@@ -218,10 +226,12 @@
 .today__motivation--streak {
   background: #A7D96C !important;
 }
+
 .today__habits {
   margin-bottom: 80px;
   padding: 0;
 }
+
 .today__readonly-notice {
   background: #FEF3C7;
   color: #92400E;
@@ -230,6 +240,7 @@
   margin-bottom: 20px;
   font-size: 14px;
   text-align: center;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .status-indicator.completed {
@@ -284,21 +295,17 @@
 .done-button {
   background: #A7D96C;
   display: flex;
- align-items: center;
- /* justify-content: space-between; */
- flex-direction: row;
-  /* box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3); */
+  align-items: center;
+  flex-direction: row;
   color: #1D1D1F;
 }
 
 .undone-button {
   background: #456486;
-  /* box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3); */
   display: flex;
- align-items: center;
- flex-direction: row;
- /* justify-content: space-between; */
- color: #FFFFFF;
+  align-items: center;
+  flex-direction: row;
+  color: #FFFFFF;
 }
 
 .skip-button {
@@ -363,12 +370,7 @@
   z-index: 100;
 }
 
-
-
-
-
-/* src/pages/Today.css - добавьте в конец файла */
-
+/* Skeleton loader */
 .habits-skeleton {
   display: flex;
   flex-direction: column;
@@ -385,6 +387,7 @@
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.3s ease;
 }
 
 .skeleton-icon {
@@ -444,4 +447,102 @@
   100% {
     background-position: 200% 0;
   }
+}
+
+/* ==================== ТЕМНАЯ ТЕМА ==================== */
+.dark-theme .habit-card {
+  background: #2C2C2E;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .habit-card.completed {
+  background: #1E3A1E;
+}
+
+.dark-theme .habit-card.failed {
+  background: #3A1E1E;
+}
+
+.dark-theme .habit-card.skipped {
+  background: #2C2C2E;
+}
+
+.dark-theme .habit-icon {
+  background: #3A3A3C;
+}
+
+.dark-theme .habit-icon.completed {
+  background: #30D158;
+}
+
+.dark-theme .habit-icon.failed {
+  background: #FF453A;
+}
+
+.dark-theme .habit-icon.skipped {
+  background: #3A3A3C;
+}
+
+.dark-theme .habit-title {
+  color: #FFFFFF;
+}
+
+.dark-theme .habit-goal {
+  color: #EBEBF5;
+}
+
+.dark-theme .today__container {
+  color: #FFFFFF;
+}
+
+.dark-theme .today__container2 {
+  color: #FFFFFF;
+}
+
+.dark-theme .today__title {
+  color: #FFFFFF;
+}
+
+.dark-theme .today__count {
+  color: #FFFFFF;
+}
+
+.dark-theme .today__subtitle {
+  color: #8E8E93;
+}
+
+.dark-theme .today__motivation {
+  background: #3A3A3C;
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .today__readonly-notice {
+  background: #3A2E1E;
+  color: #FFD60A;
+}
+
+.dark-theme .skeleton-card {
+  background: #2C2C2E;
+}
+
+.dark-theme .skeleton-icon {
+  background: linear-gradient(
+    90deg,
+    #3A3A3C 25%,
+    #48484A 50%,
+    #3A3A3C 75%
+  );
+  background-size: 200% 100%;
+}
+
+.dark-theme .skeleton-title,
+.dark-theme .skeleton-goal {
+  background: linear-gradient(
+    90deg,
+    #3A3A3C 25%,
+    #48484A 50%,
+    #3A3A3C 75%
+  );
+  background-size: 200% 100%;
 }
