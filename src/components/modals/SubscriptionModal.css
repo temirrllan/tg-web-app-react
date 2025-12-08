@@ -574,7 +574,6 @@
 }
 
 
-
 /* ==================== ТЕМНАЯ ТЕМА ==================== */
 
 /* CreateHabitForm - Dark Theme */
@@ -735,7 +734,7 @@
   color: #000000;
 }
 
-/* SubscriptionModal - Dark Theme */
+/* SubscriptionModal - Dark Theme (ТОЛЬКО цвета, верстка не меняется) */
 .dark-theme .subscription-modal {
   background: #1C1C1E;
 }
@@ -767,12 +766,12 @@
 
 .dark-theme .subscription-modal__plan--selected {
   border-color: #93DF72;
-  background: rgba(147, 223, 114, 0.1);
+  background: rgba(147, 223, 114, 0.15);
 }
 
 .dark-theme .subscription-modal__plan-radio {
   border-color: #48484A;
-  background: #2C2C2E;
+  background: #1C1C1E;
 }
 
 .dark-theme .subscription-modal__plan--selected .subscription-modal__plan-radio {
