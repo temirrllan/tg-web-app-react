@@ -93,3 +93,79 @@ button:active,
 .habit-card.animating {
   transition: none !important;
 }
+
+/* ==================== FIX Z-INDEX ==================== */
+
+/* Layout - базовый слой */
+.layout {
+  position: relative;
+  z-index: 1;
+}
+
+/* Container - над layout */
+.container {
+  position: relative;
+  z-index: 2;
+}
+
+/* Header - должен быть НАД контентом, но аватар не должен торчать */
+.header {
+  position: relative;
+  z-index: 10;
+}
+
+/* Аватар внутри header - локальный z-index */
+.header__avatar,
+.header__user {
+  position: relative;
+  z-index: 1;
+}
+
+/* Today секция - основной контент */
+.today {
+  position: relative;
+  z-index: 5;
+}
+
+/* Stats и habits - внутри today */
+.today__stats,
+.today__habits {
+  position: relative;
+  z-index: 1;
+}
+
+/* Карточки привычек */
+.habit-card-container {
+  position: relative;
+  z-index: 1;
+}
+
+.habit-card {
+  position: relative;
+  z-index: 2;
+}
+
+/* FAB кнопка - над всем контентом */
+.fab {
+  position: fixed;
+  z-index: 100 !important;
+}
+
+/* Модальные окна - самый верхний слой */
+.subscription-modal-overlay {
+  position: fixed;
+  z-index: 3000 !important;
+}
+
+.subscription-modal {
+  position: relative;
+  z-index: 3001 !important;
+}
+
+/* КРИТИЧНО: отключаем transform для header */
+.header,
+.header__user,
+.header__avatar {
+  transform: none !important;
+  will-change: auto !important;
+}
