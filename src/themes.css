@@ -1,10 +1,5 @@
 /* src/themes.css */
 
-/* ==================== ВАЖНО ==================== 
-   Светлая тема = ваши текущие стили (НЕ трогаем!)
-   Темная тема = новые переменные (только для .dark-theme)
-================================================= */
-
 /* ==================== ТЕМНАЯ ТЕМА ==================== */
 .dark-theme {
   /* Основные цвета фона */
@@ -18,7 +13,7 @@
   --text-tertiary: #8E8E93;
   --text-inverse: #000000;
   
-  /* Акцентные цвета (остаются яркими) */
+  /* Акцентные цвета */
   --color-success: #A7D96C;
   --color-success-dark: #95C55D;
   --color-danger: #FF453A;
@@ -29,7 +24,7 @@
   --border-color: #38383A;
   --border-color-hover: #0A84FF;
   
-  /* Тени (более мягкие в темной теме) */
+  /* Тени */
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
@@ -81,91 +76,15 @@
 
 /* ==================== ПЕРЕХОДЫ ==================== */
 * {
-  transition: background-color 0.3s ease, 
-              color 0.3s ease, 
-              border-color 0.3s ease,
-              box-shadow 0.3s ease;
+  transition-property: background-color, color, border-color, box-shadow;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
 }
 
-/* Отключаем переходы для элементов где они не нужны */
+/* Отключаем переходы где не нужны */
 button:active,
 .habit-card.swiping,
-.habit-card.animating {
+.habit-card.animating,
+.habit-card.touching {
   transition: none !important;
-}
-
-/* ==================== FIX Z-INDEX ==================== */
-
-/* Layout - базовый слой */
-.layout {
-  position: relative;
-  z-index: 1;
-}
-
-/* Container - над layout */
-.container {
-  position: relative;
-  z-index: 2;
-}
-
-/* Header - должен быть НАД контентом, но аватар не должен торчать */
-.header {
-  position: relative;
-  z-index: 10;
-}
-
-/* Аватар внутри header - локальный z-index */
-.header__avatar,
-.header__user {
-  position: relative;
-  z-index: 1;
-}
-
-/* Today секция - основной контент */
-.today {
-  position: relative;
-  z-index: 5;
-}
-
-/* Stats и habits - внутри today */
-.today__stats,
-.today__habits {
-  position: relative;
-  z-index: 1;
-}
-
-/* Карточки привычек */
-.habit-card-container {
-  position: relative;
-  z-index: 1;
-}
-
-.habit-card {
-  position: relative;
-  z-index: 2;
-}
-
-/* FAB кнопка - над всем контентом */
-.fab {
-  position: fixed;
-  z-index: 100 !important;
-}
-
-/* Модальные окна - самый верхний слой */
-.subscription-modal-overlay {
-  position: fixed;
-  z-index: 3000 !important;
-}
-
-.subscription-modal {
-  position: relative;
-  z-index: 3001 !important;
-}
-
-/* КРИТИЧНО: отключаем transform для header */
-.header,
-.header__user,
-.header__avatar {
-  transform: none !important;
-  will-change: auto !important;
 }

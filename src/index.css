@@ -199,3 +199,38 @@ input:focus, textarea:focus, select:focus {
     transform: translateZ(0);
   }
 }
+
+
+
+
+/* ==================== Z-INDEX FIX - ДОБАВИТЬ В КОНЕЦ index.css ==================== */
+
+.container {
+  position: relative;
+  z-index: 2;
+}
+
+.today {
+  position: relative;
+  z-index: 5;
+}
+
+.today__stats,
+.today__habits {
+  position: relative;
+  z-index: 1;
+}
+
+.habit-card-container {
+  position: relative;
+  z-index: 1;
+}
+
+.habit-card {
+  position: relative;
+  z-index: 2;
+}
+
+.fab {
+  z-index: 100 !important;
+}
