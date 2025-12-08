@@ -627,3 +627,164 @@
     flex-wrap: wrap;
   }
 }
+
+
+
+/* ==================== ТЕМНАЯ ТЕМА ==================== */
+
+/* CreateHabitForm - Dark Theme */
+.dark-theme .create-habit {
+  background: #000000;
+}
+
+.dark-theme .form-input,
+.dark-theme .form-textarea {
+  background: #1C1C1E;
+  color: #FFFFFF;
+  border: 1px solid #38383A;
+}
+
+.dark-theme .form-input::placeholder,
+.dark-theme .form-textarea::placeholder {
+  color: #636366;
+}
+
+.dark-theme .form-input:focus,
+.dark-theme .form-textarea:focus {
+  box-shadow: 0 0 0 2px #0A84FF;
+  border-color: #0A84FF;
+}
+
+.dark-theme .form-label-title {
+  color: #FFFFFF;
+}
+
+.dark-theme .form-hint {
+  color: #8E8E93;
+}
+
+.dark-theme .category-item {
+  background: #1C1C1E;
+  border-color: transparent;
+}
+
+.dark-theme .category-item--selected {
+  border-color: #0A84FF;
+}
+
+.dark-theme .category-item__name {
+  color: #FFFFFF;
+}
+
+.dark-theme .day-button {
+  background: #1C1C1E;
+  color: #FFFFFF;
+}
+
+.dark-theme .day-button--selected {
+  background: #0A84FF;
+  color: #FFFFFF;
+}
+
+.dark-theme .dropdown-button {
+  background: #1C1C1E;
+  color: #8E8E93;
+  border-color: #38383A;
+}
+
+.dark-theme .dropdown-button.active {
+  color: #FFFFFF;
+  border-color: #0A84FF;
+}
+
+.dark-theme .dropdown-button:active {
+  background: #2C2C2E;
+}
+
+.dark-theme .dropdown-menu {
+  background: #1C1C1E;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.dark-theme .dropdown-item {
+  color: #0A84FF;
+  border-bottom-color: #38383A;
+}
+
+.dark-theme .dropdown-item:active {
+  background: #2C2C2E;
+}
+
+.dark-theme .time-picker-dropdown {
+  background: #1C1C1E;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.dark-theme .time-picker-header span {
+  color: #FFFFFF;
+}
+
+.dark-theme .time-picker-close {
+  color: #8E8E93;
+}
+
+.dark-theme .time-picker {
+  background: #1C1C1E;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.dark-theme .time-picker-input {
+  background: #000000;
+  border-color: #38383A;
+  color: #FFFFFF;
+}
+
+.dark-theme .time-picker-preset button {
+  background: #2C2C2E;
+  color: #FFFFFF;
+}
+
+.dark-theme .time-picker-preset button:active {
+  background: #3A3A3C;
+}
+
+.dark-theme .time-picker__columns::before {
+  background: rgba(10, 132, 255, 0.15);
+}
+
+.dark-theme .time-picker__item {
+  color: #8E8E93;
+}
+
+.dark-theme .time-picker__item--selected {
+  color: #FFFFFF;
+}
+
+.dark-theme .toggle-switch {
+  background: #3A3A3C;
+}
+
+.dark-theme .toggle-switch--active {
+  background: linear-gradient(90deg, #93DF72 0%, #EF73FF 100%);
+}
+
+.dark-theme .form-footer {
+  background: #000000;
+  border-top-color: #38383A;
+}
+
+.dark-theme .submit-button {
+  background: #48484A;
+  color: #8E8E93;
+}
+
+.dark-theme .submit-button:not(:disabled) {
+  background: #0A84FF;
+  color: #FFFFFF;
+}
+
+/* Today page - Dark Theme */
+.dark-theme .habit-card {
+  background: #2C2C2E;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
