@@ -1,5 +1,6 @@
 import React from 'react';
 import Modal from '../common/Modal';
+import './DeleteConfirmModal.css';
 
 const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, habitTitle }) => {
   const handleYes = () => {
@@ -14,7 +15,7 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, habitTitle }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="delete-modal">
       <h2 className="delete-modal__title">
-        Are You Sure You Want to Delete the Habit?
+        Are You Sure You Want<br />to Remove the Habit?
       </h2>
       <div className="delete-modal__buttons">
         <button 
