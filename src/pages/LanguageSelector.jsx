@@ -1,4 +1,3 @@
-// src/pages/LanguageSelector.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigation } from '../hooks/useNavigation';
 import { useTranslation } from '../hooks/useTranslation';
