@@ -632,92 +632,99 @@
 
 /* ==================== ТЕМНАЯ ТЕМА ==================== */
 
+/* ==================== ТЕМНАЯ ТЕМА ==================== */
+
 /* CreateHabitForm - Dark Theme */
 .dark-theme .create-habit {
-  background: #000000;
+  background: #1C1C1E;
 }
 
 .dark-theme .form-input,
 .dark-theme .form-textarea {
-  background: #1C1C1E;
+  background: #2C2C2E;
   color: #FFFFFF;
-  border: 1px solid #38383A;
+  border: none;
 }
 
 .dark-theme .form-input::placeholder,
 .dark-theme .form-textarea::placeholder {
-  color: #636366;
+  color: #6E6E73;
 }
 
 .dark-theme .form-input:focus,
 .dark-theme .form-textarea:focus {
-  box-shadow: 0 0 0 2px #0A84FF;
-  border-color: #0A84FF;
+  box-shadow: 0 0 0 2px #34C759;
+  border-color: #34C759;
 }
 
 .dark-theme .form-label-title {
-  color: #FFFFFF;
-}
-
-.dark-theme .form-hint {
   color: #8E8E93;
 }
 
+.dark-theme .form-hint {
+  color: #6E6E73;
+}
+
+/* Категории - темный фон, полупрозрачные */
 .dark-theme .category-item {
-  background: #1C1C1E;
+  background: rgba(44, 44, 46, 0.6);
   border-color: transparent;
 }
 
 .dark-theme .category-item--selected {
-  border-color: #0A84FF;
+  border-color: transparent;
+  background: rgba(44, 44, 46, 1);
 }
 
 .dark-theme .category-item__name {
   color: #FFFFFF;
 }
 
+/* Дни недели */
 .dark-theme .day-button {
-  background: #1C1C1E;
+  background: #2C2C2E;
   color: #FFFFFF;
 }
 
 .dark-theme .day-button--selected {
-  background: #0A84FF;
-  color: #FFFFFF;
+  background: #34C759;
+  color: #000000;
 }
 
+/* Dropdown кнопки */
 .dark-theme .dropdown-button {
-  background: #1C1C1E;
-  color: #8E8E93;
-  border-color: #38383A;
+  background: #2C2C2E;
+  color: #6E6E73;
+  border-color: #3A3A3C;
 }
 
 .dark-theme .dropdown-button.active {
   color: #FFFFFF;
-  border-color: #0A84FF;
+  border-color: #3A3A3C;
 }
 
 .dark-theme .dropdown-button:active {
-  background: #2C2C2E;
+  background: #3A3A3C;
 }
 
 .dark-theme .dropdown-menu {
-  background: #1C1C1E;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  background: #2C2C2E;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
 }
 
 .dark-theme .dropdown-item {
   color: #0A84FF;
-  border-bottom-color: #38383A;
+  border-bottom-color: #3A3A3C;
 }
 
 .dark-theme .dropdown-item:active {
-  background: #2C2C2E;
+  background: #3A3A3C;
 }
 
+/* Time Picker */
 .dark-theme .time-picker-dropdown {
-  background: #1C1C1E;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  background: #2C2C2E;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
 }
 
 .dark-theme .time-picker-header span {
@@ -729,58 +736,60 @@
 }
 
 .dark-theme .time-picker {
-  background: #1C1C1E;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  background: #2C2C2E;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
 }
 
 .dark-theme .time-picker-input {
-  background: #000000;
-  border-color: #38383A;
+  background: #1C1C1E;
+  border-color: #3A3A3C;
   color: #FFFFFF;
 }
 
 .dark-theme .time-picker-preset button {
-  background: #2C2C2E;
+  background: #3A3A3C;
   color: #FFFFFF;
 }
 
 .dark-theme .time-picker-preset button:active {
-  background: #3A3A3C;
+  background: #48484A;
 }
 
 .dark-theme .time-picker__columns::before {
-  background: rgba(10, 132, 255, 0.15);
+  background: rgba(52, 199, 89, 0.15);
 }
 
 .dark-theme .time-picker__item {
-  color: #8E8E93;
+  color: #6E6E73;
 }
 
 .dark-theme .time-picker__item--selected {
   color: #FFFFFF;
 }
 
+/* Toggle Switch для Bad Habit */
 .dark-theme .toggle-switch {
-  background: #3A3A3C;
+  background: #48484A;
 }
 
 .dark-theme .toggle-switch--active {
   background: linear-gradient(90deg, #93DF72 0%, #EF73FF 100%);
 }
 
+/* Footer и кнопка создания */
 .dark-theme .form-footer {
-  background: #000000;
-  border-top-color: #38383A;
+  background: #1C1C1E;
+  border-top-color: #2C2C2E;
 }
 
 .dark-theme .submit-button {
-  background: #48484A;
-  color: #8E8E93;
+  background: #2C2C2E;
+  color: #6E6E73;
 }
 
 .dark-theme .submit-button:not(:disabled) {
-  background: #0A84FF;
-  color: #FFFFFF;
+  background: #34C759;
+  color: #000000;
 }
 
 /* Today page - Dark Theme */
