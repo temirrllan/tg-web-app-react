@@ -572,3 +572,179 @@
     font-size: 16px;
   }
 }
+
+
+/* ==================== SubscriptionModal - Dark Theme ==================== */
+.dark-theme .subscription-modal-overlay {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.dark-theme .subscription-modal {
+  background: #1C1C1E;
+}
+
+.dark-theme .subscription-modal__illustration {
+  background: #1C1C1E;
+}
+
+.dark-theme .subscription-modal__info {
+  background: #1C1C1E;
+}
+
+.dark-theme .subscription-modal__main-title {
+  color: #FFFFFF;
+}
+
+.dark-theme .subscription-modal__subtitle {
+  color: #8E8E93;
+}
+
+.dark-theme .subscription-modal__feature-text {
+  color: #FFFFFF;
+}
+
+.dark-theme .subscription-modal__plan {
+  background: #2C2C2E;
+  border: 2px solid #3A3A3C;
+}
+
+.dark-theme .subscription-modal__plan--selected {
+  border-color: #93DF72;
+  background: #2C2C2E;
+}
+
+.dark-theme .subscription-modal__plan-radio {
+  border-color: #48484A;
+  background: #1C1C1E;
+}
+
+.dark-theme .subscription-modal__plan--selected .subscription-modal__plan-radio {
+  border-color: #93DF72;
+  background: #93DF72;
+}
+
+.dark-theme .subscription-modal__plan-name {
+  color: #FFFFFF;
+}
+
+.dark-theme .subscription-modal__plan-total {
+  color: #8E8E93;
+}
+
+.dark-theme .subscription-modal__plan-price {
+  color: #FFFFFF;
+}
+
+.dark-theme .subscription-modal__link {
+  color: #8E8E93;
+  border-bottom-color: #8E8E93;
+}
+
+.dark-theme .subscription-modal__continue {
+  background: #93DF72;
+  color: #000000;
+}
+
+.dark-theme .subscription-modal__continue--disabled {
+  background: #93DF72;
+  color: #000000;
+  opacity: 0.4;
+}
+
+/* ==================== Today Page - Dark Theme ==================== */
+.dark-theme .habit-card {
+  background: #2C2C2E;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .habit-card.completed {
+  background: #1E3A1E;
+}
+
+.dark-theme .habit-card.failed {
+  background: #3A1E1E;
+}
+
+.dark-theme .habit-card.skipped {
+  background: #2C2C2E;
+}
+
+.dark-theme .habit-icon {
+  background: #3A3A3C;
+}
+
+.dark-theme .habit-icon.completed {
+  background: #30D158;
+}
+
+.dark-theme .habit-icon.failed {
+  background: #FF453A;
+}
+
+.dark-theme .habit-icon.skipped {
+  background: #3A3A3C;
+}
+
+.dark-theme .habit-title {
+  color: #FFFFFF;
+}
+
+.dark-theme .habit-goal {
+  color: #EBEBF5;
+}
+
+.dark-theme .today__container {
+  color: #FFFFFF;
+}
+
+.dark-theme .today__container2 {
+  color: #FFFFFF;
+}
+
+.dark-theme .today__title {
+  color: #FFFFFF;
+}
+
+.dark-theme .today__count {
+  color: #FFFFFF;
+}
+
+.dark-theme .today__subtitle {
+  color: #8E8E93;
+}
+
+.dark-theme .today__motivation {
+  background: #3A3A3C;
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .today__readonly-notice {
+  background: #3A2E1E;
+  color: #FFD60A;
+}
+
+.dark-theme .skeleton-card {
+  background: #2C2C2E;
+}
+
+.dark-theme .skeleton-icon {
+  background: linear-gradient(
+    90deg,
+    #3A3A3C 25%,
+    #48484A 50%,
+    #3A3A3C 75%
+  );
+  background-size: 200% 100%;
+}
+
+.dark-theme .skeleton-title,
+.dark-theme .skeleton-goal {
+  background: linear-gradient(
+    90deg,
+    #3A3A3C 25%,
+    #48484A 50%,
+    #3A3A3C 75%
+  );
+  background-size: 200% 100%;
+}
