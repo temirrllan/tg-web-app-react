@@ -229,3 +229,83 @@
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
+
+
+
+/* ==================== Settings Page - Dark Theme ==================== */
+.dark-theme .settings {
+  background: #000000;
+}
+
+.dark-theme .settings__header {
+  background: #1C1C1E;
+  border-bottom-color: rgba(84, 84, 88, 0.3);
+}
+
+.dark-theme .settings__back {
+  color: #0A84FF;
+}
+
+.dark-theme .settings__title {
+  color: #FFFFFF;
+}
+
+.dark-theme .settings__subtitle {
+  color: #8E8E93;
+}
+
+.dark-theme .settings__menu {
+  color: #0A84FF;
+}
+
+.dark-theme .settings__content {
+  background: #000000;
+}
+
+.dark-theme .settings__section-title {
+  color: #FFFFFF;
+}
+
+.dark-theme .settings__items {
+  background: #1C1C1E;
+}
+
+.dark-theme .settings__item {
+  background: transparent;
+}
+
+.dark-theme .settings__item:not(:last-child)::after {
+  background: rgba(84, 84, 88, 0.3);
+}
+
+.dark-theme .settings__item:active {
+  background: #2C2C2E;
+}
+
+.dark-theme .settings__item-label {
+  color: #FFFFFF;
+}
+
+.dark-theme .settings__item-description {
+  color: #8E8E93;
+}
+
+.dark-theme .settings__item-value {
+  color: #8E8E93;
+}
+
+.dark-theme .settings__item-arrow {
+  color: #48484A;
+}
+
+.dark-theme .settings__theme-label {
+  color: #FFFFFF;
+}
+
+.dark-theme .settings__toggle {
+  background: #48484A;
+}
+
+.dark-theme .settings__toggle--active {
+  background: #4CD964;
+}
