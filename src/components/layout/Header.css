@@ -1,14 +1,10 @@
-/* src/components/layout/Header.css */
-
-/* ==================== СВЕТЛАЯ ТЕМА ==================== */
+/* ==================== СВЕТЛАЯ ТЕМА (по умолчанию) ==================== */
 
 .header {
   background: white;
   padding: 16px;
   border-radius: 16px;
   margin-bottom: 13px;
-  position: relative;
-  z-index: 10;
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -17,8 +13,6 @@
   align-items: center;
   gap: 12px;
   cursor: pointer;
-  position: relative;
-  z-index: 1;
   transition: opacity 0.2s;
 }
 
@@ -31,8 +25,6 @@
   height: 48px;
   border-radius: 50%;
   object-fit: cover;
-  position: relative;
-  z-index: 1;
 }
 
 .header__avatar--placeholder {
