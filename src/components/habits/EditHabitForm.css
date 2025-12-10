@@ -394,93 +394,95 @@
 
 /* ==================== Edit Habit Form - Dark Theme ==================== */
 .dark-theme .edit-habit {
-  background: #000000;
-}
-
-.dark-theme .edit-habit__content {
-  background: transparent;
-}
-
-.dark-theme .form-label-title {
-  color: #FFFFFF;
+  background: #1C1C1E;
 }
 
 .dark-theme .form-input,
 .dark-theme .form-textarea {
-  background: #1C1C1E;
+  background: #2C2C2E;
   color: #FFFFFF;
-  border-color: transparent;
+  border: none;
 }
 
 .dark-theme .form-input::placeholder,
 .dark-theme .form-textarea::placeholder {
-  color: #636366;
+  color: #6E6E73;
 }
 
 .dark-theme .form-input:focus,
 .dark-theme .form-textarea:focus {
-  box-shadow: 0 0 0 2px #0A84FF;
+  box-shadow: 0 0 0 2px #34C759;
+  border-color: #34C759;
 }
 
-.dark-theme .form-hint {
+.dark-theme .form-label-title {
   color: #8E8E93;
 }
 
+.dark-theme .form-hint {
+  color: #6E6E73;
+}
+
+/* Категории - темный фон, полупрозрачные */
 .dark-theme .category-item {
-  background: #1C1C1E;
+  background: rgba(44, 44, 46, 0.6);
   border-color: transparent;
 }
 
 .dark-theme .category-item--selected {
-  border-color: #0A84FF;
+  border-color: transparent;
+  background: rgba(44, 44, 46, 1);
 }
 
 .dark-theme .category-item__name {
   color: #FFFFFF;
 }
 
+/* Дни недели */
 .dark-theme .day-button {
-  background: #1C1C1E;
+  background: #2C2C2E;
   color: #FFFFFF;
 }
 
 .dark-theme .day-button--selected {
-  background: #0A84FF;
-  color: #FFFFFF;
+  background: #34C759;
+  color: #000000;
 }
 
+/* Dropdown кнопки */
 .dark-theme .dropdown-button {
-  background: #1C1C1E;
-  border-color: #38383A;
-  color: #636366;
+  background: #2C2C2E;
+  color: #6E6E73;
+  border-color: #3A3A3C;
 }
 
 .dark-theme .dropdown-button.active {
   color: #FFFFFF;
-  border-color: #0A84FF;
+  border-color: #3A3A3C;
 }
 
 .dark-theme .dropdown-button:active {
-  background: #2C2C2E;
+  background: #3A3A3C;
 }
 
 .dark-theme .dropdown-menu {
-  background: #1C1C1E;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  background: #2C2C2E;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
 }
 
 .dark-theme .dropdown-item {
   color: #0A84FF;
-  border-bottom-color: #2C2C2E;
+  border-bottom-color: #3A3A3C;
 }
 
 .dark-theme .dropdown-item:active {
-  background: #2C2C2E;
+  background: #3A3A3C;
 }
 
+/* Time Picker */
 .dark-theme .time-picker-dropdown {
-  background: #1C1C1E;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  background: #2C2C2E;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
 }
 
 .dark-theme .time-picker-header span {
@@ -492,29 +494,32 @@
 }
 
 .dark-theme .time-picker-input {
-  background: #2C2C2E;
+  background: #1C1C1E;
+  border-color: #3A3A3C;
   color: #FFFFFF;
-  border-color: #38383A;
 }
 
+/* Toggle Switch для Bad Habit */
 .dark-theme .toggle-switch {
-  background: #38383A;
+  background: #48484A;
 }
 
 .dark-theme .toggle-switch--active {
   background: linear-gradient(90deg, #93DF72 0%, #EF73FF 100%);
 }
 
+/* Footer и кнопка сохранения */
 .dark-theme .form-footer {
-  background: #000000;
+  background: #1C1C1E;
   border-top-color: #2C2C2E;
 }
 
 .dark-theme .submit-button {
-  background: #0A84FF;
+  background: #2C2C2E;
+  color: #6E6E73;
 }
 
-.dark-theme .submit-button:disabled {
-  background: #3A3A3C;
-  opacity: 0.6;
+.dark-theme .submit-button:not(:disabled) {
+  background: #34C759;
+  color: #000000;
 }
