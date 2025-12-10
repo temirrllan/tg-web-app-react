@@ -143,3 +143,99 @@
   background: #FF3B30;
   color: white;
 }
+
+
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.subscription-page__cancel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.subscription-page__cancel-btn:not(:disabled):hover {
+  background: #FF3B30;
+  color: white;
+}
+
+/* ==================== Subscription Page - Dark Theme ==================== */
+.dark-theme .subscription-page {
+  background: #000000;
+}
+
+.dark-theme .subscription-page__content {
+  background: transparent;
+}
+
+.dark-theme .subscription-status {
+  background: #1C1C1E;
+}
+
+.dark-theme .subscription-status h3 {
+  color: #FFFFFF;
+}
+
+.dark-theme .subscription-status p {
+  color: #8E8E93;
+}
+
+.dark-theme .subscription-usage {
+  color: #FFFFFF;
+}
+
+.dark-theme .subscription-status--premium {
+  background: linear-gradient(135deg, #A7D96C 0%, #95C55D 100%);
+  color: #000000;
+}
+
+.dark-theme .subscription-status--premium h3,
+.dark-theme .subscription-status--premium p {
+  color: #000000;
+}
+
+.dark-theme .subscription-status--premium .subscription-usage {
+  color: #000000;
+}
+
+.dark-theme .days-warning {
+  color: #FFD60A !important;
+}
+
+.dark-theme .trial-badge {
+  background: #FFD60A;
+  color: #000000;
+}
+
+.dark-theme .subscription-page__cancel-btn {
+  background: #1C1C1E;
+  color: #FF453A;
+  border-color: #FF453A;
+}
+
+.dark-theme .subscription-page__cancel-btn:not(:disabled):hover {
+  background: #FF453A;
+  color: #FFFFFF;
+}
+
+.dark-theme .subscription-history {
+  background: #1C1C1E;
+}
+
+.dark-theme .subscription-history h3 {
+  color: #FFFFFF;
+}
+
+.dark-theme .history-item {
+  border-bottom-color: #2C2C2E;
+}
+
+.dark-theme .history-action {
+  color: #FFFFFF;
+}
+
+.dark-theme .history-date {
+  color: #8E8E93;
+}
