@@ -381,3 +381,140 @@
     flex-wrap: wrap;
   }
 }
+/* Responsive */
+@media (max-width: 320px) {
+  .category-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .days-selector {
+    flex-wrap: wrap;
+  }
+}
+
+/* ==================== Edit Habit Form - Dark Theme ==================== */
+.dark-theme .edit-habit {
+  background: #000000;
+}
+
+.dark-theme .edit-habit__content {
+  background: transparent;
+}
+
+.dark-theme .form-label-title {
+  color: #FFFFFF;
+}
+
+.dark-theme .form-input,
+.dark-theme .form-textarea {
+  background: #1C1C1E;
+  color: #FFFFFF;
+  border-color: transparent;
+}
+
+.dark-theme .form-input::placeholder,
+.dark-theme .form-textarea::placeholder {
+  color: #636366;
+}
+
+.dark-theme .form-input:focus,
+.dark-theme .form-textarea:focus {
+  box-shadow: 0 0 0 2px #0A84FF;
+}
+
+.dark-theme .form-hint {
+  color: #8E8E93;
+}
+
+.dark-theme .category-item {
+  background: #1C1C1E;
+  border-color: transparent;
+}
+
+.dark-theme .category-item--selected {
+  border-color: #0A84FF;
+}
+
+.dark-theme .category-item__name {
+  color: #FFFFFF;
+}
+
+.dark-theme .day-button {
+  background: #1C1C1E;
+  color: #FFFFFF;
+}
+
+.dark-theme .day-button--selected {
+  background: #0A84FF;
+  color: #FFFFFF;
+}
+
+.dark-theme .dropdown-button {
+  background: #1C1C1E;
+  border-color: #38383A;
+  color: #636366;
+}
+
+.dark-theme .dropdown-button.active {
+  color: #FFFFFF;
+  border-color: #0A84FF;
+}
+
+.dark-theme .dropdown-button:active {
+  background: #2C2C2E;
+}
+
+.dark-theme .dropdown-menu {
+  background: #1C1C1E;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.dark-theme .dropdown-item {
+  color: #0A84FF;
+  border-bottom-color: #2C2C2E;
+}
+
+.dark-theme .dropdown-item:active {
+  background: #2C2C2E;
+}
+
+.dark-theme .time-picker-dropdown {
+  background: #1C1C1E;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.dark-theme .time-picker-header span {
+  color: #FFFFFF;
+}
+
+.dark-theme .time-picker-done {
+  color: #0A84FF;
+}
+
+.dark-theme .time-picker-input {
+  background: #2C2C2E;
+  color: #FFFFFF;
+  border-color: #38383A;
+}
+
+.dark-theme .toggle-switch {
+  background: #38383A;
+}
+
+.dark-theme .toggle-switch--active {
+  background: linear-gradient(90deg, #93DF72 0%, #EF73FF 100%);
+}
+
+.dark-theme .form-footer {
+  background: #000000;
+  border-top-color: #2C2C2E;
+}
+
+.dark-theme .submit-button {
+  background: #0A84FF;
+}
+
+.dark-theme .submit-button:disabled {
+  background: #3A3A3C;
+  opacity: 0.6;
+}
