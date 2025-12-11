@@ -19,11 +19,13 @@ import SubscriptionModal from '../components/modals/SubscriptionModal';
 import Subscription from './Subscription';
 import { useTranslation } from '../hooks/useTranslation';
 import PullToRefresh from '../components/common/PullToRefresh';
+import { useTelegramTheme } from '../hooks/useTelegramTheme';
 
 const Today = () => {
   const { t } = useTranslation();
   const { user } = useTelegram();
-  
+    useTelegramTheme();
+
   const {
     todayHabits,
     stats,
