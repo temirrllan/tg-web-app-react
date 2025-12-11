@@ -88,3 +88,28 @@
   }
 }
 
+/* ==================== Onboarding - Dark Theme ==================== */
+.dark-theme .onboarding {
+  background: #000000;
+}
+
+.dark-theme .onboarding__card {
+  background: #1C1C1E;
+}
+
+.dark-theme .onboarding__title {
+  color: #FFFFFF;
+}
+
+.dark-theme .onboarding__desc {
+  color: #8E8E93;
+}
+
+.dark-theme .onboarding__btn {
+  background: #A7D96C;
+  color: #000000;
+}
+
+.dark-theme .onboarding__btn:hover {
+  background: #95C55D;
+}
