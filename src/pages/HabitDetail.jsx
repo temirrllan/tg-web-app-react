@@ -10,6 +10,7 @@ import SubscriptionModal from '../components/modals/SubscriptionModal';
 import './HabitDetail.css';
 import FriendSwipeHint from '../components/habits/FriendSwipeHint';
 import { useTranslation } from "../hooks/useTranslation";
+import { useTelegramTheme } from '../hooks/useTelegramTheme';
 
 const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const { tg, user: currentUser } = useTelegram();
@@ -24,6 +25,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const [toast, setToast] = useState(null);
   const [friendLimitData, setFriendLimitData] = useState(null);
   const [ownerInfo, setOwnerInfo] = useState(null);
+  useTelegramTheme();
 
   const [statistics, setStatistics] = useState({
     currentStreak: 0,

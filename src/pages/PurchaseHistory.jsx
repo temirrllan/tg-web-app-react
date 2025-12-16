@@ -4,11 +4,13 @@ import { habitService } from '../services/habits';
 import { useTranslation } from '../hooks/useTranslation';
 import Loader from '../components/common/Loader';
 import './PurchaseHistory.css';
+import { useTelegramTheme } from '../hooks/useTelegramTheme';
 
 const PurchaseHistory = ({ onClose }) => {
   const { t, language } = useTranslation();
   useNavigation(onClose);
-  
+    useTelegramTheme();
+
   const [loading, setLoading] = useState(true);
   const [purchases, setPurchases] = useState([]);
   

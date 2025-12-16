@@ -4,6 +4,7 @@ import { habitService } from '../services/habits';
 import './SubscriptionNew.css';
 import { telegramStarsService } from '../services/telegramStars';
 import { useTranslation } from '../hooks/useTranslation';
+import { useTelegramTheme } from '../hooks/useTelegramTheme';
 
 const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
   const { t } = useTranslation();
@@ -15,7 +16,8 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
   const [promoCode, setPromoCode] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
-  
+    useTelegramTheme();
+
   useEffect(() => {
     if (preselectedPlan === '1_year' || preselectedPlan === 'year') {
       setSelectedPlan('1_year');

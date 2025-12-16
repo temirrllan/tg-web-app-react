@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import './Onboarding.css';
 import illustration from '../../public/images/onboarding.png';
+import { useTelegramTheme } from '../hooks/useTelegramTheme';
 
 const Onboarding = ({ onComplete }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
+  useTelegramTheme();
 
   useEffect(() => {
     // Предзагрузка изображения

@@ -5,12 +5,14 @@ import { useTranslation } from '../hooks/useTranslation';
 import { useTheme } from '../hooks/useTheme'; // 🆕 ДОБАВИЛИ
 import LanguageSelector from './LanguageSelector';
 import './Settings.css';
+import { useTelegramTheme } from '../hooks/useTelegramTheme';
 
 const Settings = ({ onClose }) => {
   useNavigation(onClose);
   const { t, language } = useTranslation();
   const { isDark, toggleTheme } = useTheme(); // 🆕 ИСПОЛЬЗУЕМ ThemeContext
-  
+    useTelegramTheme();
+
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   const [inboxNotifications, setInboxNotifications] = useState(true);
   

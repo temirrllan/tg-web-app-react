@@ -5,11 +5,13 @@ import { useTranslation } from '../hooks/useTranslation';
 import Loader from '../components/common/Loader';
 import SubscriptionNew from './SubscriptionNew';
 import './Subscription.css';
+import { useTelegramTheme } from '../hooks/useTelegramTheme';
 
 const Subscription = ({ onClose, preselectedPlan = null }) => {
   const { t } = useTranslation();
   useNavigation(onClose);
-  
+    useTelegramTheme();
+
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState(null);
   const [history, setHistory] = useState([]);

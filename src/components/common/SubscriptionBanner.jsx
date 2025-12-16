@@ -1,9 +1,11 @@
 import React from 'react';
 import Button from './Button';
 import './SubscriptionBanner.css';
+import { useTelegramTheme } from '../../hooks/useTelegramTheme';
 
 const SubscriptionBanner = ({ currentHabits, limit, onUpgrade }) => {
   const isAtLimit = currentHabits >= limit;
+  useTelegramTheme();
 
   return (
     <div className={`subscription-banner ${isAtLimit ? 'subscription-banner--warning' : ''}`}>

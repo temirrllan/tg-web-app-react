@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useNavigation } from '../hooks/useNavigation';
 import { useTranslation } from '../hooks/useTranslation';
 import './LanguageSelector.css';
+import { useTelegramTheme } from '../hooks/useTelegramTheme';
 
 const LanguageSelector = ({ onClose }) => {
   useNavigation(onClose);
   const { t, language, setLanguage, isChanging } = useTranslation();
   const [selectedLanguage, setSelectedLanguage] = useState(language);
   const [isSelecting, setIsSelecting] = useState(false);
-  
+    useTelegramTheme();
+
   const languages = [
     { code: 'en', name: 'English', nativeName: 'English' },
     { code: 'ru', name: 'Russian', nativeName: 'Русский' },
