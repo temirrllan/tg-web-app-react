@@ -144,7 +144,7 @@ const Subscription = ({ onClose, preselectedPlan = null }) => {
           )}
         </div>
         
-        {subscription?.subscription?.expiresAt && (
+        {/* {subscription?.subscription?.expiresAt && (
           <button 
             className="subscription-page__cancel-btn"
             onClick={handleCancelSubscription}
@@ -169,7 +169,7 @@ const Subscription = ({ onClose, preselectedPlan = null }) => {
               </div>
             ))}
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );
