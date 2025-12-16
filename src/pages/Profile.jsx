@@ -6,6 +6,7 @@ import PurchaseHistory from './PurchaseHistory';
 import Subscription from './Subscription';
 import Settings from './Settings';
 import { useTranslation } from '../hooks/useTranslation';
+import { useTelegramTheme } from '../hooks/useTelegramTheme';
 
 const Profile = ({ onClose }) => {
   const { t } = useTranslation();
@@ -15,6 +16,7 @@ const Profile = ({ onClose }) => {
   const [showPurchaseHistory, setShowPurchaseHistory] = useState(false);
   const [showSubscriptionPage, setShowSubscriptionPage] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  useTelegramTheme();
 
   const childOpen = showPurchaseHistory || showSubscriptionPage || showSettings;
   useNavigation(onClose, { isVisible: !childOpen });
