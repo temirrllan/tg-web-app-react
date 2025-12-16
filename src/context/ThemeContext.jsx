@@ -8,12 +8,11 @@ export const ThemeContext = createContext({
 });
 
 export const ThemeProvider = ({ children }) => {
-  // Инициализация темы из localStorage или системных настроек
+  // Инициализация темы (уже применена в index.html, просто читаем)
   const getInitialTheme = () => {
     const savedTheme = localStorage.getItem('app-theme');
     if (savedTheme) return savedTheme;
     
-    // Проверяем системные настройки пользователя
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       return 'dark';
     }
@@ -44,7 +43,7 @@ export const ThemeProvider = ({ children }) => {
     setTheme(prev => {
       const newTheme = prev === 'light' ? 'dark' : 'light';
       
-      // Вибрация при переключении (если доступна)
+      // Вибрация при переключении
       if (window.Telegram?.WebApp?.HapticFeedback) {
         window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
       }

@@ -3,28 +3,116 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Habit Tracker</title>
+    
+    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- 🔥 КРИТИЧНО: Ранняя инициализация темы (ДО React) -->
     <script>
-      // Отладочная информация
-      window.addEventListener('load', function() {
-        console.log('Page loaded');
-        console.log('Telegram WebApp:', window.Telegram?.WebApp);
-        if (window.Telegram?.WebApp) {
-          console.log('WebApp version:', window.Telegram.WebApp.version);
-          console.log('WebApp platform:', window.Telegram.WebApp.platform);
-          console.log('WebApp initData:', window.Telegram.WebApp.initData);
-          console.log('WebApp user:', window.Telegram.WebApp.initDataUnsafe?.user);
+      (function initThemeImmediately() {
+        try {
+          // Получаем сохраненную тему
+          const savedTheme = localStorage.getItem('app-theme');
+          
+          // Определяем активную тему
+          let activeTheme = savedTheme;
+          
+          if (!activeTheme) {
+            // Проверяем системные настройки
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+              activeTheme = 'dark';
+            } else {
+              activeTheme = 'light';
+            }
+          }
+          
+          const isDark = activeTheme === 'dark';
+          
+          // Применяем CSS класс НЕМЕДЛЕННО
+          document.documentElement.classList.remove('light-theme', 'dark-theme');
+          document.documentElement.classList.add(activeTheme + '-theme');
+          
+          // Применяем к Telegram WebApp
+          const applyTelegramTheme = function() {
+            const tg = window.Telegram?.WebApp;
+            if (!tg) return;
+            
+            try {
+              if (isDark) {
+                if (typeof tg.setBackgroundColor === 'function') {
+                  tg.setBackgroundColor('#000000');
+                }
+                if (typeof tg.setHeaderColor === 'function') {
+                  tg.setHeaderColor('#1C1C1E');
+                }
+                if (typeof tg.setBottomBarColor === 'function') {
+                  tg.setBottomBarColor('#1C1C1E');
+                }
+              } else {
+                if (typeof tg.setBackgroundColor === 'function') {
+                  tg.setBackgroundColor('#F2F2F7');
+                }
+                if (typeof tg.setHeaderColor === 'function') {
+                  tg.setHeaderColor('#FFFFFF');
+                }
+                if (typeof tg.setBottomBarColor === 'function') {
+                  tg.setBottomBarColor('#FFFFFF');
+                }
+              }
+            } catch (error) {
+              console.error('Failed to apply Telegram theme early:', error);
+            }
+          };
+          
+          // Применяем Telegram тему
+          if (window.Telegram?.WebApp) {
+            applyTelegramTheme();
+          } else {
+            // Ждем загрузки
+            let attempts = 0;
+            const checkTelegram = setInterval(function() {
+              attempts++;
+              if (window.Telegram?.WebApp) {
+                clearInterval(checkTelegram);
+                applyTelegramTheme();
+              } else if (attempts > 50) {
+                clearInterval(checkTelegram);
+              }
+            }, 100);
+          }
+          
+        } catch (error) {
+          console.error('Early theme init failed:', error);
         }
-      });
+      })();
     </script>
+    
+    <!-- Inline стили для предотвращения мигания -->
+    <style>
+      /* Применяем базовые цвета ДО загрузки CSS */
+      html.light-theme {
+        background-color: #F2F2F7;
+        color: #1D1D1F;
+      }
+      
+      html.dark-theme {
+        background-color: #000000;
+        color: #FFFFFF;
+      }
+      
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: inherit;
+        color: inherit;
+        transition: none !important; /* Отключаем transition при первой загрузке */
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-
-    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-<script>eruda.init();</script>
   </body>
 </html>
