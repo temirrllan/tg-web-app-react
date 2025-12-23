@@ -85,10 +85,13 @@
 /* Специальные стили для label в строках */
 .form-section-row .form-label-title,
 .form-section-rw2 .form-label-title {
-  margin-bottom: 0;
+ margin-bottom: 0;
   white-space: nowrap;
-  flex-shrink: 0;
+  flex-shrink: 1; /* ИЗМЕНИЛИ: теперь может сжиматься */
   font-size: 17px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 60%; /* ДОБАВИЛИ: максимум 60% ширины */
 }
 .form-textarea {
   resize: none;
@@ -231,10 +234,11 @@
   background: #E5E5EA;
 }
 
-/* Dropdown menu */
+/* Dropdown кнопки - гибкие и адаптивные */
 .dropdown-button {
-  flex: 0 1 auto; /* Не растягивается, но может сжаться */
-  min-width: 0; /* Позволяет сжаться до нуля если нужно */
+  flex: 0 0 auto; /* ИЗМЕНИЛИ: фиксированная ширина */
+  min-width: 100px; /* ДОБАВИЛИ: минимальная ширина */
+  max-width: 140px; /* ДОБАВИЛИ: максимальная ширина */
   padding: 12px 16px;
   font-size: 15px;
   border: 1px solid #C6C6C8;
@@ -251,11 +255,20 @@
   text-overflow: ellipsis;
 }
 
+
 /* Большие экраны (iPhone 12/13/14 и больше) */
 @media (min-width: 376px) {
   .dropdown-button {
     padding: 12px 20px;
     font-size: 15px;
+    min-width: 120px;
+    max-width: 160px;
+  }
+  
+  .form-section-row .form-label-title,
+  .form-section-rw2 .form-label-title {
+    font-size: 17px;
+    max-width: 65%;
   }
 }
 
@@ -269,10 +282,14 @@
   .dropdown-button {
     padding: 10px 12px;
     font-size: 14px;
+    min-width: 90px;
+    max-width: 130px;
   }
   
-  .form-label-title {
+  .form-section-row .form-label-title,
+  .form-section-rw2 .form-label-title {
     font-size: 16px;
+    max-width: 55%;
   }
 }
 
@@ -286,10 +303,14 @@
   .dropdown-button {
     padding: 10px 10px;
     font-size: 14px;
+    min-width: 85px;
+    max-width: 120px;
   }
   
-  .form-label-title {
+  .form-section-row .form-label-title,
+  .form-section-rw2 .form-label-title {
     font-size: 15px;
+    max-width: 50%;
   }
 }
 
@@ -303,10 +324,14 @@
   .dropdown-button {
     padding: 8px 8px;
     font-size: 13px;
+    min-width: 80px;
+    max-width: 110px;
   }
   
-  .form-label-title {
+  .form-section-row .form-label-title,
+  .form-section-rw2 .form-label-title {
     font-size: 14px;
+    max-width: 45%;
   }
 }
 @media (max-width: 375px) {
