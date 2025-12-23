@@ -251,7 +251,7 @@
   position: relative;
   transition: all 0.2s;
   white-space: nowrap;
-  overflow: hidden;
+  overflow: visible;
   text-overflow: ellipsis;
 }
 
@@ -411,8 +411,11 @@
 .time-picker-dropdown {
   position: absolute;
   top: calc(100% + 4px);
-  left: 0;
-  right: 0;
+  right: 0; /* 🔥 ИЗМЕНЕНО: привязываем к правому краю */
+  left: auto; /* 🔥 ИЗМЕНЕНО: отменяем left */
+  min-width: 200px; /* 🔥 ДОБАВЛЕНО: минимальная ширина */
+  max-width: 280px; /* 🔥 ДОБАВЛЕНО: максимальная ширина */
+  width: max-content; /* 🔥 ДОБАВЛЕНО: ширина по содержимому */
   background: white;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
@@ -424,12 +427,25 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
+  gap: 12px; /* 🔥 ДОБАВЛЕНО: отступ между элементами */
 }
+
 .time-picker-header span {
   font-size: 17px;
   font-weight: 600;
+  white-space: nowrap; /* 🔥 ДОБАВЛЕНО: не переносить текст */
 }
-
+.time-picker-done {
+  background: none;
+  border: none;
+  color: #007AFF;
+  font-size: 17px;
+  font-weight: 600;
+  padding: 0;
+  cursor: pointer;
+  white-space: nowrap; /* 🔥 ДОБАВЛЕНО: не переносить текст */
+  flex-shrink: 0; /* 🔥 ДОБАВЛЕНО: не сжимать кнопку */
+}
 .time-picker-close {
   background: none;
   border: none;
@@ -460,7 +476,7 @@
   font-size: 17px;
   border: 1px solid #E5E5EA;
   border-radius: 8px;
-  margin-bottom: 12px;
+  box-sizing: border-box; /* 🔥 ДОБАВЛЕНО: учитывать padding в ширине */
 }
 
 .time-picker-preset {
@@ -469,6 +485,62 @@
   gap: 8px;
 }
 
+/* Адаптация для маленьких экранов */
+@media (max-width: 375px) {
+  .time-picker-dropdown {
+    min-width: 180px;
+    max-width: 260px;
+  }
+  
+  .time-picker-header span {
+    font-size: 16px;
+  }
+  
+  .time-picker-done {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 320px) {
+  .time-picker-dropdown {
+    min-width: 160px;
+    max-width: 240px;
+    padding: 12px;
+  }
+  
+  .time-picker-header span {
+    font-size: 15px;
+  }
+  
+  .time-picker-done {
+    font-size: 15px;
+  }
+  
+  .time-picker-input {
+    font-size: 16px;
+  }
+}
+
+/* ==================== ТЕМНАЯ ТЕМА ДЛЯ TIME PICKER ==================== */
+
+.dark-theme .time-picker-dropdown {
+  background: #2C2C2E;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.dark-theme .time-picker-header span {
+  color: #FFFFFF;
+}
+
+.dark-theme .time-picker-done {
+  color: #0A84FF;
+}
+
+.dark-theme .time-picker-input {
+  background: #1C1C1E;
+  border-color: #3A3A3C;
+  color: #FFFFFF;
+}
 .time-picker-preset button {
   padding: 10px;
   background: #F2F2F7;
