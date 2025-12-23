@@ -33,7 +33,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
 }
 .form-section-rw2{
   margin-bottom: 16px;
@@ -41,7 +41,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
 }
 .form-label {
   display: block;
@@ -85,13 +85,8 @@
 /* Специальные стили для label в строках */
 .form-section-row .form-label-title,
 .form-section-rw2 .form-label-title {
- margin-bottom: 0;
-  white-space: nowrap;
-  flex-shrink: 1; /* ИЗМЕНИЛИ: теперь может сжиматься */
-  font-size: 17px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 60%; /* ДОБАВИЛИ: максимум 60% ширины */
+  margin-bottom: 0; /* Убираем нижний отступ в строках */
+  min-width: fit-content; /* Минимальная ширина по содержимому */
 }
 .form-textarea {
   resize: none;
@@ -234,12 +229,11 @@
   background: #E5E5EA;
 }
 
-/* Dropdown кнопки - гибкие и адаптивные */
+/* Dropdown menu */
 .dropdown-button {
-  flex: 0 0 auto; /* ИЗМЕНИЛИ: фиксированная ширина */
-  min-width: 100px; /* ДОБАВИЛИ: минимальная ширина */
-  max-width: 140px; /* ДОБАВИЛИ: максимальная ширина */
-  padding: 12px 16px;
+  flex: 0 0 140px;
+  width: 140px;
+  padding: 12px 10px;
   font-size: 15px;
   border: 1px solid #C6C6C8;
   border-radius: 10px;
@@ -251,89 +245,10 @@
   position: relative;
   transition: all 0.2s;
   white-space: nowrap;
-  overflow: visible;
+  overflow: hidden;
   text-overflow: ellipsis;
 }
 
-
-/* Большие экраны (iPhone 12/13/14 и больше) */
-@media (min-width: 376px) {
-  .dropdown-button {
-    padding: 12px 20px;
-    font-size: 15px;
-    min-width: 120px;
-    max-width: 160px;
-  }
-  
-  .form-section-row .form-label-title,
-  .form-section-rw2 .form-label-title {
-    font-size: 17px;
-    max-width: 65%;
-  }
-}
-
-/* Средние экраны (iPhone X/11/12 mini) */
-@media (max-width: 375px) {
-  .form-section-row,
-  .form-section-rw2 {
-    gap: 8px;
-  }
-  
-  .dropdown-button {
-    padding: 10px 12px;
-    font-size: 14px;
-    min-width: 90px;
-    max-width: 130px;
-  }
-  
-  .form-section-row .form-label-title,
-  .form-section-rw2 .form-label-title {
-    font-size: 16px;
-    max-width: 55%;
-  }
-}
-
-/* Маленькие экраны (iPhone SE) */
-@media (max-width: 360px) {
-  .form-section-row,
-  .form-section-rw2 {
-    gap: 6px;
-  }
-  
-  .dropdown-button {
-    padding: 10px 10px;
-    font-size: 14px;
-    min-width: 85px;
-    max-width: 120px;
-  }
-  
-  .form-section-row .form-label-title,
-  .form-section-rw2 .form-label-title {
-    font-size: 15px;
-    max-width: 50%;
-  }
-}
-
-/* Очень маленькие экраны */
-@media (max-width: 320px) {
-  .form-section-row,
-  .form-section-rw2 {
-    gap: 4px;
-  }
-  
-  .dropdown-button {
-    padding: 8px 8px;
-    font-size: 13px;
-    min-width: 80px;
-    max-width: 110px;
-  }
-  
-  .form-section-row .form-label-title,
-  .form-section-rw2 .form-label-title {
-    font-size: 14px;
-    max-width: 45%;
-  }
-}
 @media (max-width: 375px) {
   .dropdown-button {
     flex: 0 0 120px;
@@ -411,11 +326,8 @@
 .time-picker-dropdown {
   position: absolute;
   top: calc(100% + 4px);
-  right: 0; /* 🔥 ИЗМЕНЕНО: привязываем к правому краю */
-  left: auto; /* 🔥 ИЗМЕНЕНО: отменяем left */
-  min-width: 200px; /* 🔥 ДОБАВЛЕНО: минимальная ширина */
-  max-width: 280px; /* 🔥 ДОБАВЛЕНО: максимальная ширина */
-  width: max-content; /* 🔥 ДОБАВЛЕНО: ширина по содержимому */
+  left: 0;
+  right: 0;
   background: white;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
@@ -427,25 +339,12 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
-  gap: 12px; /* 🔥 ДОБАВЛЕНО: отступ между элементами */
 }
-
 .time-picker-header span {
   font-size: 17px;
   font-weight: 600;
-  white-space: nowrap; /* 🔥 ДОБАВЛЕНО: не переносить текст */
 }
-.time-picker-done {
-  background: none;
-  border: none;
-  color: #007AFF;
-  font-size: 17px;
-  font-weight: 600;
-  padding: 0;
-  cursor: pointer;
-  white-space: nowrap; /* 🔥 ДОБАВЛЕНО: не переносить текст */
-  flex-shrink: 0; /* 🔥 ДОБАВЛЕНО: не сжимать кнопку */
-}
+
 .time-picker-close {
   background: none;
   border: none;
@@ -476,7 +375,7 @@
   font-size: 17px;
   border: 1px solid #E5E5EA;
   border-radius: 8px;
-  box-sizing: border-box; /* 🔥 ДОБАВЛЕНО: учитывать padding в ширине */
+  margin-bottom: 12px;
 }
 
 .time-picker-preset {
@@ -485,62 +384,6 @@
   gap: 8px;
 }
 
-/* Адаптация для маленьких экранов */
-@media (max-width: 375px) {
-  .time-picker-dropdown {
-    min-width: 180px;
-    max-width: 260px;
-  }
-  
-  .time-picker-header span {
-    font-size: 16px;
-  }
-  
-  .time-picker-done {
-    font-size: 16px;
-  }
-}
-
-@media (max-width: 320px) {
-  .time-picker-dropdown {
-    min-width: 160px;
-    max-width: 240px;
-    padding: 12px;
-  }
-  
-  .time-picker-header span {
-    font-size: 15px;
-  }
-  
-  .time-picker-done {
-    font-size: 15px;
-  }
-  
-  .time-picker-input {
-    font-size: 16px;
-  }
-}
-
-/* ==================== ТЕМНАЯ ТЕМА ДЛЯ TIME PICKER ==================== */
-
-.dark-theme .time-picker-dropdown {
-  background: #2C2C2E;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
-}
-
-.dark-theme .time-picker-header span {
-  color: #FFFFFF;
-}
-
-.dark-theme .time-picker-done {
-  color: #0A84FF;
-}
-
-.dark-theme .time-picker-input {
-  background: #1C1C1E;
-  border-color: #3A3A3C;
-  color: #FFFFFF;
-}
 .time-picker-preset button {
   padding: 10px;
   background: #F2F2F7;
