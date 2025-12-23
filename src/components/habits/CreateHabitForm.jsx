@@ -397,7 +397,7 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
           <div className="form-section">
             <div className="bad-habit-toggle">
               <div className="bad-habit-label">
-                <span className="form-label-title">{t('createHabit.badHabit')} 😈</span>
+                <span className="form-label-title">{t('createHabit.badHabit')} ы😈</span>
               </div>
               <button
                 type="button"
