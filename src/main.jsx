@@ -21,7 +21,7 @@ if (window.Telegram?.WebApp) {
   // 3️⃣ Инициализация TonConnectUI
   const tcUI = new TonConnectUI({});
 
-  // 4️⃣ Подписка на все события TON Connect и отправка их в Analytics
+  // 4️⃣ Подписка на все 12 TON Connect событий и отправка их в Analytics
   const tonEvents = [
     'ton-connect-ui-connection-started',
     'ton-connect-ui-connection-error',
