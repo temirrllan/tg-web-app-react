@@ -13,8 +13,20 @@ if (window.Telegram?.WebApp) {
   });
 
   TelegramAnalytics.track('app_open');
-  console.log('📊 Telegram Analytics: app_open');
+
+  const tcUI = new TonConnectUI({});
+
+  tcUI.on('ton-connect-ui-connection-started', () =>
+    TelegramAnalytics.track('ton_connect_connection_started')
+  );
+  tcUI.on('ton-connect-ui-connection-error', (err) =>
+    TelegramAnalytics.track('ton_connect_connection_error', { error: err.message })
+  );
+  tcUI.on('ton-connect-ui-transaction-signing-failed', (err) =>
+    TelegramAnalytics.track('ton_connect_transaction_signing_failed', { error: err.message })
+  );
 }
+
 
 
 createRoot(document.getElementById('root')).render(
