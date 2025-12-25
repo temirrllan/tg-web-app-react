@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
 import './index.css';
 
-import { init as initAnalytics } from '@telegram-apps/analytics';
+import TelegramAnalytics from '@telegram-apps/analytics';
 import { TonConnectUI } from '@tonconnect/ui';
 
 // ⚡ Проверяем, что Telegram WebApp доступен
@@ -11,7 +11,7 @@ if (window.Telegram?.WebApp) {
   const tg = window.Telegram.WebApp;
   
   // 1️⃣ Инициализация Telegram Analytics (правильный способ)
-  const analytics = initAnalytics({
+  const analytics = new TelegramAnalytics({
     token: 'eyJhcHBfbmFtZSI6ImhhYml0bHkiLCJhcHBfdXJsIjoiaHR0cHM6Ly90Lm1lL0NoZWNrSGFiaXRseUJvdCIsImFwcF9kb21haW4iOiJodHRwczovL2FwcC5ldmVudG1hdGUuYXNpYSJ9!WUWbkhe8YHV21043mPO+lCNLvHjxmw5vmjm5Z7qLdck=',
     appName: 'habitly',
   });
@@ -25,7 +25,7 @@ if (window.Telegram?.WebApp) {
 
   // 3️⃣ Инициализация TonConnectUI
   const tcUI = new TonConnectUI({
-    manifestUrl: 'https://app.eventmate.asia/tonconnect-manifest.json', // ⚠️ Создайте этот файл!
+    manifestUrl: 'https://app.eventmate.asia/tonconnect-manifest.json',
   });
 
   // 4️⃣ Подписка на все TON Connect события
@@ -67,6 +67,9 @@ if (window.Telegram?.WebApp) {
       analytics.track(eventName);
     }
   });
+
+  // Экспортируем analytics для использования в других компонентах
+  window.telegramAnalytics = analytics;
 }
 
 // 6️⃣ Рендер React приложения
