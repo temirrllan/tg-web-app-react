@@ -3,76 +3,59 @@ import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
 import './index.css';
 
-import TelegramAnalytics from '@telegram-apps/analytics';
+import * as TelegramAnalytics from '@telegram-apps/analytics';
 import { TonConnectUI } from '@tonconnect/ui';
 
 // ⚡ Проверяем, что Telegram WebApp доступен
 if (window.Telegram?.WebApp) {
   const tg = window.Telegram.WebApp;
   
-  // 1️⃣ Инициализация Telegram Analytics (правильный способ)
-  const analytics = new TelegramAnalytics({
-    token: 'eyJhcHBfbmFtZSI6ImhhYml0bHkiLCJhcHBfdXJsIjoiaHR0cHM6Ly90Lm1lL0NoZWNrSGFiaXRseUJvdCIsImFwcF9kb21haW4iOiJodHRwczovL2FwcC5ldmVudG1hdGUuYXNpYSJ9!WUWbkhe8YHV21043mPO+lCNLvHjxmw5vmjm5Z7qLdck=',
-    appName: 'habitly',
-  });
+  console.log('TelegramAnalytics exports:', TelegramAnalytics);
+  
+  // 1️⃣ Инициализация Telegram Analytics
+  try {
+    TelegramAnalytics.init({
+      token: 'eyJhcHBfbmFtZSI6ImhhYml0bHkiLCJhcHBfdXJsIjoiaHR0cHM6Ly90Lm1lL0NoZWNrSGFiaXRseUJvdCIsImFwcF9kb21haW4iOiJodHRwczovL2FwcC5ldmVudG1hdGUuYXNpYSJ9!WUWbkhe8YHV21043mPO+lCNLvHjxmw5vmjm5Z7qLdck=',
+      appName: 'habitly',
+    });
 
-  // 2️⃣ Отправляем событие открытия приложения
-  analytics.track('app_open', {
-    platform: tg.platform,
-    version: tg.version,
-  });
-  console.log('📊 Telegram Analytics: app_open');
+    // 2️⃣ Отправляем событие открытия приложения
+    TelegramAnalytics.track('app_open', {
+      platform: tg.platform,
+      version: tg.version,
+    });
+    console.log('📊 Telegram Analytics: app_open');
+  } catch (error) {
+    console.error('Analytics init error:', error);
+  }
 
   // 3️⃣ Инициализация TonConnectUI
   const tcUI = new TonConnectUI({
     manifestUrl: 'https://app.eventmate.asia/tonconnect-manifest.json',
   });
 
-  // 4️⃣ Подписка на все TON Connect события
+  // 4️⃣ Подписка на TON Connect события
   const tonEvents = [
-    'ton-connect-ui-connection-started',
-    'ton-connect-ui-connection-error',
-    'ton-connect-ui-transaction-signing-failed',
-    'ton-connect-custom-event',
-    'ton-connect-connection-completed',
-    'ton-connect-connection-error',
-    'ton-connect-connection-restoring-completed',
-    'ton-connect-connection-restoring-error',
-    'ton-connect-transaction-sent-for-signature',
-    'ton-connect-transaction-signed',
-    'ton-connect-transaction-signing-failed',
-    'ton-connect-disconnection',
+    'connection-completed',
+    'connection-error',
+    'disconnection',
   ];
 
   tonEvents.forEach((eventName) => {
-    tcUI.on(eventName, (data) => {
-      analytics.track(eventName, data ? { data } : {});
-      console.log(`📊 Telegram Analytics: ${eventName}`, data || {});
-    });
-  });
-
-  // 5️⃣ Дополнительные события для маркетплейса
-  // Отслеживание навигации
-  window.addEventListener('popstate', () => {
-    analytics.track('page_view', {
-      path: window.location.pathname,
-    });
-  });
-
-  // Отслеживание кликов по основным элементам
-  document.addEventListener('click', (e) => {
-    const target = e.target.closest('[data-analytics]');
-    if (target) {
-      const eventName = target.getAttribute('data-analytics');
-      analytics.track(eventName);
+    try {
+      tcUI.on(eventName, (data) => {
+        if (TelegramAnalytics.track) {
+          TelegramAnalytics.track(`ton_connect_${eventName}`, data);
+        }
+        console.log(`📊 TON Connect: ${eventName}`, data);
+      });
+    } catch (error) {
+      console.error(`Failed to subscribe to ${eventName}:`, error);
     }
   });
-
-  // Экспортируем analytics для использования в других компонентах
-  window.telegramAnalytics = analytics;
 }
 
-// 6️⃣ Рендер React приложения
+// 5️⃣ Рендер React приложения
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />
