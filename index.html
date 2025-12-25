@@ -5,12 +5,8 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Habit Tracker</title>
-    
-    <!-- Telegram WebApp SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- 🔥 КРИТИЧНО: Ранняя инициализация темы (ДО React) -->
-    <script>
+        <script src="https://telegram.org/js/telegram-web-app.js"></script>
+        <script>
       (function initThemeImmediately() {
         try {
           // Получаем сохраненную тему
@@ -88,9 +84,7 @@
         }
       })();
     </script>
-    
-    <!-- Inline стили для предотвращения мигания -->
-    <style>
+        <style>
       /* Применяем базовые цвета ДО загрузки CSS */
       html.light-theme {
         background-color: #F2F2F7;
@@ -110,17 +104,10 @@
         transition: none !important; /* Отключаем transition при первой загрузке */
       }
     </style>
-
-
-
-
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-
-
-     <!-- Eruda для дебага (можно убрать в проде) -->
     <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
     <script>eruda.init();</script>
   </body>
