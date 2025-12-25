@@ -1,4 +1,4 @@
-// src/pages/Today.jsx - МГНОВЕННАЯ ЗАГРУЗКА
+// src/pages/Today.jsx - С ПОЛНОЙ АНАЛИТИКОЙ
 
 import React, { useEffect, useState, useCallback } from "react";
 import Layout from "../components/layout/Layout";
@@ -24,13 +24,22 @@ import { useTelegramTheme } from '../hooks/useTelegramTheme';
 const Today = () => {
   const { t } = useTranslation();
   const { user } = useTelegram();
-    useTelegramTheme();
+  useTelegramTheme();
+
+  // 📊 Отслеживание просмотра страницы при монтировании
+  useEffect(() => {
+    window.TelegramAnalytics?.track('page_view', {
+      page: 'today',
+      user_id: user?.id,
+    });
+    console.log('📊 Analytics: page_view - today');
+  }, [user?.id]);
 
   const {
     todayHabits,
     stats,
     phrase,
-    loading, // 🔥 Теперь это false если есть кэш
+    loading,
     markHabit,
     unmarkHabit,
     createHabit,
@@ -94,28 +103,72 @@ const Today = () => {
     const subscriptionStatus = await habitService.checkSubscriptionLimits();
     setUserSubscription(subscriptionStatus);
     
+    // 📊 Отслеживание клика на FAB
+    window.TelegramAnalytics?.track('fab_clicked', {
+      can_create_more: subscriptionStatus.canCreateMore,
+      current_habits_count: dateHabits.length,
+      is_premium: subscriptionStatus.isPremium,
+    });
+    console.log('📊 Analytics: fab_clicked');
+    
     if (subscriptionStatus.canCreateMore) {
       setShowCreateForm(true);
+      
+      // 📊 Форма создания открыта
+      window.TelegramAnalytics?.track('create_form_opened', {
+        current_habits_count: dateHabits.length,
+      });
+      console.log('📊 Analytics: create_form_opened');
     } else {
       setShowSubscriptionModal(true);
+      
+      // 📊 Показан лимит подписки
+      window.TelegramAnalytics?.track('subscription_limit_reached', {
+        current_habits_count: dateHabits.length,
+        limit: subscriptionStatus.limit,
+      });
+      console.log('📊 Analytics: subscription_limit_reached');
     }
   };
 
   const handleHabitClick = (habit) => {
     setSelectedHabit(habit);
     setShowHabitDetail(true);
+    
+    // 📊 Отслеживание клика на привычку
+    window.TelegramAnalytics?.track('habit_clicked', {
+      habit_id: habit.id,
+      habit_name: habit.name,
+      habit_emoji: habit.emoji,
+      today_status: habit.today_status,
+      is_completed: habit.today_status === 'completed',
+    });
+    console.log('📊 Analytics: habit_clicked');
   };
 
   const handleEditHabit = (habit) => {
     setHabitToEdit(habit);
     setShowEditForm(true);
     setShowHabitDetail(false);
+    
+    // 📊 Отслеживание начала редактирования
+    window.TelegramAnalytics?.track('habit_edit_started', {
+      habit_id: habit.id,
+      habit_name: habit.name,
+    });
+    console.log('📊 Analytics: habit_edit_started');
   };
 
   const handleEditSuccess = async () => {
     setShowEditForm(false);
     setHabitToEdit(null);
     await reloadCurrentDateHabits();
+    
+    // 📊 Успешное редактирование
+    window.TelegramAnalytics?.track('habit_edited', {
+      habit_id: habitToEdit?.id,
+    });
+    console.log('📊 Analytics: habit_edited');
   };
 
   const handleDeleteHabit = async (habitId) => {
@@ -125,8 +178,22 @@ const Today = () => {
       setSelectedHabit(null);
       await reloadCurrentDateHabits();
       await checkUserSubscription();
+      
+      // 📊 Успешное удаление
+      window.TelegramAnalytics?.track('habit_deleted', {
+        habit_id: habitId,
+        total_habits_after: dateHabits.length - 1,
+      });
+      console.log('📊 Analytics: habit_deleted');
+      
     } catch (error) {
       console.error('Failed to delete habit:', error);
+      
+      // 📊 Ошибка удаления
+      window.TelegramAnalytics?.track('habit_deletion_failed', {
+        habit_id: habitId,
+        error: error.message,
+      });
     }
   };
 
@@ -158,6 +225,16 @@ const Today = () => {
     setIsEditableDate(isEditable);
     setDateLoading(true);
     
+    // 📊 Отслеживание смены даты
+    window.TelegramAnalytics?.track('date_changed', {
+      from_date: selectedDate,
+      to_date: date,
+      is_editable: isEditable,
+      is_today: date === getTodayDate(),
+      is_yesterday: date === getYesterdayDate(),
+    });
+    console.log('📊 Analytics: date_changed');
+    
     try {
       const result = await loadHabitsForDate(date);
       
@@ -174,7 +251,7 @@ const Today = () => {
     } finally {
       setDateLoading(false);
     }
-  }, [loadHabitsForDate]);
+  }, [selectedDate, loadHabitsForDate]);
 
   useEffect(() => {
     const today = getTodayDate();
@@ -190,6 +267,13 @@ const Today = () => {
       if (window.Telegram?.WebApp?.HapticFeedback) {
         window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
       }
+      
+      // 📊 Отслеживание обновления
+      window.TelegramAnalytics?.track('pull_to_refresh', {
+        date: selectedDate,
+        is_today: selectedDate === getTodayDate(),
+      });
+      console.log('📊 Analytics: pull_to_refresh');
       
       await forceRefresh();
       
@@ -222,8 +306,27 @@ const Today = () => {
       if (currentCount === 1) {
         localStorage.removeItem('hasSeenSwipeHint');
       }
+
+      // 📊 Успешное создание привычки
+      window.TelegramAnalytics?.track('habit_created', {
+        habit_name: habitData.name,
+        habit_emoji: habitData.emoji,
+        frequency: habitData.frequency,
+        time: habitData.time,
+        total_habits_count: currentCount,
+        is_first_habit: currentCount === 1,
+        has_reminder: !!habitData.time,
+      });
+      console.log('📊 Analytics: habit_created');
+
     } catch (error) {
       console.error("Failed to create habit:", error);
+      
+      // 📊 Ошибка создания
+      window.TelegramAnalytics?.track('habit_creation_failed', {
+        error: error.message,
+        habit_name: habitData.name,
+      });
     }
   };
 
@@ -231,6 +334,12 @@ const Today = () => {
     setSelectedSubscriptionPlan(plan);
     setShowSubscriptionModal(false);
     setShowSubscriptionPage(true);
+    
+    // 📊 Выбран план подписки
+    window.TelegramAnalytics?.track('subscription_plan_selected', {
+      plan: plan,
+    });
+    console.log('📊 Analytics: subscription_plan_selected');
   };
 
   const handleSubscriptionPageClose = async () => {
@@ -241,6 +350,13 @@ const Today = () => {
     const updatedSubscription = await habitService.checkSubscriptionLimits();
     if (updatedSubscription && updatedSubscription.isPremium) {
       await reloadCurrentDateHabits();
+      
+      // 📊 Подписка активирована
+      window.TelegramAnalytics?.track('subscription_activated', {
+        plan: selectedSubscriptionPlan,
+        is_premium: true,
+      });
+      console.log('📊 Analytics: subscription_activated');
     }
   };
 
@@ -332,6 +448,13 @@ const Today = () => {
         setTimeout(() => {
           setShowSwipeHint(true);
           localStorage.setItem('hasSeenSwipeHint', 'true');
+          
+          // 📊 Показана подсказка свайпа
+          window.TelegramAnalytics?.track('swipe_hint_shown', {
+            habits_count: dateHabits.length,
+            is_first_time: !hasSeenHint,
+          });
+          console.log('📊 Analytics: swipe_hint_shown');
         }, 1000);
       }
       
@@ -353,6 +476,27 @@ const Today = () => {
       setDateStats(prev => ({ ...prev, completed: newCompleted }));
       
       await markHabit(habitId, status, selectedDate);
+      
+      // 📊 Привычка отмечена
+      window.TelegramAnalytics?.track('habit_marked', {
+        habit_id: habitId,
+        status: status,
+        date: selectedDate,
+        total_completed: newCompleted,
+        total_habits: dateStats.total,
+        completion_rate: ((newCompleted / dateStats.total) * 100).toFixed(1),
+      });
+      console.log('📊 Analytics: habit_marked', status);
+      
+      // 📊 Все привычки выполнены
+      if (newCompleted === dateStats.total && dateStats.total > 0) {
+        window.TelegramAnalytics?.track('all_habits_completed', {
+          date: selectedDate,
+          total_habits: dateStats.total,
+        });
+        console.log('📊 Analytics: all_habits_completed');
+      }
+      
     } catch (error) {
       console.error('Error marking habit:', error);
     }
@@ -372,6 +516,14 @@ const Today = () => {
       }));
       
       await unmarkHabit(habitId, selectedDate);
+      
+      // 📊 Привычка снята с отметки
+      window.TelegramAnalytics?.track('habit_unmarked', {
+        habit_id: habitId,
+        date: selectedDate,
+      });
+      console.log('📊 Analytics: habit_unmarked');
+      
     } catch (error) {
       console.error('Error unmarking habit:', error);
     }
@@ -393,9 +545,23 @@ const Today = () => {
     return '#FFB3BA';
   };
 
-  // 🔥 УБИРАЕМ LOADER ПОЛНОСТЬЮ
-  // Показываем контент сразу, даже если loading=true
-  
+  // 📊 Отслеживание времени на странице
+  useEffect(() => {
+    const startTime = Date.now();
+    
+    return () => {
+      const sessionDuration = Math.floor((Date.now() - startTime) / 1000);
+      if (sessionDuration > 5) { // Отслеживаем только если >5 секунд
+        window.TelegramAnalytics?.track('page_session_ended', {
+          page: 'today',
+          duration_seconds: sessionDuration,
+          habits_count: dateHabits.length,
+          completed_count: dateStats.completed,
+        });
+      }
+    };
+  }, [dateHabits.length, dateStats.completed]);
+
   if (showSubscriptionPage) {
     return (
       <Subscription
@@ -498,7 +664,15 @@ const Today = () => {
 
       {showCreateForm && (
         <CreateHabitForm
-          onClose={() => setShowCreateForm(false)}
+          onClose={() => {
+            setShowCreateForm(false);
+            
+            // 📊 Форма закрыта без создания
+            window.TelegramAnalytics?.track('create_form_closed', {
+              was_cancelled: true,
+            });
+            console.log('📊 Analytics: create_form_closed');
+          }}
           onSuccess={handleCreateHabit}
         />
       )}
@@ -509,6 +683,13 @@ const Today = () => {
           onClose={() => {
             setShowEditForm(false);
             setHabitToEdit(null);
+            
+            // 📊 Форма редактирования закрыта
+            window.TelegramAnalytics?.track('edit_form_closed', {
+              was_cancelled: true,
+              habit_id: habitToEdit?.id,
+            });
+            console.log('📊 Analytics: edit_form_closed');
           }}
           onSuccess={handleEditSuccess}
         />
@@ -516,7 +697,15 @@ const Today = () => {
 
       <SubscriptionModal
         isOpen={showSubscriptionModal}
-        onClose={() => setShowSubscriptionModal(false)}
+        onClose={() => {
+          setShowSubscriptionModal(false);
+          
+          // 📊 Модал подписки закрыт
+          window.TelegramAnalytics?.track('subscription_modal_closed', {
+            was_dismissed: true,
+          });
+          console.log('📊 Analytics: subscription_modal_closed');
+        }}
         onSelectPlan={handleSubscriptionPlanSelect}
       />
     </>
