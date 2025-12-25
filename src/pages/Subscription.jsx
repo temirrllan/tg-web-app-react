@@ -144,7 +144,7 @@ const Subscription = ({ onClose, preselectedPlan = null }) => {
           )}
         </div>
         
-        {/* {subscription?.subscription?.expiresAt && (
+        {subscription?.subscription?.expiresAt && (
           <button 
             className="subscription-page__cancel-btn"
             onClick={handleCancelSubscription}
@@ -157,7 +157,7 @@ const Subscription = ({ onClose, preselectedPlan = null }) => {
           </button>
         )}
         
-        {history.length > 0 && (
+        {/* {history.length > 0 && (
           <div className="subscription-history">
             <h3>{t('subscriptionPage.history.title')}</h3>
             {history.map((item, index) => (
