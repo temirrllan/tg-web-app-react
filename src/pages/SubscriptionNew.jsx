@@ -1,3 +1,5 @@
+// src/pages/SubscriptionNew.jsx - ИСПРАВЛЕННАЯ ОБРАБОТКА ОПЛАТЫ
+
 import React, { useState, useEffect } from 'react';
 import { useNavigation } from '../hooks/useNavigation';
 import { habitService } from '../services/habits';
@@ -16,7 +18,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
   const [promoCode, setPromoCode] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
-    useTelegramTheme();
+  useTelegramTheme();
 
   useEffect(() => {
     if (preselectedPlan === '1_year' || preselectedPlan === 'year') {
@@ -30,10 +32,16 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
     }
   }, [preselectedPlan]);
 
+  // 🔥 НОВЫЙ: Слушатель события payment_success
   useEffect(() => {
-    const handlePaymentSuccess = () => {
-      console.log('🎉 Payment success event received');
-      onClose();
+    const handlePaymentSuccess = async (event) => {
+      console.log('🎉 Payment success event received:', event.detail);
+      
+      // Небольшая задержка для визуального эффекта
+      setTimeout(() => {
+        // Закрываем страницу подписки
+        onClose();
+      }, 500);
     };
 
     window.addEventListener('payment_success', handlePaymentSuccess);
@@ -43,17 +51,16 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
     };
   }, [onClose]);
 
-  // 🔥 ИСПРАВЛЕННЫЕ ТАРИФЫ - все 4 плана с правильными ценами
   const plans = [
-    // { 
-    //   id: 'test',
-    //   name: t('subscriptionNew.plans.test.name'), 
-    //   total: 1,
-    //   perMonth: 1,
-    //   badge: t('subscriptionNew.plans.test.badge'),
-    //   testMode: true,
-    //   description: t('subscriptionNew.plans.test.description')
-    // },
+    { 
+      id: 'test',
+      name: t('subscriptionNew.plans.test.name'), 
+      total: 1,
+      perMonth: 1,
+      badge: t('subscriptionNew.plans.test.badge'),
+      testMode: true,
+      description: t('subscriptionNew.plans.test.description')
+    },
     { 
       id: 'month',
       name: t('subscriptionNew.plans.month.name'), 
@@ -108,7 +115,11 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
     
     try {
       const tg = window.Telegram?.WebApp;
-      const selectedPrice = getSelectedPlanPrice();
+      
+      // 🔥 ВАЖНО: Показываем индикатор загрузки
+      if (tg?.MainButton) {
+        tg.MainButton.showProgress();
+      }
       
       // Показываем предупреждение для тестового плана
       if (selectedPlan === 'test') {
@@ -133,28 +144,31 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
         }
       }
       
-      // 🔥 КРИТИЧНО: НЕ МЕНЯЕМ plan ID - отправляем как есть
-      const backendPlan = selectedPlan; // Не модифицируем!
-      
-      console.log('💳 Opening payment form for plan:', {
-        frontendPlan: selectedPlan,
-        backendPlan: backendPlan,
-        price: selectedPrice
-      });
+      console.log('💳 Opening payment form for plan:', selectedPlan);
 
-      // Открываем форму оплаты
-      await telegramStarsService.purchaseSubscription(backendPlan);
+      // 🔥 КРИТИЧНО: Ждём завершения оплаты
+      const result = await telegramStarsService.purchaseSubscription(selectedPlan);
       
-      console.log('✅ Payment form opened');
+      console.log('✅ Payment completed:', result);
+      
+      // 🔥 Успех! UI обновится автоматически через event listener
       
     } catch (error) {
-      if (error === 'cancelled') {
-        console.log('User cancelled test purchase');
-        setIsProcessing(false);
-        return;
+      console.error('💥 Payment error:', error);
+      
+      // Сбрасываем состояние только при ошибке
+      setIsProcessing(false);
+      
+      // Скрываем прогресс
+      const tg = window.Telegram?.WebApp;
+      if (tg?.MainButton) {
+        tg.MainButton.hideProgress();
       }
       
-      console.error('Payment error:', error);
+      if (error.message === 'Payment cancelled') {
+        console.log('User cancelled payment');
+        return;
+      }
       
       let errorMessage = t('subscriptionNew.errors.failed');
       
@@ -166,8 +180,6 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
         const price = getSelectedPlanPrice();
         errorMessage = t('subscriptionNew.errors.insufficientStars.message', { price });
       }
-      
-      const tg = window.Telegram?.WebApp;
       
       if (tg?.showPopup) {
         if (error.message === 'bot_blocked') {
@@ -202,11 +214,6 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
       } else {
         alert(errorMessage);
       }
-      
-    } finally {
-      setTimeout(() => {
-        setIsProcessing(false);
-      }, 2000);
     }
   };
 
@@ -252,56 +259,6 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
           </div>
         </div>
 
-        {/* Subscription Quantity (для подарков) */}
-        {buyAsGift && (
-          <div className="subscription-new__section">
-            <h3 className="subscription-new__section-title">{t('subscriptionNew.sections.subscriptionQuantity')}</h3>
-            
-            <div className="subscription-new__quantity">
-              <span className="subscription-new__quantity-label">{t('subscriptionNew.quantity.label')}</span>
-              <div className="subscription-new__quantity-controls">
-                <button 
-                  className="subscription-new__quantity-btn"
-                  onClick={() => handleQuantityChange(-1)}
-                  disabled={quantity <= 1}
-                >
-                  −
-                </button>
-                <span className="subscription-new__quantity-value">{quantity}</span>
-                <button 
-                  className="subscription-new__quantity-btn"
-                  onClick={() => handleQuantityChange(1)}
-                  disabled={quantity >= 10}
-                >
-                  +
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Gift Option - закомментировано
-        <div className="subscription-new__section">
-          <label className="subscription-new__checkbox-container">
-            <span className="subscription-new__checkbox-label">{t('subscriptionNew.gift.buyAsGift')}</span>
-            <input
-              type="checkbox"
-              className="subscription-new__checkbox"
-              checked={buyAsGift}
-              onChange={(e) => setBuyAsGift(e.target.checked)}
-            />
-            <span className="subscription-new__checkbox-custom"></span>
-          </label>
-
-          {buyAsGift && (
-            <p 
-              className="subscription-new__gift-note"
-              dangerouslySetInnerHTML={{ __html: t('subscriptionNew.gift.note') }}
-            />
-          )}
-        </div>
-        */}
-
         {/* Subscription Plans */}
         <div className="subscription-new__section">
           <h3 className="subscription-new__section-title">{t('subscriptionNew.sections.subscriptionPlans')}</h3>
@@ -329,7 +286,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
                     <span style={{ 
                       marginLeft: '8px', 
                       padding: '2px 6px', 
-                      background: plan.testMode ? '#FFA500' : '#FF9500', 
+                      background: '#FF9500', 
                       borderRadius: '4px', 
                       fontSize: '12px',
                       color: 'white',
@@ -341,11 +298,6 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
                 </div>
                 <span className="subscription-new__plan-total">
                   {t('subscriptionNew.plans.total', { stars: plan.total })}
-                  {plan.description && (
-                    <span style={{ marginLeft: '8px', fontSize: '11px', color: '#999' }}>
-                      ({plan.description})
-                    </span>
-                  )}
                 </span>
               </div>
               <span className="subscription-new__plan-price">
@@ -355,17 +307,6 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
               </span>
             </label>
           ))}
-        </div>
-
-        {/* Promo Code */}
-        <div className="subscription-new__section">
-          <input
-            type="text"
-            className="subscription-new__promo"
-            placeholder={t('subscriptionNew.promoCode')}
-            value={promoCode}
-            onChange={(e) => setPromoCode(e.target.value)}
-          />
         </div>
 
         {/* Plan Benefits */}
@@ -379,17 +320,6 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
               </div>
             ))}
           </div>
-        </div>
-
-        {/* About Subscription */}
-        <div className="subscription-new__section">
-          <h3 className="subscription-new__section-title">{t('subscriptionNew.sections.aboutSubscription')}</h3>
-          <p className="subscription-new__about">
-            {selectedPlanData?.testMode 
-              ? t('subscriptionNew.aboutTestMode')
-              : t('subscriptionNew.about')
-            }
-          </p>
         </div>
 
         {/* Agreement */}
@@ -410,12 +340,12 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
 
         {/* Subscribe Button */}
         <button 
-          className={`subscription-new__subscribe ${!agreedToTerms ? 'subscription-new__subscribe--disabled' : ''}`}
+          className={`subscription-new__subscribe ${!agreedToTerms || isProcessing ? 'subscription-new__subscribe--disabled' : ''}`}
           onClick={handleSubscribe}
           disabled={!agreedToTerms || isProcessing}
         >
           {isProcessing 
-            ? t('subscriptionNew.processing') 
+            ? '⏳ ' + t('subscriptionNew.processing')
             : t('subscriptionNew.subscribe', { price: selectedPrice })
           }
         </button>

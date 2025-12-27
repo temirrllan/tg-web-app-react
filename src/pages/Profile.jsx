@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+// src/pages/Profile.jsx - С АВТОМАТИЧЕСКИМ ОБНОВЛЕНИЕМ
+
+import React, { useState, useEffect, useCallback } from 'react';
 import './Profile.css';
 import { useNavigation } from '../hooks/useNavigation';
 import { habitService } from '../services/habits';
@@ -21,17 +23,65 @@ const Profile = ({ onClose }) => {
   const childOpen = showPurchaseHistory || showSubscriptionPage || showSettings;
   useNavigation(onClose, { isVisible: !childOpen });
 
+  // 🔥 МЕМОИЗИРОВАННАЯ функция загрузки
+  const loadSubscriptionStatus = useCallback(async (forceRefresh = false) => {
+    try {
+      console.log(`📊 Loading subscription status (force: ${forceRefresh})...`);
+      
+      const status = await habitService.checkSubscriptionLimits(forceRefresh);
+      
+      setSubscription(status);
+      
+      console.log('✅ Subscription status loaded:', {
+        isPremium: status.isPremium,
+        plan: status.subscription?.planType,
+        active: status.subscription?.isActive
+      });
+      
+      return status;
+    } catch (error) {
+      console.error('Failed to load subscription:', error);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // 🔥 НОВЫЙ: Слушатель события payment_success
   useEffect(() => {
-    setSubscription(null);
-    setLoading(true);
-    loadSubscriptionStatus();
+    const handlePaymentSuccess = async (event) => {
+      console.log('🎉 Profile: Payment success event received');
+      
+      // Принудительно обновляем статус подписки
+      await loadSubscriptionStatus(true);
+      
+      // Вибрация успеха
+      const tg = window.Telegram?.WebApp;
+      if (tg?.HapticFeedback) {
+        tg.HapticFeedback.notificationOccurred('success');
+      }
+    };
+
+    window.addEventListener('payment_success', handlePaymentSuccess);
+    
+    return () => {
+      window.removeEventListener('payment_success', handlePaymentSuccess);
+    };
+  }, [loadSubscriptionStatus]);
+
+  // Начальная загрузка
+  useEffect(() => {
+    loadSubscriptionStatus(false);
 
     const handleFocus = () => {
-      loadSubscriptionStatus();
+      console.log('👀 Profile became visible, refreshing...');
+      loadSubscriptionStatus(true);
     };
+    
     window.addEventListener('focus', handleFocus);
+    
     return () => window.removeEventListener('focus', handleFocus);
-  }, []);
+  }, [loadSubscriptionStatus]);
 
   const tg = window.Telegram?.WebApp;
   const user = tg?.initDataUnsafe?.user || {
@@ -40,55 +90,40 @@ const Profile = ({ onClose }) => {
     username: 'testuser'
   };
 
-  const loadSubscriptionStatus = async () => {
-    try {
-      const status = await habitService.checkSubscriptionLimits();
-      setSubscription(status);
-      console.log('Loaded subscription status:', status);
-    } catch (error) {
-      console.error('Failed to load subscription:', error);
-    } finally {
-      setLoading(false);
+  const getSubscriptionLabel = () => {
+    if (loading) return t('common.loading');
+
+    if (!subscription || !subscription.isPremium || !subscription.subscription) {
+      return t('profile.plan.free');
+    }
+
+    const sub = subscription.subscription;
+    if (!sub.isActive) {
+      return t('profile.plan.free');
+    }
+
+    if (sub.planName) {
+      return sub.planName;
+    }
+
+    const planType = sub.planType || '';
+    switch (planType) {
+      case '6_months':
+        return t('profile.plan.sixMonths');
+      case '1_year':
+        return t('profile.plan.oneYear');
+      case 'lifetime':
+        return t('profile.plan.lifetime');
+      case 'trial_7_days':
+        return t('profile.plan.trial', { days: sub.daysLeft || 0 });
+      default:
+        return t('profile.plan.premium');
     }
   };
-
-const getSubscriptionLabel = () => {
-  if (loading) return t('common.loading');
-
-  if (!subscription || !subscription.isPremium || !subscription.subscription) {
-    return t('profile.plan.free');
-  }
-
-  const sub = subscription.subscription;
-  if (!sub.isActive) {
-    return t('profile.plan.free');
-  }
-
-  // Используем display_name из плана
-  if (sub.planName) {
-    return sub.planName; // Будет "For 6 Months" или "For 1 Year"
-  }
-
-  // Fallback на старую логику
-  const planType = sub.planType || '';
-  switch (planType) {
-    case '6_months':
-      return t('profile.plan.sixMonths');
-    case '1_year':
-      return t('profile.plan.oneYear');
-    case 'lifetime':
-      return t('profile.plan.lifetime');
-    case 'trial_7_days':
-      return t('profile.plan.trial', { days: sub.daysLeft || 0 });
-    default:
-      return t('profile.plan.premium');
-  }
-};
 
   const isSubscriptionActive = () =>
     subscription?.isPremium && subscription?.subscription?.isActive;
 
-  // только id/иконки, лейблы возьмём через t при рендере
   const menuItems = [
     { id: 'subscription', icon: '⭐', showBadge: true },
     { id: 'purchase_history', icon: '📋' }
@@ -109,70 +144,67 @@ const getSubscriptionLabel = () => {
     { id: 'payment' }
   ];
 
-const handleMenuClick = (itemId) => {
-  console.log('Menu item clicked:', itemId);
+  const handleMenuClick = (itemId) => {
+    console.log('Menu item clicked:', itemId);
 
-  switch (itemId) {
-    case 'subscription':
-      console.log('Opening subscription page...');
-      // ВАЖНО: Сначала закрываем профиль, потом открываем подписку
-      setShowSubscriptionPage(true);
-      break;
-    case 'purchase_history':
-      setShowPurchaseHistory(true);
-      break;
-    case 'settings':
-      setShowSettings(true);
-      break;
-    case 'support':
-      tg?.openLink?.('https://t.me/Migin_Sergey');
-      break;
-    case 'terms':
-      tg?.openLink?.('https://yoursite.com/terms');
-      break;
-    case 'privacy':
-      tg?.openLink?.('https://yoursite.com/privacy');
-      break;
-    case 'payment':
-      tg?.openLink?.('https://yoursite.com/payment-policy');
-      break;
-    default:
-      break;
+    switch (itemId) {
+      case 'subscription':
+        setShowSubscriptionPage(true);
+        break;
+      case 'purchase_history':
+        setShowPurchaseHistory(true);
+        break;
+      case 'settings':
+        setShowSettings(true);
+        break;
+      case 'support':
+        tg?.openLink?.('https://t.me/Migin_Sergey');
+        break;
+      case 'terms':
+        tg?.openLink?.('https://yoursite.com/terms');
+        break;
+      case 'privacy':
+        tg?.openLink?.('https://yoursite.com/privacy');
+        break;
+      case 'payment':
+        tg?.openLink?.('https://yoursite.com/payment-policy');
+        break;
+      default:
+        break;
+    }
+  };
+
+  if (showSubscriptionPage) {
+    return (
+      <Subscription
+        onClose={() => {
+          setShowSubscriptionPage(false);
+          loadSubscriptionStatus(true); // 🔥 Принудительное обновление
+        }}
+      />
+    );
   }
-};
 
-  // ДОБАВЬ ЭТУ ПРОВЕРКУ ПЕРЕД ОСНОВНЫМ RETURN
-if (showSubscriptionPage) {
-  return (
-    <Subscription
-      onClose={() => {
-        setShowSubscriptionPage(false);
-        loadSubscriptionStatus();
-      }}
-    />
-  );
-}
+  if (showPurchaseHistory) {
+    return (
+      <PurchaseHistory
+        onClose={() => {
+          setShowPurchaseHistory(false);
+          loadSubscriptionStatus(true);
+        }}
+      />
+    );
+  }
 
-if (showPurchaseHistory) {
-  return (
-    <PurchaseHistory
-      onClose={() => {
-        setShowPurchaseHistory(false);
-        loadSubscriptionStatus();
-      }}
-    />
-  );
-}
-
-if (showSettings) {
-  return (
-    <Settings
-      onClose={() => {
-        setShowSettings(false);
-      }}
-    />
-  );
-}
+  if (showSettings) {
+    return (
+      <Settings
+        onClose={() => {
+          setShowSettings(false);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="profile">
