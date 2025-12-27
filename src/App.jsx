@@ -3,7 +3,7 @@ import { authenticateUser } from './services/auth';
 import { habitService } from './services/habits';
 import { useTelegram } from './hooks/useTelegram';
 import { LanguageProvider, LanguageContext } from './context/LanguageContext';
-import { ThemeProvider } from './context/ThemeContext'; // 🆕 ДОБАВИЛИ
+import { ThemeProvider } from './context/ThemeContext';
 import Onboarding from './components/Onboarding';
 import Today from './pages/Today';
 import Profile from './pages/Profile';
@@ -17,7 +17,8 @@ function AppContent() {
   const [error, setError] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  
+  const [shouldShowFabHint, setShouldShowFabHint] = useState(false);
+
   const { initializeLanguage, language } = useContext(LanguageContext);
 
   console.log('🔍 APP STATE:', {
@@ -139,6 +140,8 @@ function AppContent() {
           if (response.isNewUser === true) {
             console.log('🆕 NEW USER DETECTED (by flag) - SHOWING ONBOARDING');
             setShowOnboarding(true);
+            setShouldShowFabHint(true);
+
           } else {
             console.log('👤 Checking alternative: habit count');
             try {
@@ -149,6 +152,7 @@ function AppContent() {
               if (habitCount === 0) {
                 console.log('🆕 NEW USER DETECTED (by habit count) - SHOWING ONBOARDING');
                 setShowOnboarding(true);
+                setShouldShowFabHint(true);
               } else {
                 console.log('👤 EXISTING USER WITH HABITS - SKIPPING ONBOARDING');
               }
@@ -278,7 +282,7 @@ function AppContent() {
   console.log('📱 Rendering MAIN APP');
   return (
     <>
-      <Today />
+      <Today shouldShowFabHint={shouldShowFabHint}/>
       {showProfile && (
         <Profile onClose={() => setShowProfile(false)} />
       )}

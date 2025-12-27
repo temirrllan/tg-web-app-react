@@ -20,8 +20,8 @@ import Subscription from './Subscription';
 import { useTranslation } from '../hooks/useTranslation';
 import PullToRefresh from '../components/common/PullToRefresh';
 import { useTelegramTheme } from '../hooks/useTelegramTheme';
-
-const Today = () => {
+import FabHint from '../components/hints/FabHint';
+const Today = ({ shouldShowFabHint = false }) => {
   const { t } = useTranslation();
   const { user } = useTelegram();
   useTelegramTheme();
@@ -61,6 +61,7 @@ const Today = () => {
   const [showEditForm, setShowEditForm] = useState(false);
   const [habitToEdit, setHabitToEdit] = useState(null);
   const [userSubscription, setUserSubscription] = useState(null);
+  const [showFabHint, setShowFabHint] = useState(false);
 
   const getTodayDate = () => {
     const today = new Date();
@@ -85,7 +86,58 @@ const Today = () => {
   const [dateLoading, setDateLoading] = useState(false);
   const [dateStats, setDateStats] = useState({ completed: 0, total: 0 });
   const [datePhrase, setDatePhrase] = useState(null);
+  useEffect(() => {
+    const hasSeenFabHint = localStorage.getItem('hasSeenFabHint');
+    
+    console.log('🔍 FAB Hint check:', {
+      shouldShowFabHint,
+      hasSeenFabHint,
+      loading,
+      dateLoading,
+      habitsCount: dateHabits.length
+    });
+    
+    // Показываем если:
+    // 1. Пришел флаг из App (shouldShowFabHint)
+    // 2. Пользователь не видел подсказку раньше
+    // 3. Данные загружены (не loading)
+    // 4. У пользователя НЕТ привычек (новый пользователь)
+    if (shouldShowFabHint && 
+        !hasSeenFabHint && 
+        !loading && 
+        !dateLoading &&
+        dateHabits.length === 0) {
+      
+      console.log('🎯 Showing FAB hint for new user');
+      
+      // Показываем через небольшую задержку для плавности
+      const timer = setTimeout(() => {
+        setShowFabHint(true);
+        localStorage.setItem('hasSeenFabHint', 'true');
+        
+        // 📊 Аналитика
+        window.TelegramAnalytics?.track('fab_hint_shown', {
+          is_new_user: true,
+          habits_count: 0,
+          trigger: 'after_onboarding'
+        });
+        console.log('📊 Analytics: fab_hint_shown (after onboarding)');
+      }, 500); // Короткая задержка 0.5 секунд
+      
+      return () => clearTimeout(timer);
+    }
+  }, [shouldShowFabHint, loading, dateLoading, dateHabits.length]);
 
+  // 🆕 Обработчик закрытия FAB hint
+  const handleFabHintClose = () => {
+    setShowFabHint(false);
+    
+    // 📊 Аналитика
+    window.TelegramAnalytics?.track('fab_hint_closed', {
+      habits_count: dateHabits.length
+    });
+    console.log('📊 Analytics: fab_hint_closed');
+  };
   useEffect(() => {
     checkUserSubscription();
   }, []);
@@ -651,7 +703,8 @@ const Today = () => {
             )}
           </div>
         </PullToRefresh>
-        
+                <FabHint show={showFabHint} onClose={handleFabHintClose} />
+
         <SwipeHint 
           show={showSwipeHint} 
           onClose={() => setShowSwipeHint(false)} 
