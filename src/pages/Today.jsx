@@ -87,33 +87,25 @@ const Today = ({ shouldShowFabHint = false }) => {
   const [dateStats, setDateStats] = useState({ completed: 0, total: 0 });
   const [datePhrase, setDatePhrase] = useState(null);
   useEffect(() => {
-    const hasSeenFabHint = localStorage.getItem('hasSeenFabHint');
-    
     console.log('🔍 FAB Hint check:', {
       shouldShowFabHint,
-      hasSeenFabHint,
       loading,
       dateLoading,
       habitsCount: dateHabits.length
     });
     
-    // Показываем если:
-    // 1. Пришел флаг из App (shouldShowFabHint)
-    // 2. Пользователь не видел подсказку раньше
-    // 3. Данные загружены (не loading)
-    // 4. У пользователя НЕТ привычек (новый пользователь)
+    // 🎯 УПРОЩЕННАЯ ЛОГИКА:
+    // Если пришел флаг shouldShowFabHint === true И нет привычек - показываем
     if (shouldShowFabHint && 
-        !hasSeenFabHint && 
         !loading && 
         !dateLoading &&
         dateHabits.length === 0) {
       
-      console.log('🎯 Showing FAB hint for new user');
+      console.log('🎯 Showing FAB hint for new user (ignoring localStorage)');
       
       // Показываем через небольшую задержку для плавности
       const timer = setTimeout(() => {
         setShowFabHint(true);
-        localStorage.setItem('hasSeenFabHint', 'true');
         
         // 📊 Аналитика
         window.TelegramAnalytics?.track('fab_hint_shown', {
@@ -122,7 +114,7 @@ const Today = ({ shouldShowFabHint = false }) => {
           trigger: 'after_onboarding'
         });
         console.log('📊 Analytics: fab_hint_shown (after onboarding)');
-      }, 500); // Короткая задержка 0.5 секунд
+      }, 500);
       
       return () => clearTimeout(timer);
     }
@@ -131,6 +123,9 @@ const Today = ({ shouldShowFabHint = false }) => {
   // 🆕 Обработчик закрытия FAB hint
   const handleFabHintClose = () => {
     setShowFabHint(false);
+    
+    // ✅ Сохраняем в localStorage только ПОСЛЕ закрытия
+    localStorage.setItem('hasSeenFabHint', 'true');
     
     // 📊 Аналитика
     window.TelegramAnalytics?.track('fab_hint_closed', {
