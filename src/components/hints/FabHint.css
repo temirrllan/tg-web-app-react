@@ -1,4 +1,4 @@
-/* src/components/hints/FabHint.css */
+/* src/components/hints/FabHint.css - УЛУЧШЕННАЯ ВЕРСИЯ */
 
 .fab-hint-overlay {
   position: fixed;
@@ -6,14 +6,15 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.75);
   z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: fadeIn 0.4s ease-out;
+  animation: fadeIn 0.5s ease-out;
   padding: 20px;
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .fab-hint-container {
@@ -27,48 +28,52 @@
   pointer-events: none;
 }
 
-/* Балун с подсказкой */
+/* Балун с подсказкой - ЯРКИЙ ГРАДИЕНТ */
 .fab-hint-bubble {
   position: absolute;
   bottom: 100px;
-  right: 24px;
-  background: var(--bg-primary, #FFFFFF);
-  border-radius: 20px 20px 4px 20px;
-  padding: 20px 24px;
+  right: 20px;
+  background: linear-gradient(135deg, #A7D96C 0%, #8BC34A 100%);
+  border-radius: 24px 24px 8px 24px;
+  padding: 24px;
   max-width: 280px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  animation: slideUpBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 
+    0 12px 40px rgba(167, 217, 108, 0.4),
+    0 4px 16px rgba(0, 0, 0, 0.2);
+  animation: slideUpBounce 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
   pointer-events: auto;
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .fab-hint-text {
-  font-size: 16px;
+  font-size: 17px;
   line-height: 1.5;
-  color: var(--text-primary, #1D1D1F);
+  color: #1D1D1F;
   margin: 0;
-  font-weight: 500;
-  transition: color 0.3s ease;
+  font-weight: 600;
+  text-align: left;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
 }
 
-/* Стрелка-указатель на FAB */
+/* Стрелка-указатель на FAB - УЛУЧШЕННАЯ */
 .fab-hint-arrow {
   position: absolute;
-  bottom: 32px;
-  right: 32px;
-  width: 60px;
-  height: 60px;
+  bottom: 16px;
+  right: 16px;
+  width: 80px;
+  height: 80px;
   pointer-events: none;
-  animation: pointToFab 2s ease-in-out infinite;
+  animation: pointToFab 1.5s ease-in-out infinite;
+  z-index: 10;
 }
 
 .fab-hint-arrow svg {
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+  filter: drop-shadow(0 4px 12px rgba(167, 217, 108, 0.8));
 }
 
-/* Пульсирующий круг вокруг FAB */
+/* Пульсирующие круги вокруг FAB - МНОЖЕСТВЕННЫЕ */
 .fab-hint-pulse {
   position: absolute;
   bottom: 24px;
@@ -76,40 +81,61 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  border: 3px solid var(--color-success, #A7D96C);
-  animation: pulseRing 2s ease-in-out infinite;
   pointer-events: none;
-  transition: border-color 0.3s ease;
 }
 
-/* Кнопка "Понятно" */
+.fab-hint-pulse::before,
+.fab-hint-pulse::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 3px solid #A7D96C;
+  animation: pulseRing 2s ease-in-out infinite;
+}
+
+.fab-hint-pulse::after {
+  animation-delay: 1s;
+}
+
+/* Кнопка "Понятно" - КОНТРАСТНАЯ */
 .fab-hint-button {
   margin-top: 16px;
   width: 100%;
-  background: var(--color-success, #A7D96C);
-  color: #000000;
+  background: rgba(255, 255, 255, 0.95);
+  color: #1D1D1F;
   border: none;
-  border-radius: 12px;
-  padding: 14px 20px;
-  font-size: 16px;
-  font-weight: 600;
+  border-radius: 14px;
+  padding: 16px 20px;
+  font-size: 17px;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(167, 217, 108, 0.3);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .fab-hint-button:hover {
-  background: var(--color-success-dark, #95C55D);
-  box-shadow: 0 4px 12px rgba(167, 217, 108, 0.4);
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 
+    0 6px 16px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
 }
 
 .fab-hint-button:active {
-  transform: scale(0.98);
-  background: var(--color-success-dark, #95C55D);
-  box-shadow: 0 2px 8px rgba(167, 217, 108, 0.3);
+  transform: scale(0.96) translateY(0);
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
-/* Анимации */
+/* Анимации - УЛУЧШЕННЫЕ */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -122,10 +148,13 @@
 @keyframes slideUpBounce {
   0% {
     opacity: 0;
-    transform: translateY(30px) scale(0.9);
+    transform: translateY(40px) scale(0.85);
   }
-  50% {
-    transform: translateY(-5px) scale(1.02);
+  60% {
+    transform: translateY(-8px) scale(1.03);
+  }
+  80% {
+    transform: translateY(4px) scale(0.98);
   }
   100% {
     opacity: 1;
@@ -135,27 +164,35 @@
 
 @keyframes pointToFab {
   0%, 100% {
-    transform: translate(0, 0) rotate(-45deg);
-    opacity: 0.8;
+    transform: translate(0, 0) rotate(-45deg) scale(1);
+    opacity: 0.9;
+  }
+  25% {
+    transform: translate(-6px, 6px) rotate(-45deg) scale(1.1);
+    opacity: 1;
   }
   50% {
-    transform: translate(-8px, 8px) rotate(-45deg);
+    transform: translate(-12px, 12px) rotate(-45deg) scale(1.15);
+    opacity: 1;
+  }
+  75% {
+    transform: translate(-6px, 6px) rotate(-45deg) scale(1.1);
     opacity: 1;
   }
 }
 
 @keyframes pulseRing {
   0% {
-    transform: scale(1);
+    transform: translate(-50%, -50%) scale(1);
     opacity: 1;
   }
   50% {
-    transform: scale(1.3);
-    opacity: 0.5;
+    transform: translate(-50%, -50%) scale(1.4);
+    opacity: 0.6;
   }
   100% {
-    transform: scale(1);
-    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.8);
+    opacity: 0;
   }
 }
 
@@ -165,56 +202,89 @@
     right: 16px;
     bottom: 90px;
     max-width: calc(100vw - 100px);
-    padding: 16px 20px;
+    padding: 20px;
   }
   
   .fab-hint-text {
-    font-size: 15px;
+    font-size: 16px;
   }
   
   .fab-hint-arrow {
-    right: 28px;
-    bottom: 28px;
-    width: 50px;
-    height: 50px;
+    right: 12px;
+    bottom: 12px;
+    width: 70px;
+    height: 70px;
   }
   
   .fab-hint-pulse {
     right: 20px;
     bottom: 20px;
   }
+  
+  .fab-hint-button {
+    padding: 14px 18px;
+    font-size: 16px;
+  }
 }
 
 @media (max-width: 375px) {
   .fab-hint-bubble {
     max-width: calc(100vw - 80px);
-    padding: 14px 18px;
+    padding: 18px;
   }
   
   .fab-hint-text {
-    font-size: 14px;
+    font-size: 15px;
   }
   
   .fab-hint-button {
-    padding: 12px 18px;
+    padding: 13px 16px;
     font-size: 15px;
+  }
+  
+  .fab-hint-arrow {
+    width: 60px;
+    height: 60px;
   }
 }
 
 /* ==================== ТЕМНАЯ ТЕМА ==================== */
+.dark-theme .fab-hint-overlay {
+  background: rgba(0, 0, 0, 0.85);
+}
+
 .dark-theme .fab-hint-bubble {
-  background: #2C2C2E;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  background: linear-gradient(135deg, #8BC34A 0%, #689F38 100%);
+  box-shadow: 
+    0 12px 40px rgba(139, 195, 74, 0.4),
+    0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 .dark-theme .fab-hint-text {
-  color: #FFFFFF;
+  color: #1D1D1F;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
 }
 
-.dark-theme .fab-hint-pulse {
-  border-color: #A7D96C;
+.dark-theme .fab-hint-button {
+  background: rgba(28, 28, 30, 0.95);
+  color: #FFFFFF;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .fab-hint-button:hover {
+  background: rgba(28, 28, 30, 1);
+  box-shadow: 
+    0 6px 16px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .fab-hint-pulse::before,
+.dark-theme .fab-hint-pulse::after {
+  border-color: #8BC34A;
 }
 
 .dark-theme .fab-hint-arrow svg {
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
+  filter: drop-shadow(0 4px 12px rgba(139, 195, 74, 0.8));
 }

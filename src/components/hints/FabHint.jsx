@@ -1,4 +1,4 @@
-// src/components/hints/FabHint.jsx
+// src/components/hints/FabHint.jsx - УЛУЧШЕННАЯ ВЕРСИЯ
 import React, { useEffect } from 'react';
 import './FabHint.css';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -55,18 +55,35 @@ const FabHint = ({ show, onClose }) => {
   return (
     <div className="fab-hint-overlay" onClick={handleClose}>
       <div className="fab-hint-container" onClick={(e) => e.stopPropagation()}>
-        {/* Пульсирующий круг */}
+        {/* Пульсирующие круги */}
         <div className="fab-hint-pulse" />
         
-        {/* Стрелка-указатель */}
+        {/* Яркая стрелка-указатель */}
         <div className="fab-hint-arrow">
-          <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Внешняя обводка для яркости */}
             <path 
-              d="M15 15 L45 45 M45 45 L45 25 M45 45 L25 45" 
-              stroke="#A7D96C" 
-              strokeWidth="4" 
+              d="M15 15 L55 55 M55 55 L55 30 M55 55 L30 55" 
+              stroke="#FFFFFF" 
+              strokeWidth="8" 
               strokeLinecap="round" 
               strokeLinejoin="round"
+              opacity="0.3"
+            />
+            {/* Основная стрелка */}
+            <path 
+              d="M15 15 L55 55 M55 55 L55 30 M55 55 L30 55" 
+              stroke="#A7D96C" 
+              strokeWidth="5" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            />
+            {/* Точка на конце стрелки для акцента */}
+            <circle 
+              cx="55" 
+              cy="55" 
+              r="4" 
+              fill="#A7D96C"
             />
           </svg>
         </div>
