@@ -648,7 +648,7 @@ const Today = ({ shouldShowFabHint = false }) => {
   return (
     <>
       <Layout>
-        <PullToRefresh onRefresh={handleRefresh}>
+        {/* <PullToRefresh onRefresh={handleRefresh}> */}
           <Header user={user} onProfileClick={() => setShowProfile(true)} />
 
           <div className="today">
@@ -702,7 +702,7 @@ const Today = ({ shouldShowFabHint = false }) => {
               </div>
             )}
           </div>
-        </PullToRefresh>
+        {/* </PullToRefresh> */}
                 <FabHint show={showFabHint} onClose={handleFabHintClose} />
 
         <SwipeHint 
