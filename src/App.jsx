@@ -1,3 +1,5 @@
+// src/App.jsx - ФИНАЛЬНАЯ ВЕРСИЯ
+
 import React, { useState, useEffect, useContext } from 'react';
 import { authenticateUser } from './services/auth';
 import { habitService } from './services/habits';
@@ -17,8 +19,10 @@ function AppContent() {
   const [error, setError] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  
+  // 🆕 Флаг для показа подсказки FAB
   const [shouldShowFabHint, setShouldShowFabHint] = useState(false);
-
+  
   const { initializeLanguage, language } = useContext(LanguageContext);
 
   console.log('🔍 APP STATE:', {
@@ -64,8 +68,7 @@ function AppContent() {
           success: response.success,
           userId: response.user?.id,
           isNewUser: response.isNewUser,
-          isNewUserType: typeof response.isNewUser,
-          fullResponse: response
+          isNewUserType: typeof response.isNewUser
         });
         
         if (response.success) {
@@ -133,32 +136,19 @@ function AppContent() {
             }
           }
           
-          // Onboarding check
+          // 🔥 КРИТИЧНО: Onboarding ТОЛЬКО для новых пользователей
           console.log('🔍 === ONBOARDING CHECK ===');
           console.log('isNewUser value:', response.isNewUser);
+          console.log('isNewUser type:', typeof response.isNewUser);
           
           if (response.isNewUser === true) {
-            console.log('🆕 NEW USER DETECTED (by flag) - SHOWING ONBOARDING');
+            console.log('🆕 NEW USER - SHOWING ONBOARDING + WILL SHOW FAB HINT');
             setShowOnboarding(true);
-            setShouldShowFabHint(true);
-
+            setShouldShowFabHint(true); // ✅ Устанавливаем флаг для подсказки
           } else {
-            console.log('👤 Checking alternative: habit count');
-            try {
-              const habitsResponse = await habitService.getAllHabits();
-              const habitCount = habitsResponse?.habits?.length || 0;
-              console.log('Habit count:', habitCount);
-              
-              if (habitCount === 0) {
-                console.log('🆕 NEW USER DETECTED (by habit count) - SHOWING ONBOARDING');
-                setShowOnboarding(true);
-                setShouldShowFabHint(true);
-              } else {
-                console.log('👤 EXISTING USER WITH HABITS - SKIPPING ONBOARDING');
-              }
-            } catch (habitError) {
-              console.error('Failed to check habits:', habitError);
-            }
+            console.log('👤 EXISTING USER - SKIPPING ONBOARDING');
+            // НЕ показываем onboarding
+            // НЕ показываем подсказку
           }
           
         } else {
@@ -274,6 +264,7 @@ function AppContent() {
         onComplete={() => {
           console.log('✅ Onboarding completed');
           setShowOnboarding(false);
+          // shouldShowFabHint остается true - передается в Today
         }} 
       />
     );
@@ -282,7 +273,8 @@ function AppContent() {
   console.log('📱 Rendering MAIN APP');
   return (
     <>
-      <Today shouldShowFabHint={shouldShowFabHint}/>
+      {/* 🆕 Передаем флаг подсказки */}
+      <Today shouldShowFabHint={shouldShowFabHint} />
       {showProfile && (
         <Profile onClose={() => setShowProfile(false)} />
       )}
@@ -292,7 +284,7 @@ function AppContent() {
 
 function App() {
   return (
-    <ThemeProvider> {/* 🆕 ОБЕРНУЛИ В ThemeProvider */}
+    <ThemeProvider>
       <LanguageProvider>
         <AppContent />
       </LanguageProvider>
