@@ -1,4 +1,4 @@
-/* src/components/hints/WeekNavigationHint.css */
+/* src/components/hints/WeekNavigationHint.css - С ДИНАМИЧЕСКИМИ ПОЗИЦИЯМИ */
 
 .week-hint-overlay {
   position: fixed;
@@ -23,13 +23,14 @@
   pointer-events: none;
 }
 
-/* Светящаяся область вокруг WeekNavigation */
+/* Светящаяся область вокруг WeekNavigation - БЕЗ ФИКСИРОВАННОЙ ПОЗИЦИИ */
 .week-hint-spotlight {
-  position: absolute;
-  top: 120px; /* Примерная позиция WeekNavigation */
+  position: fixed;
+  /* top и height задаются через inline style */
   left: 0;
   right: 0;
-  height: 70px;
+  max-width: 500px;
+  margin: 0 auto;
   background: transparent;
   pointer-events: none;
   z-index: 9999;
@@ -63,10 +64,10 @@
   }
 }
 
-/* Речевой пузырь */
+/* Речевой пузырь - БЕЗ ФИКСИРОВАННОЙ ПОЗИЦИИ */
 .week-hint-bubble {
-  position: absolute;
-  top: 200px;
+  position: fixed;
+  /* top задается через inline style */
   left: 50%;
   transform: translateX(-50%);
   background: #FFFFFF;
@@ -183,15 +184,10 @@
 }
 
 /* ==================== АДАПТИВНОСТЬ ==================== */
+/* Убираем все медиа-запросы с фиксированными позициями */
 
 @media (max-width: 430px) {
-  .week-hint-spotlight {
-    top: 110px;
-    height: 65px;
-  }
-  
   .week-hint-bubble {
-    top: 185px;
     max-width: calc(100vw - 48px);
     padding: 18px 20px;
   }
@@ -207,12 +203,7 @@
 }
 
 @media (max-width: 375px) {
-  .week-hint-spotlight {
-    top: 105px;
-  }
-  
   .week-hint-bubble {
-    top: 175px;
     padding: 16px 18px;
   }
   
