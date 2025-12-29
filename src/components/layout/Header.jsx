@@ -6,24 +6,29 @@ const Header = ({ user, onProfileClick }) => {
   const [imageLoading, setImageLoading] = useState(true);
 
   // Обработчик ошибки загрузки изображения
-  const handleImageError = () => {
-    console.warn('Failed to load user avatar, using fallback');
+  const handleImageError = (e) => {
+    console.warn('❌ Failed to load user avatar:', {
+      url: user?.photo_url,
+      userId: user?.id,
+      error: e.type
+    });
     setImageError(true);
     setImageLoading(false);
   };
 
   // Обработчик успешной загрузки
   const handleImageLoad = () => {
+    console.log('✅ Avatar loaded successfully');
     setImageLoading(false);
   };
 
-  // Сброс состояния при смене пользователя
+  // Сброс состояния при смене пользователя или URL
   useEffect(() => {
-    if (user?.photo_url) {
+    if (user?.photo_url && !imageError) {
       setImageError(false);
       setImageLoading(true);
     }
-  }, [user?.photo_url]);
+  }, [user?.photo_url, user?.id]);
 
   // Функция для получения инициалов
   const getInitials = () => {
@@ -64,7 +69,6 @@ const Header = ({ user, onProfileClick }) => {
       '#52C97F', // Green
     ];
     
-    // Используем user ID для выбора консистентного цвета
     const index = user.id % colors.length;
     return colors[index];
   };
@@ -87,10 +91,23 @@ const Header = ({ user, onProfileClick }) => {
     return 'User';
   };
 
+  // Проверяем валидность URL
+  const isValidImageUrl = (url) => {
+    if (!url) return false;
+    if (typeof url !== 'string') return false;
+    if (url.trim() === '') return false;
+    // Проверяем что это HTTP/HTTPS URL
+    return url.startsWith('http://') || url.startsWith('https://');
+  };
+
+  const shouldShowImage = user?.photo_url && 
+                          isValidImageUrl(user.photo_url) && 
+                          !imageError;
+
   return (
     <header className="header">
       <div className="header__user" onClick={onProfileClick}>
-        {user?.photo_url && !imageError ? (
+        {shouldShowImage ? (
           <>
             {/* Показываем placeholder пока загружается */}
             {imageLoading && (
@@ -109,6 +126,7 @@ const Header = ({ user, onProfileClick }) => {
               onLoad={handleImageLoad}
               loading="lazy"
               style={{ display: imageLoading ? 'none' : 'block' }}
+              crossOrigin="anonymous"
             />
           </>
         ) : (

@@ -19,7 +19,8 @@ const Profile = ({ onClose }) => {
   const [showSubscriptionPage, setShowSubscriptionPage] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   useTelegramTheme();
-
+const [avatarError, setAvatarError] = useState(false);
+  const [avatarLoading, setAvatarLoading] = useState(true);
   const childOpen = showPurchaseHistory || showSubscriptionPage || showSettings;
   useNavigation(onClose, { isVisible: !childOpen });
 
@@ -89,7 +90,62 @@ const Profile = ({ onClose }) => {
     last_name: 'User',
     username: 'testuser'
   };
+const handleAvatarError = (e) => {
+    console.warn('❌ Failed to load profile avatar:', {
+      url: user?.photo_url,
+      error: e.type
+    });
+    setAvatarError(true);
+    setAvatarLoading(false);
+  };
+   const handleAvatarLoad = () => {
+    console.log('✅ Profile avatar loaded');
+    setAvatarLoading(false);
+  };
 
+  const getInitials = () => {
+    if (!user) return '?';
+    
+    const firstName = user.first_name || '';
+    const lastName = user.last_name || '';
+    
+    if (firstName && lastName) {
+      return `${firstName[0]}${lastName[0]}`.toUpperCase();
+    }
+    
+    if (firstName) {
+      return firstName[0].toUpperCase();
+    }
+    
+    if (user.username) {
+      return user.username[0].toUpperCase();
+    }
+    
+    return '?';
+  };
+
+  const getAvatarColor = () => {
+    // Используем telegram_id если есть, иначе простой хеш от имени
+    const id = user?.id || 0;
+    
+    const colors = [
+      '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
+      '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52C97F'
+    ];
+    
+    const index = id % colors.length;
+    return colors[index];
+  };
+
+  const isValidImageUrl = (url) => {
+    if (!url) return false;
+    if (typeof url !== 'string') return false;
+    if (url.trim() === '') return false;
+    return url.startsWith('http://') || url.startsWith('https://');
+  };
+  const shouldShowAvatar = user?.photo_url && 
+                          isValidImageUrl(user.photo_url) && 
+                          !avatarError;
   const getSubscriptionLabel = () => {
     if (loading) return t('common.loading');
 
@@ -210,15 +266,33 @@ const Profile = ({ onClose }) => {
     <div className="profile">
       <div className="profile__content">
         <div className="profile__user">
-          {user?.photo_url ? (
-            <img
-              src={user.photo_url}
-              alt={user.first_name}
-              className="profile__avatar"
-            />
+          {shouldShowAvatar ? (
+            <>
+              {avatarLoading && (
+                <div 
+                  className="profile__avatar profile__avatar--placeholder"
+                  style={{ backgroundColor: getAvatarColor() }}
+                >
+                  {getInitials()}
+                </div>
+              )}
+              <img
+                src={user.photo_url}
+                alt={user.first_name}
+                className="profile__avatar"
+                onError={handleAvatarError}
+                onLoad={handleAvatarLoad}
+                loading="lazy"
+                style={{ display: avatarLoading ? 'none' : 'block' }}
+                crossOrigin="anonymous"
+              />
+            </>
           ) : (
-            <div className="profile__avatar profile__avatar--placeholder">
-              {user?.first_name?.[0] || '?'}
+            <div 
+              className="profile__avatar profile__avatar--placeholder"
+              style={{ backgroundColor: getAvatarColor() }}
+            >
+              {getInitials()}
             </div>
           )}
           <h3 className="profile__name">
