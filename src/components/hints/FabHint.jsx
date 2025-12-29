@@ -1,4 +1,4 @@
-// src/components/hints/FabHint.jsx - БЕЛЫЙ БАЛУН С ХВОСТИКОМ
+// src/components/hints/FabHint.jsx - С ВЫРЕЗОМ ДЛЯ FAB
 import React, { useEffect } from 'react';
 import './FabHint.css';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -54,8 +54,27 @@ const FabHint = ({ show, onClose }) => {
 
   return (
     <>
-      {/* Overlay с blur - НЕ закрывает FAB кнопку */}
-      <div className="fab-hint-overlay" onClick={handleClose}>
+      {/* SVG с маской для выреза */}
+      <svg style={{ position: 'fixed', width: 0, height: 0 }}>
+        <defs>
+          <mask id="fab-cutout-mask">
+            {/* Белый фон = видимая область */}
+            <rect width="100%" height="100%" fill="white" />
+            {/* Чёрный круг = вырез (невидимая область) */}
+            <circle 
+              cx="calc(100vw - 52px)" 
+              cy="calc(100vh - 52px)" 
+              r="40" 
+              fill="black" 
+            />
+          </mask>
+        </defs>
+      </svg>
+
+      {/* Затемнённый overlay с вырезом */}
+      <div className="fab-hint-overlay-wrapper" onClick={handleClose}>
+        <div className="fab-hint-overlay" />
+        
         <div className="fab-hint-container" onClick={(e) => e.stopPropagation()}>
           {/* Белый балун с хвостиком */}
           <div className="fab-hint-bubble">
@@ -69,7 +88,7 @@ const FabHint = ({ show, onClose }) => {
         </div>
       </div>
       
-      {/* Пульсирующие круги ПОВЕРХ overlay */}
+      {/* Пульсирующие круги ПОВЕРХ всего */}
       <div className="fab-hint-pulse-container">
         <div className="fab-hint-pulse" />
       </div>
