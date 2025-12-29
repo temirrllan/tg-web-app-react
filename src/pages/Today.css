@@ -668,10 +668,9 @@
 }
 
 
+/* Добавьте ЭТО в конец Today.css - заменяет существующий .fab */
 
-/* Добавить в Today.css */
-
-/* FAB кнопка - ВСЕГДА ПОВЕРХ ВСЕГО */
+/* FAB кнопка - ФИКСИРОВАННАЯ ПОЗИЦИЯ НА ВСЕХ УСТРОЙСТВАХ */
 .fab {
   position: fixed;
   bottom: 24px;
@@ -702,10 +701,16 @@
   transform: scale(0.95);
 }
 
-/* Для мобильных */
+/* АДАПТИВНОСТЬ - синхронизировано с hint */
 @media (max-width: 430px) {
   .fab {
     right: 20px;
     bottom: 20px;
   }
+}
+
+/* Темная тема */
+.dark-theme .fab {
+  background: #A7D96C;
+  color: #1D1D1F;
 }
