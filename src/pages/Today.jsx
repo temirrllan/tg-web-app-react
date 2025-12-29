@@ -61,8 +61,8 @@ const Today = ({ shouldShowFabHint = false }) => {
   const [showEditForm, setShowEditForm] = useState(false);
   const [habitToEdit, setHabitToEdit] = useState(null);
   const [userSubscription, setUserSubscription] = useState(null);
-  const [showFabHint, setShowFabHint] = useState(false);
-
+const [showFabHint, setShowFabHint] = useState(false);
+const [fabHintShown, setFabHintShown] = useState(false);
   const getTodayDate = () => {
     const today = new Date();
     const year = today.getFullYear();
@@ -87,38 +87,41 @@ const Today = ({ shouldShowFabHint = false }) => {
   const [dateStats, setDateStats] = useState({ completed: 0, total: 0 });
   const [datePhrase, setDatePhrase] = useState(null);
   useEffect(() => {
-    console.log('🔍 FAB Hint check:', {
-      shouldShowFabHint,
-      loading,
-      dateLoading,
-      habitsCount: dateHabits.length
-    });
+  console.log('🔍 FAB Hint check:', {
+    shouldShowFabHint,
+    loading,
+    dateLoading,
+    habitsCount: dateHabits.length,
+    fabHintShown // 🆕 Добавили в лог
+  });
+  
+  // 🎯 УПРОЩЕННАЯ ЛОГИКА + проверка что hint еще не показывали
+  // Если пришел флаг shouldShowFabHint === true И нет привычек И hint еще не показывали
+  if (shouldShowFabHint && 
+      !loading && 
+      !dateLoading &&
+      dateHabits.length === 0 &&
+      !fabHintShown) { // ✅ Проверяем что не показывали
     
-    // 🎯 УПРОЩЕННАЯ ЛОГИКА:
-    // Если пришел флаг shouldShowFabHint === true И нет привычек - показываем
-    if (shouldShowFabHint && 
-        !loading && 
-        !dateLoading &&
-        dateHabits.length === 0) {
+    console.log('🎯 Showing FAB hint for new user (ignoring localStorage)');
+    
+    // Показываем через небольшую задержку для плавности
+    const timer = setTimeout(() => {
+      setShowFabHint(true);
+      setFabHintShown(true); // ✅ Устанавливаем флаг что показали
       
-      console.log('🎯 Showing FAB hint for new user (ignoring localStorage)');
-      
-      // Показываем через небольшую задержку для плавности
-      const timer = setTimeout(() => {
-        setShowFabHint(true);
-        
-        // 📊 Аналитика
-        window.TelegramAnalytics?.track('fab_hint_shown', {
-          is_new_user: true,
-          habits_count: 0,
-          trigger: 'after_onboarding'
-        });
-        console.log('📊 Analytics: fab_hint_shown (after onboarding)');
-      }, 500);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [shouldShowFabHint, loading, dateLoading, dateHabits.length]);
+      // 📊 Аналитика
+      window.TelegramAnalytics?.track('fab_hint_shown', {
+        is_new_user: true,
+        habits_count: 0,
+        trigger: 'after_onboarding'
+      });
+      console.log('📊 Analytics: fab_hint_shown (after onboarding)');
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }
+}, [shouldShowFabHint, loading, dateLoading, dateHabits.length, fabHintShown]);
 
   // 🆕 Обработчик закрытия FAB hint
   const handleFabHintClose = () => {
