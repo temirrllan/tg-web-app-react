@@ -1,6 +1,4 @@
-// src/pages/Profile.jsx - С АВТОМАТИЧЕСКИМ ОБНОВЛЕНИЕМ
-
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Profile.css';
 import { useNavigation } from '../hooks/useNavigation';
 import { habitService } from '../services/habits';
@@ -19,70 +17,21 @@ const Profile = ({ onClose }) => {
   const [showSubscriptionPage, setShowSubscriptionPage] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   useTelegramTheme();
-const [avatarError, setAvatarError] = useState(false);
-  const [avatarLoading, setAvatarLoading] = useState(true);
+
   const childOpen = showPurchaseHistory || showSubscriptionPage || showSettings;
   useNavigation(onClose, { isVisible: !childOpen });
 
-  // 🔥 МЕМОИЗИРОВАННАЯ функция загрузки
-  const loadSubscriptionStatus = useCallback(async (forceRefresh = false) => {
-    try {
-      console.log(`📊 Loading subscription status (force: ${forceRefresh})...`);
-      
-      const status = await habitService.checkSubscriptionLimits(forceRefresh);
-      
-      setSubscription(status);
-      
-      console.log('✅ Subscription status loaded:', {
-        isPremium: status.isPremium,
-        plan: status.subscription?.planType,
-        active: status.subscription?.isActive
-      });
-      
-      return status;
-    } catch (error) {
-      console.error('Failed to load subscription:', error);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // 🔥 НОВЫЙ: Слушатель события payment_success
   useEffect(() => {
-    const handlePaymentSuccess = async (event) => {
-      console.log('🎉 Profile: Payment success event received');
-      
-      // Принудительно обновляем статус подписки
-      await loadSubscriptionStatus(true);
-      
-      // Вибрация успеха
-      const tg = window.Telegram?.WebApp;
-      if (tg?.HapticFeedback) {
-        tg.HapticFeedback.notificationOccurred('success');
-      }
-    };
-
-    window.addEventListener('payment_success', handlePaymentSuccess);
-    
-    return () => {
-      window.removeEventListener('payment_success', handlePaymentSuccess);
-    };
-  }, [loadSubscriptionStatus]);
-
-  // Начальная загрузка
-  useEffect(() => {
-    loadSubscriptionStatus(false);
+    setSubscription(null);
+    setLoading(true);
+    loadSubscriptionStatus();
 
     const handleFocus = () => {
-      console.log('👀 Profile became visible, refreshing...');
-      loadSubscriptionStatus(true);
+      loadSubscriptionStatus();
     };
-    
     window.addEventListener('focus', handleFocus);
-    
     return () => window.removeEventListener('focus', handleFocus);
-  }, [loadSubscriptionStatus]);
+  }, []);
 
   const tg = window.Telegram?.WebApp;
   const user = tg?.initDataUnsafe?.user || {
@@ -90,96 +39,56 @@ const [avatarError, setAvatarError] = useState(false);
     last_name: 'User',
     username: 'testuser'
   };
-const handleAvatarError = (e) => {
-    console.warn('❌ Failed to load profile avatar:', {
-      url: user?.photo_url,
-      error: e.type
-    });
-    setAvatarError(true);
-    setAvatarLoading(false);
-  };
-   const handleAvatarLoad = () => {
-    console.log('✅ Profile avatar loaded');
-    setAvatarLoading(false);
-  };
 
-  const getInitials = () => {
-    if (!user) return '?';
-    
-    const firstName = user.first_name || '';
-    const lastName = user.last_name || '';
-    
-    if (firstName && lastName) {
-      return `${firstName[0]}${lastName[0]}`.toUpperCase();
-    }
-    
-    if (firstName) {
-      return firstName[0].toUpperCase();
-    }
-    
-    if (user.username) {
-      return user.username[0].toUpperCase();
-    }
-    
-    return '?';
-  };
-
-  const getAvatarColor = () => {
-    // Используем telegram_id если есть, иначе простой хеш от имени
-    const id = user?.id || 0;
-    
-    const colors = [
-      '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
-      '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52C97F'
-    ];
-    
-    const index = id % colors.length;
-    return colors[index];
-  };
-
-  const isValidImageUrl = (url) => {
-    if (!url) return false;
-    if (typeof url !== 'string') return false;
-    if (url.trim() === '') return false;
-    return url.startsWith('http://') || url.startsWith('https://');
-  };
-  const shouldShowAvatar = user?.photo_url && 
-                          isValidImageUrl(user.photo_url) && 
-                          !avatarError;
-  const getSubscriptionLabel = () => {
-    if (loading) return t('common.loading');
-
-    if (!subscription || !subscription.isPremium || !subscription.subscription) {
-      return t('profile.plan.free');
-    }
-
-    const sub = subscription.subscription;
-    if (!sub.isActive) {
-      return t('profile.plan.free');
-    }
-
-    if (sub.planName) {
-      return sub.planName;
-    }
-
-    const planType = sub.planType || '';
-    switch (planType) {
-      case '6_months':
-        return t('profile.plan.sixMonths');
-      case '1_year':
-        return t('profile.plan.oneYear');
-      case 'lifetime':
-        return t('profile.plan.lifetime');
-      case 'trial_7_days':
-        return t('profile.plan.trial', { days: sub.daysLeft || 0 });
-      default:
-        return t('profile.plan.premium');
+  const loadSubscriptionStatus = async () => {
+    try {
+      const status = await habitService.checkSubscriptionLimits();
+      setSubscription(status);
+      console.log('Loaded subscription status:', status);
+    } catch (error) {
+      console.error('Failed to load subscription:', error);
+    } finally {
+      setLoading(false);
     }
   };
+
+const getSubscriptionLabel = () => {
+  if (loading) return t('common.loading');
+
+  if (!subscription || !subscription.isPremium || !subscription.subscription) {
+    return t('profile.plan.free');
+  }
+
+  const sub = subscription.subscription;
+  if (!sub.isActive) {
+    return t('profile.plan.free');
+  }
+
+  // Используем display_name из плана
+  if (sub.planName) {
+    return sub.planName; // Будет "For 6 Months" или "For 1 Year"
+  }
+
+  // Fallback на старую логику
+  const planType = sub.planType || '';
+  switch (planType) {
+    case '6_months':
+      return t('profile.plan.sixMonths');
+    case '1_year':
+      return t('profile.plan.oneYear');
+    case 'lifetime':
+      return t('profile.plan.lifetime');
+    case 'trial_7_days':
+      return t('profile.plan.trial', { days: sub.daysLeft || 0 });
+    default:
+      return t('profile.plan.premium');
+  }
+};
 
   const isSubscriptionActive = () =>
     subscription?.isPremium && subscription?.subscription?.isActive;
 
+  // только id/иконки, лейблы возьмём через t при рендере
   const menuItems = [
     { id: 'subscription', icon: '⭐', showBadge: true },
     { id: 'purchase_history', icon: '📋' }
@@ -200,99 +109,84 @@ const handleAvatarError = (e) => {
     { id: 'payment' }
   ];
 
-  const handleMenuClick = (itemId) => {
-    console.log('Menu item clicked:', itemId);
+const handleMenuClick = (itemId) => {
+  console.log('Menu item clicked:', itemId);
 
-    switch (itemId) {
-      case 'subscription':
-        setShowSubscriptionPage(true);
-        break;
-      case 'purchase_history':
-        setShowPurchaseHistory(true);
-        break;
-      case 'settings':
-        setShowSettings(true);
-        break;
-      case 'support':
-        tg?.openLink?.('https://t.me/Migin_Sergey');
-        break;
-      case 'terms':
-        tg?.openLink?.('https://yoursite.com/terms');
-        break;
-      case 'privacy':
-        tg?.openLink?.('https://yoursite.com/privacy');
-        break;
-      case 'payment':
-        tg?.openLink?.('https://yoursite.com/payment-policy');
-        break;
-      default:
-        break;
-    }
-  };
-
-  if (showSubscriptionPage) {
-    return (
-      <Subscription
-        onClose={() => {
-          setShowSubscriptionPage(false);
-          loadSubscriptionStatus(true); // 🔥 Принудительное обновление
-        }}
-      />
-    );
+  switch (itemId) {
+    case 'subscription':
+      console.log('Opening subscription page...');
+      // ВАЖНО: Сначала закрываем профиль, потом открываем подписку
+      setShowSubscriptionPage(true);
+      break;
+    case 'purchase_history':
+      setShowPurchaseHistory(true);
+      break;
+    case 'settings':
+      setShowSettings(true);
+      break;
+    case 'support':
+      tg?.openLink?.('https://t.me/Migin_Sergey');
+      break;
+    case 'terms':
+      tg?.openLink?.('https://yoursite.com/terms');
+      break;
+    case 'privacy':
+      tg?.openLink?.('https://yoursite.com/privacy');
+      break;
+    case 'payment':
+      tg?.openLink?.('https://yoursite.com/payment-policy');
+      break;
+    default:
+      break;
   }
+};
 
-  if (showPurchaseHistory) {
-    return (
-      <PurchaseHistory
-        onClose={() => {
-          setShowPurchaseHistory(false);
-          loadSubscriptionStatus(true);
-        }}
-      />
-    );
-  }
+  // ДОБАВЬ ЭТУ ПРОВЕРКУ ПЕРЕД ОСНОВНЫМ RETURN
+if (showSubscriptionPage) {
+  return (
+    <Subscription
+      onClose={() => {
+        setShowSubscriptionPage(false);
+        loadSubscriptionStatus();
+      }}
+    />
+  );
+}
 
-  if (showSettings) {
-    return (
-      <Settings
-        onClose={() => {
-          setShowSettings(false);
-        }}
-      />
-    );
-  }
+if (showPurchaseHistory) {
+  return (
+    <PurchaseHistory
+      onClose={() => {
+        setShowPurchaseHistory(false);
+        loadSubscriptionStatus();
+      }}
+    />
+  );
+}
+
+if (showSettings) {
+  return (
+    <Settings
+      onClose={() => {
+        setShowSettings(false);
+      }}
+    />
+  );
+}
 
   return (
     <div className="profile">
       <div className="profile__content">
         <div className="profile__user">
-          {shouldShowAvatar ? (
-            <>
-              {avatarLoading && (
-                <div 
-                  className="profile__avatar profile__avatar--placeholder"
-                  style={{ backgroundColor: getAvatarColor() }}
-                >
-                  {getInitials()}
-                </div>
-              )}
-              <img
-                src={user.photo_url}
-                alt={user.first_name}
-                className="profile__avatar"
-                onError={handleAvatarError}
-                onLoad={handleAvatarLoad}
-                loading="lazy"
-                style={{ display: avatarLoading ? 'none' : 'block' }}
-                crossOrigin="anonymous"
-              />
-            </>
+          {user?.photo_url ? (
+            <img
+              src={user.photo_url}
+              alt={user.first_name}
+              className="profile__avatar"
+            />
           ) : (
-            <div 
-              className="profile__avatar profile__avatar--placeholder"
-              style={{ backgroundColor: getAvatarColor() }}
-            >
-              {getInitials()}
+            <div className="profile__avatar profile__avatar--placeholder">
+              {user?.first_name?.[0] || '?'}
             </div>
           )}
           <h3 className="profile__name">
