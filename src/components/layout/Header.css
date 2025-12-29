@@ -14,6 +14,7 @@
   gap: 12px;
   cursor: pointer;
   transition: opacity 0.2s;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .header__user:active {
@@ -25,6 +26,12 @@
   height: 48px;
   border-radius: 50%;
   object-fit: cover;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.header__user:active .header__avatar {
+  transform: scale(0.95);
 }
 
 .header__avatar--placeholder {
@@ -35,10 +42,30 @@
   justify-content: center;
   font-weight: 600;
   font-size: 20px;
+  user-select: none;
+  -webkit-user-select: none;
+  /* Градиент для более красивого вида */
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-color-dark, #0077b3));
+  box-shadow: 0 2px 8px rgba(0, 136, 204, 0.2);
+}
+
+/* Анимация загрузки для placeholder */
+.header__avatar--loading {
+  animation: avatarPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes avatarPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 .header__info {
   flex: 1;
+  min-width: 0; /* Для корректного обрезания длинных текстов */
 }
 
 .header__name {
@@ -47,18 +74,29 @@
   color: #1D1D1F;
   margin-bottom: 2px;
   transition: color 0.3s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .header__username {
   font-size: 14px;
   color: #8E8E93;
   transition: color 0.3s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .header__arrow {
   font-size: 24px;
   color: #C7C7CC;
-  transition: color 0.3s ease;
+  transition: color 0.3s ease, transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.header__user:active .header__arrow {
+  transform: translateX(3px);
 }
 
 /* ==================== ТЕМНАЯ ТЕМА ==================== */
@@ -77,4 +115,8 @@
 
 .dark-theme .header__arrow {
   color: #8E8E93;
+}
+
+.dark-theme .header__avatar--placeholder {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
