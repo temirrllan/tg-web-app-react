@@ -1,4 +1,4 @@
-/* src/components/hints/FabHint.css - С ИДЕАЛЬНЫМ ВЫРЕЗОМ */
+/* src/components/hints/FabHint.css - BOX-SHADOW МЕТОД */
 
 .fab-hint-overlay-wrapper {
   position: fixed;
@@ -6,22 +6,23 @@
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 9998; /* Ниже FAB */
+  z-index: 9998; /* Ниже FAB (9999) */
   animation: fadeIn 0.4s ease-out;
+  pointer-events: auto;
 }
 
-/* Затемнённый слой с SVG маской */
-.fab-hint-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.65);
+/* Прозрачный круг с огромной тенью = затемнение всего экрана кроме круга */
+.fab-hint-cutout-circle {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  pointer-events: none;
   
-  /* Применяем SVG маску для выреза */
-  mask: url(#fab-cutout-mask);
-  -webkit-mask: url(#fab-cutout-mask);
+  /* Огромная box-shadow = затемнение всего кроме круга */
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.65);
 }
 
 .fab-hint-container {
@@ -184,6 +185,11 @@
 
 /* Адаптивность */
 @media (max-width: 430px) {
+  .fab-hint-cutout-circle {
+    right: 20px;
+    bottom: 20px;
+  }
+  
   .fab-hint-bubble {
     right: 16px;
     bottom: 95px;
@@ -232,8 +238,8 @@
 }
 
 /* ==================== ТЕМНАЯ ТЕМА ==================== */
-.dark-theme .fab-hint-overlay {
-  background: rgba(0, 0, 0, 0.75);
+.dark-theme .fab-hint-cutout-circle {
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75);
 }
 
 .dark-theme .fab-hint-bubble {

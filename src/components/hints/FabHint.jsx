@@ -1,4 +1,4 @@
-// src/components/hints/FabHint.jsx - С ВЫРЕЗОМ ДЛЯ FAB
+// src/components/hints/FabHint.jsx - МЕТОД BOX-SHADOW
 import React, { useEffect } from 'react';
 import './FabHint.css';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -54,26 +54,10 @@ const FabHint = ({ show, onClose }) => {
 
   return (
     <>
-      {/* SVG с маской для выреза */}
-      <svg style={{ position: 'fixed', width: 0, height: 0 }}>
-        <defs>
-          <mask id="fab-cutout-mask">
-            {/* Белый фон = видимая область */}
-            <rect width="100%" height="100%" fill="white" />
-            {/* Чёрный круг = вырез (невидимая область) */}
-            <circle 
-              cx="calc(100vw - 52px)" 
-              cy="calc(100vh - 52px)" 
-              r="40" 
-              fill="black" 
-            />
-          </mask>
-        </defs>
-      </svg>
-
-      {/* Затемнённый overlay с вырезом */}
+      {/* Затемнённый overlay с вырезом через box-shadow */}
       <div className="fab-hint-overlay-wrapper" onClick={handleClose}>
-        <div className="fab-hint-overlay" />
+        {/* Прозрачный круг с огромной тенью = затемнение всего кроме круга */}
+        <div className="fab-hint-cutout-circle" />
         
         <div className="fab-hint-container" onClick={(e) => e.stopPropagation()}>
           {/* Белый балун с хвостиком */}
