@@ -11,7 +11,39 @@ import './HabitDetail.css';
 import FriendSwipeHint from '../components/habits/FriendSwipeHint';
 import { useTranslation } from "../hooks/useTranslation";
 import { useTelegramTheme } from '../hooks/useTelegramTheme';
+const CircularProgress = ({ value, total, color }) => {
+  const percentage = total > 0 ? (value / total) * 100 : 0;
+  const radius = 42;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (percentage / 100) * circumference;
 
+  return (
+    <svg width="100" height="100" style={{ transform: 'rotate(-90deg)' }}>
+      {/* Фоновый круг */}
+      <circle
+        cx="50"
+        cy="50"
+        r={radius}
+        fill="none"
+        stroke="var(--bg-tertiary, #F2F2F7)"
+        strokeWidth="8"
+      />
+      {/* Прогресс круг */}
+      <circle
+        cx="50"
+        cy="50"
+        r={radius}
+        fill="none"
+        stroke={color}
+        strokeWidth="8"
+        strokeDasharray={circumference}
+        strokeDashoffset={offset}
+        strokeLinecap="round"
+        style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+      />
+    </svg>
+  );
+};
 const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const { tg, user: currentUser } = useTelegram();
   const { t } = useTranslation();
@@ -575,52 +607,69 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
           </div>
 
           <div className="habit-detail__statistics">
-            <div className="habit-detail__stat-card">
-              <div className="habit-detail__stat-circle" style={{
-                '--progress': getProgressPercentage(statistics.currentStreak, 100),
-                '--color': getProgressColor('streak')
-              }}>
-                <span className="habit-detail__stat-value">{statistics.currentStreak}</span>
-              </div>
-              <h3 className="habit-detail__stat-title">{t('habitDetail.statistics.daysStreak')}</h3>
-              <p className="habit-detail__stat-subtitle">{t('habitDetail.statistics.daysStreak')}</p>
-            </div>
+  <div className="habit-detail__stat-card">
+    <div className="habit-detail__stat-circle">
+      <CircularProgress 
+        value={statistics.currentStreak} 
+        total={100} 
+        color={getProgressColor('streak')}
+      />
+      <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <span className="habit-detail__stat-value">{statistics.currentStreak}</span>
+      </div>
+    </div>
+    <h3 className="habit-detail__stat-title">{t('habitDetail.statistics.daysStreak')}</h3>
+    <p className="habit-detail__stat-subtitle">{t('habitDetail.statistics.daysStreak')}</p>
+  </div>
 
-            <div className="habit-detail__stat-card">
-              <div className="habit-detail__stat-circle" style={{
-                '--progress': getProgressPercentage(statistics.weekDays, statistics.weekTotal),
-                '--color': getProgressColor('week')
-              }}>
-                <span className="habit-detail__stat-value">{statistics.weekDays}</span>
-                <span className="habit-detail__stat-total">{statistics.weekTotal}</span>
-              </div>
-              <h3 className="habit-detail__stat-title">{t('habitDetail.statistics.week')}</h3>
-              <p className="habit-detail__stat-subtitle">{t('habitDetail.statistics.daysStreak')}</p>
-            </div>
+  <div className="habit-detail__stat-card">
+    <div className="habit-detail__stat-circle">
+      <CircularProgress 
+        value={statistics.weekDays} 
+        total={statistics.weekTotal} 
+        color={getProgressColor('week')}
+      />
+      <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <span className="habit-detail__stat-value">{statistics.weekDays}</span>
+        <span className="habit-detail__stat-total">{statistics.weekTotal}</span>
+      </div>
+    </div>
+    <h3 className="habit-detail__stat-title">{t('habitDetail.statistics.week')}</h3>
+    <p className="habit-detail__stat-subtitle">{t('habitDetail.statistics.daysStreak')}</p>
+  </div>
 
-            <div className="habit-detail__stat-card">
-              <div className="habit-detail__stat-circle" style={{
-                '--progress': getProgressPercentage(statistics.monthDays, statistics.monthTotal),
-                '--color': getProgressColor('month')
-              }}>
-                <span className="habit-detail__stat-value">{statistics.monthDays}</span>
-                <span className="habit-detail__stat-total">{statistics.monthTotal}</span>
-              </div>
-              <h3 className="habit-detail__stat-title">{t('habitDetail.statistics.month')}</h3>
-              <p className="habit-detail__stat-subtitle">{t('habitDetail.statistics.daysStreak')}</p>
-            </div>
-            <div className="habit-detail__stat-card">
-              <div className="habit-detail__stat-circle" style={{
-                '--progress': getProgressPercentage(statistics.yearDays, statistics.yearTotal),
-                '--color': getProgressColor('year')
-              }}>
-                <span className="habit-detail__stat-value">{statistics.yearDays}</span>
-                <span className="habit-detail__stat-total">{statistics.yearTotal}</span>
-              </div>
-              <h3 className="habit-detail__stat-title">{t('habitDetail.statistics.year')}</h3>
-              <p className="habit-detail__stat-subtitle">{t('habitDetail.statistics.daysStreak')}</p>
-            </div>
-          </div>
+  <div className="habit-detail__stat-card">
+    <div className="habit-detail__stat-circle">
+      <CircularProgress 
+        value={statistics.monthDays} 
+        total={statistics.monthTotal} 
+        color={getProgressColor('month')}
+      />
+      <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <span className="habit-detail__stat-value">{statistics.monthDays}</span>
+        <span className="habit-detail__stat-total">{statistics.monthTotal}</span>
+      </div>
+    </div>
+    <h3 className="habit-detail__stat-title">{t('habitDetail.statistics.month')}</h3>
+    <p className="habit-detail__stat-subtitle">{t('habitDetail.statistics.daysStreak')}</p>
+  </div>
+
+  <div className="habit-detail__stat-card">
+    <div className="habit-detail__stat-circle">
+      <CircularProgress 
+        value={statistics.yearDays} 
+        total={statistics.yearTotal} 
+        color={getProgressColor('year')}
+      />
+      <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <span className="habit-detail__stat-value">{statistics.yearDays}</span>
+        <span className="habit-detail__stat-total">{statistics.yearTotal}</span>
+      </div>
+    </div>
+    <h3 className="habit-detail__stat-title">{t('habitDetail.statistics.year')}</h3>
+    <p className="habit-detail__stat-subtitle">{t('habitDetail.statistics.daysStreak')}</p>
+  </div>
+</div>
 
           <div className="habit-detail__motivation">
             <p className="habit-detail__motivation-text">
