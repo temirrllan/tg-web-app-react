@@ -94,7 +94,7 @@ const [weekHintShown, setWeekHintShown] = useState(false); // 🆕
   const [datePhrase, setDatePhrase] = useState(null);
 
 
-  useEffect(() => {
+ useEffect(() => {
   console.log('🔍 FAB Hint check:', {
     shouldShowFabHint,
     loading,
@@ -103,7 +103,6 @@ const [weekHintShown, setWeekHintShown] = useState(false); // 🆕
     fabHintShown
   });
   
-  // Показываем FAB hint только если пришел флаг И нет привычек И hint еще не показывали
   if (shouldShowFabHint && 
       !loading && 
       !dateLoading &&
@@ -116,7 +115,6 @@ const [weekHintShown, setWeekHintShown] = useState(false); // 🆕
       setShowFabHint(true);
       setFabHintShown(true);
       
-      // 📊 Аналитика
       window.TelegramAnalytics?.track('fab_hint_shown', {
         is_new_user: true,
         habits_count: 0,
@@ -134,38 +132,41 @@ useEffect(() => {
     loading,
     dateLoading,
     weekHintShown,
-    fabHintShown
+    fabHintShown,
+    showFabHint
   });
   
-  // Показываем Week hint если:
-  // 1. Есть хотя бы одна привычка
-  // 2. Не показываем сейчас FAB hint
-  // 3. Week hint еще не показывали
-  // 4. Данные загружены
+  // ✅ КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: Проверяем что есть привычки И FAB hint закрыт
   if (dateHabits.length > 0 && 
-      !showFabHint && 
+      !showFabHint &&           // FAB hint ЗАКРЫТ
       !weekHintShown && 
       !loading && 
       !dateLoading &&
-      fabHintShown) { // Показываем только если FAB hint уже был показан
+      fabHintShown) {           // FAB hint УЖЕ БЫЛ ПОКАЗАН
     
-    console.log('🎯 Showing Week Navigation hint');
+    console.log('🎯 Showing Week Navigation hint after habit creation');
     
     const timer = setTimeout(() => {
       setShowWeekHint(true);
       setWeekHintShown(true);
       
-      // 📊 Аналитика
       window.TelegramAnalytics?.track('week_hint_shown', {
         habits_count: dateHabits.length,
         trigger: 'after_first_habit'
       });
       console.log('📊 Analytics: week_hint_shown');
-    }, 800); // Небольшая задержка для плавности
+    }, 800);
     
     return () => clearTimeout(timer);
   }
-}, [dateHabits.length, showFabHint, weekHintShown, loading, dateLoading, fabHintShown]);
+}, [
+  dateHabits.length, 
+  showFabHint,      // ✅ Добавили в зависимости
+  weekHintShown, 
+  loading, 
+  dateLoading, 
+  fabHintShown
+]);
 
   // 🆕 Обработчик закрытия FAB hint
   const handleFabHintClose = () => {
@@ -763,12 +764,13 @@ const handleWeekHintClose = () => {
           </div>
         {/* </PullToRefresh> */}
                 <FabHint show={showFabHint} onClose={handleFabHintClose} />
-        
-        <WeekNavigationHint show={showWeekHint} onClose={handleWeekHintClose} />
-        <SwipeHint 
-          show={showSwipeHint} 
-          onClose={() => setShowSwipeHint(false)} 
-        />
+
+<WeekNavigationHint show={showWeekHint} onClose={handleWeekHintClose} />
+
+<SwipeHint 
+  show={showSwipeHint} 
+  onClose={() => setShowSwipeHint(false)} 
+/>
         
         <button className="fab" onClick={handleFabClick}>
           +
