@@ -765,7 +765,7 @@ const handleWeekHintClose = () => {
         {/* </PullToRefresh> */}
                 <FabHint show={showFabHint} onClose={handleFabHintClose} />
 
-<WeekNavigationHint show={showWeekHint} onClose={handleWeekHintClose} />
+{/* <WeekNavigationHint show={showWeekHint} onClose={handleWeekHintClose} /> */}
 
 <SwipeHint 
   show={showSwipeHint} 
