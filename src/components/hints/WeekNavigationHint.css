@@ -90,47 +90,6 @@
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
 }
 
-/* Пульсирующие круги по бокам WeekNavigation */
-.week-hint-pulse-left,
-.week-hint-pulse-right {
-  position: fixed;
-  top: 265px;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 10000;
-}
-
-.week-hint-pulse-left {
-  left: 16px;
-}
-
-.week-hint-pulse-right {
-  right: 16px;
-}
-
-.week-hint-pulse-left::before,
-.week-hint-pulse-left::after,
-.week-hint-pulse-right::before,
-.week-hint-pulse-right::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  border: 3px solid #A7D96C;
-  animation: pulseRing 2s ease-in-out infinite;
-}
-
-.week-hint-pulse-left::after,
-.week-hint-pulse-right::after {
-  animation-delay: 1s;
-}
-
 /* Кнопка "Понятно" */
 .week-hint-button {
   margin-top: 16px;
@@ -217,11 +176,6 @@
     top: 245px;
   }
   
-  .week-hint-pulse-left,
-  .week-hint-pulse-right {
-    top: 225px;
-  }
-  
   .week-hint-bubble {
     padding: 18px;
   }
@@ -243,11 +197,6 @@
   
   .week-hint-arrow-container {
     top: 235px;
-  }
-  
-  .week-hint-pulse-left,
-  .week-hint-pulse-right {
-    top: 225px;
   }
   
   .week-hint-bubble {
@@ -297,11 +246,4 @@
 .dark-theme .week-hint-arrow {
   color: #A7D96C;
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
-}
-
-.dark-theme .week-hint-pulse-left::before,
-.dark-theme .week-hint-pulse-left::after,
-.dark-theme .week-hint-pulse-right::before,
-.dark-theme .week-hint-pulse-right::after {
-  border-color: #A7D96C;
 }

@@ -58,17 +58,26 @@ const FabHint = ({ show, onClose }) => {
   const fabBottom = 24;
   const fabRight = 24;
   
-  // Координаты круга в SVG (origin - top left)
-  const circleCenterX = `calc(100% - ${fabRight + fabSize / 2}px)`;
-  const circleCenterY = `calc(100% - ${fabBottom + fabSize / 2}px)`;
-  const circleRadius = fabSize / 2 + 8; // +8px для небольшого запаса
+  // Используем viewBox и координаты относительно viewport
+  const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 500;
+  const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+  
+  // Координаты центра круга (от левого верхнего угла)
+  const circleCenterX = viewportWidth - fabRight - fabSize / 2;
+  const circleCenterY = viewportHeight - fabBottom - fabSize / 2;
+  const circleRadius = fabSize / 2 + 10; // +10px для запаса
 
   return (
     <>
       {/* Затемнённый overlay с SVG маской для выреза */}
       <div className="fab-hint-overlay-wrapper" onClick={handleClose}>
         {/* SVG с маской - создаёт вырез в затемнении */}
-        <svg className="fab-hint-svg-mask" xmlns="http://www.w3.org/2000/svg">
+        <svg 
+          className="fab-hint-svg-mask" 
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox={`0 0 ${viewportWidth} ${viewportHeight}`}
+          preserveAspectRatio="none"
+        >
           <defs>
             <mask id="fab-hint-mask">
               {/* Белый = видимо (затемнено), чёрный = скрыто (не затемнено) */}

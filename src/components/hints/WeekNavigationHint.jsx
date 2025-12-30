@@ -1,4 +1,4 @@
-// src/components/hints/WeekNavigationHint.jsx - С SVG МАСКОЙ
+// src/components/hints/WeekNavigationHint.jsx - БЕЗ КРУЖКОВ
 import React, { useEffect } from 'react';
 import './WeekNavigationHint.css';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -52,12 +52,25 @@ const WeekNavigationHint = ({ show, onClose }) => {
 
   if (!show) return null;
 
+  // Координаты для выреза WeekNavigation
+  const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 500;
+  const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+  
+  // Область WeekNavigation: top: 220px, height: 100px, full width
+  const cutoutY = 220;
+  const cutoutHeight = 100;
+
   return (
     <>
       {/* Затемнённый overlay с SVG маской для выреза */}
       <div className="week-hint-overlay-wrapper" onClick={handleClose}>
         {/* SVG с маской - создаёт вырез в затемнении */}
-        <svg className="week-hint-svg-mask" xmlns="http://www.w3.org/2000/svg">
+        <svg 
+          className="week-hint-svg-mask" 
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox={`0 0 ${viewportWidth} ${viewportHeight}`}
+          preserveAspectRatio="none"
+        >
           <defs>
             <mask id="week-hint-mask">
               {/* Белый = видимо (затемнено), чёрный = скрыто (не затемнено) */}
@@ -65,9 +78,9 @@ const WeekNavigationHint = ({ show, onClose }) => {
               {/* Вырезаем прямоугольник для WeekNavigation - область НЕ затемняется */}
               <rect 
                 x="0" 
-                y="220" 
+                y={cutoutY}
                 width="100%" 
-                height="100" 
+                height={cutoutHeight}
                 fill="black"
                 rx="16"
               />
@@ -99,10 +112,6 @@ const WeekNavigationHint = ({ show, onClose }) => {
       <div className="week-hint-arrow-container">
         <div className="week-hint-arrow">↑</div>
       </div>
-      
-      {/* Пульсирующие круги по бокам */}
-      <div className="week-hint-pulse-left" />
-      <div className="week-hint-pulse-right" />
     </>
   );
 };
