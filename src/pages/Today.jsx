@@ -21,8 +21,6 @@ import { useTranslation } from '../hooks/useTranslation';
 import PullToRefresh from '../components/common/PullToRefresh';
 import { useTelegramTheme } from '../hooks/useTelegramTheme';
 import FabHint from '../components/hints/FabHint';
-import WeekNavigationHint from '../components/hints/WeekNavigationHint';
-
 const Today = ({ shouldShowFabHint = false }) => {
   const { t } = useTranslation();
   const { user } = useTelegram();
@@ -63,11 +61,7 @@ const Today = ({ shouldShowFabHint = false }) => {
   const [showEditForm, setShowEditForm] = useState(false);
   const [habitToEdit, setHabitToEdit] = useState(null);
   const [userSubscription, setUserSubscription] = useState(null);
-const [showFabHint, setShowFabHint] = useState(false);
-const [fabHintShown, setFabHintShown] = useState(false);
-const [showWeekHint, setShowWeekHint] = useState(false); // 🆕
-const [weekHintShown, setWeekHintShown] = useState(false); // 🆕
-
+  const [showFabHint, setShowFabHint] = useState(false);
 
   const getTodayDate = () => {
     const today = new Date();
@@ -92,112 +86,53 @@ const [weekHintShown, setWeekHintShown] = useState(false); // 🆕
   const [dateLoading, setDateLoading] = useState(false);
   const [dateStats, setDateStats] = useState({ completed: 0, total: 0 });
   const [datePhrase, setDatePhrase] = useState(null);
-
-
- useEffect(() => {
-  console.log('🔍 FAB Hint check:', {
-    shouldShowFabHint,
-    loading,
-    dateLoading,
-    habitsCount: dateHabits.length,
-    fabHintShown
-  });
-  
-  if (shouldShowFabHint && 
-      !loading && 
-      !dateLoading &&
-      dateHabits.length === 0 &&
-      !fabHintShown) {
+  useEffect(() => {
+    console.log('🔍 FAB Hint check:', {
+      shouldShowFabHint,
+      loading,
+      dateLoading,
+      habitsCount: dateHabits.length
+    });
     
-    console.log('🎯 Showing FAB hint for new user');
-    
-    const timer = setTimeout(() => {
-      setShowFabHint(true);
-      setFabHintShown(true);
+    // 🎯 УПРОЩЕННАЯ ЛОГИКА:
+    // Если пришел флаг shouldShowFabHint === true И нет привычек - показываем
+    if (shouldShowFabHint && 
+        !loading && 
+        !dateLoading &&
+        dateHabits.length === 0) {
       
-      window.TelegramAnalytics?.track('fab_hint_shown', {
-        is_new_user: true,
-        habits_count: 0,
-        trigger: 'after_onboarding'
-      });
-      console.log('📊 Analytics: fab_hint_shown (after onboarding)');
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }
-}, [shouldShowFabHint, loading, dateLoading, dateHabits.length, fabHintShown]);
-useEffect(() => {
-  console.log('🔍 Week Navigation Hint check:', {
-    habitsCount: dateHabits.length,
-    loading,
-    dateLoading,
-    weekHintShown,
-    fabHintShown,
-    showFabHint
-  });
-  
-  // ✅ КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: Проверяем что есть привычки И FAB hint закрыт
-  if (dateHabits.length > 0 && 
-      !showFabHint &&           // FAB hint ЗАКРЫТ
-      !weekHintShown && 
-      !loading && 
-      !dateLoading &&
-      fabHintShown) {           // FAB hint УЖЕ БЫЛ ПОКАЗАН
-    
-    console.log('🎯 Showing Week Navigation hint after habit creation');
-    
-    const timer = setTimeout(() => {
-      setShowWeekHint(true);
-      setWeekHintShown(true);
+      console.log('🎯 Showing FAB hint for new user (ignoring localStorage)');
       
-      window.TelegramAnalytics?.track('week_hint_shown', {
-        habits_count: dateHabits.length,
-        trigger: 'after_first_habit'
-      });
-      console.log('📊 Analytics: week_hint_shown');
-    }, 800);
-    
-    return () => clearTimeout(timer);
-  }
-}, [
-  dateHabits.length, 
-  showFabHint,      // ✅ Добавили в зависимости
-  weekHintShown, 
-  loading, 
-  dateLoading, 
-  fabHintShown
-]);
+      // Показываем через небольшую задержку для плавности
+      const timer = setTimeout(() => {
+        setShowFabHint(true);
+        
+        // 📊 Аналитика
+        window.TelegramAnalytics?.track('fab_hint_shown', {
+          is_new_user: true,
+          habits_count: 0,
+          trigger: 'after_onboarding'
+        });
+        console.log('📊 Analytics: fab_hint_shown (after onboarding)');
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [shouldShowFabHint, loading, dateLoading, dateHabits.length]);
 
   // 🆕 Обработчик закрытия FAB hint
   const handleFabHintClose = () => {
-  console.log('✅ FAB hint closed');
-  setShowFabHint(false);
-  
-  // ✅ Сохраняем в localStorage только ПОСЛЕ закрытия
-  localStorage.setItem('hasSeenFabHint', 'true');
-  
-  // 📊 Аналитика
-  window.TelegramAnalytics?.track('fab_hint_closed', {
-    habits_count: dateHabits.length
-  });
-  console.log('📊 Analytics: fab_hint_closed');
-  
-  // 🎯 НЕ показываем Week hint сразу - только после создания привычки
-};
-
-const handleWeekHintClose = () => {
-  console.log('✅ Week Navigation hint closed');
-  setShowWeekHint(false);
-  
-  // ✅ Сохраняем в localStorage
-  localStorage.setItem('hasSeenWeekHint', 'true');
-  
-  // 📊 Аналитика
-  window.TelegramAnalytics?.track('week_hint_closed', {
-    habits_count: dateHabits.length
-  });
-  console.log('📊 Analytics: week_hint_closed');
-};
+    setShowFabHint(false);
+    
+    // ✅ Сохраняем в localStorage только ПОСЛЕ закрытия
+    localStorage.setItem('hasSeenFabHint', 'true');
+    
+    // 📊 Аналитика
+    window.TelegramAnalytics?.track('fab_hint_closed', {
+      habits_count: dateHabits.length
+    });
+    console.log('📊 Analytics: fab_hint_closed');
+  };
   useEffect(() => {
     checkUserSubscription();
   }, []);
@@ -765,12 +700,10 @@ const handleWeekHintClose = () => {
         {/* </PullToRefresh> */}
                 <FabHint show={showFabHint} onClose={handleFabHintClose} />
 
-{/* <WeekNavigationHint show={showWeekHint} onClose={handleWeekHintClose} /> */}
-
-<SwipeHint 
-  show={showSwipeHint} 
-  onClose={() => setShowSwipeHint(false)} 
-/>
+        <SwipeHint 
+          show={showSwipeHint} 
+          onClose={() => setShowSwipeHint(false)} 
+        />
         
         <button className="fab" onClick={handleFabClick}>
           +
@@ -823,8 +756,6 @@ const handleWeekHintClose = () => {
         }}
         onSelectPlan={handleSubscriptionPlanSelect}
       />
-
-
     </>
   );
 };
