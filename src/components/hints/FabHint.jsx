@@ -1,4 +1,4 @@
-// src/components/hints/FabHint.jsx - С SVG МАСКОЙ
+// src/components/hints/FabHint.jsx - МЕТОД BOX-SHADOW
 import React, { useEffect } from 'react';
 import './FabHint.css';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -52,53 +52,12 @@ const FabHint = ({ show, onClose }) => {
 
   if (!show) return null;
 
-  // Вычисляем позицию FAB кнопки для выреза
-  // По умолчанию: bottom: 24px, right: 24px, size: 56px
-  const fabSize = 56;
-  const fabBottom = 24;
-  const fabRight = 24;
-  
-  // Используем viewBox и координаты относительно viewport
-  const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 500;
-  const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
-  
-  // Координаты центра круга (от левого верхнего угла)
-  const circleCenterX = viewportWidth - fabRight - fabSize / 2;
-  const circleCenterY = viewportHeight - fabBottom - fabSize / 2;
-  const circleRadius = fabSize / 2 + 10; // +10px для запаса
-
   return (
     <>
-      {/* Затемнённый overlay с SVG маской для выреза */}
+      {/* Затемнённый overlay с вырезом через box-shadow */}
       <div className="fab-hint-overlay-wrapper" onClick={handleClose}>
-        {/* SVG с маской - создаёт вырез в затемнении */}
-        <svg 
-          className="fab-hint-svg-mask" 
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox={`0 0 ${viewportWidth} ${viewportHeight}`}
-          preserveAspectRatio="none"
-        >
-          <defs>
-            <mask id="fab-hint-mask">
-              {/* Белый = видимо (затемнено), чёрный = скрыто (не затемнено) */}
-              <rect width="100%" height="100%" fill="white"/>
-              {/* Вырезаем круг для FAB кнопки - область НЕ затемняется */}
-              <circle 
-                cx={circleCenterX}
-                cy={circleCenterY}
-                r={circleRadius}
-                fill="black"
-              />
-            </mask>
-          </defs>
-          {/* Затемнение с маской */}
-          <rect 
-            width="100%" 
-            height="100%" 
-            fill="rgba(0, 0, 0, 0.65)" 
-            mask="url(#fab-hint-mask)"
-          />
-        </svg>
+        {/* Прозрачный круг с огромной тенью = затемнение всего кроме круга */}
+        <div className="fab-hint-cutout-circle" />
         
         <div className="fab-hint-container" onClick={(e) => e.stopPropagation()}>
           {/* Белый балун с хвостиком */}
