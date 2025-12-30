@@ -194,7 +194,7 @@
   position: absolute;
   width: 100%;
   height: 100%;
-  border-radius: 50%;
+  border-radius: 70%;
   border: 8px solid var(--color, #A7D96C);
   border-top-color: transparent;
   border-right-color: transparent;
