@@ -151,7 +151,7 @@
   word-wrap: break-word;
 }
 
-/* Statistics */
+/* Statistics - УЛУЧШЕННЫЙ ДИЗАЙН */
 .habit-detail__statistics {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -161,12 +161,15 @@
 
 .habit-detail__stat-card {
   background: var(--card-bg, white);
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 20px;
-  text-align: left;
+  text-align: center;
   border: 1px solid var(--border-color, transparent);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
 }
 
+/* 🎨 КРАСИВЫЕ КРУГОВЫЕ ПРОГРЕСС-БАРЫ */
 .habit-detail__stat-circle {
   width: 100px;
   height: 100px;
@@ -178,41 +181,71 @@
   flex-direction: column;
 }
 
+/* Фоновый круг (серый) */
 .habit-detail__stat-circle::before {
   content: '';
   position: absolute;
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  border: 8px solid var(--bg-tertiary, #F2F2F7);
+  background: conic-gradient(
+    var(--bg-tertiary, #F2F2F7) 0deg,
+    var(--bg-tertiary, #F2F2F7) 360deg
+  );
   box-sizing: border-box;
 }
 
+/* Прогресс круг (цветной с градиентом) */
 .habit-detail__stat-circle::after {
   content: '';
   position: absolute;
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  border: 8px solid var(--color, #A7D96C);
-  border-top-color: transparent;
-  border-right-color: transparent;
-  transform: rotate(calc(var(--progress, 0) * 3.6deg - 90deg));
+  background: conic-gradient(
+    from -90deg,
+    var(--color, #A7D96C) 0deg,
+    var(--color, #A7D96C) calc(var(--progress, 0) * 3.6deg),
+    transparent calc(var(--progress, 0) * 3.6deg),
+    transparent 360deg
+  );
   box-sizing: border-box;
-  transition: transform 0.5s ease;
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  mask: radial-gradient(
+    circle,
+    transparent 0%,
+    transparent 65%,
+    black 65%,
+    black 100%
+  );
+  -webkit-mask: radial-gradient(
+    circle,
+    transparent 0%,
+    transparent 65%,
+    black 65%,
+    black 100%
+  );
+}
+
+/* Внутренний белый круг для эффекта кольца */
+.habit-detail__stat-circle > * {
+  position: relative;
+  z-index: 2;
 }
 
 .habit-detail__stat-value {
   font-size: 32px;
   font-weight: 700;
   color: var(--text-primary, #000);
-  z-index: 1;
+  line-height: 1;
+  z-index: 2;
 }
 
 .habit-detail__stat-total {
   font-size: 14px;
   color: var(--text-tertiary, #8E8E93);
-  z-index: 1;
+  z-index: 2;
+  margin-top: 2px;
 }
 
 .habit-detail__stat-title {
@@ -226,6 +259,43 @@
   font-size: 14px;
   color: var(--text-tertiary, #8E8E93);
   margin: 0;
+}
+
+/* Анимация появления статистики */
+@keyframes statAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.habit-detail__stat-card {
+  animation: statAppear 0.4s ease-out;
+}
+
+.habit-detail__stat-card:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.habit-detail__stat-card:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.habit-detail__stat-card:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.habit-detail__stat-card:nth-child(4) {
+  animation-delay: 0.3s;
+}
+
+/* Hover эффект для карточек */
+.habit-detail__stat-card:active {
+  transform: scale(0.98);
 }
 
 /* Motivation */
@@ -474,6 +544,38 @@
 }
 
 /* Dark theme specific adjustments */
+.dark-theme .habit-detail {
+  background: #000000;
+}
+
+.dark-theme .habit-detail__stat-card {
+  background: #2C2C2E;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .habit-detail__stat-circle::before {
+  background: conic-gradient(
+    #3A3A3C 0deg,
+    #3A3A3C 360deg
+  );
+}
+
+.dark-theme .habit-detail__stat-value {
+  color: #FFFFFF;
+}
+
+.dark-theme .habit-detail__stat-total {
+  color: #8E8E93;
+}
+
+.dark-theme .habit-detail__stat-title {
+  color: #FFFFFF;
+}
+
+.dark-theme .habit-detail__stat-subtitle {
+  color: #8E8E93;
+}
+
 .dark-theme .habit-detail__motivation-text {
   color: #000000;
 }
@@ -488,4 +590,37 @@
 
 .dark-theme .habit-detail__creator-notice {
   background: rgba(10, 132, 255, 0.15);
+}
+
+.dark-theme .habit-detail__friends {
+  background: #2C2C2E;
+}
+
+.dark-theme .habit-detail__friends-title {
+  color: #FFFFFF;
+}
+
+.dark-theme .habit-detail__friends-subtitle {
+  color: #8E8E93;
+}
+
+.dark-theme .friend-card {
+  background: #1C1C1E;
+  border-color: #3A3A3C;
+}
+
+.dark-theme .friend-card__name {
+  color: #FFFFFF;
+}
+
+.dark-theme .habit-detail__btn--danger {
+  background: #2C2C2E;
+  color: #FFFFFF;
+  border-color: #3A3A3C;
+}
+
+.dark-theme .habit-detail__btn--danger:hover {
+  background: #3A1E1E;
+  color: #FF453A;
+  border-color: #FF453A;
 }
