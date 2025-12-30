@@ -1,4 +1,4 @@
-// src/pages/Today.jsx - Week Hint сразу после FAB Hint
+// src/pages/Today.jsx - С ПОЛНОЙ АНАЛИТИКОЙ
 
 import React, { useEffect, useState, useCallback } from "react";
 import Layout from "../components/layout/Layout";
@@ -18,21 +18,21 @@ import EditHabitForm from '../components/habits/EditHabitForm';
 import SubscriptionModal from '../components/modals/SubscriptionModal';
 import Subscription from './Subscription';
 import { useTranslation } from '../hooks/useTranslation';
+import PullToRefresh from '../components/common/PullToRefresh';
 import { useTelegramTheme } from '../hooks/useTelegramTheme';
 import FabHint from '../components/hints/FabHint';
-import WeekNavigationHint from '../components/hints/WeekNavigationHint';
-
 const Today = ({ shouldShowFabHint = false }) => {
   const { t } = useTranslation();
   const { user } = useTelegram();
   useTelegramTheme();
 
-  // 📊 Отслеживание просмотра страницы
+  // 📊 Отслеживание просмотра страницы при монтировании
   useEffect(() => {
     window.TelegramAnalytics?.track('page_view', {
       page: 'today',
       user_id: user?.id,
     });
+    console.log('📊 Analytics: page_view - today');
   }, [user?.id]);
 
   const {
@@ -46,6 +46,7 @@ const Today = ({ shouldShowFabHint = false }) => {
     deleteHabit,
     loadHabitsForDate,
     refresh,
+    refreshDateData,
     forceRefresh
   } = useHabits();
   
@@ -60,22 +61,23 @@ const Today = ({ shouldShowFabHint = false }) => {
   const [showEditForm, setShowEditForm] = useState(false);
   const [habitToEdit, setHabitToEdit] = useState(null);
   const [userSubscription, setUserSubscription] = useState(null);
-  
-  // 🆕 Состояния для подсказок
-  const [showFabHint, setShowFabHint] = useState(false);
-  const [fabHintShown, setFabHintShown] = useState(false);
-  const [showWeekHint, setShowWeekHint] = useState(false);
-  const [weekHintShown, setWeekHintShown] = useState(false);
-
+const [showFabHint, setShowFabHint] = useState(false);
+const [fabHintShown, setFabHintShown] = useState(false);
   const getTodayDate = () => {
     const today = new Date();
-    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const getYesterdayDate = () => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    return `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+    const year = yesterday.getFullYear();
+    const month = String(yesterday.getMonth() + 1).padStart(2, '0');
+    const day = String(yesterday.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
   
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
@@ -84,85 +86,56 @@ const Today = ({ shouldShowFabHint = false }) => {
   const [dateLoading, setDateLoading] = useState(false);
   const [dateStats, setDateStats] = useState({ completed: 0, total: 0 });
   const [datePhrase, setDatePhrase] = useState(null);
-
-  // 🎯 ПОКАЗ FAB HINT - для новых пользователей без привычек
   useEffect(() => {
-    console.log('🔍 FAB Hint check:', {
-      shouldShowFabHint,
-      loading,
-      dateLoading,
-      habitsCount: dateHabits.length,
-      fabHintShown,
-      hasSeenInStorage: localStorage.getItem('hasSeenFabHint')
-    });
+  console.log('🔍 FAB Hint check:', {
+    shouldShowFabHint,
+    loading,
+    dateLoading,
+    habitsCount: dateHabits.length,
+    fabHintShown // 🆕 Добавили в лог
+  });
+  
+  // 🎯 УПРОЩЕННАЯ ЛОГИКА + проверка что hint еще не показывали
+  // Если пришел флаг shouldShowFabHint === true И нет привычек И hint еще не показывали
+  if (shouldShowFabHint && 
+      !loading && 
+      !dateLoading &&
+      dateHabits.length === 0 &&
+      !fabHintShown) { // ✅ Проверяем что не показывали
     
-    // ✅ Показываем FAB hint если:
-    // 1. shouldShowFabHint === true (новый пользователь)
-    // 2. Загрузка завершена
-    // 3. Нет привычек
-    // 4. Hint еще не был показан в этой сессии
-    // 5. Hint не был показан ранее (проверка localStorage)
-    if (shouldShowFabHint && 
-        !loading && 
-        !dateLoading &&
-        dateHabits.length === 0 &&
-        !fabHintShown &&
-        !localStorage.getItem('hasSeenFabHint')) {
+    console.log('🎯 Showing FAB hint for new user (ignoring localStorage)');
+    
+    // Показываем через небольшую задержку для плавности
+    const timer = setTimeout(() => {
+      setShowFabHint(true);
+      setFabHintShown(true); // ✅ Устанавливаем флаг что показали
       
-      console.log('🎯 Showing FAB hint for new user');
-      
-      const timer = setTimeout(() => {
-        setShowFabHint(true);
-        setFabHintShown(true);
-        
-        window.TelegramAnalytics?.track('fab_hint_shown', {
-          is_new_user: true,
-          habits_count: 0,
-          trigger: 'after_onboarding'
-        });
-      }, 500);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [shouldShowFabHint, loading, dateLoading, dateHabits.length, fabHintShown]);
+      // 📊 Аналитика
+      window.TelegramAnalytics?.track('fab_hint_shown', {
+        is_new_user: true,
+        habits_count: 0,
+        trigger: 'after_onboarding'
+      });
+      console.log('📊 Analytics: fab_hint_shown (after onboarding)');
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }
+}, [shouldShowFabHint, loading, dateLoading, dateHabits.length, fabHintShown]);
 
-  // 🆕 Обработчик закрытия FAB hint - СРАЗУ показываем Week hint
+  // 🆕 Обработчик закрытия FAB hint
   const handleFabHintClose = () => {
-    console.log('✅ FAB hint closed');
     setShowFabHint(false);
+    
+    // ✅ Сохраняем в localStorage только ПОСЛЕ закрытия
     localStorage.setItem('hasSeenFabHint', 'true');
     
+    // 📊 Аналитика
     window.TelegramAnalytics?.track('fab_hint_closed', {
       habits_count: dateHabits.length
     });
-    
-    // 🎯 СРАЗУ показываем Week Navigation hint (если не был показан ранее)
-    if (!weekHintShown && !localStorage.getItem('hasSeenWeekHint')) {
-      console.log('🎯 Showing Week Navigation hint after FAB hint close');
-      
-      setTimeout(() => {
-        setShowWeekHint(true);
-        setWeekHintShown(true);
-        
-        window.TelegramAnalytics?.track('week_hint_shown', {
-          is_new_user: true,
-          trigger: 'after_fab_hint_close'
-        });
-      }, 300); // Небольшая задержка для плавности
-    }
+    console.log('📊 Analytics: fab_hint_closed');
   };
-  
-  // 🆕 Обработчик закрытия Week hint
-  const handleWeekHintClose = () => {
-    console.log('✅ Week Navigation hint closed');
-    setShowWeekHint(false);
-    localStorage.setItem('hasSeenWeekHint', 'true');
-    
-    window.TelegramAnalytics?.track('week_hint_closed', {
-      habits_count: dateHabits.length
-    });
-  };
-
   useEffect(() => {
     checkUserSubscription();
   }, []);
@@ -180,51 +153,72 @@ const Today = ({ shouldShowFabHint = false }) => {
     const subscriptionStatus = await habitService.checkSubscriptionLimits();
     setUserSubscription(subscriptionStatus);
     
+    // 📊 Отслеживание клика на FAB
     window.TelegramAnalytics?.track('fab_clicked', {
       can_create_more: subscriptionStatus.canCreateMore,
       current_habits_count: dateHabits.length,
       is_premium: subscriptionStatus.isPremium,
     });
+    console.log('📊 Analytics: fab_clicked');
     
     if (subscriptionStatus.canCreateMore) {
       setShowCreateForm(true);
+      
+      // 📊 Форма создания открыта
       window.TelegramAnalytics?.track('create_form_opened', {
         current_habits_count: dateHabits.length,
       });
+      console.log('📊 Analytics: create_form_opened');
     } else {
       setShowSubscriptionModal(true);
+      
+      // 📊 Показан лимит подписки
       window.TelegramAnalytics?.track('subscription_limit_reached', {
         current_habits_count: dateHabits.length,
         limit: subscriptionStatus.limit,
       });
+      console.log('📊 Analytics: subscription_limit_reached');
     }
   };
 
   const handleHabitClick = (habit) => {
     setSelectedHabit(habit);
     setShowHabitDetail(true);
+    
+    // 📊 Отслеживание клика на привычку
     window.TelegramAnalytics?.track('habit_clicked', {
       habit_id: habit.id,
       habit_name: habit.name,
+      habit_emoji: habit.emoji,
+      today_status: habit.today_status,
+      is_completed: habit.today_status === 'completed',
     });
+    console.log('📊 Analytics: habit_clicked');
   };
 
   const handleEditHabit = (habit) => {
     setHabitToEdit(habit);
     setShowEditForm(true);
     setShowHabitDetail(false);
+    
+    // 📊 Отслеживание начала редактирования
     window.TelegramAnalytics?.track('habit_edit_started', {
       habit_id: habit.id,
+      habit_name: habit.name,
     });
+    console.log('📊 Analytics: habit_edit_started');
   };
 
   const handleEditSuccess = async () => {
     setShowEditForm(false);
     setHabitToEdit(null);
     await reloadCurrentDateHabits();
+    
+    // 📊 Успешное редактирование
     window.TelegramAnalytics?.track('habit_edited', {
       habit_id: habitToEdit?.id,
     });
+    console.log('📊 Analytics: habit_edited');
   };
 
   const handleDeleteHabit = async (habitId) => {
@@ -234,11 +228,22 @@ const Today = ({ shouldShowFabHint = false }) => {
       setSelectedHabit(null);
       await reloadCurrentDateHabits();
       await checkUserSubscription();
+      
+      // 📊 Успешное удаление
       window.TelegramAnalytics?.track('habit_deleted', {
         habit_id: habitId,
+        total_habits_after: dateHabits.length - 1,
       });
+      console.log('📊 Analytics: habit_deleted');
+      
     } catch (error) {
       console.error('Failed to delete habit:', error);
+      
+      // 📊 Ошибка удаления
+      window.TelegramAnalytics?.track('habit_deletion_failed', {
+        habit_id: habitId,
+        error: error.message,
+      });
     }
   };
 
@@ -248,11 +253,15 @@ const Today = ({ shouldShowFabHint = false }) => {
     
     try {
       const result = await loadHabitsForDate(selectedDate);
+      
       if (result) {
         setDateHabits(result.habits || []);
         setDateStats(result.stats || { completed: 0, total: 0 });
         setDatePhrase(result.phrase);
-        if (selectedDate === todayStr) await refresh();
+        
+        if (selectedDate === todayStr) {
+          await refresh();
+        }
       }
     } catch (error) {
       console.error('Failed to reload habits:', error);
@@ -266,14 +275,19 @@ const Today = ({ shouldShowFabHint = false }) => {
     setIsEditableDate(isEditable);
     setDateLoading(true);
     
+    // 📊 Отслеживание смены даты
     window.TelegramAnalytics?.track('date_changed', {
       from_date: selectedDate,
       to_date: date,
       is_editable: isEditable,
+      is_today: date === getTodayDate(),
+      is_yesterday: date === getYesterdayDate(),
     });
+    console.log('📊 Analytics: date_changed');
     
     try {
       const result = await loadHabitsForDate(date);
+      
       if (result) {
         setDateHabits(result.habits || []);
         setDateStats(result.stats || { completed: 0, total: 0 });
@@ -298,6 +312,29 @@ const Today = ({ shouldShowFabHint = false }) => {
     }
   }, [todayHabits, stats, phrase, selectedDate, dateLoading, loading]);
 
+  const handleRefresh = useCallback(async () => {
+    try {
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+      }
+      
+      // 📊 Отслеживание обновления
+      window.TelegramAnalytics?.track('pull_to_refresh', {
+        date: selectedDate,
+        is_today: selectedDate === getTodayDate(),
+      });
+      console.log('📊 Analytics: pull_to_refresh');
+      
+      await forceRefresh();
+      
+      if (selectedDate !== getTodayDate()) {
+        await reloadCurrentDateHabits();
+      }
+    } catch (error) {
+      console.error('❌ Refresh failed:', error);
+    }
+  }, [forceRefresh, selectedDate, reloadCurrentDateHabits]);
+
   useEffect(() => {
     const today = getTodayDate();
     if (!loading) {
@@ -310,10 +347,8 @@ const Today = ({ shouldShowFabHint = false }) => {
 
   const handleCreateHabit = async (habitData) => {
     try {
-      console.log('🎯 Creating habit');
       await createHabit(habitData);
       setShowCreateForm(false);
-      
       await reloadCurrentDateHabits();
       await checkUserSubscription();
       
@@ -322,13 +357,26 @@ const Today = ({ shouldShowFabHint = false }) => {
         localStorage.removeItem('hasSeenSwipeHint');
       }
 
+      // 📊 Успешное создание привычки
       window.TelegramAnalytics?.track('habit_created', {
         habit_name: habitData.name,
+        habit_emoji: habitData.emoji,
+        frequency: habitData.frequency,
+        time: habitData.time,
         total_habits_count: currentCount,
         is_first_habit: currentCount === 1,
+        has_reminder: !!habitData.time,
       });
+      console.log('📊 Analytics: habit_created');
+
     } catch (error) {
       console.error("Failed to create habit:", error);
+      
+      // 📊 Ошибка создания
+      window.TelegramAnalytics?.track('habit_creation_failed', {
+        error: error.message,
+        habit_name: habitData.name,
+      });
     }
   };
 
@@ -336,29 +384,61 @@ const Today = ({ shouldShowFabHint = false }) => {
     setSelectedSubscriptionPlan(plan);
     setShowSubscriptionModal(false);
     setShowSubscriptionPage(true);
-    window.TelegramAnalytics?.track('subscription_plan_selected', { plan });
+    
+    // 📊 Выбран план подписки
+    window.TelegramAnalytics?.track('subscription_plan_selected', {
+      plan: plan,
+    });
+    console.log('📊 Analytics: subscription_plan_selected');
   };
 
   const handleSubscriptionPageClose = async () => {
     setShowSubscriptionPage(false);
     setSelectedSubscriptionPlan(null);
     await checkUserSubscription();
+    
+    const updatedSubscription = await habitService.checkSubscriptionLimits();
+    if (updatedSubscription && updatedSubscription.isPremium) {
+      await reloadCurrentDateHabits();
+      
+      // 📊 Подписка активирована
+      window.TelegramAnalytics?.track('subscription_activated', {
+        plan: selectedSubscriptionPlan,
+        is_premium: true,
+      });
+      console.log('📊 Analytics: subscription_activated');
+    }
   };
 
   const getMotivationalMessage = () => {
-    if (datePhrase?.text) return datePhrase.text;
-    if (dateStats.total === 0) return t('todays.createYourFirstHabit');
-    if (dateStats.completed === 0) return t("todays.youCanDoIt");
-    if (dateStats.completed === dateStats.total) return t("todays.allDoneAmazing");
+    const currentPhrase = datePhrase;
+    
+    if (currentPhrase && currentPhrase.text) {
+      return currentPhrase.text;
+    }
+    
+    if (dateStats.total === 0) {
+      return t('todays.createYourFirstHabit');
+    }
+    if (dateStats.completed === 0) {
+      return t("todays.youCanDoIt");
+    }
+    if (dateStats.completed === dateStats.total) {
+      return t("todays.allDoneAmazing");
+    }
     
     const percentage = (dateStats.completed / dateStats.total) * 100;
     if (percentage >= 70) return t("habits.almostThere");
     if (percentage >= 50) return t("habits.greatProgress");
+    
     return t("habits.keepGoing");
   };
 
   const getMotivationalEmoji = () => {
-    if (datePhrase?.emoji) return datePhrase.emoji;
+    if (datePhrase && datePhrase.emoji) {
+      return datePhrase.emoji;
+    }
+    
     if (dateStats.total === 0) return "🚀";
     if (dateStats.completed === 0) return "💪";
     if (dateStats.completed === dateStats.total) return "🎉";
@@ -374,6 +454,7 @@ const Today = ({ shouldShowFabHint = false }) => {
     
     const [year, month, day] = selectedDate.split('-');
     const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    
     const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
     const dayNumber = date.getDate();
     
@@ -417,11 +498,16 @@ const Today = ({ shouldShowFabHint = false }) => {
         setTimeout(() => {
           setShowSwipeHint(true);
           localStorage.setItem('hasSeenSwipeHint', 'true');
+          
+          // 📊 Показана подсказка свайпа
           window.TelegramAnalytics?.track('swipe_hint_shown', {
             habits_count: dateHabits.length,
+            is_first_time: !hasSeenHint,
           });
+          console.log('📊 Analytics: swipe_hint_shown');
         }, 1000);
       }
+      
       localStorage.setItem('previousHabitsCount', String(dateHabits.length));
     }
   }, [dateHabits.length, isEditableDate]);
@@ -434,11 +520,33 @@ const Today = ({ shouldShowFabHint = false }) => {
         prev.map(h => h.id === habitId ? { ...h, today_status: status } : h)
       );
       
-      const newCompleted = status === 'completed' ? dateStats.completed + 1 : dateStats.completed;
+      const newCompleted = status === 'completed' 
+        ? dateStats.completed + 1 
+        : dateStats.completed;
       setDateStats(prev => ({ ...prev, completed: newCompleted }));
       
       await markHabit(habitId, status, selectedDate);
-      window.TelegramAnalytics?.track('habit_marked', { habit_id: habitId, status });
+      
+      // 📊 Привычка отмечена
+      window.TelegramAnalytics?.track('habit_marked', {
+        habit_id: habitId,
+        status: status,
+        date: selectedDate,
+        total_completed: newCompleted,
+        total_habits: dateStats.total,
+        completion_rate: ((newCompleted / dateStats.total) * 100).toFixed(1),
+      });
+      console.log('📊 Analytics: habit_marked', status);
+      
+      // 📊 Все привычки выполнены
+      if (newCompleted === dateStats.total && dateStats.total > 0) {
+        window.TelegramAnalytics?.track('all_habits_completed', {
+          date: selectedDate,
+          total_habits: dateStats.total,
+        });
+        console.log('📊 Analytics: all_habits_completed');
+      }
+      
     } catch (error) {
       console.error('Error marking habit:', error);
     }
@@ -451,15 +559,31 @@ const Today = ({ shouldShowFabHint = false }) => {
       setDateHabits(prev => 
         prev.map(h => h.id === habitId ? { ...h, today_status: 'pending' } : h)
       );
-      setDateStats(prev => ({ ...prev, completed: Math.max(0, prev.completed - 1) }));
+      
+      setDateStats(prev => ({ 
+        ...prev, 
+        completed: Math.max(0, prev.completed - 1) 
+      }));
+      
       await unmarkHabit(habitId, selectedDate);
+      
+      // 📊 Привычка снята с отметки
+      window.TelegramAnalytics?.track('habit_unmarked', {
+        habit_id: habitId,
+        date: selectedDate,
+      });
+      console.log('📊 Analytics: habit_unmarked');
+      
     } catch (error) {
       console.error('Error unmarking habit:', error);
     }
   }, [isEditableDate, selectedDate, unmarkHabit]);
 
   const getMotivationalBackgroundColor = () => {
-    if (datePhrase?.backgroundColor) return datePhrase.backgroundColor;
+    if (datePhrase && datePhrase.backgroundColor) {
+      return datePhrase.backgroundColor;
+    }
+    
     if (dateStats.total === 0) return '#FFE4B5';
     if (dateStats.completed === 0) return '#FFB3BA';
     if (dateStats.completed === dateStats.total) return '#87CEEB';
@@ -467,11 +591,34 @@ const Today = ({ shouldShowFabHint = false }) => {
     const percentage = (dateStats.completed / dateStats.total) * 100;
     if (percentage >= 70) return '#B5E7A0';
     if (percentage >= 50) return '#A7D96C';
+    
     return '#FFB3BA';
   };
 
+  // 📊 Отслеживание времени на странице
+  useEffect(() => {
+    const startTime = Date.now();
+    
+    return () => {
+      const sessionDuration = Math.floor((Date.now() - startTime) / 1000);
+      if (sessionDuration > 5) { // Отслеживаем только если >5 секунд
+        window.TelegramAnalytics?.track('page_session_ended', {
+          page: 'today',
+          duration_seconds: sessionDuration,
+          habits_count: dateHabits.length,
+          completed_count: dateStats.completed,
+        });
+      }
+    };
+  }, [dateHabits.length, dateStats.completed]);
+
   if (showSubscriptionPage) {
-    return <Subscription onClose={handleSubscriptionPageClose} preselectedPlan={selectedSubscriptionPlan} />;
+    return (
+      <Subscription
+        onClose={handleSubscriptionPageClose}
+        preselectedPlan={selectedSubscriptionPlan}
+      />
+    );
   }
 
   if (showHabitDetail && selectedHabit) {
@@ -499,64 +646,84 @@ const Today = ({ shouldShowFabHint = false }) => {
   return (
     <>
       <Layout>
-        <Header user={user} onProfileClick={() => setShowProfile(true)} />
+        {/* <PullToRefresh onRefresh={handleRefresh}> */}
+          <Header user={user} onProfileClick={() => setShowProfile(true)} />
 
-        <div className="today">
-          <div className="today__stats">
-            <div className="today__container">
-              <h2 className="today__title">{t('todays.completed')}</h2>
-              <span className="today__count">
-                {displayStats.completed} {t('todays.outof')} {displayStats.total} {t('todays.Habits')}
-              </span>
-            </div>
+          <div className="today">
+            <div className="today__stats">
+              <div className="today__container">
+                <h2 className="today__title">{t('todays.completed')}</h2>
+                <span className="today__count">
+                  {displayStats.completed} {t('todays.outof')} {displayStats.total} {t('todays.Habits')}
+                </span>
+              </div>
 
-            <div className="today__container2">
-              <p className="today__subtitle">{getDateLabel()}</p>
-              <div className="today__motivation" style={{ backgroundColor: getMotivationalBackgroundColor() }}>
-                {getMotivationalMessage()} {getMotivationalEmoji()}
+              <div className="today__container2">
+                <p className="today__subtitle">{getDateLabel()}</p>
+                <div className="today__motivation" style={{ 
+                  backgroundColor: getMotivationalBackgroundColor() 
+                }}>
+                  {getMotivationalMessage()} {getMotivationalEmoji()}
+                </div>
               </div>
             </div>
+
+            <WeekNavigation 
+              selectedDate={selectedDate}
+              onDateSelect={handleDateSelect}
+            />
+
+            {showReadOnlyNotice && (
+              <div className="today__readonly-notice">
+                <span>{t('todays.viewOnly')}</span>
+              </div>
+            )}
+
+            {dateLoading ? (
+              <div className="today__habits-loading">
+                <HabitsSkeleton />
+              </div>
+            ) : displayHabits.length === 0 ? (
+              <EmptyState onCreateClick={() => handleFabClick()} />
+            ) : (
+              <div className="today__habits">
+                {displayHabits.map((habit) => (
+                  <HabitCard
+                    key={`${habit.id}-${selectedDate}-${habit.today_status}`}
+                    habit={habit}
+                    onMark={isEditableDate ? handleMark : undefined}
+                    onUnmark={isEditableDate ? handleUnmark : undefined}
+                    onClick={handleHabitClick}
+                    readOnly={!isEditableDate}
+                  />
+                ))}
+              </div>
+            )}
           </div>
+        {/* </PullToRefresh> */}
+                <FabHint show={showFabHint} onClose={handleFabHintClose} />
 
-          <WeekNavigation selectedDate={selectedDate} onDateSelect={handleDateSelect} />
-
-          {showReadOnlyNotice && (
-            <div className="today__readonly-notice">
-              <span>{t('todays.viewOnly')}</span>
-            </div>
-          )}
-
-          {dateLoading ? (
-            <div className="today__habits-loading"><HabitsSkeleton /></div>
-          ) : displayHabits.length === 0 ? (
-            <EmptyState onCreateClick={() => handleFabClick()} />
-          ) : (
-            <div className="today__habits">
-              {displayHabits.map((habit) => (
-                <HabitCard
-                  key={`${habit.id}-${selectedDate}-${habit.today_status}`}
-                  habit={habit}
-                  onMark={isEditableDate ? handleMark : undefined}
-                  onUnmark={isEditableDate ? handleUnmark : undefined}
-                  onClick={handleHabitClick}
-                  readOnly={!isEditableDate}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* 🎯 ВСЕ ПОДСКАЗКИ */}
-        <FabHint show={showFabHint} onClose={handleFabHintClose} />
-        <WeekNavigationHint show={showWeekHint} onClose={handleWeekHintClose} />
-        <SwipeHint show={showSwipeHint} onClose={() => setShowSwipeHint(false)} />
+        <SwipeHint 
+          show={showSwipeHint} 
+          onClose={() => setShowSwipeHint(false)} 
+        />
         
-        <button className="fab" onClick={handleFabClick}>+</button>
+        <button className="fab" onClick={handleFabClick}>
+          +
+        </button>
       </Layout>
 
       {showCreateForm && (
         <CreateHabitForm
-          onClose={() => setShowCreateForm(false)}
+          onClose={() => {
+            setShowCreateForm(false);
+            
+            // 📊 Форма закрыта без создания
+            window.TelegramAnalytics?.track('create_form_closed', {
+              was_cancelled: true,
+            });
+            console.log('📊 Analytics: create_form_closed');
+          }}
           onSuccess={handleCreateHabit}
         />
       )}
@@ -567,6 +734,13 @@ const Today = ({ shouldShowFabHint = false }) => {
           onClose={() => {
             setShowEditForm(false);
             setHabitToEdit(null);
+            
+            // 📊 Форма редактирования закрыта
+            window.TelegramAnalytics?.track('edit_form_closed', {
+              was_cancelled: true,
+              habit_id: habitToEdit?.id,
+            });
+            console.log('📊 Analytics: edit_form_closed');
           }}
           onSuccess={handleEditSuccess}
         />
@@ -574,7 +748,15 @@ const Today = ({ shouldShowFabHint = false }) => {
 
       <SubscriptionModal
         isOpen={showSubscriptionModal}
-        onClose={() => setShowSubscriptionModal(false)}
+        onClose={() => {
+          setShowSubscriptionModal(false);
+          
+          // 📊 Модал подписки закрыт
+          window.TelegramAnalytics?.track('subscription_modal_closed', {
+            was_dismissed: true,
+          });
+          console.log('📊 Analytics: subscription_modal_closed');
+        }}
         onSelectPlan={handleSubscriptionPlanSelect}
       />
     </>
