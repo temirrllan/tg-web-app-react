@@ -52,15 +52,15 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
   }, [onClose]);
 
   const plans = [
-    // { 
-    //   id: 'test',
-    //   name: t('subscriptionNew.plans.test.name'), 
-    //   total: 1,
-    //   perMonth: 1,
-    //   badge: t('subscriptionNew.plans.test.badge'),
-    //   testMode: true,
-    //   description: t('subscriptionNew.plans.test.description')
-    // },
+    { 
+      id: 'test',
+      name: t('subscriptionNew.plans.test.name'), 
+      total: 1,
+      perMonth: 1,
+      badge: t('subscriptionNew.plans.test.badge'),
+      testMode: true,
+      description: t('subscriptionNew.plans.test.description')
+    },
     { 
       id: 'month',
       name: t('subscriptionNew.plans.month.name'), 
