@@ -12,14 +12,14 @@
   background: rgba(0, 0, 0, 0.65);
 }
 
-/* Подсветка области WeekNavigation */
+/* Подсветка области WeekNavigation - СМЕЩЕНО НИЖЕ */
 .week-hint-highlight {
   position: fixed;
-  top: 0;
+  top: 100px; /* ✅ Увеличено с 0 до 100px */
   left: 0;
   right: 0;
-  /* Высота подсветки - покрывает хедер + WeekNavigation */
-  height: 200px;
+  /* Высота подсветки - покрывает WeekNavigation */
+  height: 100px; /* ✅ Уменьшено с 200px до 100px */
   background: transparent;
   pointer-events: none;
   z-index: 9999;
@@ -35,7 +35,7 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  padding-top: 220px;
+  padding-top: 220px; /* ✅ Оставляем, чтобы балун был ниже подсветки */
   pointer-events: none;
 }
 
@@ -77,10 +77,10 @@
   text-align: center;
 }
 
-/* Анимированная стрелка указывающая на WeekNavigation */
+/* Анимированная стрелка указывающая на WeekNavigation - СМЕЩЕНО НИЖЕ */
 .week-hint-arrow-container {
   position: fixed;
-  top: 140px;
+  top: 160px; /* ✅ Увеличено со 140px до 160px */
   left: 50%;
   transform: translateX(-50%);
   z-index: 10000;
@@ -94,11 +94,11 @@
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
 }
 
-/* Пульсирующие круги по бокам WeekNavigation */
+/* Пульсирующие круги по бокам WeekNavigation - СМЕЩЕНО НИЖЕ */
 .week-hint-pulse-left,
 .week-hint-pulse-right {
   position: fixed;
-  top: 140px;
+  top: 160px; /* ✅ Увеличено со 140px до 160px */
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -214,7 +214,8 @@
 
 @media (max-width: 430px) {
   .week-hint-highlight {
-    height: 180px;
+    top: 90px; /* ✅ Адаптивно для маленьких экранов */
+    height: 90px;
   }
   
   .week-hint-container {
@@ -222,12 +223,12 @@
   }
   
   .week-hint-arrow-container {
-    top: 120px;
+    top: 145px; /* ✅ Адаптивно */
   }
   
   .week-hint-pulse-left,
   .week-hint-pulse-right {
-    top: 120px;
+    top: 145px; /* ✅ Адаптивно */
   }
   
   .week-hint-bubble {
@@ -246,7 +247,8 @@
 
 @media (max-width: 375px) {
   .week-hint-highlight {
-    height: 170px;
+    top: 85px;
+    height: 85px;
   }
   
   .week-hint-container {
@@ -254,12 +256,12 @@
   }
   
   .week-hint-arrow-container {
-    top: 110px;
+    top: 135px;
   }
   
   .week-hint-pulse-left,
   .week-hint-pulse-right {
-    top: 110px;
+    top: 135px;
   }
   
   .week-hint-bubble {
