@@ -98,7 +98,7 @@
 .week-hint-pulse-left,
 .week-hint-pulse-right {
   position: fixed;
-  top: 240px; /* ✅ Увеличено со 160px до 230px (+70px) */
+  top: 245px; /* ✅ Увеличено со 160px до 230px (+70px) */
   width: 32px;
   height: 32px;
   border-radius: 50%;
