@@ -178,59 +178,28 @@
   flex-direction: column;
 }
 
-/* 🎨 УЛУЧШЕННЫЕ КРУГЛЫЕ ЛИНИИ - Фоновый круг */
 .habit-detail__stat-circle::before {
   content: '';
   position: absolute;
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  border: 10px solid var(--bg-tertiary, #F2F2F7);
+  border: 8px solid var(--bg-tertiary, #F2F2F7);
   box-sizing: border-box;
 }
 
-/* 🎨 УЛУЧШЕННЫЕ КРУГЛЫЕ ЛИНИИ - Прогресс круг с rounded caps */
 .habit-detail__stat-circle::after {
   content: '';
   position: absolute;
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  border: 10px solid transparent;
-  border-top-color: var(--color, #A7D96C);
-  border-right-color: var(--color, #A7D96C);
+  border: 8px solid var(--color, #A7D96C);
+  border-top-color: transparent;
+  border-right-color: transparent;
   transform: rotate(calc(var(--progress, 0) * 3.6deg - 90deg));
   box-sizing: border-box;
   transition: transform 0.5s ease;
-  
-  /* ✨ КЛЮЧЕВОЕ УЛУЧШЕНИЕ - скругленные концы линий */
-  stroke-linecap: round;
-  border-radius: 50%;
-}
-
-/* ✨ SVG метод для идеально круглых концов */
-.habit-detail__stat-circle svg {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  transform: rotate(-90deg);
-}
-
-.habit-detail__stat-circle svg circle {
-  fill: none;
-  stroke-width: 10;
-  stroke-linecap: round; /* Круглые концы */
-  transition: stroke-dashoffset 0.5s ease;
-}
-
-.habit-detail__stat-circle svg circle.background {
-  stroke: var(--bg-tertiary, #F2F2F7);
-}
-
-.habit-detail__stat-circle svg circle.progress {
-  stroke: var(--color, #A7D96C);
-  stroke-dasharray: 283; /* 2 * PI * 45 (радиус) */
-  stroke-dashoffset: calc(283 - (283 * var(--progress, 0) / 100));
 }
 
 .habit-detail__stat-value {
@@ -519,13 +488,4 @@
 
 .dark-theme .habit-detail__creator-notice {
   background: rgba(10, 132, 255, 0.15);
-}
-
-/* Dark theme - круги */
-.dark-theme .habit-detail__stat-circle::before {
-  border-color: #3A3A3C;
-}
-
-.dark-theme .habit-detail__stat-circle svg circle.background {
-  stroke: #3A3A3C;
 }
