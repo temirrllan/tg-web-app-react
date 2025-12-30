@@ -12,14 +12,14 @@
   background: rgba(0, 0, 0, 0.65);
 }
 
-/* Подсветка области WeekNavigation - СМЕЩЕНО НИЖЕ */
+/* Подсветка области WeekNavigation - СМЕЩЕНО ЕЩЕ НИЖЕ */
 .week-hint-highlight {
   position: fixed;
-  top: 200px; /* ✅ Увеличено с 0 до 100px */
+  top: 170px; /* ✅ Увеличено со 100px до 170px (+70px) */
   left: 0;
   right: 0;
   /* Высота подсветки - покрывает WeekNavigation */
-  height: 50px; /* ✅ Уменьшено с 200px до 100px */
+  height: 100px;
   background: transparent;
   pointer-events: none;
   z-index: 9999;
@@ -35,7 +35,7 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  padding-top: 220px; /* ✅ Оставляем, чтобы балун был ниже подсветки */
+  padding-top: 290px; /* ✅ Увеличено с 220px до 290px (+70px) */
   pointer-events: none;
 }
 
@@ -77,10 +77,10 @@
   text-align: center;
 }
 
-/* Анимированная стрелка указывающая на WeekNavigation - СМЕЩЕНО НИЖЕ */
+/* Анимированная стрелка указывающая на WeekNavigation - СМЕЩЕНО ЕЩЕ НИЖЕ */
 .week-hint-arrow-container {
   position: fixed;
-  top: 180px; /* ✅ Увеличено со 140px до 160px */
+  top: 230px; /* ✅ Увеличено со 160px до 230px (+70px) */
   left: 50%;
   transform: translateX(-50%);
   z-index: 10000;
@@ -94,11 +94,11 @@
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
 }
 
-/* Пульсирующие круги по бокам WeekNavigation - СМЕЩЕНО НИЖЕ */
+/* Пульсирующие круги по бокам WeekNavigation - СМЕЩЕНО ЕЩЕ НИЖЕ */
 .week-hint-pulse-left,
 .week-hint-pulse-right {
   position: fixed;
-  top: 180px; /* ✅ Увеличено со 140px до 160px */
+  top: 230px; /* ✅ Увеличено со 160px до 230px (+70px) */
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -214,21 +214,21 @@
 
 @media (max-width: 430px) {
   .week-hint-highlight {
-    top: 90px; /* ✅ Адаптивно для маленьких экранов */
+    top: 160px; /* ✅ Увеличено с 90px до 160px (+70px) */
     height: 90px;
   }
   
   .week-hint-container {
-    padding-top: 200px;
+    padding-top: 270px; /* ✅ Увеличено с 200px до 270px (+70px) */
   }
   
   .week-hint-arrow-container {
-    top: 145px; /* ✅ Адаптивно */
+    top: 215px; /* ✅ Увеличено со 145px до 215px (+70px) */
   }
   
   .week-hint-pulse-left,
   .week-hint-pulse-right {
-    top: 145px; /* ✅ Адаптивно */
+    top: 215px; /* ✅ Увеличено со 145px до 215px (+70px) */
   }
   
   .week-hint-bubble {
@@ -247,21 +247,21 @@
 
 @media (max-width: 375px) {
   .week-hint-highlight {
-    top: 85px;
+    top: 155px; /* ✅ Увеличено с 85px до 155px (+70px) */
     height: 85px;
   }
   
   .week-hint-container {
-    padding-top: 190px;
+    padding-top: 260px; /* ✅ Увеличено со 190px до 260px (+70px) */
   }
   
   .week-hint-arrow-container {
-    top: 135px;
+    top: 205px; /* ✅ Увеличено со 135px до 205px (+70px) */
   }
   
   .week-hint-pulse-left,
   .week-hint-pulse-right {
-    top: 135px;
+    top: 205px; /* ✅ Увеличено со 135px до 205px (+70px) */
   }
   
   .week-hint-bubble {
