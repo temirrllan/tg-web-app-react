@@ -15,11 +15,11 @@
 /* Подсветка области WeekNavigation - СМЕЩЕНО НИЖЕ */
 .week-hint-highlight {
   position: fixed;
-  top: 100px; /* ✅ Увеличено с 0 до 100px */
+  top: 200px; /* ✅ Увеличено с 0 до 100px */
   left: 0;
   right: 0;
   /* Высота подсветки - покрывает WeekNavigation */
-  height: 100px; /* ✅ Уменьшено с 200px до 100px */
+  height: 50px; /* ✅ Уменьшено с 200px до 100px */
   background: transparent;
   pointer-events: none;
   z-index: 9999;
@@ -80,7 +80,7 @@
 /* Анимированная стрелка указывающая на WeekNavigation - СМЕЩЕНО НИЖЕ */
 .week-hint-arrow-container {
   position: fixed;
-  top: 160px; /* ✅ Увеличено со 140px до 160px */
+  top: 180px; /* ✅ Увеличено со 140px до 160px */
   left: 50%;
   transform: translateX(-50%);
   z-index: 10000;
@@ -98,7 +98,7 @@
 .week-hint-pulse-left,
 .week-hint-pulse-right {
   position: fixed;
-  top: 160px; /* ✅ Увеличено со 140px до 160px */
+  top: 180px; /* ✅ Увеличено со 140px до 160px */
   width: 32px;
   height: 32px;
   border-radius: 50%;
