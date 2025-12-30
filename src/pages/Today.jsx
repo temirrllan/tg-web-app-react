@@ -1,4 +1,4 @@
-// src/pages/Today.jsx - ФИНАЛЬНАЯ ВЕРСИЯ С ДВУМЯ ПОДСКАЗКАМИ
+// src/pages/Today.jsx - С ПОЛНОЙ АНАЛИТИКОЙ
 
 import React, { useEffect, useState, useCallback } from "react";
 import Layout from "../components/layout/Layout";
@@ -18,10 +18,9 @@ import EditHabitForm from '../components/habits/EditHabitForm';
 import SubscriptionModal from '../components/modals/SubscriptionModal';
 import Subscription from './Subscription';
 import { useTranslation } from '../hooks/useTranslation';
+import PullToRefresh from '../components/common/PullToRefresh';
 import { useTelegramTheme } from '../hooks/useTelegramTheme';
 import FabHint from '../components/hints/FabHint';
-import WeekNavigationHint from '../components/hints/WeekNavigationHint';
-
 const Today = ({ shouldShowFabHint = false }) => {
   const { t } = useTranslation();
   const { user } = useTelegram();
@@ -62,13 +61,8 @@ const Today = ({ shouldShowFabHint = false }) => {
   const [showEditForm, setShowEditForm] = useState(false);
   const [habitToEdit, setHabitToEdit] = useState(null);
   const [userSubscription, setUserSubscription] = useState(null);
-  
-  // 🆕 Состояния для подсказок
-  const [showFabHint, setShowFabHint] = useState(false);
-  const [fabHintShown, setFabHintShown] = useState(false);
-  const [showWeekHint, setShowWeekHint] = useState(false);
-  const [weekHintShown, setWeekHintShown] = useState(false);
-
+const [showFabHint, setShowFabHint] = useState(false);
+const [fabHintShown, setFabHintShown] = useState(false);
   const getTodayDate = () => {
     const today = new Date();
     const year = today.getFullYear();
@@ -92,43 +86,42 @@ const Today = ({ shouldShowFabHint = false }) => {
   const [dateLoading, setDateLoading] = useState(false);
   const [dateStats, setDateStats] = useState({ completed: 0, total: 0 });
   const [datePhrase, setDatePhrase] = useState(null);
-
-  // 🎯 Показ FAB hint для новых пользователей
   useEffect(() => {
-    console.log('🔍 FAB Hint check:', {
-      shouldShowFabHint,
-      loading,
-      dateLoading,
-      habitsCount: dateHabits.length,
-      fabHintShown
-    });
+  console.log('🔍 FAB Hint check:', {
+    shouldShowFabHint,
+    loading,
+    dateLoading,
+    habitsCount: dateHabits.length,
+    fabHintShown // 🆕 Добавили в лог
+  });
+  
+  // 🎯 УПРОЩЕННАЯ ЛОГИКА + проверка что hint еще не показывали
+  // Если пришел флаг shouldShowFabHint === true И нет привычек И hint еще не показывали
+  if (shouldShowFabHint && 
+      !loading && 
+      !dateLoading &&
+      dateHabits.length === 0 &&
+      !fabHintShown) { // ✅ Проверяем что не показывали
     
-    // Если пришел флаг shouldShowFabHint === true И нет привычек И hint еще не показывали
-    if (shouldShowFabHint && 
-        !loading && 
-        !dateLoading &&
-        dateHabits.length === 0 &&
-        !fabHintShown) {
+    console.log('🎯 Showing FAB hint for new user (ignoring localStorage)');
+    
+    // Показываем через небольшую задержку для плавности
+    const timer = setTimeout(() => {
+      setShowFabHint(true);
+      setFabHintShown(true); // ✅ Устанавливаем флаг что показали
       
-      console.log('🎯 Showing FAB hint for new user (ignoring localStorage)');
-      
-      // Показываем через небольшую задержку для плавности
-      const timer = setTimeout(() => {
-        setShowFabHint(true);
-        setFabHintShown(true);
-        
-        // 📊 Аналитика
-        window.TelegramAnalytics?.track('fab_hint_shown', {
-          is_new_user: true,
-          habits_count: 0,
-          trigger: 'after_onboarding'
-        });
-        console.log('📊 Analytics: fab_hint_shown (after onboarding)');
-      }, 500);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [shouldShowFabHint, loading, dateLoading, dateHabits.length, fabHintShown]);
+      // 📊 Аналитика
+      window.TelegramAnalytics?.track('fab_hint_shown', {
+        is_new_user: true,
+        habits_count: 0,
+        trigger: 'after_onboarding'
+      });
+      console.log('📊 Analytics: fab_hint_shown (after onboarding)');
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }
+}, [shouldShowFabHint, loading, dateLoading, dateHabits.length, fabHintShown]);
 
   // 🆕 Обработчик закрытия FAB hint
   const handleFabHintClose = () => {
@@ -142,37 +135,7 @@ const Today = ({ shouldShowFabHint = false }) => {
       habits_count: dateHabits.length
     });
     console.log('📊 Analytics: fab_hint_closed');
-    
-    // 🆕 После закрытия FAB hint показываем WeekNavigation hint
-    if (!weekHintShown && !localStorage.getItem('hasSeenWeekHint')) {
-      setTimeout(() => {
-        setShowWeekHint(true);
-        setWeekHintShown(true);
-        
-        // 📊 Аналитика
-        window.TelegramAnalytics?.track('week_hint_shown', {
-          is_new_user: true,
-          trigger: 'after_fab_hint'
-        });
-        console.log('📊 Analytics: week_hint_shown');
-      }, 300); // Небольшая задержка для плавности
-    }
   };
-  
-  // 🆕 Обработчик закрытия WeekNavigation hint
-  const handleWeekHintClose = () => {
-    setShowWeekHint(false);
-    
-    // ✅ Сохраняем в localStorage
-    localStorage.setItem('hasSeenWeekHint', 'true');
-    
-    // 📊 Аналитика
-    window.TelegramAnalytics?.track('week_hint_closed', {
-      habits_count: dateHabits.length
-    });
-    console.log('📊 Analytics: week_hint_closed');
-  };
-
   useEffect(() => {
     checkUserSubscription();
   }, []);
@@ -638,7 +601,7 @@ const Today = ({ shouldShowFabHint = false }) => {
     
     return () => {
       const sessionDuration = Math.floor((Date.now() - startTime) / 1000);
-      if (sessionDuration > 5) {
+      if (sessionDuration > 5) { // Отслеживаем только если >5 секунд
         window.TelegramAnalytics?.track('page_session_ended', {
           page: 'today',
           duration_seconds: sessionDuration,
@@ -683,68 +646,67 @@ const Today = ({ shouldShowFabHint = false }) => {
   return (
     <>
       <Layout>
-        <Header user={user} onProfileClick={() => setShowProfile(true)} />
+        {/* <PullToRefresh onRefresh={handleRefresh}> */}
+          <Header user={user} onProfileClick={() => setShowProfile(true)} />
 
-        <div className="today">
-          <div className="today__stats">
-            <div className="today__container">
-              <h2 className="today__title">{t('todays.completed')}</h2>
-              <span className="today__count">
-                {displayStats.completed} {t('todays.outof')} {displayStats.total} {t('todays.Habits')}
-              </span>
-            </div>
+          <div className="today">
+            <div className="today__stats">
+              <div className="today__container">
+                <h2 className="today__title">{t('todays.completed')}</h2>
+                <span className="today__count">
+                  {displayStats.completed} {t('todays.outof')} {displayStats.total} {t('todays.Habits')}
+                </span>
+              </div>
 
-            <div className="today__container2">
-              <p className="today__subtitle">{getDateLabel()}</p>
-              <div className="today__motivation" style={{ 
-                backgroundColor: getMotivationalBackgroundColor() 
-              }}>
-                {getMotivationalMessage()} {getMotivationalEmoji()}
+              <div className="today__container2">
+                <p className="today__subtitle">{getDateLabel()}</p>
+                <div className="today__motivation" style={{ 
+                  backgroundColor: getMotivationalBackgroundColor() 
+                }}>
+                  {getMotivationalMessage()} {getMotivationalEmoji()}
+                </div>
               </div>
             </div>
+
+            <WeekNavigation 
+              selectedDate={selectedDate}
+              onDateSelect={handleDateSelect}
+            />
+
+            {showReadOnlyNotice && (
+              <div className="today__readonly-notice">
+                <span>{t('todays.viewOnly')}</span>
+              </div>
+            )}
+
+            {dateLoading ? (
+              <div className="today__habits-loading">
+                <HabitsSkeleton />
+              </div>
+            ) : displayHabits.length === 0 ? (
+              <EmptyState onCreateClick={() => handleFabClick()} />
+            ) : (
+              <div className="today__habits">
+                {displayHabits.map((habit) => (
+                  <HabitCard
+                    key={`${habit.id}-${selectedDate}-${habit.today_status}`}
+                    habit={habit}
+                    onMark={isEditableDate ? handleMark : undefined}
+                    onUnmark={isEditableDate ? handleUnmark : undefined}
+                    onClick={handleHabitClick}
+                    readOnly={!isEditableDate}
+                  />
+                ))}
+              </div>
+            )}
           </div>
+        {/* </PullToRefresh> */}
+                <FabHint show={showFabHint} onClose={handleFabHintClose} />
 
-          <WeekNavigation 
-            selectedDate={selectedDate}
-            onDateSelect={handleDateSelect}
-          />
-
-          {showReadOnlyNotice && (
-            <div className="today__readonly-notice">
-              <span>{t('todays.viewOnly')}</span>
-            </div>
-          )}
-
-          {dateLoading ? (
-            <div className="today__habits-loading">
-              <HabitsSkeleton />
-            </div>
-          ) : displayHabits.length === 0 ? (
-            <EmptyState onCreateClick={() => handleFabClick()} />
-          ) : (
-            <div className="today__habits">
-              {displayHabits.map((habit) => (
-                <HabitCard
-                  key={`${habit.id}-${selectedDate}-${habit.today_status}`}
-                  habit={habit}
-                  onMark={isEditableDate ? handleMark : undefined}
-                  onUnmark={isEditableDate ? handleUnmark : undefined}
-                  onClick={handleHabitClick}
-                  readOnly={!isEditableDate}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* 🆕 Все подсказки */}
         <SwipeHint 
           show={showSwipeHint} 
           onClose={() => setShowSwipeHint(false)} 
         />
-        
-        <FabHint show={showFabHint} onClose={handleFabHintClose} />
-        <WeekNavigationHint show={showWeekHint} onClose={handleWeekHintClose} />
         
         <button className="fab" onClick={handleFabClick}>
           +
