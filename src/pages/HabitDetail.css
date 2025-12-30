@@ -176,7 +176,7 @@
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  border-radius: 15px;
+  border-radius: 25px;
 }
 
 .habit-detail__stat-circle::before {
