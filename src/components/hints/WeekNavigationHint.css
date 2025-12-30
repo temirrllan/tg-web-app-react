@@ -80,7 +80,7 @@
 /* Анимированная стрелка указывающая на WeekNavigation - СМЕЩЕНО ЕЩЕ НИЖЕ */
 .week-hint-arrow-container {
   position: fixed;
-  top: 260px; /* ✅ Увеличено со 160px до 230px (+70px) */
+  top: 280px; /* ✅ Увеличено со 160px до 230px (+70px) */
   left: 50%;
   transform: translateX(-50%);
   z-index: 10000;
