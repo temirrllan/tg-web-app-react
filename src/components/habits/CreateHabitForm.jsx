@@ -153,13 +153,6 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
     setShowTimeDropdown(false);
   };
 
-  // 🔥 НОВАЯ ФУНКЦИЯ: Сброс времени
-  const handleTimeReset = () => {
-    setFormData(prev => ({ ...prev, reminder_time: '' }));
-    setTimeActive(false);
-    setShowTimeDropdown(false);
-  };
-
   const formatTime12h = (time) => {
     if (!time) return t('createHabit.default');
     const [hours, minutes] = time.split(':');
@@ -363,7 +356,7 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
                 </div>
               )}
 
-              {/* Reminder time - ИСПРАВЛЕННАЯ ВЕРСИЯ */}
+              {/* Reminder time */}
               <div className="form-section-rw2" ref={timeRef}>
                 <span className="form-label-title">{t('createHabit.pingMe')}</span>
                 <button
@@ -378,22 +371,13 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
                   <div className="time-picker-dropdown">
                     <div className="time-picker-header">
                       <span>{t('createHabit.selectTime')}</span>
-                      <div className="time-picker-buttons">
-                        <button
-                          type="button"
-                          className="time-picker-reset"
-                          onClick={(e) => { e.preventDefault(); handleTimeReset(); }}
-                        >
-                          {t('common.reset') || 'Сбросить'}
-                        </button>
-                        <button
-                          type="button"
-                          className="time-picker-done"
-                          onClick={(e) => { e.preventDefault(); handleTimeSelect(); }}
-                        >
-                          {t('common.done') || 'Готово'}
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        className="time-picker-done"
+                        onClick={(e) => { e.preventDefault(); handleTimeSelect(); }}
+                      >
+                        {t('common.done')}
+                      </button>
                     </div>
                     <input
                       type="time"
@@ -408,6 +392,7 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
             </>
           )}
 
+          {/* Bad habit toggle */}
           {/* Bad habit toggle */}
           <div className="form-section">
             <div className="bad-habit-toggle">
@@ -443,3 +428,4 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
 };
 
 export default CreateHabitForm;
+
