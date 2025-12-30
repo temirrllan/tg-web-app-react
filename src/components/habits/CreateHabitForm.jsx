@@ -148,6 +148,13 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
     setRepeatActive(true);
   };
 
+  // 🔥 ИСПРАВЛЕНО: Функция сброса времени
+  const handleTimeReset = () => {
+    setFormData(prev => ({ ...prev, reminder_time: '' }));
+    setTimeActive(false);
+    setShowTimeDropdown(false);
+  };
+
   const handleTimeSelect = () => {
     setTimeActive(true);
     setShowTimeDropdown(false);
@@ -386,13 +393,21 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
                       className="time-picker-input"
                       autoFocus
                     />
+                    {formData.reminder_time && (
+                      <button
+                        type="button"
+                        className="time-picker-reset"
+                        onClick={(e) => { e.preventDefault(); handleTimeReset(); }}
+                      >
+                        {t('common.reset')}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
             </>
           )}
 
-          {/* Bad habit toggle */}
           {/* Bad habit toggle */}
           <div className="form-section">
             <div className="bad-habit-toggle">
@@ -428,4 +443,3 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
 };
 
 export default CreateHabitForm;
-
