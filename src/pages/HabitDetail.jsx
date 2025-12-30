@@ -12,6 +12,40 @@ import FriendSwipeHint from '../components/habits/FriendSwipeHint';
 import { useTranslation } from "../hooks/useTranslation";
 import { useTelegramTheme } from '../hooks/useTelegramTheme';
 
+// 🎨 Компонент круглого прогресс-бара с SVG
+const CircularProgress = ({ value, total, color }) => {
+  const percentage = total > 0 ? (value / total) * 100 : 0;
+  const radius = 45;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+  return (
+    <div className="habit-detail__stat-circle" style={{ '--color': color, '--progress': percentage }}>
+      <svg viewBox="0 0 100 100">
+        {/* Фоновый круг */}
+        <circle
+          className="background"
+          cx="50"
+          cy="50"
+          r={radius}
+        />
+        {/* Прогресс круг */}
+        <circle
+          className="progress"
+          cx="50"
+          cy="50"
+          r={radius}
+          style={{
+            strokeDashoffset: strokeDashoffset
+          }}
+        />
+      </svg>
+      <span className="habit-detail__stat-value">{value}</span>
+      {total > 0 && <span className="habit-detail__stat-total">{total}</span>}
+    </div>
+  );
+};
+
 const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const { tg, user: currentUser } = useTelegram();
   const { t } = useTranslation();
@@ -313,57 +347,50 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   };
 
   const handleCopyLink = async () => {
-  try {
-    console.log('📋 Creating share link for habit:', habit.id);
-    
-    // Создаём ссылку на backend
-    const shareData = await habitService.createShareLink(habit.id);
-    console.log('✅ Share data received:', shareData);
-    
-    if (!shareData || !shareData.shareCode) {
-      throw new Error('No share code received');
-    }
-    
-    const shareCode = shareData.shareCode;
-    const inviteLink = `https://t.me/CheckHabitlyBot?start=${shareCode}`;
-    
-    console.log('📋 Attempting to copy link:', inviteLink);
-    
-    // Универсальный метод копирования
-    const copySuccess = await copyToClipboard(inviteLink);
-    
-    if (copySuccess) {
-      console.log('✅ Link copied successfully:', inviteLink);
+    try {
+      console.log('📋 Creating share link for habit:', habit.id);
       
-      // Показываем модалку успеха
-      setShowCopyModal(true);
+      const shareData = await habitService.createShareLink(habit.id);
+      console.log('✅ Share data received:', shareData);
       
-      // Вибрация
-      if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      if (!shareData || !shareData.shareCode) {
+        throw new Error('No share code received');
       }
-    } else {
-      throw new Error('All copy methods failed');
+      
+      const shareCode = shareData.shareCode;
+      const inviteLink = `https://t.me/CheckHabitlyBot?start=${shareCode}`;
+      
+      console.log('📋 Attempting to copy link:', inviteLink);
+      
+      const copySuccess = await copyToClipboard(inviteLink);
+      
+      if (copySuccess) {
+        console.log('✅ Link copied successfully:', inviteLink);
+        
+        setShowCopyModal(true);
+        
+        if (window.Telegram?.WebApp?.HapticFeedback) {
+          window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        }
+      } else {
+        throw new Error('All copy methods failed');
+      }
+      
+    } catch (err) {
+      console.error('❌ Failed to copy link:', err);
+      console.error('Error details:', {
+        message: err.message,
+        stack: err.stack
+      });
+      
+      setToast({
+        message: t('habitDetail.toasts.linkCopyFailed'),
+        type: 'error'
+      });
     }
-    
-  } catch (err) {
-    console.error('❌ Failed to copy link:', err);
-    console.error('Error details:', {
-      message: err.message,
-      stack: err.stack
-    });
-    
-    // Показываем ошибку
-    setToast({
-      message: t('habitDetail.toasts.linkCopyFailed'),
-      type: 'error'
-    });
-  }
-};
+  };
 
-  // Универсальная функция копирования
   const copyToClipboard = async (text) => {
-    // Метод 1: Современный Clipboard API
     if (navigator.clipboard && navigator.clipboard.writeText) {
       try {
         await navigator.clipboard.writeText(text);
@@ -374,12 +401,10 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       }
     }
     
-    // Метод 2: execCommand (работает в большинстве случаев)
     try {
       const textArea = document.createElement('textarea');
       textArea.value = text;
       
-      // Стили для невидимости
       textArea.style.position = 'fixed';
       textArea.style.top = '0';
       textArea.style.left = '0';
@@ -395,7 +420,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       textArea.focus();
       textArea.select();
       
-      // Для iOS
       textArea.setSelectionRange(0, 99999);
       
       const successful = document.execCommand('copy');
@@ -409,11 +433,9 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       console.warn('⚠️ execCommand failed:', err);
     }
     
-    // Метод 3: Telegram WebApp readTextFromClipboard (только для чтения, но попробуем)
     const tg = window.Telegram?.WebApp;
     if (tg && tg.readTextFromClipboard) {
       try {
-        // Используем prompt как fallback
         if (window.prompt) {
           window.prompt('Copy this link:', text);
           console.log('✅ Showed prompt for manual copy');
@@ -424,7 +446,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       }
     }
     
-    // Метод 4: Последний fallback - пытаемся через alert
     if (tg && tg.showAlert) {
       tg.showAlert(`Copy this link:\n\n${text}`);
       console.log('✅ Showed alert with link');
@@ -518,11 +539,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     return habit.category_icon || habit.icon || '🎯';
   };
 
-  const getProgressPercentage = (completed, total) => {
-    if (total === 0) return 0;
-    return Math.round((completed / total) * 100);
-  };
-
   const getProgressColor = (type) => {
     const colors = {
       streak: '#A7D96C',
@@ -566,57 +582,45 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
             {habit.goal && (
               <p className="habit-detail__habit-goal">{habit.goal}</p>
             )}
-            
-            {/* {!isCreator && members.length > 0 && (
-              <p className="habit-detail__creator-notice">
-                {t('habitDetail.sharedHabitNotice')}
-              </p>
-            )} */}
           </div>
 
           <div className="habit-detail__statistics">
             <div className="habit-detail__stat-card">
-              <div className="habit-detail__stat-circle" style={{
-                '--progress': getProgressPercentage(statistics.currentStreak, 100),
-                '--color': getProgressColor('streak')
-              }}>
-                <span className="habit-detail__stat-value">{statistics.currentStreak}</span>
-              </div>
+              <CircularProgress
+                value={statistics.currentStreak}
+                total={0}
+                color={getProgressColor('streak')}
+              />
               <h3 className="habit-detail__stat-title">{t('habitDetail.statistics.daysStreak')}</h3>
               <p className="habit-detail__stat-subtitle">{t('habitDetail.statistics.daysStreak')}</p>
             </div>
 
             <div className="habit-detail__stat-card">
-              <div className="habit-detail__stat-circle" style={{
-                '--progress': getProgressPercentage(statistics.weekDays, statistics.weekTotal),
-                '--color': getProgressColor('week')
-              }}>
-                <span className="habit-detail__stat-value">{statistics.weekDays}</span>
-                <span className="habit-detail__stat-total">{statistics.weekTotal}</span>
-              </div>
+              <CircularProgress
+                value={statistics.weekDays}
+                total={statistics.weekTotal}
+                color={getProgressColor('week')}
+              />
               <h3 className="habit-detail__stat-title">{t('habitDetail.statistics.week')}</h3>
-              <p className="habit-detail__stat-subtitle">{t('habitDetail.statistics.daysStreak')}</p>
+              <p className="habit-detail__stat-subtitle">{t('habitDetail.statistics.daysStreke')}</p>
             </div>
 
             <div className="habit-detail__stat-card">
-              <div className="habit-detail__stat-circle" style={{
-                '--progress': getProgressPercentage(statistics.monthDays, statistics.monthTotal),
-                '--color': getProgressColor('month')
-              }}>
-                <span className="habit-detail__stat-value">{statistics.monthDays}</span>
-                <span className="habit-detail__stat-total">{statistics.monthTotal}</span>
-              </div>
+              <CircularProgress
+                value={statistics.monthDays}
+                total={statistics.monthTotal}
+                color={getProgressColor('month')}
+              />
               <h3 className="habit-detail__stat-title">{t('habitDetail.statistics.month')}</h3>
               <p className="habit-detail__stat-subtitle">{t('habitDetail.statistics.daysStreak')}</p>
             </div>
+            
             <div className="habit-detail__stat-card">
-              <div className="habit-detail__stat-circle" style={{
-                '--progress': getProgressPercentage(statistics.yearDays, statistics.yearTotal),
-                '--color': getProgressColor('year')
-              }}>
-                <span className="habit-detail__stat-value">{statistics.yearDays}</span>
-                <span className="habit-detail__stat-total">{statistics.yearTotal}</span>
-              </div>
+              <CircularProgress
+                value={statistics.yearDays}
+                total={statistics.yearTotal}
+                color={getProgressColor('year')}
+              />
               <h3 className="habit-detail__stat-title">{t('habitDetail.statistics.year')}</h3>
               <p className="habit-detail__stat-subtitle">{t('habitDetail.statistics.daysStreak')}</p>
             </div>
@@ -662,24 +666,13 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
             )}
             
             <div className="habit-detail__share-buttons">
-  {/* <button 
-    className="habit-detail__btn habit-detail__btn--copy-link"
-    onClick={handleCopyLink}
-  >
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-    </svg>
-    {t('habitDetail.friends.copyLink')}
-  </button> */}
-  
-  <button 
-    className="habit-detail__btn habit-detail__btn--primary habit-detail__btn--share"
-    onClick={handleAddFriend}
-  >
-    {t('habitDetail.friends.addFriend')}
-  </button>
-</div>
+              <button 
+                className="habit-detail__btn habit-detail__btn--primary habit-detail__btn--share"
+                onClick={handleAddFriend}
+              >
+                {t('habitDetail.friends.addFriend')}
+              </button>
+            </div>
           </div>
 
           {isCreator && (
