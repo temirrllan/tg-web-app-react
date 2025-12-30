@@ -66,6 +66,9 @@ const Today = ({ shouldShowFabHint = false }) => {
   const [fabHintShown, setFabHintShown] = useState(false);
   const [showWeekHint, setShowWeekHint] = useState(false);
   const [weekHintShown, setWeekHintShown] = useState(false);
+  
+  // 🆕 Флаг для отслеживания создания первой привычки
+  const [firstHabitCreated, setFirstHabitCreated] = useState(false);
 
   const getTodayDate = () => {
     const today = new Date();
@@ -92,9 +95,16 @@ const Today = ({ shouldShowFabHint = false }) => {
       loading,
       dateLoading,
       habitsCount: dateHabits.length,
-      fabHintShown
+      fabHintShown,
+      hasSeenInStorage: localStorage.getItem('hasSeenFabHint')
     });
     
+    // ✅ Показываем FAB hint если:
+    // 1. shouldShowFabHint === true (новый пользователь)
+    // 2. Загрузка завершена
+    // 3. Нет привычек
+    // 4. Hint еще не был показан в этой сессии
+    // 5. Hint не был показан ранее (проверка localStorage)
     if (shouldShowFabHint && 
         !loading && 
         !dateLoading &&
@@ -119,7 +129,7 @@ const Today = ({ shouldShowFabHint = false }) => {
     }
   }, [shouldShowFabHint, loading, dateLoading, dateHabits.length, fabHintShown]);
 
-  // 🆕 Обработчик закрытия FAB hint - СРАЗУ показываем Week hint
+  // 🆕 Обработчик закрытия FAB hint
   const handleFabHintClose = () => {
     console.log('✅ FAB hint closed');
     setShowFabHint(false);
@@ -129,20 +139,53 @@ const Today = ({ shouldShowFabHint = false }) => {
       habits_count: dateHabits.length
     });
     
-    // 🎯 СРАЗУ показываем Week Navigation hint
-    if (!weekHintShown && !localStorage.getItem('hasSeenWeekHint')) {
-      setTimeout(() => {
-        console.log('🎯 Showing Week Navigation hint after FAB close');
+    // ❌ НЕ показываем Week hint сразу - ждем создания первой привычки
+    console.log('⏳ Waiting for first habit to be created before showing Week hint');
+  };
+  
+  // 🎯 ПОКАЗ WEEK HINT - после создания первой привычки
+  useEffect(() => {
+    console.log('🔍 Week Hint check:', {
+      shouldShowFabHint,
+      firstHabitCreated,
+      loading,
+      dateLoading,
+      habitsCount: dateHabits.length,
+      weekHintShown,
+      hasSeenInStorage: localStorage.getItem('hasSeenWeekHint')
+    });
+    
+    // ✅ Показываем Week hint если:
+    // 1. shouldShowFabHint === true (новый пользователь)
+    // 2. Первая привычка была создана
+    // 3. Загрузка завершена
+    // 4. Есть хотя бы одна привычка
+    // 5. Hint еще не был показан в этой сессии
+    // 6. Hint не был показан ранее (проверка localStorage)
+    if (shouldShowFabHint && 
+        firstHabitCreated &&
+        !loading && 
+        !dateLoading &&
+        dateHabits.length > 0 &&
+        !weekHintShown &&
+        !localStorage.getItem('hasSeenWeekHint')) {
+      
+      console.log('🎯 Showing Week Navigation hint for new user after first habit created');
+      
+      const timer = setTimeout(() => {
         setShowWeekHint(true);
         setWeekHintShown(true);
         
         window.TelegramAnalytics?.track('week_hint_shown', {
           is_new_user: true,
-          trigger: 'after_fab_hint_close'
+          habits_count: dateHabits.length,
+          trigger: 'after_first_habit_created'
         });
-      }, 300);
+      }, 800);
+      
+      return () => clearTimeout(timer);
     }
-  };
+  }, [shouldShowFabHint, firstHabitCreated, loading, dateLoading, dateHabits.length, weekHintShown]);
   
   // 🆕 Обработчик закрытия Week hint
   const handleWeekHintClose = () => {
@@ -302,8 +345,13 @@ const Today = ({ shouldShowFabHint = false }) => {
 
   const handleCreateHabit = async (habitData) => {
     try {
+      console.log('🎯 Creating first habit for new user');
       await createHabit(habitData);
       setShowCreateForm(false);
+      
+      // 🆕 Устанавливаем флаг создания первой привычки
+      setFirstHabitCreated(true);
+      
       await reloadCurrentDateHabits();
       await checkUserSubscription();
       

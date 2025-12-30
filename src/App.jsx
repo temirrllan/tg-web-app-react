@@ -1,4 +1,4 @@
-// src/App.jsx - ФИНАЛЬНАЯ ВЕРСИЯ
+// src/App.jsx - ФИНАЛЬНАЯ ВЕРСИЯ С ОЧИСТКОЙ ПОДСКАЗОК
 
 import React, { useState, useEffect, useContext } from 'react';
 import { authenticateUser } from './services/auth';
@@ -143,12 +143,20 @@ function AppContent() {
           
           if (response.isNewUser === true) {
             console.log('🆕 NEW USER - SHOWING ONBOARDING + WILL SHOW FAB HINT');
+            
+            // 🆕 Очищаем localStorage от старых подсказок для нового пользователя
+            console.log('🧹 Clearing old hints from localStorage for new user');
+            localStorage.removeItem('hasSeenFabHint');
+            localStorage.removeItem('hasSeenWeekHint');
+            localStorage.removeItem('hasSeenSwipeHint');
+            localStorage.removeItem('previousHabitsCount');
+            
             setShowOnboarding(true);
             setShouldShowFabHint(true); // ✅ Устанавливаем флаг для подсказки
           } else {
             console.log('👤 EXISTING USER - SKIPPING ONBOARDING');
             // НЕ показываем onboarding
-            // НЕ показываем подсказку
+            // НЕ показываем подсказки
           }
           
         } else {
