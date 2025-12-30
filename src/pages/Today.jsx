@@ -13,7 +13,7 @@ import { useHabits } from "../hooks/useHabits";
 import { useTelegram } from "../hooks/useTelegram";
 import { habitService } from '../services/habits';
 import "./Today.css";
-import SwipeHint from '../components/hints/SwipeHint';
+import SwipeHint from '../components/habits/SwipeHint';
 import EditHabitForm from '../components/habits/EditHabitForm';
 import SubscriptionModal from '../components/modals/SubscriptionModal';
 import Subscription from './Subscription';
