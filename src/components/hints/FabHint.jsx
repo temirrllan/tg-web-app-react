@@ -1,4 +1,4 @@
-// src/components/hints/FabHint.jsx - МЕТОД BOX-SHADOW
+// src/components/hints/FabHint.jsx - С SVG МАСКОЙ
 import React, { useEffect } from 'react';
 import './FabHint.css';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -52,12 +52,44 @@ const FabHint = ({ show, onClose }) => {
 
   if (!show) return null;
 
+  // Вычисляем позицию FAB кнопки для выреза
+  // По умолчанию: bottom: 24px, right: 24px, size: 56px
+  const fabSize = 56;
+  const fabBottom = 24;
+  const fabRight = 24;
+  
+  // Координаты круга в SVG (origin - top left)
+  const circleCenterX = `calc(100% - ${fabRight + fabSize / 2}px)`;
+  const circleCenterY = `calc(100% - ${fabBottom + fabSize / 2}px)`;
+  const circleRadius = fabSize / 2 + 8; // +8px для небольшого запаса
+
   return (
     <>
-      {/* Затемнённый overlay с вырезом через box-shadow */}
+      {/* Затемнённый overlay с SVG маской для выреза */}
       <div className="fab-hint-overlay-wrapper" onClick={handleClose}>
-        {/* Прозрачный круг с огромной тенью = затемнение всего кроме круга */}
-        <div className="fab-hint-cutout-circle" />
+        {/* SVG с маской - создаёт вырез в затемнении */}
+        <svg className="fab-hint-svg-mask" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <mask id="fab-hint-mask">
+              {/* Белый = видимо (затемнено), чёрный = скрыто (не затемнено) */}
+              <rect width="100%" height="100%" fill="white"/>
+              {/* Вырезаем круг для FAB кнопки - область НЕ затемняется */}
+              <circle 
+                cx={circleCenterX}
+                cy={circleCenterY}
+                r={circleRadius}
+                fill="black"
+              />
+            </mask>
+          </defs>
+          {/* Затемнение с маской */}
+          <rect 
+            width="100%" 
+            height="100%" 
+            fill="rgba(0, 0, 0, 0.65)" 
+            mask="url(#fab-hint-mask)"
+          />
+        </svg>
         
         <div className="fab-hint-container" onClick={(e) => e.stopPropagation()}>
           {/* Белый балун с хвостиком */}

@@ -1,4 +1,4 @@
-// src/components/hints/WeekNavigationHint.jsx
+// src/components/hints/WeekNavigationHint.jsx - С SVG МАСКОЙ
 import React, { useEffect } from 'react';
 import './WeekNavigationHint.css';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -54,10 +54,33 @@ const WeekNavigationHint = ({ show, onClose }) => {
 
   return (
     <>
-      {/* Затемнённый overlay */}
+      {/* Затемнённый overlay с SVG маской для выреза */}
       <div className="week-hint-overlay-wrapper" onClick={handleClose}>
-        {/* Подсветка области WeekNavigation */}
-        <div className="week-hint-highlight" />
+        {/* SVG с маской - создаёт вырез в затемнении */}
+        <svg className="week-hint-svg-mask" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <mask id="week-hint-mask">
+              {/* Белый = видимо (затемнено), чёрный = скрыто (не затемнено) */}
+              <rect width="100%" height="100%" fill="white"/>
+              {/* Вырезаем прямоугольник для WeekNavigation - область НЕ затемняется */}
+              <rect 
+                x="0" 
+                y="220" 
+                width="100%" 
+                height="100" 
+                fill="black"
+                rx="16"
+              />
+            </mask>
+          </defs>
+          {/* Затемнение с маской */}
+          <rect 
+            width="100%" 
+            height="100%" 
+            fill="rgba(0, 0, 0, 0.65)" 
+            mask="url(#week-hint-mask)"
+          />
+        </svg>
         
         <div className="week-hint-container" onClick={(e) => e.stopPropagation()}>
           {/* Белый балун с хвостиком */}
