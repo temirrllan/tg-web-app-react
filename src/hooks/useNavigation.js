@@ -3,8 +3,7 @@ import { useTelegram } from './useTelegram';
 
 /**
  * useNavigation — управляет Telegram BackButton.
- * - Показывает "Назад" при монтировании, скрывает при размонтировании.
- * - Восстанавливает кнопку, если Telegram сбрасывает её (themeChanged, reinit и т.п.)
+ * НЕ меняет текст кнопки, если он уже установлен компонентом
  */
 export const useNavigation = (onBack = null, options = {}) => {
   const { tg } = useTelegram();
@@ -32,7 +31,7 @@ export const useNavigation = (onBack = null, options = {}) => {
       goBack();
     };
 
-    // Показываем кнопку "Назад"
+    // Показываем кнопку "Назад" (БЕЗ изменения текста)
     const showBackButton = () => {
       try {
         if (!backButton.isVisible && isVisible) {
@@ -50,16 +49,18 @@ export const useNavigation = (onBack = null, options = {}) => {
     backButton.onClick(handleBack);
 
     // 🔄 Слежение: Telegram иногда скрывает кнопку — возвращаем обратно
+    // ⚠️ НЕ меняем текст кнопки в интервале - только показываем
     intervalRef.current = setInterval(() => {
       try {
         if (isVisible && tg?.BackButton && !tg.BackButton.isVisible) {
           tg.BackButton.show();
-          console.log('Navigation: BackButton auto-restored');
+          // Убрали логирование, чтобы не спамить консоль
         }
       } catch {}
     }, 500);
 
     // Слушаем Telegram-события, чтобы повторно показывать кнопку
+    // Но НЕ меняем текст
     const restoreEvents = ['themeChanged', 'viewportChanged', 'reinit'];
     restoreEvents.forEach((event) => tg.onEvent?.(event, showBackButton));
 
