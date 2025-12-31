@@ -2,26 +2,29 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigation } from '../hooks/useNavigation';
 import { useTranslation } from '../hooks/useTranslation';
-import { useTheme } from '../hooks/useTheme'; // 🆕 ДОБАВИЛИ
+import { useTheme } from '../hooks/useTheme';
 import LanguageSelector from './LanguageSelector';
 import './Settings.css';
 import { useTelegramTheme } from '../hooks/useTelegramTheme';
 
 const Settings = ({ onClose }) => {
-  useNavigation(onClose);
   const { t, language } = useTranslation();
-  const { isDark, toggleTheme } = useTheme(); // 🆕 ИСПОЛЬЗУЕМ ThemeContext
-    useTelegramTheme();
+  const { isDark, toggleTheme } = useTheme();
+  useTelegramTheme();
 
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   const [inboxNotifications, setInboxNotifications] = useState(true);
+  
+  // 🔥 КРИТИЧНО: НЕ используем useNavigation когда открыт LanguageSelector
+  useNavigation(
+    showLanguageSelector ? null : onClose, // Если открыт LanguageSelector - не обрабатываем
+    { isVisible: !showLanguageSelector } // Скрываем кнопку когда открыт LanguageSelector
+  );
   
   useEffect(() => {
     const savedNotifications = localStorage.getItem('inboxNotifications') !== 'false';
     setInboxNotifications(savedNotifications);
   }, []);
-  
-  // 🔥 УДАЛИЛИ весь код с localStorage для темы - теперь через ThemeContext
 
   const handleInboxToggle = () => {
     const next = !inboxNotifications;
@@ -31,6 +34,7 @@ const Settings = ({ onClose }) => {
   
   const getLanguageDisplayName = () => t(`languages.${language}`);
   
+  // Если открыт LanguageSelector - показываем только его
   if (showLanguageSelector) {
     return <LanguageSelector onClose={() => setShowLanguageSelector(false)} />;
   }
@@ -68,13 +72,13 @@ const Settings = ({ onClose }) => {
           </div>
         </div>
         
-        {/* 🆕 Обновленный переключатель темы */}
+        {/* Переключатель темы */}
         <div className="settings__theme-section">
           <div className="settings__theme-item">
             <span className="settings__theme-label">{t('settings.nightTheme')}</span>
             <button 
               className={`settings__toggle ${isDark ? 'settings__toggle--active' : ''}`}
-              onClick={toggleTheme} // 🆕 Используем toggleTheme из контекста
+              onClick={toggleTheme}
               aria-pressed={isDark}
               aria-label={t('settings.nightTheme')}
             >

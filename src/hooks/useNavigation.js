@@ -3,13 +3,14 @@ import { useTelegram } from './useTelegram';
 
 /**
  * useNavigation — управляет Telegram BackButton.
- * НЕ меняет текст кнопки, если он уже установлен компонентом
+ * ВАЖНО: НЕ меняет текст кнопки, если isVisible = false
  */
 export const useNavigation = (onBack = null, options = {}) => {
   const { tg } = useTelegram();
   const { isVisible = true } = options;
   const backButtonHandlerRef = useRef(null);
   const intervalRef = useRef(null);
+  const isActiveRef = useRef(true);
 
   const goBack = useCallback(() => {
     console.log('Navigation: goBack called');
@@ -24,6 +25,20 @@ export const useNavigation = (onBack = null, options = {}) => {
     }
 
     const backButton = tg.BackButton;
+    isActiveRef.current = isVisible;
+
+    // Если не видим - ничего не делаем
+    if (!isVisible) {
+      console.log('🔇 [useNavigation] isVisible=false, hiding BackButton');
+      try {
+        backButton.hide();
+      } catch (e) {
+        console.warn('Hide failed:', e);
+      }
+      return;
+    }
+
+    console.log('🔊 [useNavigation] isVisible=true, setting up BackButton');
 
     // Основной обработчик
     const handleBack = () => {
@@ -31,12 +46,11 @@ export const useNavigation = (onBack = null, options = {}) => {
       goBack();
     };
 
-    // Показываем кнопку "Назад" (БЕЗ изменения текста)
+    // Показываем кнопку (БЕЗ изменения текста)
     const showBackButton = () => {
       try {
-        if (!backButton.isVisible && isVisible) {
+        if (!backButton.isVisible && isActiveRef.current) {
           backButton.show();
-          console.log('Navigation: BackButton forced visible');
         }
       } catch (err) {
         console.warn('Navigation: BackButton.show() failed', err);
@@ -49,31 +63,42 @@ export const useNavigation = (onBack = null, options = {}) => {
     backButton.onClick(handleBack);
 
     // 🔄 Слежение: Telegram иногда скрывает кнопку — возвращаем обратно
-    // ⚠️ НЕ меняем текст кнопки в интервале - только показываем
+    // НО: только если isActiveRef.current = true
     intervalRef.current = setInterval(() => {
       try {
-        if (isVisible && tg?.BackButton && !tg.BackButton.isVisible) {
+        if (isActiveRef.current && tg?.BackButton && !tg.BackButton.isVisible) {
           tg.BackButton.show();
-          // Убрали логирование, чтобы не спамить консоль
         }
       } catch {}
     }, 500);
 
-    // Слушаем Telegram-события, чтобы повторно показывать кнопку
-    // Но НЕ меняем текст
+    // Слушаем Telegram-события
     const restoreEvents = ['themeChanged', 'viewportChanged', 'reinit'];
-    restoreEvents.forEach((event) => tg.onEvent?.(event, showBackButton));
+    restoreEvents.forEach((event) => {
+      if (tg.onEvent) {
+        tg.onEvent(event, showBackButton);
+      }
+    });
 
     // Очистка
     return () => {
+      console.log('🧹 [useNavigation] Cleaning up');
+      isActiveRef.current = false;
+      
       try {
         backButton.offClick?.(backButtonHandlerRef.current);
       } catch {}
-      restoreEvents.forEach((event) => tg.offEvent?.(event, showBackButton));
+      
+      restoreEvents.forEach((event) => {
+        if (tg.offEvent) {
+          tg.offEvent(event, showBackButton);
+        }
+      });
+      
       clearInterval(intervalRef.current);
+      
       if (tg?.BackButton) {
         tg.BackButton.hide();
-        console.log('Navigation: BackButton hidden on cleanup');
       }
     };
   }, [tg, goBack, isVisible]);

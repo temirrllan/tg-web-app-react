@@ -9,56 +9,70 @@ const LanguageSelector = ({ onClose }) => {
   const { t, language, setLanguage, isChanging } = useTranslation();
   const [selectedLanguage, setSelectedLanguage] = useState(language);
   const [isSelecting, setIsSelecting] = useState(false);
-  const backButtonHandlerRef = useRef(null);
+  const backButtonSetupRef = useRef(false);
   useTelegramTheme();
 
-  // 🔥 Устанавливаем текст BackButton ОДИН РАЗ при монтировании
+  // 🔥 КРИТИЧНО: Устанавливаем BackButton ТОЛЬКО ОДИН РАЗ
   useEffect(() => {
-    if (!tg?.BackButton) return;
+    if (!tg?.BackButton || backButtonSetupRef.current) return;
     
-    // Определяем текст "Назад" на текущем языке
-    const backTexts = {
-      en: 'Back',
-      ru: 'Назад',
-      kk: 'Артқа'
+    backButtonSetupRef.current = true; // Помечаем, что уже настроили
+    
+    console.log('🔙 [LanguageSelector] Setting up BackButton');
+    
+    const backButton = tg.BackButton;
+    
+    // Определяем текст на текущем языке
+    const getBackText = (lang) => {
+      const texts = {
+        en: 'Back',
+        ru: 'Назад',
+        kk: 'Артқа'
+      };
+      return texts[lang] || texts['en'];
     };
     
-    const backText = backTexts[language] || backTexts['en'];
+    const initialText = getBackText(language);
     
-    console.log('🔙 Setting BackButton text once:', backText);
+    // Обработчик клика
+    const handleBackClick = () => {
+      console.log('🔙 [LanguageSelector] Back button clicked');
+      onClose();
+    };
     
     try {
-      // Устанавливаем текст один раз
-      if (typeof tg.BackButton.setText === 'function') {
-        tg.BackButton.setText(backText);
+      // 1. Отключаем все предыдущие обработчики
+      backButton.offClick(handleBackClick);
+      
+      // 2. Устанавливаем текст
+      if (typeof backButton.setText === 'function') {
+        backButton.setText(initialText);
+        console.log('✅ [LanguageSelector] Set text:', initialText);
       }
       
-      // Показываем кнопку
-      tg.BackButton.show();
+      // 3. Показываем кнопку
+      backButton.show();
       
-      // Обработчик клика
-      const handleBack = () => {
-        console.log('🔙 BackButton clicked, closing...');
-        onClose();
-      };
+      // 4. Добавляем обработчик
+      backButton.onClick(handleBackClick);
       
-      backButtonHandlerRef.current = handleBack;
-      tg.BackButton.onClick(handleBack);
-      
-      // Cleanup: скрываем кнопку при размонтировании
-      return () => {
-        try {
-          tg.BackButton.offClick(backButtonHandlerRef.current);
-          tg.BackButton.hide();
-          console.log('🔙 BackButton cleanup done');
-        } catch (e) {
-          console.warn('BackButton cleanup error:', e);
-        }
-      };
+      console.log('✅ [LanguageSelector] BackButton setup complete');
     } catch (error) {
-      console.warn('BackButton setup error:', error);
+      console.error('❌ [LanguageSelector] BackButton setup error:', error);
     }
-  }, []); // ⚠️ Пустой массив - выполняется ТОЛЬКО при монтировании
+    
+    // Cleanup
+    return () => {
+      console.log('🧹 [LanguageSelector] Cleaning up BackButton');
+      try {
+        backButton.offClick(handleBackClick);
+        backButton.hide();
+        backButtonSetupRef.current = false;
+      } catch (e) {
+        console.warn('⚠️ [LanguageSelector] Cleanup error:', e);
+      }
+    };
+  }, []); // Пустой массив - выполняется ТОЛЬКО при монтировании
 
   const languages = [
     { code: 'en', name: 'English', nativeName: 'English' },
@@ -67,23 +81,39 @@ const LanguageSelector = ({ onClose }) => {
   ];
   
   const handleLanguageSelect = async (langCode) => {
-    if (isSelecting || isChanging) return;
+    if (isSelecting || isChanging) {
+      console.log('⚠️ Already selecting or changing language');
+      return;
+    }
+    
+    console.log('🌍 [LanguageSelector] Language selected:', langCode);
     
     setIsSelecting(true);
     setSelectedLanguage(langCode);
     
-    // Добавляем вибрацию
+    // Вибрация
     if (window.Telegram?.WebApp?.HapticFeedback) {
-      window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      try {
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      } catch (e) {
+        console.warn('Haptic feedback failed:', e);
+      }
     }
     
-    // Применяем изменение языка
-    await setLanguage(langCode);
-    
-    // Закрываем экран
-    setTimeout(() => {
-      onClose();
-    }, 150);
+    try {
+      // Применяем изменение языка
+      await setLanguage(langCode);
+      console.log('✅ [LanguageSelector] Language changed to:', langCode);
+      
+      // Небольшая задержка для завершения операции
+      setTimeout(() => {
+        console.log('🚪 [LanguageSelector] Closing...');
+        onClose();
+      }, 200);
+    } catch (error) {
+      console.error('❌ [LanguageSelector] Language change error:', error);
+      setIsSelecting(false);
+    }
   };
   
   return (
