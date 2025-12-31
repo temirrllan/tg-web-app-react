@@ -128,3 +128,50 @@
     touch-action: pan-x;
   }
 }
+
+
+/* ==================== ТЕМНАЯ ТЕМА ==================== */
+
+/* Базовые стили для темной темы */
+.dark-theme .week-navigation__day {
+  color: #EBEBF5;
+}
+
+.dark-theme .week-navigation__day:hover:not(.week-navigation__day--active) {
+  background: rgba(167, 217, 108, 0.15);
+}
+
+.dark-theme .week-navigation__day--active {
+  background: #A7D96C !important;
+  color: #1D1D1F !important;
+  font-weight: 600;
+}
+
+/* 🆕 КРИТИЧНО: Today должен быть виден в неактивном состоянии */
+.dark-theme .week-navigation__day--today:not(.week-navigation__day--active) {
+  font-weight: 700;
+  color: #FFFFFF !important; /* Белый для максимальной видимости */
+  background: rgba(167, 217, 108, 0.2); /* Легкий зеленый фон */
+}
+
+/* Yesterday тоже делаем заметным */
+.dark-theme .week-navigation__day--yesterday:not(.week-navigation__day--active) {
+  color: #EBEBF5;
+  font-weight: 500;
+}
+
+/* Прошедшие дни */
+.dark-theme .week-navigation__day--past:not(.week-navigation__day--active) {
+  opacity: 0.5;
+  color: #8E8E93;
+}
+
+/* Readonly состояние */
+.dark-theme .week-navigation__day--readonly {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.dark-theme .week-navigation__day--readonly:hover {
+  background: transparent;
+}
