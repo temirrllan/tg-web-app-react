@@ -44,7 +44,8 @@ const CircularProgress = ({ value, total, color }) => {
   );
 };
 
-const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
+const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {useNavigation(onClose);
+
   const { tg, user: currentUser } = useTelegram();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
@@ -69,8 +70,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     yearTotal: 365
   });
 
-  useNavigation(onClose);
-
+  
   const [isCreator, setIsCreator] = useState(false);
 
   // 🆕 ФУНКЦИЯ ДЛЯ ОБНОВЛЕНИЯ СТАТИСТИКИ
