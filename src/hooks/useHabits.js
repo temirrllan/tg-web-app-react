@@ -159,107 +159,113 @@ export const useHabits = () => {
   }, []);
 
   const markHabit = useCallback(async (habitId, status = 'completed', date) => {
-  try {
-    vibrate();
-    
-    if (!date) {
-      throw new Error('Date is required for marking habit');
-    }
-    
-    console.log(`✏️ Marking habit ${habitId} as ${status} for ${date}`);
-    
-    const today = new Date().toISOString().split('T')[0];
-    
-    if (date === today) {
-      setTodayHabits(prev => {
-        return prev.map(h => 
-          h.id === habitId 
-            ? { ...h, today_status: status }
-            : h
-        );
-      });
+    try {
+      vibrate();
       
-      setStats(prev => {
-        const currentHabit = prev.completed;
-        const newCompleted = status === 'completed' 
-          ? currentHabit + 1 
-          : currentHabit;
-        return { ...prev, completed: newCompleted };
-      });
-    } else {
-      console.log(`✅ Marking for ${date} (not today), skipping UI update`);
+      if (!date) {
+        throw new Error('Date is required for marking habit');
+      }
+      
+      console.log(`✏️ Marking habit ${habitId} as ${status} for ${date}`);
+      
+      const today = new Date().toISOString().split('T')[0];
+      
+      // 🆕 ВАЖНО: Обновляем todayHabits ТОЛЬКО если это сегодня
+      if (date === today) {
+        // Оптимистично обновляем UI для сегодня
+        setTodayHabits(prev => {
+          return prev.map(h => 
+            h.id === habitId 
+              ? { ...h, today_status: status }
+              : h
+          );
+        });
+        
+        // Обновляем статистику
+        setStats(prev => {
+          const currentHabit = prev.completed;
+          const newCompleted = status === 'completed' 
+            ? currentHabit + 1 
+            : currentHabit;
+          return { ...prev, completed: newCompleted };
+        });
+      } else {
+        // Для других дат - НЕ трогаем todayHabits
+        console.log(`✅ Marking for ${date} (not today), skipping UI update`);
+      }
+      
+      // Отправляем на сервер
+      const result = await habitService.markHabit(habitId, status, date);
+      
+      console.log('✅ Mark habit response:', result);
+      
+      return result;
+    } catch (err) {
+      console.error('❌ markHabit error:', err);
+      
+      // 🆕 Откатываем ТОЛЬКО для сегодня
+      const today = new Date().toISOString().split('T')[0];
+      if (date === today) {
+        await loadTodayHabits(false);
+      }
+      
+      setError(err.message || 'Failed to mark habit');
+      throw err;
     }
-    
-    const result = await markHabit(habitId, status, date);
-    
-    // 🆕 ВАЖНО: Инвалидируем статистику этой привычки
-    habitService.invalidateHabitsCache();
-    
-    console.log('✅ Mark habit response:', result);
-    
-    return result;
-  } catch (err) {
-    console.error('❌ markHabit error:', err);
-    
-    const today = new Date().toISOString().split('T')[0];
-    if (date === today) {
-      await loadTodayHabits(false);
-    }
-    
-    setError(err.message || 'Failed to mark habit');
-    throw err;
-  }
-}, [loadTodayHabits]);
+  }, [loadTodayHabits]);
 
-const unmarkHabit = useCallback(async (habitId, date) => {
-  try {
-    vibrate();
-    
-    if (!date) {
-      throw new Error('Date is required for unmarking habit');
-    }
-    
-    console.log(`↩️ Unmarking habit ${habitId} for ${date}`);
-    
-    const today = new Date().toISOString().split('T')[0];
-    
-    if (date === today) {
-      setTodayHabits(prev => {
-        return prev.map(h => 
-          h.id === habitId 
-            ? { ...h, today_status: 'pending' }
-            : h
-        );
-      });
+  const unmarkHabit = useCallback(async (habitId, date) => {
+    try {
+      vibrate();
       
-      setStats(prev => ({
-        ...prev,
-        completed: Math.max(0, prev.completed - 1)
-      }));
-    } else {
-      console.log(`✅ Unmarking for ${date} (not today), skipping UI update`);
+      if (!date) {
+        throw new Error('Date is required for unmarking habit');
+      }
+      
+      console.log(`↩️ Unmarking habit ${habitId} for ${date}`);
+      
+      const today = new Date().toISOString().split('T')[0];
+      
+      // 🆕 ВАЖНО: Обновляем todayHabits ТОЛЬКО если это сегодня
+      if (date === today) {
+        // Оптимистично обновляем UI для сегодня
+        setTodayHabits(prev => {
+          return prev.map(h => 
+            h.id === habitId 
+              ? { ...h, today_status: 'pending' }
+              : h
+          );
+        });
+        
+        // Обновляем статистику
+        setStats(prev => ({
+          ...prev,
+          completed: Math.max(0, prev.completed - 1)
+        }));
+      } else {
+        // Для других дат - НЕ трогаем todayHabits
+        console.log(`✅ Unmarking for ${date} (not today), skipping UI update`);
+      }
+      
+      // Отправляем на сервер
+      const result = await habitService.unmarkHabit(habitId, date);
+      
+      console.log('✅ Unmark habit response:', result);
+      
+      return result;
+    } catch (err) {
+      console.error('❌ unmarkHabit error:', err);
+      
+      // 🆕 Откатываем ТОЛЬКО для сегодня
+      const today = new Date().toISOString().split('T')[0];
+      if (date === today) {
+        await loadTodayHabits(false);
+      }
+      
+      setError(err.message || 'Failed to unmark habit');
+      throw err;
     }
-    
-    const result = await unmarkHabit(habitId, date);
-    
-    // 🆕 ВАЖНО: Инвалидируем статистику этой привычки
-    habitService.invalidateHabitsCache();
-    
-    console.log('✅ Unmark habit response:', result);
-    
-    return result;
-  } catch (err) {
-    console.error('❌ unmarkHabit error:', err);
-    
-    const today = new Date().toISOString().split('T')[0];
-    if (date === today) {
-      await loadTodayHabits(false);
-    }
-    
-    setError(err.message || 'Failed to unmark habit');
-    throw err;
-  }
-}, [loadTodayHabits]);
+  }, [loadTodayHabits]);
 
   const createHabit = useCallback(async (habitData) => {
     try {
