@@ -86,6 +86,32 @@ const Today = ({ shouldShowFabHint = false }) => {
   const [dateLoading, setDateLoading] = useState(false);
   const [dateStats, setDateStats] = useState({ completed: 0, total: 0 });
   const [datePhrase, setDatePhrase] = useState(null);
+  // 🔥 КРИТИЧНО: Логируем изменения todayHabits
+  useEffect(() => {
+    console.log('🔥 ========== todayHabits CHANGED ==========');
+    console.log('New todayHabits:', todayHabits.map(h => ({
+      id: h.id,
+      title: h.title,
+      today_status: h.today_status
+    })));
+    console.log('Current selectedDate:', selectedDate);
+    console.log('Is today?', selectedDate === getTodayDate());
+    console.log('==========================================');
+  }, [todayHabits]);
+
+  // 🔥 КРИТИЧНО: Логируем изменения dateHabits
+  useEffect(() => {
+    console.log('📅 ========== dateHabits CHANGED ==========');
+    console.log('New dateHabits:', dateHabits.map(h => ({
+      id: h.id,
+      title: h.title,
+      today_status: h.today_status
+    })));
+    console.log('For date:', selectedDate);
+    console.log('==========================================');
+  }, [dateHabits]);
+
+
   useEffect(() => {
     console.log('🔍 FAB Hint check:', {
       shouldShowFabHint,
@@ -303,9 +329,19 @@ const Today = ({ shouldShowFabHint = false }) => {
    useEffect(() => {
     const today = getTodayDate();
     // КРИТИЧНО: Синхронизируем только если это сегодня И мы не в процессе загрузки И не было ручного изменения
+     console.log('🔄 ========== SYNC useEffect TRIGGERED ==========');
+    console.log('selectedDate:', selectedDate);
+    console.log('today:', today);
+    console.log('dateLoading:', dateLoading);
+    console.log('loading:', loading);
+    console.log('Should sync?', selectedDate === today && !dateLoading && !loading);
     if (selectedDate === today && !dateLoading && !loading) {
       // Проверяем, изменились ли данные (предотвращаем ненужные обновления)
       const habitsChanged = JSON.stringify(dateHabits) !== JSON.stringify(todayHabits);
+      console.log('📊 Habits comparison:');
+      console.log('dateHabits:', dateHabits.map(h => `${h.id}:${h.today_status}`));
+      console.log('todayHabits:', todayHabits.map(h => `${h.id}:${h.today_status}`));
+      console.log('habitsChanged:', habitsChanged);
       if (habitsChanged) {
         setDateHabits(todayHabits);
         setDateStats(stats);

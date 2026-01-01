@@ -209,39 +209,54 @@ export const habitService = {
     const markDate = date || new Date().toISOString().split('T')[0];
     const today = new Date().toISOString().split('T')[0];
     const isToday = markDate === today;
-    
+    console.log('🟢 ========== markHabit SERVICE ==========');
+    console.log('Parameters:', { habitId, status, markDate });
+    console.log('Today:', today);
+    console.log('Is marking for today?', isToday);
     console.log('🎯 markHabit:', { habitId, status, markDate, today, isToday });
     
     // Оптимистичное обновление кэша
     const todayKey = CACHE_KEYS.todayHabits();
     const dateKey = CACHE_KEYS.habitsForDate(markDate);
-    
+        console.log('Cache keys:', { todayKey, dateKey });
+
     // ВАЖНО: Обновляем ТОЛЬКО нужный кэш
     if (isToday) {
+            console.log('📝 Updating TODAY cache optimistically');
+
       this.updateHabitStatusInCache(todayKey, habitId, status);
+    }else {
+      console.log('📝 NOT updating TODAY cache (marking for different date)');
     }
+        console.log('📝 Updating DATE cache optimistically for', markDate);
+
     this.updateHabitStatusInCache(dateKey, habitId, status);
     
     try {
+            console.log('📤 Sending mark request to API...');
+
       const { data } = await api.post(`/habits/${habitId}/mark`, {
         status,
         date: markDate
       });
-      
+            console.log('✅ API response received:', data);
+
       // 🔥 КРИТИЧНО: Обновляем с сервера ТОЛЬКО соответствующую дату
       if (isToday) {
-        console.log('✅ Updating today habits from server');
+        console.log('🔄 Refreshing TODAY habits from server (because isToday=true)');
         await this.getTodayHabits(true);
       } else {
         console.log('✅ Updating habits for date', markDate, 'from server');
         // Для других дат обновляем только их кэш
+         console.log('🔄 Refreshing habits for', markDate, 'from server (because isToday=false)');
+        console.log('⚠️ NOT refreshing TODAY habits - they should remain unchanged!');
         await this.getHabitsForDate(markDate, true);
       }
       
       return data;
     } catch (error) {
       // Откатываем оптимистичное обновление
-      console.error('❌ markHabit error, rolling back cache');
+      console.error('❌ markHabit API error:', error);
       if (isToday) {
         cacheService.invalidate('habits_today');
       }
@@ -258,7 +273,10 @@ export const habitService = {
     const unmarkDate = date || new Date().toISOString().split('T')[0];
     const today = new Date().toISOString().split('T')[0];
     const isToday = unmarkDate === today;
-    
+     console.log('🟡 ========== unmarkHabit SERVICE ==========');
+    console.log('Parameters:', { habitId, unmarkDate });
+    console.log('Today:', today);
+    console.log('Is unmarking for today?', isToday);
     console.log('↩️ unmarkHabit:', { habitId, unmarkDate, today, isToday });
     
     // Оптимистичное обновление
@@ -266,20 +284,35 @@ export const habitService = {
     const dateKey = CACHE_KEYS.habitsForDate(unmarkDate);
     
     // ВАЖНО: Обновляем ТОЛЬКО нужный кэш
-    if (isToday) {
+    if (isToday) {      console.log('📝 Updating TODAY cache optimistically');
+
       this.updateHabitStatusInCache(todayKey, habitId, 'pending');
-    }
+    }else {
+      console.log('📝 NOT updating TODAY cache (unmarking for different date)');
+    }    console.log('📝 Updating DATE cache optimistically for', unmarkDate);
+
     this.updateHabitStatusInCache(dateKey, habitId, 'pending');
     
     try {
+            console.log('📤 Sending unmark request to API...');
+
       const { data } = await api.delete(`/habits/${habitId}/mark?date=${unmarkDate}`);
-      
+      console.log('✅ API response received:', data);
+
+      console.log('🗑️ Invalidating stats cache');
+      cacheService.invalidate(`habit_stats_${habitId}`);
+      cacheService.invalidate(`habit_members_${habitId}`);
+
+
       // 🔥 КРИТИЧНО: Обновляем с сервера ТОЛЬКО соответствующую дату
       if (isToday) {
+        console.log('🔄 Refreshing TODAY habits from server (because isToday=true)');
+
         console.log('✅ Updating today habits from server');
         await this.getTodayHabits(true);
       } else {
-        console.log('✅ Updating habits for date', unmarkDate, 'from server');
+       console.log('🔄 Refreshing habits for', unmarkDate, 'from server (because isToday=false)');
+        console.log('⚠️ NOT refreshing TODAY habits - they should remain unchanged!');
         // Для других дат обновляем только их кэш
         await this.getHabitsForDate(unmarkDate, true);
       }
@@ -288,9 +321,13 @@ export const habitService = {
     } catch (error) {
       console.error('❌ unmarkHabit error, rolling back cache');
       if (isToday) {
+        console.log('⏮️ Rolling back TODAY cache');
         cacheService.invalidate('habits_today');
       }
+      console.log('⏮️ Rolling back DATE cache for', unmarkDate);
       cacheService.invalidate(`habits_date_${unmarkDate}`);
+      cacheService.invalidate(`habit_stats_${habitId}`);
+
       throw error;
     }
   },
@@ -299,11 +336,21 @@ export const habitService = {
    * Обновление статуса в кэше (для оптимистичных обновлений)
    */
   updateHabitStatusInCache(cacheKey, habitId, newStatus) {
+    console.log('🔧 updateHabitStatusInCache:', { cacheKey, habitId, newStatus });
     const cached = cacheService.get(cacheKey);
-    if (!cached || !cached.habits) return;
+    if (!cached || !cached.habits) {
+      console.log('⚠️ No cached data found for key:', cacheKey);
+      return;
+    }
+
+    console.log('Current cached habits:', cached.habits.map(h => ({
+      id: h.id,
+      status: h.today_status
+    })));
 
     const updatedHabits = cached.habits.map(habit => {
       if (habit.id === habitId) {
+        console.log(`✏️ Updating habit ${habitId}: ${habit.today_status} -> ${newStatus}`);
         return { ...habit, today_status: newStatus };
       }
       return habit;
@@ -315,7 +362,8 @@ export const habitService = {
       stats: this.recalculateStats(updatedHabits)
     };
 
-    cacheService.set(cacheKey, updatedData, CACHE_TTL.FAST);
+    cacheService.set(cacheKey, updatedData, CACHE_TTL.FAST)
+    console.log('✅ Cache updated');;
   },
 
   /**
