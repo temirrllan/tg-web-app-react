@@ -300,17 +300,12 @@ const Today = ({ shouldShowFabHint = false }) => {
     }
   }, [selectedDate, loadHabitsForDate]);
 
-   useEffect(() => {
+  useEffect(() => {
     const today = getTodayDate();
-    // КРИТИЧНО: Синхронизируем только если это сегодня И мы не в процессе загрузки И не было ручного изменения
     if (selectedDate === today && !dateLoading && !loading) {
-      // Проверяем, изменились ли данные (предотвращаем ненужные обновления)
-      const habitsChanged = JSON.stringify(dateHabits) !== JSON.stringify(todayHabits);
-      if (habitsChanged) {
-        setDateHabits(todayHabits);
-        setDateStats(stats);
-        setDatePhrase(phrase);
-      }
+      setDateHabits(todayHabits);
+      setDateStats(stats);
+      setDatePhrase(phrase);
     }
   }, [todayHabits, stats, phrase, selectedDate, dateLoading, loading]);
 
@@ -514,11 +509,10 @@ const Today = ({ shouldShowFabHint = false }) => {
     }
   }, [dateHabits.length, isEditableDate]);
 
-const handleMark = useCallback(async (habitId, status) => {
+  const handleMark = useCallback(async (habitId, status) => {
     if (!isEditableDate) return;
     
     try {
-      // Оптимистичное обновление UI
       setDateHabits(prev => 
         prev.map(h => h.id === habitId ? { ...h, today_status: status } : h)
       );
@@ -528,17 +522,7 @@ const handleMark = useCallback(async (habitId, status) => {
         : dateStats.completed;
       setDateStats(prev => ({ ...prev, completed: newCompleted }));
       
-      // Выполняем API запрос
       await markHabit(habitId, status, selectedDate);
-      
-      // ВАЖНО: Не перезагружаем данные автоматически - только если это сегодня
-      const today = getTodayDate();
-      if (selectedDate === today) {
-        // Для сегодня - обновление через useEffect выше
-      } else {
-        // Для вчера - данные уже обновлены оптимистично
-        console.log(`✅ Habit ${habitId} marked as ${status} for ${selectedDate}`);
-      }
       
       // 📊 Привычка отмечена
       window.TelegramAnalytics?.track('habit_marked', {
@@ -562,16 +546,13 @@ const handleMark = useCallback(async (habitId, status) => {
       
     } catch (error) {
       console.error('Error marking habit:', error);
-      // Откатываем оптимистичное обновление при ошибке
-      await reloadCurrentDateHabits();
     }
-  }, [isEditableDate, selectedDate, markHabit, dateStats, reloadCurrentDateHabits]);
+  }, [isEditableDate, selectedDate, markHabit, dateStats]);
 
   const handleUnmark = useCallback(async (habitId) => {
     if (!isEditableDate) return;
     
     try {
-      // Оптимистичное обновление UI
       setDateHabits(prev => 
         prev.map(h => h.id === habitId ? { ...h, today_status: 'pending' } : h)
       );
@@ -581,17 +562,7 @@ const handleMark = useCallback(async (habitId, status) => {
         completed: Math.max(0, prev.completed - 1) 
       }));
       
-      // Выполняем API запрос
       await unmarkHabit(habitId, selectedDate);
-      
-      // ВАЖНО: Не перезагружаем данные автоматически
-      const today = getTodayDate();
-      if (selectedDate === today) {
-        // Для сегодня - обновление через useEffect
-      } else {
-        // Для вчера - данные уже обновлены оптимистично
-        console.log(`✅ Habit ${habitId} unmarked for ${selectedDate}`);
-      }
       
       // 📊 Привычка снята с отметки
       window.TelegramAnalytics?.track('habit_unmarked', {
@@ -602,10 +573,8 @@ const handleMark = useCallback(async (habitId, status) => {
       
     } catch (error) {
       console.error('Error unmarking habit:', error);
-      // Откатываем оптимистичное обновление при ошибке
-      await reloadCurrentDateHabits();
     }
-  }, [isEditableDate, selectedDate, unmarkHabit, reloadCurrentDateHabits]);
+  }, [isEditableDate, selectedDate, unmarkHabit]);
 
   const getMotivationalBackgroundColor = () => {
     if (datePhrase && datePhrase.backgroundColor) {
