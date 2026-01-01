@@ -1,6 +1,4 @@
-// src/services/habitsOptimized.js - ИСПРАВЛЕННАЯ ВЕРСИЯ
-// Проблема: При отметке за вчерашний день обновлялись данные для сегодня
-// Решение: Обновляем ТОЛЬКО соответствующую дату
+// src/services/habitsOptimized.js
 
 import api from './api';
 import cacheService from './cacheService';
@@ -23,10 +21,10 @@ const CACHE_KEYS = {
  * TTL для разных типов данных
  */
 const CACHE_TTL = {
-  FAST: 1 * 60 * 1000,      // 1 минута
-  MEDIUM: 5 * 60 * 1000,    // 5 минут
-  SLOW: 30 * 60 * 1000,     // 30 минут
-  STATIC: 60 * 60 * 1000    // 1 час
+  FAST: 1 * 60 * 1000,      // 1 минута - для часто меняющихся данных
+  MEDIUM: 5 * 60 * 1000,    // 5 минут - для обычных данных
+  SLOW: 30 * 60 * 1000,     // 30 минут - для редко меняющихся данных
+  STATIC: 60 * 60 * 1000    // 1 час - для статических данных
 };
 
 export const habitService = {
@@ -202,98 +200,79 @@ export const habitService = {
   },
 
   /**
-   * 🔥 ИСПРАВЛЕНО: Отметить привычку (с оптимистичным обновлением)
-   * Теперь обновляет ТОЛЬКО соответствующую дату
+   * Отметить привычку (с оптимистичным обновлением)
    */
-  async markHabit(habitId, status = 'completed', date) {
-    const markDate = date || new Date().toISOString().split('T')[0];
-    const today = new Date().toISOString().split('T')[0];
-    const isToday = markDate === today;
-    
-    console.log('🎯 markHabit:', { habitId, status, markDate, today, isToday });
-    
-    // Оптимистичное обновление кэша
-    const todayKey = CACHE_KEYS.todayHabits();
-    const dateKey = CACHE_KEYS.habitsForDate(markDate);
-    
-    // ВАЖНО: Обновляем ТОЛЬКО нужный кэш
-    if (isToday) {
-      this.updateHabitStatusInCache(todayKey, habitId, status);
-    }
-    this.updateHabitStatusInCache(dateKey, habitId, status);
-    
-    try {
-      const { data } = await api.post(`/habits/${habitId}/mark`, {
-        status,
-        date: markDate
-      });
-      
-      // 🔥 КРИТИЧНО: Обновляем с сервера ТОЛЬКО соответствующую дату
-      if (isToday) {
-        console.log('✅ Updating today habits from server');
-        await this.getTodayHabits(true);
-      } else {
-        console.log('✅ Updating habits for date', markDate, 'from server');
-        // Для других дат обновляем только их кэш
-        await this.getHabitsForDate(markDate, true);
-      }
-      
-      return data;
-    } catch (error) {
-      // Откатываем оптимистичное обновление
-      console.error('❌ markHabit error, rolling back cache');
-      if (isToday) {
-        cacheService.invalidate('habits_today');
-      }
-      cacheService.invalidate(`habits_date_${markDate}`);
-      throw error;
-    }
-  },
-
   /**
-   * 🔥 ИСПРАВЛЕНО: Снять отметку
-   * Теперь обновляет ТОЛЬКО соответствующую дату
-   */
-  async unmarkHabit(habitId, date) {
-    const unmarkDate = date || new Date().toISOString().split('T')[0];
-    const today = new Date().toISOString().split('T')[0];
-    const isToday = unmarkDate === today;
+ * Отметить привычку (с оптимистичным обновлением)
+ */
+async markHabit(habitId, status = 'completed', date) {
+  const markDate = date || new Date().toISOString().split('T')[0];
+  
+  // Оптимистичное обновление кэша
+  const todayKey = CACHE_KEYS.todayHabits();
+  const dateKey = CACHE_KEYS.habitsForDate(markDate);
+  
+  this.updateHabitStatusInCache(todayKey, habitId, status);
+  this.updateHabitStatusInCache(dateKey, habitId, status);
+  
+  try {
+    const { data } = await api.post(`/habits/${habitId}/mark`, {
+      status,
+      date: markDate
+    });
     
-    console.log('↩️ unmarkHabit:', { habitId, unmarkDate, today, isToday });
+    // 🆕 КРИТИЧНО: Инвалидируем статистику привычки
+    cacheService.invalidate(`habit_stats_${habitId}`);
+    cacheService.invalidate(`habit_members_${habitId}`);
     
-    // Оптимистичное обновление
-    const todayKey = CACHE_KEYS.todayHabits();
-    const dateKey = CACHE_KEYS.habitsForDate(unmarkDate);
-    
-    // ВАЖНО: Обновляем ТОЛЬКО нужный кэш
-    if (isToday) {
-      this.updateHabitStatusInCache(todayKey, habitId, 'pending');
+    // Принудительно обновляем кэш с сервера
+    await this.getTodayHabits(true);
+    if (markDate !== new Date().toISOString().split('T')[0]) {
+      await this.getHabitsForDate(markDate, true);
     }
-    this.updateHabitStatusInCache(dateKey, habitId, 'pending');
     
-    try {
-      const { data } = await api.delete(`/habits/${habitId}/mark?date=${unmarkDate}`);
-      
-      // 🔥 КРИТИЧНО: Обновляем с сервера ТОЛЬКО соответствующую дату
-      if (isToday) {
-        console.log('✅ Updating today habits from server');
-        await this.getTodayHabits(true);
-      } else {
-        console.log('✅ Updating habits for date', unmarkDate, 'from server');
-        // Для других дат обновляем только их кэш
-        await this.getHabitsForDate(unmarkDate, true);
-      }
-      
-      return data;
-    } catch (error) {
-      console.error('❌ unmarkHabit error, rolling back cache');
-      if (isToday) {
-        cacheService.invalidate('habits_today');
-      }
-      cacheService.invalidate(`habits_date_${unmarkDate}`);
-      throw error;
+    return data;
+  } catch (error) {
+    // Откатываем оптимистичное обновление
+    cacheService.invalidate('habits_');
+    cacheService.invalidate(`habit_stats_${habitId}`);
+    throw error;
+  }
+},
+
+/**
+ * Снять отметку
+ */
+async unmarkHabit(habitId, date) {
+  const unmarkDate = date || new Date().toISOString().split('T')[0];
+  
+  // Оптимистичное обновление
+  const todayKey = CACHE_KEYS.todayHabits();
+  const dateKey = CACHE_KEYS.habitsForDate(unmarkDate);
+  
+  this.updateHabitStatusInCache(todayKey, habitId, 'pending');
+  this.updateHabitStatusInCache(dateKey, habitId, 'pending');
+  
+  try {
+    const { data } = await api.delete(`/habits/${habitId}/mark?date=${unmarkDate}`);
+    
+    // 🆕 КРИТИЧНО: Инвалидируем статистику привычки
+    cacheService.invalidate(`habit_stats_${habitId}`);
+    cacheService.invalidate(`habit_members_${habitId}`);
+    
+    // Обновляем с сервера
+    await this.getTodayHabits(true);
+    if (unmarkDate !== new Date().toISOString().split('T')[0]) {
+      await this.getHabitsForDate(unmarkDate, true);
     }
-  },
+    
+    return data;
+  } catch (error) {
+    cacheService.invalidate('habits_');
+    cacheService.invalidate(`habit_stats_${habitId}`);
+    throw error;
+  }
+},
 
   /**
    * Обновление статуса в кэше (для оптимистичных обновлений)
