@@ -11,6 +11,7 @@ import './HabitDetail.css';
 import FriendSwipeHint from '../components/habits/FriendSwipeHint';
 import { useTranslation } from "../hooks/useTranslation";
 import { useTelegramTheme } from '../hooks/useTelegramTheme';
+
 const CircularProgress = ({ value, total, color }) => {
   const percentage = total > 0 ? (value / total) * 100 : 0;
   const radius = 42;
@@ -19,7 +20,6 @@ const CircularProgress = ({ value, total, color }) => {
 
   return (
     <svg width="100" height="100" style={{ transform: 'rotate(-90deg)' }}>
-      {/* Фоновый круг */}
       <circle
         cx="50"
         cy="50"
@@ -28,7 +28,6 @@ const CircularProgress = ({ value, total, color }) => {
         stroke="var(--bg-tertiary, #F2F2F7)"
         strokeWidth="8"
       />
-      {/* Прогресс круг */}
       <circle
         cx="50"
         cy="50"
@@ -44,6 +43,7 @@ const CircularProgress = ({ value, total, color }) => {
     </svg>
   );
 };
+
 const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const { tg, user: currentUser } = useTelegram();
   const { t } = useTranslation();
@@ -72,6 +72,29 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   useNavigation(onClose);
 
   const [isCreator, setIsCreator] = useState(false);
+
+  // 🆕 ДОБАВЛЕНО: Функция для обновления статистики
+  const loadStatistics = async () => {
+    try {
+      console.log('📊 Loading statistics for habit:', habit.id);
+      const stats = await habitService.getHabitStatistics(habit.id);
+      
+      if (stats) {
+        setStatistics({
+          currentStreak: stats.currentStreak || habit.streak_current || 0,
+          weekDays: stats.weekCompleted || 0,
+          weekTotal: 7,
+          monthDays: stats.monthCompleted || 0,
+          monthTotal: stats.monthTotal || 30,
+          yearDays: stats.yearCompleted || 0,
+          yearTotal: 365
+        });
+        console.log('✅ Statistics updated:', stats);
+      }
+    } catch (error) {
+      console.error('Failed to load statistics:', error);
+    }
+  };
 
   useEffect(() => {
     console.group('🔍 CALCULATING isCreator');
@@ -178,49 +201,95 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     }
   }, [tg, onClose]);
 
+  // 🆕 ИЗМЕНЕНО: Начальная загрузка данных
   useEffect(() => {
-    const loadOwnerInfo = async () => {
+    const loadInitialData = async () => {
       try {
+        setLoading(true);
         setOwnerInfoLoading(true);
-        console.log('🔄 Loading owner info for habit:', habit.id);
-        const info = await habitService.getHabitOwner(habit.id);
-        console.log('📊 Habit owner info received:', info);
-        setOwnerInfo(info);
+        
+        // Загружаем все данные параллельно
+        const [ownerInfoResult, statsResult, membersResult, limitResult] = await Promise.all([
+          habitService.getHabitOwner(habit.id),
+          habitService.getHabitStatistics(habit.id),
+          habitService.getHabitMembers(habit.id),
+          habitService.checkFriendLimit(habit.id)
+        ]);
+        
+        console.log('📊 Initial data loaded');
+        
+        setOwnerInfo(ownerInfoResult);
+        
+        if (statsResult) {
+          setStatistics({
+            currentStreak: statsResult.currentStreak || habit.streak_current || 0,
+            weekDays: statsResult.weekCompleted || 0,
+            weekTotal: 7,
+            monthDays: statsResult.monthCompleted || 0,
+            monthTotal: statsResult.monthTotal || 30,
+            yearDays: statsResult.yearCompleted || 0,
+            yearTotal: 365
+          });
+        }
+        
+        setMembers(membersResult.members || []);
+        setFriendLimitData(limitResult);
+        
       } catch (error) {
-        console.error('Failed to load owner info:', error);
+        console.error('Failed to load initial data:', error);
       } finally {
+        setLoading(false);
         setOwnerInfoLoading(false);
       }
     };
-
-    loadOwnerInfo();
-    loadStatistics();
-    loadMembers();
-    checkFriendLimit();
+    
+    loadInitialData();
   }, [habit.id]);
 
-  const loadStatistics = async () => {
-    try {
-      setLoading(true);
-      const stats = await habitService.getHabitStatistics(habit.id);
-      
-      if (stats) {
-        setStatistics({
-          currentStreak: stats.currentStreak || habit.streak_current || 0,
-          weekDays: stats.weekCompleted || 0,
-          weekTotal: 7,
-          monthDays: stats.monthCompleted || 0,
-          monthTotal: stats.monthTotal || 30,
-          yearDays: stats.yearCompleted || 0,
-          yearTotal: 365
-        });
+  // 🆕 ДОБАВЛЕНО: Слушаем изменения в localStorage (сигнал от Today.jsx)
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      // Проверяем, что это наше событие обновления статистики
+      if (e.key === `habit_stats_update_${habit.id}`) {
+        console.log('📡 Received stats update signal for habit:', habit.id);
+        loadStatistics();
+        // Очищаем флаг
+        localStorage.removeItem(`habit_stats_update_${habit.id}`);
       }
-    } catch (error) {
-      console.error('Failed to load statistics:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [habit.id]);
+
+  // 🆕 ДОБАВЛЕНО: Проверяем visibility change (когда пользователь возвращается)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('👀 Page visible, refreshing stats');
+        loadStatistics();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [habit.id]);
+
+  // 🆕 ДОБАВЛЕНО: Периодическое обновление каждые 10 секунд (опционально)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log('⏰ Auto-refreshing stats');
+      loadStatistics();
+    }, 10000); // 10 секунд
+
+    return () => clearInterval(interval);
+  }, [habit.id]);
 
   const loadMembers = async () => {
     try {
@@ -345,57 +414,50 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   };
 
   const handleCopyLink = async () => {
-  try {
-    console.log('📋 Creating share link for habit:', habit.id);
-    
-    // Создаём ссылку на backend
-    const shareData = await habitService.createShareLink(habit.id);
-    console.log('✅ Share data received:', shareData);
-    
-    if (!shareData || !shareData.shareCode) {
-      throw new Error('No share code received');
-    }
-    
-    const shareCode = shareData.shareCode;
-    const inviteLink = `https://t.me/CheckHabitlyBot?start=${shareCode}`;
-    
-    console.log('📋 Attempting to copy link:', inviteLink);
-    
-    // Универсальный метод копирования
-    const copySuccess = await copyToClipboard(inviteLink);
-    
-    if (copySuccess) {
-      console.log('✅ Link copied successfully:', inviteLink);
+    try {
+      console.log('📋 Creating share link for habit:', habit.id);
       
-      // Показываем модалку успеха
-      setShowCopyModal(true);
+      const shareData = await habitService.createShareLink(habit.id);
+      console.log('✅ Share data received:', shareData);
       
-      // Вибрация
-      if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      if (!shareData || !shareData.shareCode) {
+        throw new Error('No share code received');
       }
-    } else {
-      throw new Error('All copy methods failed');
+      
+      const shareCode = shareData.shareCode;
+      const inviteLink = `https://t.me/CheckHabitlyBot?start=${shareCode}`;
+      
+      console.log('📋 Attempting to copy link:', inviteLink);
+      
+      const copySuccess = await copyToClipboard(inviteLink);
+      
+      if (copySuccess) {
+        console.log('✅ Link copied successfully:', inviteLink);
+        
+        setShowCopyModal(true);
+        
+        if (window.Telegram?.WebApp?.HapticFeedback) {
+          window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        }
+      } else {
+        throw new Error('All copy methods failed');
+      }
+      
+    } catch (err) {
+      console.error('❌ Failed to copy link:', err);
+      console.error('Error details:', {
+        message: err.message,
+        stack: err.stack
+      });
+      
+      setToast({
+        message: t('habitDetail.toasts.linkCopyFailed'),
+        type: 'error'
+      });
     }
-    
-  } catch (err) {
-    console.error('❌ Failed to copy link:', err);
-    console.error('Error details:', {
-      message: err.message,
-      stack: err.stack
-    });
-    
-    // Показываем ошибку
-    setToast({
-      message: t('habitDetail.toasts.linkCopyFailed'),
-      type: 'error'
-    });
-  }
-};
+  };
 
-  // Универсальная функция копирования
   const copyToClipboard = async (text) => {
-    // Метод 1: Современный Clipboard API
     if (navigator.clipboard && navigator.clipboard.writeText) {
       try {
         await navigator.clipboard.writeText(text);
@@ -406,12 +468,10 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       }
     }
     
-    // Метод 2: execCommand (работает в большинстве случаев)
     try {
       const textArea = document.createElement('textarea');
       textArea.value = text;
       
-      // Стили для невидимости
       textArea.style.position = 'fixed';
       textArea.style.top = '0';
       textArea.style.left = '0';
@@ -427,7 +487,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       textArea.focus();
       textArea.select();
       
-      // Для iOS
       textArea.setSelectionRange(0, 99999);
       
       const successful = document.execCommand('copy');
@@ -441,11 +500,9 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       console.warn('⚠️ execCommand failed:', err);
     }
     
-    // Метод 3: Telegram WebApp readTextFromClipboard (только для чтения, но попробуем)
     const tg = window.Telegram?.WebApp;
     if (tg && tg.readTextFromClipboard) {
       try {
-        // Используем prompt как fallback
         if (window.prompt) {
           window.prompt('Copy this link:', text);
           console.log('✅ Showed prompt for manual copy');
@@ -456,7 +513,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       }
     }
     
-    // Метод 4: Последний fallback - пытаемся через alert
     if (tg && tg.showAlert) {
       tg.showAlert(`Copy this link:\n\n${text}`);
       console.log('✅ Showed alert with link');
@@ -578,7 +634,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       <div className="habit-detail">
         <div className="habit-detail__content">
           <div className="habit-detail__habit-info">
-
             <div className="habit-detail__habit-header">
               <div className="habit-detail__habit-title-section">
                 <span className="habit-detail__emoji">{getCategoryEmoji()}</span>
@@ -598,12 +653,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
             {habit.goal && (
               <p className="habit-detail__habit-goal">{habit.goal}</p>
             )}
-            
-            {/* {!isCreator && members.length > 0 && (
-              <p className="habit-detail__creator-notice">
-                {t('habitDetail.sharedHabitNotice')}
-              </p>
-            )} */}
           </div>
 
           <div className="habit-detail__statistics">
@@ -641,6 +690,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
               <h3 className="habit-detail__stat-title">{t('habitDetail.statistics.month')}</h3>
               <p className="habit-detail__stat-subtitle">{t('habitDetail.statistics.daysStreak')}</p>
             </div>
+
             <div className="habit-detail__stat-card">
               <div className="habit-detail__stat-circle" style={{
                 '--progress': getProgressPercentage(statistics.yearDays, statistics.yearTotal),
@@ -694,24 +744,13 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
             )}
             
             <div className="habit-detail__share-buttons">
-  {/* <button 
-    className="habit-detail__btn habit-detail__btn--copy-link"
-    onClick={handleCopyLink}
-  >
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-    </svg>
-    {t('habitDetail.friends.copyLink')}
-  </button> */}
-  
-  <button 
-    className="habit-detail__btn habit-detail__btn--primary habit-detail__btn--share"
-    onClick={handleAddFriend}
-  >
-    {t('habitDetail.friends.addFriend')}
-  </button>
-</div>
+              <button 
+                className="habit-detail__btn habit-detail__btn--primary habit-detail__btn--share"
+                onClick={handleAddFriend}
+              >
+                {t('habitDetail.friends.addFriend')}
+              </button>
+            </div>
           </div>
 
           {isCreator && (
