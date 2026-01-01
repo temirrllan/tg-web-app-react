@@ -1,4 +1,3 @@
-
 // src/pages/Today.jsx - С ПОЛНОЙ АНАЛИТИКОЙ
 
 import React, { useEffect, useState, useCallback } from "react";
