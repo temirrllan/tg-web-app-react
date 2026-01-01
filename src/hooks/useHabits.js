@@ -1,4 +1,4 @@
-// src/hooks/useHabits.js - МГНОВЕННАЯ ЗАГРУЗКА БЕЗ LOADER
+// src/hooks/useHabits.js - МГНОВЕННАЯ ЗАГРУЗКА + ЗАЩИТА ОТ ДУБЛИРОВАНИЯ
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { habitService } from '../services/habits';
@@ -54,16 +54,27 @@ export const useHabits = () => {
   
   const isFirstLoad = useRef(true);
   const isFetching = useRef(false);
+  const lastFetchRef = useRef(null); // 🆕 Для предотвращения дублирования запросов
 
   /**
    * 🚀 Фоновая загрузка (без блокировки UI)
    */
-  const loadTodayHabits = useCallback(async (showLoading = false) => {
+  const loadTodayHabits = useCallback(async (showLoading = false, force = false) => {
+    const now = Date.now();
+    
+    // 🆕 Предотвращаем частые запросы (не чаще 1 раза в секунду)
+    if (!force && lastFetchRef.current && (now - lastFetchRef.current) < 1000) {
+      console.log('⚠️ Skipping duplicate fetch (too soon)');
+      return;
+    }
+    
     // Предотвращаем дублирование запросов
     if (isFetching.current) {
       console.log('⏳ Already fetching, skipping...');
       return;
     }
+    
+    lastFetchRef.current = now;
     
     try {
       isFetching.current = true;
@@ -88,7 +99,7 @@ export const useHabits = () => {
       console.log('✅ Today habits loaded:', {
         date: today,
         count: normalizedHabits.length,
-        fromCache: true
+        completed: normalizedStats.completed
       });
 
       setTodayHabits(normalizedHabits);
@@ -157,22 +168,31 @@ export const useHabits = () => {
       
       console.log(`✏️ Marking habit ${habitId} as ${status} for ${date}`);
       
-      // Оптимистично обновляем UI
-      setTodayHabits(prev => {
-        return prev.map(h => 
-          h.id === habitId 
-            ? { ...h, today_status: status }
-            : h
-        );
-      });
+      const today = new Date().toISOString().split('T')[0];
       
-      // Обновляем статистику
-      setStats(prev => {
-        const newCompleted = status === 'completed' 
-          ? prev.completed + 1 
-          : prev.completed;
-        return { ...prev, completed: newCompleted };
-      });
+      // 🆕 ВАЖНО: Обновляем todayHabits ТОЛЬКО если это сегодня
+      if (date === today) {
+        // Оптимистично обновляем UI для сегодня
+        setTodayHabits(prev => {
+          return prev.map(h => 
+            h.id === habitId 
+              ? { ...h, today_status: status }
+              : h
+          );
+        });
+        
+        // Обновляем статистику
+        setStats(prev => {
+          const currentHabit = prev.completed;
+          const newCompleted = status === 'completed' 
+            ? currentHabit + 1 
+            : currentHabit;
+          return { ...prev, completed: newCompleted };
+        });
+      } else {
+        // Для других дат - НЕ трогаем todayHabits
+        console.log(`✅ Marking for ${date} (not today), skipping UI update`);
+      }
       
       // Отправляем на сервер
       const result = await habitService.markHabit(habitId, status, date);
@@ -183,8 +203,11 @@ export const useHabits = () => {
     } catch (err) {
       console.error('❌ markHabit error:', err);
       
-      // Откатываем при ошибке
-      await loadTodayHabits(false);
+      // 🆕 Откатываем ТОЛЬКО для сегодня
+      const today = new Date().toISOString().split('T')[0];
+      if (date === today) {
+        await loadTodayHabits(false);
+      }
       
       setError(err.message || 'Failed to mark habit');
       throw err;
@@ -201,20 +224,28 @@ export const useHabits = () => {
       
       console.log(`↩️ Unmarking habit ${habitId} for ${date}`);
       
-      // Оптимистично обновляем UI
-      setTodayHabits(prev => {
-        return prev.map(h => 
-          h.id === habitId 
-            ? { ...h, today_status: 'pending' }
-            : h
-        );
-      });
+      const today = new Date().toISOString().split('T')[0];
       
-      // Обновляем статистику
-      setStats(prev => ({
-        ...prev,
-        completed: Math.max(0, prev.completed - 1)
-      }));
+      // 🆕 ВАЖНО: Обновляем todayHabits ТОЛЬКО если это сегодня
+      if (date === today) {
+        // Оптимистично обновляем UI для сегодня
+        setTodayHabits(prev => {
+          return prev.map(h => 
+            h.id === habitId 
+              ? { ...h, today_status: 'pending' }
+              : h
+          );
+        });
+        
+        // Обновляем статистику
+        setStats(prev => ({
+          ...prev,
+          completed: Math.max(0, prev.completed - 1)
+        }));
+      } else {
+        // Для других дат - НЕ трогаем todayHabits
+        console.log(`✅ Unmarking for ${date} (not today), skipping UI update`);
+      }
       
       // Отправляем на сервер
       const result = await habitService.unmarkHabit(habitId, date);
@@ -225,8 +256,11 @@ export const useHabits = () => {
     } catch (err) {
       console.error('❌ unmarkHabit error:', err);
       
-      // Откатываем при ошибке
-      await loadTodayHabits(false);
+      // 🆕 Откатываем ТОЛЬКО для сегодня
+      const today = new Date().toISOString().split('T')[0];
+      if (date === today) {
+        await loadTodayHabits(false);
+      }
       
       setError(err.message || 'Failed to unmark habit');
       throw err;
@@ -239,7 +273,7 @@ export const useHabits = () => {
       
       // Обновляем данные после создания
       await Promise.all([
-        loadTodayHabits(false),
+        loadTodayHabits(false, true), // force = true
         loadAllHabits()
       ]);
       
@@ -257,7 +291,7 @@ export const useHabits = () => {
       // Обновляем данные после удаления
       await Promise.all([
         loadAllHabits(),
-        loadTodayHabits(false)
+        loadTodayHabits(false, true) // force = true
       ]);
     } catch (err) {
       setError(err.message);
@@ -270,7 +304,7 @@ export const useHabits = () => {
     const today = new Date().toISOString().split('T')[0];
     
     if (date === today) {
-      await loadTodayHabits(false);
+      await loadTodayHabits(false, true); // force = true
       return {
         habits: todayHabits,
         stats: stats,
@@ -282,9 +316,10 @@ export const useHabits = () => {
   }, [loadTodayHabits, loadHabitsForDate, todayHabits, stats, phrase]);
 
   const forceRefresh = useCallback(async () => {
-    console.log('🔄 Force refresh');
+    console.log('🔄 Force refresh - clearing cache');
     habitService.invalidateHabitsCache();
-    await loadTodayHabits(true);
+    lastFetchRef.current = null; // 🆕 Сбрасываем защиту
+    await loadTodayHabits(true, true); // showLoading = true, force = true
   }, [loadTodayHabits]);
 
   // 🚀 Загрузка при монтировании
@@ -292,11 +327,11 @@ export const useHabits = () => {
     // Если уже есть кэш - загружаем в фоне
     if (initialCache) {
       console.log('⚡ Initial cache loaded, fetching updates in background...');
-      loadTodayHabits(false); // showLoading = false
+      loadTodayHabits(false, false); // showLoading = false, force = false
     } else {
       // Если нет кэша - показываем loader
       console.log('📡 No cache, loading with loader...');
-      loadTodayHabits(true);
+      loadTodayHabits(true, false); // showLoading = true, force = false
     }
     
     loadAllHabits();
@@ -306,7 +341,7 @@ export const useHabits = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       console.log('⏰ Auto-refresh (background)');
-      loadTodayHabits(false);
+      loadTodayHabits(false, false); // showLoading = false, force = false
     }, 30000);
 
     return () => clearInterval(interval);
@@ -317,7 +352,7 @@ export const useHabits = () => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         console.log('👀 Tab became visible, refreshing...');
-        loadTodayHabits(false);
+        loadTodayHabits(false, false); // showLoading = false, force = false
       }
     };
 
