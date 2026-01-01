@@ -198,29 +198,45 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     loadMembers();
     checkFriendLimit();
   }, [habit.id]);
-
-  const loadStatistics = async () => {
-    try {
-      setLoading(true);
-      const stats = await habitService.getHabitStatistics(habit.id);
-      
-      if (stats) {
-        setStatistics({
-          currentStreak: stats.currentStreak || habit.streak_current || 0,
-          weekDays: stats.weekCompleted || 0,
-          weekTotal: 7,
-          monthDays: stats.monthCompleted || 0,
-          monthTotal: stats.monthTotal || 30,
-          yearDays: stats.yearCompleted || 0,
-          yearTotal: 365
-        });
-      }
-    } catch (error) {
-      console.error('Failed to load statistics:', error);
-    } finally {
-      setLoading(false);
+// 🆕 Автообновление статистики при фокусе на странице
+useEffect(() => {
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible') {
+      console.log('📊 HabitDetail became visible, refreshing stats...');
+      loadStatistics();
+      loadMembers();
     }
   };
+
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+
+  return () => {
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+  };
+}, [habit.id]); // Перезагружаем при изменении habit.id
+  const loadStatistics = async () => {
+  try {
+    setLoading(true);
+    // 🆕 ВАЖНО: Принудительно загружаем свежие данные
+    const stats = await habitService.getHabitStatistics(habit.id, true); // forceRefresh = true
+    
+    if (stats) {
+      setStatistics({
+        currentStreak: stats.currentStreak || habit.streak_current || 0,
+        weekDays: stats.weekCompleted || 0,
+        weekTotal: 7,
+        monthDays: stats.monthCompleted || 0,
+        monthTotal: stats.monthTotal || 30,
+        yearDays: stats.yearCompleted || 0,
+        yearTotal: 365
+      });
+    }
+  } catch (error) {
+    console.error('Failed to load statistics:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const loadMembers = async () => {
     try {
