@@ -1,3 +1,4 @@
+// src/components/habits/HabitCard.jsx - ИСПРАВЛЕНО: Дата в ключе дубликатов
 
 import React, { useState, useRef, useEffect } from "react";
 import { HABIT_STATUSES } from "../../utils/constants";
@@ -10,12 +11,12 @@ const HabitCard = React.memo(
     const [swipeOffset, setSwipeOffset] = useState(0);
     const [isAnimating, setIsAnimating] = useState(false);
     const [startX, setStartX] = useState(0);
-    const [startY, setStartY] = useState(0); // Добавляем Y координату
+    const [startY, setStartY] = useState(0);
     const [isSwiping, setIsSwiping] = useState(false);
-    const [isScrolling, setIsScrolling] = useState(false); // Флаг скролла
+    const [isScrolling, setIsScrolling] = useState(false);
     const [hasMoved, setHasMoved] = useState(false);
     const cardRef = useRef(null);
-    const lastActionRef = useRef(null);
+    const lastActionRef = useRef({ key: null, time: 0 });
     const { t } = useTranslation();
 
     const currentStatus = habit.today_status || HABIT_STATUSES.PENDING;
@@ -26,8 +27,14 @@ const HabitCard = React.memo(
 
     const SWIPE_THRESHOLD = 60;
     const MAX_SWIPE = 120;
-    const MOVE_THRESHOLD = 5; // Минимальное движение для начала свайпа
-    const SCROLL_THRESHOLD = 10; // Порог для определения скролла
+    const MOVE_THRESHOLD = 5;
+    const SCROLL_THRESHOLD = 10;
+
+    // 🆕 Функция для получения текущей даты
+    const getCurrentDate = () => {
+      const today = new Date();
+      return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    };
 
     useEffect(() => {
       setSwipeOffset(0);
@@ -77,18 +84,21 @@ const HabitCard = React.memo(
         return;
       }
 
-      // 🆕 КРИТИЧНО: Проверяем, не был ли недавно выполнен такой же запрос
-      const actionKey = `${habit.id}-${nextStatus}`;
+      // 🔥 КРИТИЧНО: Включаем дату в ключ для предотвращения ложных дубликатов
+      const currentDate = getCurrentDate();
+      const actionKey = `${habit.id}-${nextStatus}-${currentDate}`;
       const now = Date.now();
       
-      if (lastActionRef.current === actionKey && (now - lastActionRef.lastTime) < 1000) {
+      if (lastActionRef.current.key === actionKey && (now - lastActionRef.current.time) < 2000) {
         console.log('⚠️ Duplicate action prevented:', actionKey);
         setSwipeOffset(0);
         return;
       }
       
-      lastActionRef.current = actionKey;
-      lastActionRef.lastTime = now;
+      lastActionRef.current = {
+        key: actionKey,
+        time: now
+      };
 
       setLoading(true);
       setIsAnimating(true);
@@ -112,7 +122,6 @@ const HabitCard = React.memo(
       }
     };
 
-    // Touch handlers
     const handleTouchStart = (e) => {
       if (loading) return;
 
@@ -134,42 +143,35 @@ const HabitCard = React.memo(
       const diffX = currentX - startX;
       const diffY = currentY - startY;
 
-      // Если еще не определили тип движения
       if (!isSwiping && !isScrolling) {
         const absX = Math.abs(diffX);
         const absY = Math.abs(diffY);
 
-        // Определяем направление движения
         if (absX > SCROLL_THRESHOLD || absY > SCROLL_THRESHOLD) {
           if (absY > absX) {
-            // Вертикальное движение = скролл
             setIsScrolling(true);
             return;
           } else {
             if (!readOnly) {
               setIsSwiping(true);
             } else {
-              setIsScrolling(true); // readOnly = считаем скроллом
+              setIsScrolling(true);
             }
           }
         } else {
-          return; // Движение слишком маленькое
+          return;
         }
       }
 
-      // Если это скролл - не обрабатываем
       if (isScrolling) {
         return;
       }
 
-      // Если это свайп - обрабатываем
       if (isSwiping) {
-        // Предотвращаем скролл при свайпе
         e.preventDefault();
 
         setHasMoved(true);
 
-        // Проверяем возможность свайпа
         if (diffX < 0 && !getNextStatusLeft()) return;
         if (diffX > 0 && !getNextStatusRight()) return;
 
@@ -179,7 +181,6 @@ const HabitCard = React.memo(
     };
 
     const handleTouchEnd = () => {
-      // Если был скролл - просто сбрасываем флаги
       if (isScrolling) {
         setIsScrolling(false);
         setStartX(0);
@@ -187,7 +188,6 @@ const HabitCard = React.memo(
         return;
       }
 
-      // Если не было свайпа и не было движения - это клик
       if (!isSwiping && !hasMoved && onClick) {
         onClick(habit);
         setStartX(0);
@@ -195,7 +195,6 @@ const HabitCard = React.memo(
         return;
       }
 
-      // Если был свайп - обрабатываем
       if (isSwiping) {
         if (Math.abs(swipeOffset) >= SWIPE_THRESHOLD) {
           if (swipeOffset < 0) {
@@ -208,7 +207,6 @@ const HabitCard = React.memo(
         }
       }
 
-      // Сбрасываем флаги
       setIsSwiping(false);
       setIsScrolling(false);
       setStartX(0);
@@ -216,7 +214,6 @@ const HabitCard = React.memo(
       setHasMoved(false);
     };
 
-    // Mouse handlers для десктопа
     const handleMouseDown = (e) => {
       if (loading) return;
       e.preventDefault();
