@@ -44,7 +44,10 @@ const CircularProgress = ({ value, total, color }) => {
   );
 };
 
-const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {useNavigation(onClose);
+const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
+  // ✅ ИСПРАВЛЕНИЕ: Используем только useNavigation для управления BackButton
+  // Это предотвращает мигание кнопки "назад"/"закрыть"
+  useNavigation(onClose);
 
   const { tg, user: currentUser } = useTelegram();
   const { t } = useTranslation();
@@ -241,20 +244,21 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {useNavigation(onC
     setIsCreator(creatorStatus);
   }, [currentUser, ownerInfo, habit.id, habit.creator_id, habit.user_id, habit.parent_habit_id]);
 
-  useEffect(() => {
-    if (!tg) return;
-    try {
-      tg.BackButton.show();
-      tg.BackButton.onClick(onClose);
-
-      return () => {
-        tg.BackButton.offClick(onClose);
-        tg.BackButton.hide();
-      };
-    } catch (err) {
-      console.error('Failed to handle Telegram BackButton:', err);
-    }
-  }, [tg, onClose]);
+  // ❌ УДАЛЕНО: Дублирующий useEffect для BackButton
+  // Это вызывало мигание кнопки, так как конфликтовал с useNavigation
+  // useEffect(() => {
+  //   if (!tg) return;
+  //   try {
+  //     tg.BackButton.show();
+  //     tg.BackButton.onClick(onClose);
+  //     return () => {
+  //       tg.BackButton.offClick(onClose);
+  //       tg.BackButton.hide();
+  //     };
+  //   } catch (err) {
+  //     console.error('Failed to handle Telegram BackButton:', err);
+  //   }
+  // }, [tg, onClose]);
 
   useEffect(() => {
     const loadOwnerInfo = async () => {
