@@ -14,7 +14,6 @@ const HabitCard = React.memo(
     const [isScrolling, setIsScrolling] = useState(false); // Флаг скролла
     const [hasMoved, setHasMoved] = useState(false);
     const cardRef = useRef(null);
-    const lastActionRef = useRef(null);
     const { t } = useTranslation();
 
     const currentStatus = habit.today_status || HABIT_STATUSES.PENDING;
@@ -75,19 +74,6 @@ const HabitCard = React.memo(
         setSwipeOffset(0);
         return;
       }
-
-      // 🆕 КРИТИЧНО: Проверяем, не был ли недавно выполнен такой же запрос
-      const actionKey = `${habit.id}-${nextStatus}`;
-      const now = Date.now();
-      
-      if (lastActionRef.current === actionKey && (now - lastActionRef.lastTime) < 1000) {
-        console.log('⚠️ Duplicate action prevented:', actionKey);
-        setSwipeOffset(0);
-        return;
-      }
-      
-      lastActionRef.current = actionKey;
-      lastActionRef.lastTime = now;
 
       setLoading(true);
       setIsAnimating(true);

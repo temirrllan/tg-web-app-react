@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigation } from '../hooks/useNavigation';
 import { useTelegram } from '../hooks/useTelegram';
 import { habitService } from '../services/habits';
@@ -11,7 +11,6 @@ import './HabitDetail.css';
 import FriendSwipeHint from '../components/habits/FriendSwipeHint';
 import { useTranslation } from "../hooks/useTranslation";
 import { useTelegramTheme } from '../hooks/useTelegramTheme';
-
 const CircularProgress = ({ value, total, color }) => {
   const percentage = total > 0 ? (value / total) * 100 : 0;
   const radius = 42;
@@ -20,6 +19,7 @@ const CircularProgress = ({ value, total, color }) => {
 
   return (
     <svg width="100" height="100" style={{ transform: 'rotate(-90deg)' }}>
+      {/* Фоновый круг */}
       <circle
         cx="50"
         cy="50"
@@ -28,6 +28,7 @@ const CircularProgress = ({ value, total, color }) => {
         stroke="var(--bg-tertiary, #F2F2F7)"
         strokeWidth="8"
       />
+      {/* Прогресс круг */}
       <circle
         cx="50"
         cy="50"
@@ -43,38 +44,20 @@ const CircularProgress = ({ value, total, color }) => {
     </svg>
   );
 };
-
 const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const { tg, user: currentUser } = useTelegram();
   const { t } = useTranslation();
-  
-  // ✅ КРИТИЧНО: Мемоизируем onClose чтобы предотвратить лишние ре-рендеры useNavigation
-  const stableOnClose = useCallback(() => {
-    console.log('🔙 HabitDetail closing');
-    onClose();
-  }, [onClose]);
-  
-  // ✅ Используем useNavigation ПОСЛЕ мемоизации callback
-  useNavigation(stableOnClose);
+  const [loading, setLoading] = useState(true);
+  const [ownerInfoLoading, setOwnerInfoLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showCopyModal, setShowCopyModal] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [members, setMembers] = useState([]);
+  const [showFriendHint, setShowFriendHint] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [friendLimitData, setFriendLimitData] = useState(null);
+  const [ownerInfo, setOwnerInfo] = useState(null);
   useTelegramTheme();
-
-  // 🎯 Группируем связанные состояния в объекты для уменьшения количества useState
-  const [uiState, setUiState] = useState({
-    loading: true,
-    ownerInfoLoading: true,
-    showDeleteModal: false,
-    showCopyModal: false,
-    showSubscriptionModal: false,
-    showFriendHint: false
-  });
-
-  const [dataState, setDataState] = useState({
-    members: [],
-    toast: null,
-    friendLimitData: null,
-    ownerInfo: null,
-    isCreator: false
-  });
 
   const [statistics, setStatistics] = useState({
     currentStreak: 0,
@@ -86,14 +69,140 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     yearTotal: 365
   });
 
-  // 🆕 ФУНКЦИЯ ДЛЯ ОБНОВЛЕНИЯ СТАТИСТИКИ
-  const loadStatistics = useCallback(async (forceRefresh = false) => {
-    try {
-      console.log(`📊 Loading statistics for habit ${habit.id}, forceRefresh:`, forceRefresh);
+  useNavigation(onClose);
+
+  const [isCreator, setIsCreator] = useState(false);
+
+  useEffect(() => {
+    console.group('🔍 CALCULATING isCreator');
+
+    if (!currentUser) {
+      console.warn('⚠️ No current user');
+      console.groupEnd();
+      setIsCreator(false);
+      return;
+    }
+
+    const userDbId = localStorage.getItem('user_id');
+
+    if (!userDbId) {
+      console.error('❌ CRITICAL: No user_id in localStorage!');
+      console.groupEnd();
+      setIsCreator(false);
+      return;
+    }
+
+    console.log('📊 User identification:', {
+      localStorage_user_id: userDbId,
+      currentUser_telegram_id: currentUser.id
+    });
+
+    console.log('📋 Habit data:', {
+      habit_id: habit.id,
+      habit_user_id: habit.user_id,
+      habit_creator_id: habit.creator_id,
+      habit_parent_habit_id: habit.parent_habit_id
+    });
+
+    console.log('🌐 Owner info from API:', ownerInfo);
+
+    let creatorStatus = false;
+
+    if (ownerInfo && ownerInfo.creator_id) {
+      const creatorDbId = String(ownerInfo.creator_id);
+      const match = String(userDbId) === creatorDbId;
       
-      const stats = forceRefresh 
-        ? await habitService.getHabitStatistics(habit.id, true)
-        : await habitService.getHabitStatistics(habit.id);
+      console.log('✅ Method 1 (API ownerInfo):', {
+        userDbId: String(userDbId),
+        creatorDbId: creatorDbId,
+        match: match
+      });
+      
+      if (match) {
+        console.log('✅ USER IS CREATOR (via API ownerInfo)');
+        creatorStatus = true;
+      }
+    }
+
+    if (!creatorStatus && habit.creator_id !== undefined && habit.creator_id !== null) {
+      const creatorDbId = String(habit.creator_id);
+      const match = String(userDbId) === creatorDbId;
+      
+      console.log('✅ Method 2 (habit.creator_id):', {
+        userDbId: String(userDbId),
+        creatorDbId: creatorDbId,
+        match: match
+      });
+      
+      if (match) {
+        console.log('✅ USER IS CREATOR (via habit.creator_id)');
+        creatorStatus = true;
+      }
+    }
+
+    if (!creatorStatus && !habit.parent_habit_id && habit.user_id !== undefined && habit.user_id !== null) {
+      const habitUserId = String(habit.user_id);
+      const match = String(userDbId) === habitUserId;
+      
+      console.log('✅ Method 3 (habit.user_id fallback):', {
+        userDbId: String(userDbId),
+        habitUserId: habitUserId,
+        match: match,
+        isSharedHabit: !!habit.parent_habit_id
+      });
+      
+      if (match) {
+        console.log('✅ USER IS CREATOR (via habit.user_id)');
+        creatorStatus = true;
+      }
+    }
+
+    console.log('🎯 FINAL isCreator:', creatorStatus);
+    console.groupEnd();
+    
+    setIsCreator(creatorStatus);
+  }, [currentUser, ownerInfo, habit.id, habit.creator_id, habit.user_id, habit.parent_habit_id]);
+
+  useEffect(() => {
+    if (!tg) return;
+    try {
+      tg.BackButton.show();
+      tg.BackButton.onClick(onClose);
+
+      return () => {
+        tg.BackButton.offClick(onClose);
+        tg.BackButton.hide();
+      };
+    } catch (err) {
+      console.error('Failed to handle Telegram BackButton:', err);
+    }
+  }, [tg, onClose]);
+
+  useEffect(() => {
+    const loadOwnerInfo = async () => {
+      try {
+        setOwnerInfoLoading(true);
+        console.log('🔄 Loading owner info for habit:', habit.id);
+        const info = await habitService.getHabitOwner(habit.id);
+        console.log('📊 Habit owner info received:', info);
+        setOwnerInfo(info);
+      } catch (error) {
+        console.error('Failed to load owner info:', error);
+      } finally {
+        setOwnerInfoLoading(false);
+      }
+    };
+
+    loadOwnerInfo();
+    loadStatistics();
+    loadMembers();
+    checkFriendLimit();
+  }, [habit.id]);
+
+  const loadStatistics = async () => {
+    try {
+      setLoading(true);
+      const stats = await habitService.getHabitStatistics(habit.id);
       
       if (stats) {
         setStatistics({
@@ -105,151 +214,18 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
           yearDays: stats.yearCompleted || 0,
           yearTotal: 365
         });
-        
-        console.log('✅ Statistics updated:', {
-          currentStreak: stats.currentStreak,
-          weekDays: stats.weekCompleted,
-          monthDays: stats.monthCompleted,
-          yearDays: stats.yearCompleted
-        });
       }
     } catch (error) {
       console.error('Failed to load statistics:', error);
     } finally {
-      setUiState(prev => ({ ...prev, loading: false }));
+      setLoading(false);
     }
-  }, [habit.id, habit.streak_current]);
-
-  // 🆕 СЛУШАТЕЛЬ ИЗМЕНЕНИЙ В localStorage
-  useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key && e.key.includes('cache_habits')) {
-        console.log('🔄 Habit cache changed, refreshing statistics...');
-        loadStatistics(true);
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, [loadStatistics]);
-
-  // 🆕 СЛУШАТЕЛЬ VISIBILITY
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        console.log('👀 Page became visible, refreshing statistics...');
-        loadStatistics(true);
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [loadStatistics]);
-
-  // 🆕 ПЕРИОДИЧЕСКОЕ ОБНОВЛЕНИЕ
-  useEffect(() => {
-    const interval = setInterval(() => {
-      console.log('⏰ Auto-refresh statistics (background)');
-      loadStatistics(true);
-    }, 10000);
-
-    return () => clearInterval(interval);
-  }, [loadStatistics]);
-
-  // ✅ Вычисление isCreator вынесено в useMemo для оптимизации
-  const isCreator = useMemo(() => {
-    if (!currentUser) {
-      console.warn('⚠️ No current user');
-      return false;
-    }
-
-    const userDbId = localStorage.getItem('user_id');
-    if (!userDbId) {
-      console.error('❌ CRITICAL: No user_id in localStorage!');
-      return false;
-    }
-
-    let creatorStatus = false;
-
-    // Method 1: API ownerInfo
-    if (dataState.ownerInfo && dataState.ownerInfo.creator_id) {
-      const creatorDbId = String(dataState.ownerInfo.creator_id);
-      if (String(userDbId) === creatorDbId) {
-        creatorStatus = true;
-      }
-    }
-
-    // Method 2: habit.creator_id
-    if (!creatorStatus && habit.creator_id !== undefined && habit.creator_id !== null) {
-      const creatorDbId = String(habit.creator_id);
-      if (String(userDbId) === creatorDbId) {
-        creatorStatus = true;
-      }
-    }
-
-    // Method 3: habit.user_id fallback
-    if (!creatorStatus && !habit.parent_habit_id && habit.user_id !== undefined && habit.user_id !== null) {
-      const habitUserId = String(habit.user_id);
-      if (String(userDbId) === habitUserId) {
-        creatorStatus = true;
-      }
-    }
-
-    console.log('🎯 isCreator calculated:', creatorStatus);
-    return creatorStatus;
-  }, [currentUser, dataState.ownerInfo, habit.id, habit.creator_id, habit.user_id, habit.parent_habit_id]);
-
-  // ✅ Объединяем все начальные загрузки в один useEffect
-  useEffect(() => {
-    const initializeData = async () => {
-      try {
-        console.log('🚀 Initializing HabitDetail data...');
-        
-        // Параллельно загружаем все данные
-        const [ownerInfo, friendLimit] = await Promise.all([
-          habitService.getHabitOwner(habit.id).catch(err => {
-            console.error('Failed to load owner info:', err);
-            return null;
-          }),
-          habitService.checkFriendLimit(habit.id).catch(err => {
-            console.error('Failed to check friend limit:', err);
-            return null;
-          })
-        ]);
-
-        // Загружаем members отдельно (не критично для первого рендера)
-        habitService.getHabitMembers(habit.id)
-          .then(data => {
-            setDataState(prev => ({ ...prev, members: data.members || [] }));
-          })
-          .catch(err => console.error('Failed to load members:', err));
-
-        // Обновляем состояния одним батчем
-        setDataState(prev => ({
-          ...prev,
-          ownerInfo,
-          friendLimitData: friendLimit
-        }));
-
-        setUiState(prev => ({ ...prev, ownerInfoLoading: false }));
-
-        // Загружаем статистику
-        await loadStatistics(true);
-
-        console.log('✅ HabitDetail data initialized');
-      } catch (error) {
-        console.error('Failed to initialize data:', error);
-        setUiState(prev => ({ ...prev, loading: false, ownerInfoLoading: false }));
-      }
-    };
-
-    initializeData();
-  }, [habit.id, loadStatistics]);
+  };
 
   const loadMembers = async () => {
     try {
       const data = await habitService.getHabitMembers(habit.id);
-      setDataState(prev => ({ ...prev, members: data.members || [] }));
+      setMembers(data.members || []);
     } catch (error) {
       console.error('Failed to load members:', error);
     }
@@ -258,7 +234,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const checkFriendLimit = async () => {
     try {
       const limitData = await habitService.checkFriendLimit(habit.id);
-      setDataState(prev => ({ ...prev, friendLimitData: limitData }));
+      setFriendLimitData(limitData);
       console.log('Friend limit data:', limitData);
     } catch (error) {
       console.error('Failed to check friend limit:', error);
@@ -269,13 +245,13 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     console.log('Add Friend clicked, checking limits...');
     
     const limitCheck = await habitService.checkFriendLimit(habit.id);
-    setDataState(prev => ({ ...prev, friendLimitData: limitCheck }));
+    setFriendLimitData(limitCheck);
     
     console.log('Friend limit check result:', limitCheck);
     
     if (limitCheck.showPremiumModal && !limitCheck.isPremium) {
       console.log('Friend limit reached, showing subscription modal');
-      setUiState(prev => ({ ...prev, showSubscriptionModal: true }));
+      setShowSubscriptionModal(true);
       return;
     }
     
@@ -301,9 +277,9 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       console.log('📝 Share text:', shareText);
       
       const hasSeenFriendHint = localStorage.getItem('hasSeenFriendHint');
-      if (!hasSeenFriendHint && dataState.members.length === 0) {
+      if (!hasSeenFriendHint && members.length === 0) {
         setTimeout(() => {
-          setUiState(prev => ({ ...prev, showFriendHint: true }));
+          setShowFriendHint(true);
           localStorage.setItem('hasSeenFriendHint', 'true');
         }, 2000);
       }
@@ -318,24 +294,18 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
         window.open(telegramShareUrl, '_blank');
       }
       
-      setDataState(prev => ({
-        ...prev,
-        toast: {
-          message: t('habitDetail.toasts.shareLinkCreated'),
-          type: 'success'
-        }
-      }));
+      setToast({
+        message: t('habitDetail.toasts.shareLinkCreated'),
+        type: 'success'
+      });
       
       console.log('✅ Share dialog opened successfully');
     } catch (error) {
       console.error('❌ Failed to create share link:', error);
-      setDataState(prev => ({
-        ...prev,
-        toast: {
-          message: t('habitDetail.toasts.shareLinkFailed'),
-          type: 'error'
-        }
-      }));
+      setToast({
+        message: t('habitDetail.toasts.shareLinkFailed'),
+        type: 'error'
+      });
     }
   };
 
@@ -351,7 +321,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
         await checkFriendLimit();
         await loadMembers();
         
-        setUiState(prev => ({ ...prev, showSubscriptionModal: false }));
+        setShowSubscriptionModal(false);
         
         if (window.Telegram?.WebApp?.showAlert) {
           window.Telegram.WebApp.showAlert(t('habitDetail.toasts.premiumActivated'));
@@ -364,7 +334,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     } catch (error) {
       console.error('Failed to activate premium:', error);
       
-      setUiState(prev => ({ ...prev, showSubscriptionModal: false }));
+      setShowSubscriptionModal(false);
       
       if (window.Telegram?.WebApp?.showAlert) {
         window.Telegram.WebApp.showAlert(t('habitDetail.toasts.premiumFailed'));
@@ -375,53 +345,57 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   };
 
   const handleCopyLink = async () => {
-    try {
-      console.log('📋 Creating share link for habit:', habit.id);
-      
-      const shareData = await habitService.createShareLink(habit.id);
-      console.log('✅ Share data received:', shareData);
-      
-      if (!shareData || !shareData.shareCode) {
-        throw new Error('No share code received');
-      }
-      
-      const shareCode = shareData.shareCode;
-      const inviteLink = `https://t.me/CheckHabitlyBot?start=${shareCode}`;
-      
-      console.log('📋 Attempting to copy link:', inviteLink);
-      
-      const copySuccess = await copyToClipboard(inviteLink);
-      
-      if (copySuccess) {
-        console.log('✅ Link copied successfully:', inviteLink);
-        
-        setUiState(prev => ({ ...prev, showCopyModal: true }));
-        
-        if (window.Telegram?.WebApp?.HapticFeedback) {
-          window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-        }
-      } else {
-        throw new Error('All copy methods failed');
-      }
-      
-    } catch (err) {
-      console.error('❌ Failed to copy link:', err);
-      console.error('Error details:', {
-        message: err.message,
-        stack: err.stack
-      });
-      
-      setDataState(prev => ({
-        ...prev,
-        toast: {
-          message: t('habitDetail.toasts.linkCopyFailed'),
-          type: 'error'
-        }
-      }));
+  try {
+    console.log('📋 Creating share link for habit:', habit.id);
+    
+    // Создаём ссылку на backend
+    const shareData = await habitService.createShareLink(habit.id);
+    console.log('✅ Share data received:', shareData);
+    
+    if (!shareData || !shareData.shareCode) {
+      throw new Error('No share code received');
     }
-  };
+    
+    const shareCode = shareData.shareCode;
+    const inviteLink = `https://t.me/CheckHabitlyBot?start=${shareCode}`;
+    
+    console.log('📋 Attempting to copy link:', inviteLink);
+    
+    // Универсальный метод копирования
+    const copySuccess = await copyToClipboard(inviteLink);
+    
+    if (copySuccess) {
+      console.log('✅ Link copied successfully:', inviteLink);
+      
+      // Показываем модалку успеха
+      setShowCopyModal(true);
+      
+      // Вибрация
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      }
+    } else {
+      throw new Error('All copy methods failed');
+    }
+    
+  } catch (err) {
+    console.error('❌ Failed to copy link:', err);
+    console.error('Error details:', {
+      message: err.message,
+      stack: err.stack
+    });
+    
+    // Показываем ошибку
+    setToast({
+      message: t('habitDetail.toasts.linkCopyFailed'),
+      type: 'error'
+    });
+  }
+};
 
+  // Универсальная функция копирования
   const copyToClipboard = async (text) => {
+    // Метод 1: Современный Clipboard API
     if (navigator.clipboard && navigator.clipboard.writeText) {
       try {
         await navigator.clipboard.writeText(text);
@@ -432,10 +406,12 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       }
     }
     
+    // Метод 2: execCommand (работает в большинстве случаев)
     try {
       const textArea = document.createElement('textarea');
       textArea.value = text;
       
+      // Стили для невидимости
       textArea.style.position = 'fixed';
       textArea.style.top = '0';
       textArea.style.left = '0';
@@ -451,6 +427,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       textArea.focus();
       textArea.select();
       
+      // Для iOS
       textArea.setSelectionRange(0, 99999);
       
       const successful = document.execCommand('copy');
@@ -464,9 +441,11 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       console.warn('⚠️ execCommand failed:', err);
     }
     
+    // Метод 3: Telegram WebApp readTextFromClipboard (только для чтения, но попробуем)
     const tg = window.Telegram?.WebApp;
     if (tg && tg.readTextFromClipboard) {
       try {
+        // Используем prompt как fallback
         if (window.prompt) {
           window.prompt('Copy this link:', text);
           console.log('✅ Showed prompt for manual copy');
@@ -477,6 +456,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       }
     }
     
+    // Метод 4: Последний fallback - пытаемся через alert
     if (tg && tg.showAlert) {
       tg.showAlert(`Copy this link:\n\n${text}`);
       console.log('✅ Showed alert with link');
@@ -492,13 +472,10 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       const result = await habitService.punchFriend(habit.id, memberId);
       
       if (result.showToast) {
-        setDataState(prev => ({
-          ...prev,
-          toast: {
-            message: result.toastMessage,
-            type: result.toastType || 'info'
-          }
-        }));
+        setToast({
+          message: result.toastMessage,
+          type: result.toastType || 'info'
+        });
         
         if (window.Telegram?.WebApp?.HapticFeedback) {
           if (result.alreadyCompleted) {
@@ -518,13 +495,10 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       }
     } catch (error) {
       console.error('Failed to send punch:', error);
-      setDataState(prev => ({
-        ...prev,
-        toast: {
-          message: t('habitDetail.toasts.punchFailed'),
-          type: 'error'
-        }
-      }));
+      setToast({
+        message: t('habitDetail.toasts.punchFailed'),
+        type: 'error'
+      });
     }
   };
 
@@ -536,13 +510,10 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
             await habitService.removeMember(habit.id, memberId);
             await loadMembers();
             await checkFriendLimit();
-            setDataState(prev => ({
-              ...prev,
-              toast: {
-                message: t('habitDetail.toasts.friendRemoved'),
-                type: 'success'
-              }
-            }));
+            setToast({
+              message: t('habitDetail.toasts.friendRemoved'),
+              type: 'success'
+            });
           }
         });
       } else {
@@ -551,24 +522,18 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
           await habitService.removeMember(habit.id, memberId);
           await loadMembers();
           await checkFriendLimit();
-          setDataState(prev => ({
-            ...prev,
-            toast: {
-              message: t('habitDetail.toasts.friendRemoved'),
-              type: 'success'
-            }
-          }));
+          setToast({
+            message: t('habitDetail.toasts.friendRemoved'),
+            type: 'success'
+          });
         }
       }
     } catch (error) {
       console.error('Failed to remove friend:', error);
-      setDataState(prev => ({
-        ...prev,
-        toast: {
-          message: t('habitDetail.toasts.friendRemoveFailed'),
-          type: 'error'
-        }
-      }));
+      setToast({
+        message: t('habitDetail.toasts.friendRemoveFailed'),
+        type: 'error'
+      });
     }
   };
 
@@ -600,7 +565,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     return colors[type] || '#A7D96C';
   };
 
-  if (uiState.loading) {
+  if (loading) {
     return (
       <div className="habit-detail habit-detail--loading">
         <Loader size="large" />
@@ -613,13 +578,14 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       <div className="habit-detail">
         <div className="habit-detail__content">
           <div className="habit-detail__habit-info">
+
             <div className="habit-detail__habit-header">
               <div className="habit-detail__habit-title-section">
                 <span className="habit-detail__emoji">{getCategoryEmoji()}</span>
                 <h2 className="habit-detail__habit-title">{habit.title}</h2>
               </div>
               
-              {!uiState.ownerInfoLoading && isCreator && (
+              {!ownerInfoLoading && isCreator && (
                 <button 
                   className="habit-detail__edit-btn"
                   onClick={handleEditClick}
@@ -632,6 +598,12 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
             {habit.goal && (
               <p className="habit-detail__habit-goal">{habit.goal}</p>
             )}
+            
+            {/* {!isCreator && members.length > 0 && (
+              <p className="habit-detail__creator-notice">
+                {t('habitDetail.sharedHabitNotice')}
+              </p>
+            )} */}
           </div>
 
           <div className="habit-detail__statistics">
@@ -669,7 +641,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
               <h3 className="habit-detail__stat-title">{t('habitDetail.statistics.month')}</h3>
               <p className="habit-detail__stat-subtitle">{t('habitDetail.statistics.daysStreak')}</p>
             </div>
-
             <div className="habit-detail__stat-card">
               <div className="habit-detail__stat-circle" style={{
                 '--progress': getProgressPercentage(statistics.yearDays, statistics.yearTotal),
@@ -692,20 +663,20 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
           <div className="habit-detail__friends">
             <h3 className="habit-detail__friends-title">{t('habitDetail.friends.title')}</h3>
             
-            {dataState.friendLimitData && !dataState.friendLimitData.isPremium && (
+            {friendLimitData && !friendLimitData.isPremium && (
               <p style={{
                 fontSize: '13px',
                 color: '#8E8E93',
                 marginBottom: '12px',
                 textAlign: 'left'
               }}>
-                {dataState.friendLimitData.currentFriendsCount}/{dataState.friendLimitData.limit} {dataState.friendLimitData.limit === 1 ? t('habitDetail.friends.friendsAdded') : t('habitDetail.friends.friendsAddedPlural')} ({t('habitDetail.friends.freePlan')})
+                {friendLimitData.currentFriendsCount}/{friendLimitData.limit} {friendLimitData.limit === 1 ? t('habitDetail.friends.friendsAdded') : t('habitDetail.friends.friendsAddedPlural')} ({t('habitDetail.friends.freePlan')})
               </p>
             )}
             
-            {dataState.members.length > 0 ? (
+            {members.length > 0 ? (
               <div className="habit-detail__members-list">
-                {dataState.members.map(member => (
+                {members.map(member => (
                   <FriendCard
                     key={member.id}
                     member={member}
@@ -723,19 +694,30 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
             )}
             
             <div className="habit-detail__share-buttons">
-              <button 
-                className="habit-detail__btn habit-detail__btn--primary habit-detail__btn--share"
-                onClick={handleAddFriend}
-              >
-                {t('habitDetail.friends.addFriend')}
-              </button>
-            </div>
+  {/* <button 
+    className="habit-detail__btn habit-detail__btn--copy-link"
+    onClick={handleCopyLink}
+  >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+    </svg>
+    {t('habitDetail.friends.copyLink')}
+  </button> */}
+  
+  <button 
+    className="habit-detail__btn habit-detail__btn--primary habit-detail__btn--share"
+    onClick={handleAddFriend}
+  >
+    {t('habitDetail.friends.addFriend')}
+  </button>
+</div>
           </div>
 
           {isCreator && (
             <button 
               className="habit-detail__btn habit-detail__btn--danger"
-              onClick={() => setUiState(prev => ({ ...prev, showDeleteModal: true }))}
+              onClick={() => setShowDeleteModal(true)}
             >
               {t('habitDetail.buttons.removeHabit')}
             </button>
@@ -744,41 +726,41 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       </div>
 
       <DeleteConfirmModal
-        isOpen={uiState.showDeleteModal}
-        onClose={() => setUiState(prev => ({ ...prev, showDeleteModal: false }))}
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
         onConfirm={() => onDelete(habit.id)}
         habitTitle={habit.title}
       />
 
       <CopyLinkModal
-        isOpen={uiState.showCopyModal}
-        onClose={() => setUiState(prev => ({ ...prev, showCopyModal: false }))}
+        isOpen={showCopyModal}
+        onClose={() => setShowCopyModal(false)}
       />
 
       <FriendSwipeHint 
-        show={uiState.showFriendHint}
-        onClose={() => setUiState(prev => ({ ...prev, showFriendHint: false }))}
+        show={showFriendHint}
+        onClose={() => setShowFriendHint(false)}
       />
 
       <SubscriptionModal
-        isOpen={uiState.showSubscriptionModal}
-        onClose={() => setUiState(prev => ({ ...prev, showSubscriptionModal: false }))}
+        isOpen={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
         onContinue={handleSubscriptionContinue}
       />
 
-      {dataState.toast && (
+      {toast && (
         <Toast
-          message={dataState.toast.message}
-          type={dataState.toast.type}
+          message={toast.message}
+          type={toast.type}
           duration={3000}
-          onClose={() => setDataState(prev => ({ ...prev, toast: null }))}
+          onClose={() => setToast(null)}
         />
       )}
     </>
   );
 };
 
-const FriendCard = React.memo(({ member, onPunch, onRemove, removeText, punchText }) => {
+const FriendCard = ({ member, onPunch, onRemove, removeText, punchText }) => {
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [startX, setStartX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
@@ -848,8 +830,6 @@ const FriendCard = React.memo(({ member, onPunch, onRemove, removeText, punchTex
       )}
     </div>
   );
-});
-
-FriendCard.displayName = 'FriendCard';
+};
 
 export default HabitDetail;
