@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { useNavigation } from "../hooks/useNavigation";
-import { useTelegram } from "../hooks/useTelegram";
-import { habitService } from "../services/habits";
-import Loader from "../components/common/Loader";
-import DeleteConfirmModal from "../components/modals/DeleteConfirmModal";
-import CopyLinkModal from "../components/modals/CopyLinkModal";
-import Toast from "../components/common/Toast";
-import SubscriptionModal from "../components/modals/SubscriptionModal";
-import "./HabitDetail.css";
-import FriendSwipeHint from "../components/habits/FriendSwipeHint";
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigation } from '../hooks/useNavigation';
+import { useTelegram } from '../hooks/useTelegram';
+import { habitService } from '../services/habits';
+import Loader from '../components/common/Loader';
+import DeleteConfirmModal from '../components/modals/DeleteConfirmModal';
+import CopyLinkModal from '../components/modals/CopyLinkModal';
+import Toast from '../components/common/Toast';
+import SubscriptionModal from '../components/modals/SubscriptionModal';
+import './HabitDetail.css';
+import FriendSwipeHint from '../components/habits/FriendSwipeHint';
 import { useTranslation } from "../hooks/useTranslation";
-import { useTelegramTheme } from "../hooks/useTelegramTheme";
+import { useTelegramTheme } from '../hooks/useTelegramTheme';
 
 const CircularProgress = ({ value, total, color }) => {
   const percentage = total > 0 ? (value / total) * 100 : 0;
@@ -19,7 +19,7 @@ const CircularProgress = ({ value, total, color }) => {
   const offset = circumference - (percentage / 100) * circumference;
 
   return (
-    <svg width="100" height="100" style={{ transform: "rotate(-90deg)" }}>
+    <svg width="100" height="100" style={{ transform: 'rotate(-90deg)' }}>
       <circle
         cx="50"
         cy="50"
@@ -38,7 +38,7 @@ const CircularProgress = ({ value, total, color }) => {
         strokeDasharray={circumference}
         strokeDashoffset={offset}
         strokeLinecap="round"
-        style={{ transition: "stroke-dashoffset 0.5s ease" }}
+        style={{ transition: 'stroke-dashoffset 0.5s ease' }}
       />
     </svg>
   );
@@ -47,13 +47,13 @@ const CircularProgress = ({ value, total, color }) => {
 const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const { tg, user: currentUser } = useTelegram();
   const { t } = useTranslation();
-
+  
   // ✅ КРИТИЧНО: Мемоизируем onClose чтобы предотвратить лишние ре-рендеры useNavigation
   const stableOnClose = useCallback(() => {
-    console.log("🔙 HabitDetail closing");
+    console.log('🔙 HabitDetail closing');
     onClose();
   }, [onClose]);
-
+  
   // ✅ Используем useNavigation ПОСЛЕ мемоизации callback
   useNavigation(stableOnClose);
   useTelegramTheme();
@@ -65,7 +65,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     showDeleteModal: false,
     showCopyModal: false,
     showSubscriptionModal: false,
-    showFriendHint: false,
+    showFriendHint: false
   });
 
   const [dataState, setDataState] = useState({
@@ -73,7 +73,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     toast: null,
     friendLimitData: null,
     ownerInfo: null,
-    isCreator: false,
+    isCreator: false
   });
 
   const [statistics, setStatistics] = useState({
@@ -83,117 +83,89 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     monthDays: 0,
     monthTotal: 30,
     yearDays: 0,
-    yearTotal: 365,
+    yearTotal: 365
   });
 
   // 🆕 ФУНКЦИЯ ДЛЯ ОБНОВЛЕНИЯ СТАТИСТИКИ
-  const loadStatistics = useCallback(
-    async (forceRefresh = false) => {
-      try {
-        console.log(
-          `📊 Loading statistics for habit ${habit.id}, forceRefresh:`,
-          forceRefresh
-        );
-
-        const stats = forceRefresh
-          ? await habitService.getHabitStatistics(habit.id, true)
-          : await habitService.getHabitStatistics(habit.id);
-
-        if (stats) {
-          setStatistics({
-            currentStreak: stats.currentStreak || habit.streak_current || 0,
-            weekDays: stats.weekCompleted || 0,
-            weekTotal: 7,
-            monthDays: stats.monthCompleted || 0,
-            monthTotal: stats.monthTotal || 30,
-            yearDays: stats.yearCompleted || 0,
-            yearTotal: 365,
-          });
-
-          console.log("✅ Statistics updated:", {
-            currentStreak: stats.currentStreak,
-            weekDays: stats.weekCompleted,
-            monthDays: stats.monthCompleted,
-            yearDays: stats.yearCompleted,
-          });
-        }
-      } catch (error) {
-        console.error("Failed to load statistics:", error);
-      } finally {
-        setUiState((prev) => ({ ...prev, loading: false }));
+  const loadStatistics = useCallback(async (forceRefresh = false) => {
+    try {
+      console.log(`📊 Loading statistics for habit ${habit.id}, forceRefresh:`, forceRefresh);
+      
+      const stats = forceRefresh 
+        ? await habitService.getHabitStatistics(habit.id, true)
+        : await habitService.getHabitStatistics(habit.id);
+      
+      if (stats) {
+        setStatistics({
+          currentStreak: stats.currentStreak || habit.streak_current || 0,
+          weekDays: stats.weekCompleted || 0,
+          weekTotal: 7,
+          monthDays: stats.monthCompleted || 0,
+          monthTotal: stats.monthTotal || 30,
+          yearDays: stats.yearCompleted || 0,
+          yearTotal: 365
+        });
+        
+        console.log('✅ Statistics updated:', {
+          currentStreak: stats.currentStreak,
+          weekDays: stats.weekCompleted,
+          monthDays: stats.monthCompleted,
+          yearDays: stats.yearCompleted
+        });
       }
-    },
-    [habit.id, habit.streak_current]
-  );
+    } catch (error) {
+      console.error('Failed to load statistics:', error);
+    } finally {
+      setUiState(prev => ({ ...prev, loading: false }));
+    }
+  }, [habit.id, habit.streak_current]);
 
   // 🆕 СЛУШАТЕЛЬ ИЗМЕНЕНИЙ В localStorage
   useEffect(() => {
     const handleStorageChange = (e) => {
-      if (e.key && e.key.includes("cache_habits")) {
-        console.log("🔄 Habit cache changed, refreshing statistics...");
+      if (e.key && e.key.includes('cache_habits')) {
+        console.log('🔄 Habit cache changed, refreshing statistics...');
         loadStatistics(true);
       }
     };
 
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, [loadStatistics]);
 
   // 🆕 СЛУШАТЕЛЬ VISIBILITY
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        console.log("👀 Page became visible, refreshing statistics...");
+      if (document.visibilityState === 'visible') {
+        console.log('👀 Page became visible, refreshing statistics...');
         loadStatistics(true);
       }
     };
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () =>
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [loadStatistics]);
 
   // 🆕 ПЕРИОДИЧЕСКОЕ ОБНОВЛЕНИЕ
   useEffect(() => {
     const interval = setInterval(() => {
-      console.log("⏰ Auto-refresh statistics (background)");
+      console.log('⏰ Auto-refresh statistics (background)');
       loadStatistics(true);
     }, 10000);
 
     return () => clearInterval(interval);
   }, [loadStatistics]);
 
-  // После существующего useEffect с loadStatistics
-  useEffect(() => {
-    const handleHabitStatusChange = (event) => {
-      const { habitId, status } = event.detail;
-
-      // Обновляем только если это наша привычка
-      if (habitId === habit.id) {
-        console.log(
-          "🔄 Habit status changed, refreshing statistics immediately..."
-        );
-        loadStatistics(true); // force refresh
-      }
-    };
-
-    window.addEventListener("habitStatusChanged", handleHabitStatusChange);
-
-    return () => {
-      window.removeEventListener("habitStatusChanged", handleHabitStatusChange);
-    };
-  }, [habit.id, loadStatistics]);
-
   // ✅ Вычисление isCreator вынесено в useMemo для оптимизации
   const isCreator = useMemo(() => {
     if (!currentUser) {
-      console.warn("⚠️ No current user");
+      console.warn('⚠️ No current user');
       return false;
     }
 
-    const userDbId = localStorage.getItem("user_id");
+    const userDbId = localStorage.getItem('user_id');
     if (!userDbId) {
-      console.error("❌ CRITICAL: No user_id in localStorage!");
+      console.error('❌ CRITICAL: No user_id in localStorage!');
       return false;
     }
 
@@ -208,11 +180,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     }
 
     // Method 2: habit.creator_id
-    if (
-      !creatorStatus &&
-      habit.creator_id !== undefined &&
-      habit.creator_id !== null
-    ) {
+    if (!creatorStatus && habit.creator_id !== undefined && habit.creator_id !== null) {
       const creatorDbId = String(habit.creator_id);
       if (String(userDbId) === creatorDbId) {
         creatorStatus = true;
@@ -220,75 +188,58 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     }
 
     // Method 3: habit.user_id fallback
-    if (
-      !creatorStatus &&
-      !habit.parent_habit_id &&
-      habit.user_id !== undefined &&
-      habit.user_id !== null
-    ) {
+    if (!creatorStatus && !habit.parent_habit_id && habit.user_id !== undefined && habit.user_id !== null) {
       const habitUserId = String(habit.user_id);
       if (String(userDbId) === habitUserId) {
         creatorStatus = true;
       }
     }
 
-    console.log("🎯 isCreator calculated:", creatorStatus);
+    console.log('🎯 isCreator calculated:', creatorStatus);
     return creatorStatus;
-  }, [
-    currentUser,
-    dataState.ownerInfo,
-    habit.id,
-    habit.creator_id,
-    habit.user_id,
-    habit.parent_habit_id,
-  ]);
+  }, [currentUser, dataState.ownerInfo, habit.id, habit.creator_id, habit.user_id, habit.parent_habit_id]);
 
   // ✅ Объединяем все начальные загрузки в один useEffect
   useEffect(() => {
     const initializeData = async () => {
       try {
-        console.log("🚀 Initializing HabitDetail data...");
-
+        console.log('🚀 Initializing HabitDetail data...');
+        
         // Параллельно загружаем все данные
         const [ownerInfo, friendLimit] = await Promise.all([
-          habitService.getHabitOwner(habit.id).catch((err) => {
-            console.error("Failed to load owner info:", err);
+          habitService.getHabitOwner(habit.id).catch(err => {
+            console.error('Failed to load owner info:', err);
             return null;
           }),
-          habitService.checkFriendLimit(habit.id).catch((err) => {
-            console.error("Failed to check friend limit:", err);
+          habitService.checkFriendLimit(habit.id).catch(err => {
+            console.error('Failed to check friend limit:', err);
             return null;
-          }),
+          })
         ]);
 
         // Загружаем members отдельно (не критично для первого рендера)
-        habitService
-          .getHabitMembers(habit.id)
-          .then((data) => {
-            setDataState((prev) => ({ ...prev, members: data.members || [] }));
+        habitService.getHabitMembers(habit.id)
+          .then(data => {
+            setDataState(prev => ({ ...prev, members: data.members || [] }));
           })
-          .catch((err) => console.error("Failed to load members:", err));
+          .catch(err => console.error('Failed to load members:', err));
 
         // Обновляем состояния одним батчем
-        setDataState((prev) => ({
+        setDataState(prev => ({
           ...prev,
           ownerInfo,
-          friendLimitData: friendLimit,
+          friendLimitData: friendLimit
         }));
 
-        setUiState((prev) => ({ ...prev, ownerInfoLoading: false }));
+        setUiState(prev => ({ ...prev, ownerInfoLoading: false }));
 
         // Загружаем статистику
         await loadStatistics(true);
 
-        console.log("✅ HabitDetail data initialized");
+        console.log('✅ HabitDetail data initialized');
       } catch (error) {
-        console.error("Failed to initialize data:", error);
-        setUiState((prev) => ({
-          ...prev,
-          loading: false,
-          ownerInfoLoading: false,
-        }));
+        console.error('Failed to initialize data:', error);
+        setUiState(prev => ({ ...prev, loading: false, ownerInfoLoading: false }));
       }
     };
 
@@ -298,36 +249,36 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const loadMembers = async () => {
     try {
       const data = await habitService.getHabitMembers(habit.id);
-      setDataState((prev) => ({ ...prev, members: data.members || [] }));
+      setDataState(prev => ({ ...prev, members: data.members || [] }));
     } catch (error) {
-      console.error("Failed to load members:", error);
+      console.error('Failed to load members:', error);
     }
   };
 
   const checkFriendLimit = async () => {
     try {
       const limitData = await habitService.checkFriendLimit(habit.id);
-      setDataState((prev) => ({ ...prev, friendLimitData: limitData }));
-      console.log("Friend limit data:", limitData);
+      setDataState(prev => ({ ...prev, friendLimitData: limitData }));
+      console.log('Friend limit data:', limitData);
     } catch (error) {
-      console.error("Failed to check friend limit:", error);
+      console.error('Failed to check friend limit:', error);
     }
   };
 
   const handleAddFriend = async () => {
-    console.log("Add Friend clicked, checking limits...");
-
+    console.log('Add Friend clicked, checking limits...');
+    
     const limitCheck = await habitService.checkFriendLimit(habit.id);
-    setDataState((prev) => ({ ...prev, friendLimitData: limitCheck }));
-
-    console.log("Friend limit check result:", limitCheck);
-
+    setDataState(prev => ({ ...prev, friendLimitData: limitCheck }));
+    
+    console.log('Friend limit check result:', limitCheck);
+    
     if (limitCheck.showPremiumModal && !limitCheck.isPremium) {
-      console.log("Friend limit reached, showing subscription modal");
-      setUiState((prev) => ({ ...prev, showSubscriptionModal: true }));
+      console.log('Friend limit reached, showing subscription modal');
+      setUiState(prev => ({ ...prev, showSubscriptionModal: true }));
       return;
     }
-
+    
     await handleShare();
   };
 
@@ -335,144 +286,137 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     try {
       const shareData = await habitService.createShareLink(habit.id);
       const shareCode = shareData.shareCode;
-
-      console.log("📤 Creating share link:", {
-        habitId: habit.id,
+      
+      console.log('📤 Creating share link:', { 
+        habitId: habit.id, 
         shareCode,
-        botUsername: "CheckHabitlyBot",
+        botUsername: 'CheckHabitlyBot' 
       });
-
-      const shareText = `Join my "${habit.title}" habit!\n\n📝 ${t(
-        "habitDetail.goal"
-      )}: ${habit.goal}\n\nLet's build better habits together! 💪`;
-
+      
+      const shareText = `Join my "${habit.title}" habit!\n\n📝 ${t('habitDetail.goal')}: ${habit.goal}\n\nLet's build better habits together! 💪`;
+      
       const shareUrl = `https://t.me/CheckHabitlyBot?start=${shareCode}`;
-
-      console.log("🔗 Generated share URL:", shareUrl);
-      console.log("📝 Share text:", shareText);
-
-      const hasSeenFriendHint = localStorage.getItem("hasSeenFriendHint");
+      
+      console.log('🔗 Generated share URL:', shareUrl);
+      console.log('📝 Share text:', shareText);
+      
+      const hasSeenFriendHint = localStorage.getItem('hasSeenFriendHint');
       if (!hasSeenFriendHint && dataState.members.length === 0) {
         setTimeout(() => {
-          setUiState((prev) => ({ ...prev, showFriendHint: true }));
-          localStorage.setItem("hasSeenFriendHint", "true");
+          setUiState(prev => ({ ...prev, showFriendHint: true }));
+          localStorage.setItem('hasSeenFriendHint', 'true');
         }, 2000);
       }
-
+      
       if (tg?.openTelegramLink) {
-        const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(
-          shareUrl
-        )}&text=${encodeURIComponent(shareText)}`;
-        console.log("📲 Opening Telegram share dialog:", telegramShareUrl);
+        const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+        console.log('📲 Opening Telegram share dialog:', telegramShareUrl);
         tg.openTelegramLink(telegramShareUrl);
       } else {
-        const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(
-          shareUrl
-        )}&text=${encodeURIComponent(shareText)}`;
-        console.log("🌐 Opening share in browser:", telegramShareUrl);
-        window.open(telegramShareUrl, "_blank");
+        const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+        console.log('🌐 Opening share in browser:', telegramShareUrl);
+        window.open(telegramShareUrl, '_blank');
       }
-
-      setDataState((prev) => ({
+      
+      setDataState(prev => ({
         ...prev,
         toast: {
-          message: t("habitDetail.toasts.shareLinkCreated"),
-          type: "success",
-        },
+          message: t('habitDetail.toasts.shareLinkCreated'),
+          type: 'success'
+        }
       }));
-
-      console.log("✅ Share dialog opened successfully");
+      
+      console.log('✅ Share dialog opened successfully');
     } catch (error) {
-      console.error("❌ Failed to create share link:", error);
-      setDataState((prev) => ({
+      console.error('❌ Failed to create share link:', error);
+      setDataState(prev => ({
         ...prev,
         toast: {
-          message: t("habitDetail.toasts.shareLinkFailed"),
-          type: "error",
-        },
+          message: t('habitDetail.toasts.shareLinkFailed'),
+          type: 'error'
+        }
       }));
     }
   };
 
   const handleSubscriptionContinue = async (plan) => {
-    console.log("Selected subscription plan:", plan);
-
+    console.log('Selected subscription plan:', plan);
+    
     try {
       const result = await habitService.activatePremium(plan);
-
+      
       if (result.success) {
-        console.log("Premium activated successfully");
-
+        console.log('Premium activated successfully');
+        
         await checkFriendLimit();
         await loadMembers();
-
-        setUiState((prev) => ({ ...prev, showSubscriptionModal: false }));
-
+        
+        setUiState(prev => ({ ...prev, showSubscriptionModal: false }));
+        
         if (window.Telegram?.WebApp?.showAlert) {
-          window.Telegram.WebApp.showAlert(
-            t("habitDetail.toasts.premiumActivated")
-          );
+          window.Telegram.WebApp.showAlert(t('habitDetail.toasts.premiumActivated'));
         }
-
+        
         setTimeout(() => {
           handleShare();
         }, 500);
       }
     } catch (error) {
-      console.error("Failed to activate premium:", error);
-
-      setUiState((prev) => ({ ...prev, showSubscriptionModal: false }));
-
+      console.error('Failed to activate premium:', error);
+      
+      setUiState(prev => ({ ...prev, showSubscriptionModal: false }));
+      
       if (window.Telegram?.WebApp?.showAlert) {
-        window.Telegram.WebApp.showAlert(t("habitDetail.toasts.premiumFailed"));
+        window.Telegram.WebApp.showAlert(t('habitDetail.toasts.premiumFailed'));
       } else {
-        alert(t("habitDetail.toasts.premiumFailed"));
+        alert(t('habitDetail.toasts.premiumFailed'));
       }
     }
   };
 
   const handleCopyLink = async () => {
     try {
-      console.log("📋 Creating share link for habit:", habit.id);
-
+      console.log('📋 Creating share link for habit:', habit.id);
+      
       const shareData = await habitService.createShareLink(habit.id);
-      console.log("✅ Share data received:", shareData);
-
+      console.log('✅ Share data received:', shareData);
+      
       if (!shareData || !shareData.shareCode) {
-        throw new Error("No share code received");
+        throw new Error('No share code received');
       }
-
+      
       const shareCode = shareData.shareCode;
       const inviteLink = `https://t.me/CheckHabitlyBot?start=${shareCode}`;
-
-      console.log("📋 Attempting to copy link:", inviteLink);
-
+      
+      console.log('📋 Attempting to copy link:', inviteLink);
+      
       const copySuccess = await copyToClipboard(inviteLink);
-
+      
       if (copySuccess) {
-        console.log("✅ Link copied successfully:", inviteLink);
-
-        setUiState((prev) => ({ ...prev, showCopyModal: true }));
-
+        console.log('✅ Link copied successfully:', inviteLink);
+        
+        setUiState(prev => ({ ...prev, showCopyModal: true }));
+        
         if (window.Telegram?.WebApp?.HapticFeedback) {
-          window.Telegram.WebApp.HapticFeedback.notificationOccurred("success");
+          window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
         }
       } else {
-        throw new Error("All copy methods failed");
+        throw new Error('All copy methods failed');
       }
+      
     } catch (err) {
-      console.error("❌ Failed to copy link:", err);
-      console.error("Error details:", {
+      console.error('❌ Failed to copy link:', err);
+      console.error('Error details:', {
         message: err.message,
-        stack: err.stack,
+        stack: err.stack
       });
-
-      setDataState((prev) => ({
+      
+      setDataState(prev => ({
         ...prev,
         toast: {
-          message: t("habitDetail.toasts.linkCopyFailed"),
-          type: "error",
-        },
+          message: t('habitDetail.toasts.linkCopyFailed'),
+          type: 'error'
+        }
       }));
     }
   };
@@ -481,113 +425,105 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       try {
         await navigator.clipboard.writeText(text);
-        console.log("✅ Copied via Clipboard API");
+        console.log('✅ Copied via Clipboard API');
         return true;
       } catch (err) {
-        console.warn("⚠️ Clipboard API failed:", err);
+        console.warn('⚠️ Clipboard API failed:', err);
       }
     }
-
+    
     try {
-      const textArea = document.createElement("textarea");
+      const textArea = document.createElement('textarea');
       textArea.value = text;
-
-      textArea.style.position = "fixed";
-      textArea.style.top = "0";
-      textArea.style.left = "0";
-      textArea.style.width = "2em";
-      textArea.style.height = "2em";
-      textArea.style.padding = "0";
-      textArea.style.border = "none";
-      textArea.style.outline = "none";
-      textArea.style.boxShadow = "none";
-      textArea.style.background = "transparent";
-
+      
+      textArea.style.position = 'fixed';
+      textArea.style.top = '0';
+      textArea.style.left = '0';
+      textArea.style.width = '2em';
+      textArea.style.height = '2em';
+      textArea.style.padding = '0';
+      textArea.style.border = 'none';
+      textArea.style.outline = 'none';
+      textArea.style.boxShadow = 'none';
+      textArea.style.background = 'transparent';
+      
       document.body.appendChild(textArea);
       textArea.focus();
       textArea.select();
-
+      
       textArea.setSelectionRange(0, 99999);
-
-      const successful = document.execCommand("copy");
+      
+      const successful = document.execCommand('copy');
       document.body.removeChild(textArea);
-
+      
       if (successful) {
-        console.log("✅ Copied via execCommand");
+        console.log('✅ Copied via execCommand');
         return true;
       }
     } catch (err) {
-      console.warn("⚠️ execCommand failed:", err);
+      console.warn('⚠️ execCommand failed:', err);
     }
-
+    
     const tg = window.Telegram?.WebApp;
     if (tg && tg.readTextFromClipboard) {
       try {
         if (window.prompt) {
-          window.prompt("Copy this link:", text);
-          console.log("✅ Showed prompt for manual copy");
+          window.prompt('Copy this link:', text);
+          console.log('✅ Showed prompt for manual copy');
           return true;
         }
       } catch (err) {
-        console.warn("⚠️ Telegram readTextFromClipboard failed:", err);
+        console.warn('⚠️ Telegram readTextFromClipboard failed:', err);
       }
     }
-
+    
     if (tg && tg.showAlert) {
       tg.showAlert(`Copy this link:\n\n${text}`);
-      console.log("✅ Showed alert with link");
+      console.log('✅ Showed alert with link');
       return true;
     }
-
-    console.error("❌ All copy methods failed");
+    
+    console.error('❌ All copy methods failed');
     return false;
   };
 
   const handlePunchFriend = async (memberId) => {
     try {
       const result = await habitService.punchFriend(habit.id, memberId);
-
+      
       if (result.showToast) {
-        setDataState((prev) => ({
+        setDataState(prev => ({
           ...prev,
           toast: {
             message: result.toastMessage,
-            type: result.toastType || "info",
-          },
+            type: result.toastType || 'info'
+          }
         }));
-
+        
         if (window.Telegram?.WebApp?.HapticFeedback) {
           if (result.alreadyCompleted) {
-            window.Telegram.WebApp.HapticFeedback.notificationOccurred(
-              "warning"
-            );
+            window.Telegram.WebApp.HapticFeedback.notificationOccurred('warning');
           } else if (result.success) {
-            window.Telegram.WebApp.HapticFeedback.impactOccurred("medium");
+            window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
           }
         }
       } else if (tg?.showAlert) {
         if (result.alreadyCompleted) {
-          tg.showAlert(
-            t("habitDetail.alerts.alreadyCompleted", {
-              name: result.friendName,
-            })
-          );
+          tg.showAlert(t('habitDetail.alerts.alreadyCompleted', { name: result.friendName }));
         } else if (result.isSkipped) {
-          tg.showAlert(
-            t("habitDetail.alerts.skipped", { name: result.friendName })
-          );
+          tg.showAlert(t('habitDetail.alerts.skipped', { name: result.friendName }));
         } else if (result.success) {
-          tg.showAlert(t("habitDetail.alerts.reminderSent"));
+          tg.showAlert(t('habitDetail.alerts.reminderSent'));
         }
       }
     } catch (error) {
-      console.error("Failed to send punch:", error);
-      setDataState((prev) => ({
+      console.error('Failed to send punch:', error);
+      setDataState(prev => ({
         ...prev,
         toast: {
-          message: t("habitDetail.toasts.punchFailed"),
-          type: "error",
-        },
+          message: t('habitDetail.toasts.punchFailed'),
+          type: 'error'
+        }
       }));
     }
   };
@@ -595,63 +531,58 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const handleRemoveFriend = async (memberId) => {
     try {
       if (tg?.showConfirm) {
-        tg.showConfirm(
-          t("habitDetail.alerts.removeFriendConfirm"),
-          async (confirmed) => {
-            if (confirmed) {
-              await habitService.removeMember(habit.id, memberId);
-              await loadMembers();
-              await checkFriendLimit();
-              setDataState((prev) => ({
-                ...prev,
-                toast: {
-                  message: t("habitDetail.toasts.friendRemoved"),
-                  type: "success",
-                },
-              }));
-            }
+        tg.showConfirm(t('habitDetail.alerts.removeFriendConfirm'), async (confirmed) => {
+          if (confirmed) {
+            await habitService.removeMember(habit.id, memberId);
+            await loadMembers();
+            await checkFriendLimit();
+            setDataState(prev => ({
+              ...prev,
+              toast: {
+                message: t('habitDetail.toasts.friendRemoved'),
+                type: 'success'
+              }
+            }));
           }
-        );
+        });
       } else {
-        const confirmed = window.confirm(
-          t("habitDetail.alerts.removeFriendConfirm")
-        );
+        const confirmed = window.confirm(t('habitDetail.alerts.removeFriendConfirm'));
         if (confirmed) {
           await habitService.removeMember(habit.id, memberId);
           await loadMembers();
           await checkFriendLimit();
-          setDataState((prev) => ({
+          setDataState(prev => ({
             ...prev,
             toast: {
-              message: t("habitDetail.toasts.friendRemoved"),
-              type: "success",
-            },
+              message: t('habitDetail.toasts.friendRemoved'),
+              type: 'success'
+            }
           }));
         }
       }
     } catch (error) {
-      console.error("Failed to remove friend:", error);
-      setDataState((prev) => ({
+      console.error('Failed to remove friend:', error);
+      setDataState(prev => ({
         ...prev,
         toast: {
-          message: t("habitDetail.toasts.friendRemoveFailed"),
-          type: "error",
-        },
+          message: t('habitDetail.toasts.friendRemoveFailed'),
+          type: 'error'
+        }
       }));
     }
   };
 
   const handleEditClick = () => {
-    console.log("🖊️ Edit button clicked");
-    console.log("✅ User is the creator - opening edit form");
-
+    console.log('🖊️ Edit button clicked');
+    console.log('✅ User is the creator - opening edit form');
+    
     if (onEdit) {
       onEdit(habit);
     }
   };
 
   const getCategoryEmoji = () => {
-    return habit.category_icon || habit.icon || "🎯";
+    return habit.category_icon || habit.icon || '🎯';
   };
 
   const getProgressPercentage = (completed, total) => {
@@ -661,12 +592,12 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
 
   const getProgressColor = (type) => {
     const colors = {
-      streak: "#A7D96C",
-      week: "#7DD3C0",
-      month: "#C084FC",
-      year: "#FBBF24",
+      streak: '#A7D96C',
+      week: '#7DD3C0', 
+      month: '#C084FC',
+      year: '#FBBF24'
     };
-    return colors[type] || "#A7D96C";
+    return colors[type] || '#A7D96C';
   };
 
   if (uiState.loading) {
@@ -684,18 +615,16 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
           <div className="habit-detail__habit-info">
             <div className="habit-detail__habit-header">
               <div className="habit-detail__habit-title-section">
-                <span className="habit-detail__emoji">
-                  {getCategoryEmoji()}
-                </span>
+                <span className="habit-detail__emoji">{getCategoryEmoji()}</span>
                 <h2 className="habit-detail__habit-title">{habit.title}</h2>
               </div>
-
+              
               {!uiState.ownerInfoLoading && isCreator && (
-                <button
+                <button 
                   className="habit-detail__edit-btn"
                   onClick={handleEditClick}
                 >
-                  {t("habitDetail.edit")}
+                  {t('habitDetail.edit')}
                 </button>
               )}
             </div>
@@ -707,174 +636,108 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
 
           <div className="habit-detail__statistics">
             <div className="habit-detail__stat-card">
-              <div
-                className="habit-detail__stat-circle"
-                style={{
-                  "--progress": getProgressPercentage(
-                    statistics.currentStreak,
-                    100
-                  ),
-                  "--color": getProgressColor("streak"),
-                }}
-              >
-                <span className="habit-detail__stat-value">
-                  {statistics.currentStreak}
-                </span>
+              <div className="habit-detail__stat-circle" style={{
+                '--progress': getProgressPercentage(statistics.currentStreak, 100),
+                '--color': getProgressColor('streak')
+              }}>
+                <span className="habit-detail__stat-value">{statistics.currentStreak}</span>
               </div>
-              <h3 className="habit-detail__stat-title">
-                {t("habitDetail.statistics.daysStreak")}
-              </h3>
-              <p className="habit-detail__stat-subtitle">
-                {t("habitDetail.statistics.daysStreak")}
-              </p>
+              <h3 className="habit-detail__stat-title">{t('habitDetail.statistics.daysStreak')}</h3>
+              <p className="habit-detail__stat-subtitle">{t('habitDetail.statistics.daysStreak')}</p>
             </div>
 
             <div className="habit-detail__stat-card">
-              <div
-                className="habit-detail__stat-circle"
-                style={{
-                  "--progress": getProgressPercentage(
-                    statistics.weekDays,
-                    statistics.weekTotal
-                  ),
-                  "--color": getProgressColor("week"),
-                }}
-              >
-                <span className="habit-detail__stat-value">
-                  {statistics.weekDays}
-                </span>
-                <span className="habit-detail__stat-total">
-                  {statistics.weekTotal}
-                </span>
+              <div className="habit-detail__stat-circle" style={{
+                '--progress': getProgressPercentage(statistics.weekDays, statistics.weekTotal),
+                '--color': getProgressColor('week')
+              }}>
+                <span className="habit-detail__stat-value">{statistics.weekDays}</span>
+                <span className="habit-detail__stat-total">{statistics.weekTotal}</span>
               </div>
-              <h3 className="habit-detail__stat-title">
-                {t("habitDetail.statistics.week")}
-              </h3>
-              <p className="habit-detail__stat-subtitle">
-                {t("habitDetail.statistics.daysStreak")}
-              </p>
+              <h3 className="habit-detail__stat-title">{t('habitDetail.statistics.week')}</h3>
+              <p className="habit-detail__stat-subtitle">{t('habitDetail.statistics.daysStreak')}</p>
             </div>
 
             <div className="habit-detail__stat-card">
-              <div
-                className="habit-detail__stat-circle"
-                style={{
-                  "--progress": getProgressPercentage(
-                    statistics.monthDays,
-                    statistics.monthTotal
-                  ),
-                  "--color": getProgressColor("month"),
-                }}
-              >
-                <span className="habit-detail__stat-value">
-                  {statistics.monthDays}
-                </span>
-                <span className="habit-detail__stat-total">
-                  {statistics.monthTotal}
-                </span>
+              <div className="habit-detail__stat-circle" style={{
+                '--progress': getProgressPercentage(statistics.monthDays, statistics.monthTotal),
+                '--color': getProgressColor('month')
+              }}>
+                <span className="habit-detail__stat-value">{statistics.monthDays}</span>
+                <span className="habit-detail__stat-total">{statistics.monthTotal}</span>
               </div>
-              <h3 className="habit-detail__stat-title">
-                {t("habitDetail.statistics.month")}
-              </h3>
-              <p className="habit-detail__stat-subtitle">
-                {t("habitDetail.statistics.daysStreak")}
-              </p>
+              <h3 className="habit-detail__stat-title">{t('habitDetail.statistics.month')}</h3>
+              <p className="habit-detail__stat-subtitle">{t('habitDetail.statistics.daysStreak')}</p>
             </div>
 
             <div className="habit-detail__stat-card">
-              <div
-                className="habit-detail__stat-circle"
-                style={{
-                  "--progress": getProgressPercentage(
-                    statistics.yearDays,
-                    statistics.yearTotal
-                  ),
-                  "--color": getProgressColor("year"),
-                }}
-              >
-                <span className="habit-detail__stat-value">
-                  {statistics.yearDays}
-                </span>
-                <span className="habit-detail__stat-total">
-                  {statistics.yearTotal}
-                </span>
+              <div className="habit-detail__stat-circle" style={{
+                '--progress': getProgressPercentage(statistics.yearDays, statistics.yearTotal),
+                '--color': getProgressColor('year')
+              }}>
+                <span className="habit-detail__stat-value">{statistics.yearDays}</span>
+                <span className="habit-detail__stat-total">{statistics.yearTotal}</span>
               </div>
-              <h3 className="habit-detail__stat-title">
-                {t("habitDetail.statistics.year")}
-              </h3>
-              <p className="habit-detail__stat-subtitle">
-                {t("habitDetail.statistics.daysStreak")}
-              </p>
+              <h3 className="habit-detail__stat-title">{t('habitDetail.statistics.year')}</h3>
+              <p className="habit-detail__stat-subtitle">{t('habitDetail.statistics.daysStreak')}</p>
             </div>
           </div>
 
           <div className="habit-detail__motivation">
             <p className="habit-detail__motivation-text">
-              {t("habitDetail.motivation")}
+              {t('habitDetail.motivation')}
             </p>
           </div>
 
           <div className="habit-detail__friends">
-            <h3 className="habit-detail__friends-title">
-              {t("habitDetail.friends.title")}
-            </h3>
-
-            {dataState.friendLimitData &&
-              !dataState.friendLimitData.isPremium && (
-                <p
-                  style={{
-                    fontSize: "13px",
-                    color: "#8E8E93",
-                    marginBottom: "12px",
-                    textAlign: "left",
-                  }}
-                >
-                  {dataState.friendLimitData.currentFriendsCount}/
-                  {dataState.friendLimitData.limit}{" "}
-                  {dataState.friendLimitData.limit === 1
-                    ? t("habitDetail.friends.friendsAdded")
-                    : t("habitDetail.friends.friendsAddedPlural")}{" "}
-                  ({t("habitDetail.friends.freePlan")})
-                </p>
-              )}
-
+            <h3 className="habit-detail__friends-title">{t('habitDetail.friends.title')}</h3>
+            
+            {dataState.friendLimitData && !dataState.friendLimitData.isPremium && (
+              <p style={{
+                fontSize: '13px',
+                color: '#8E8E93',
+                marginBottom: '12px',
+                textAlign: 'left'
+              }}>
+                {dataState.friendLimitData.currentFriendsCount}/{dataState.friendLimitData.limit} {dataState.friendLimitData.limit === 1 ? t('habitDetail.friends.friendsAdded') : t('habitDetail.friends.friendsAddedPlural')} ({t('habitDetail.friends.freePlan')})
+              </p>
+            )}
+            
             {dataState.members.length > 0 ? (
               <div className="habit-detail__members-list">
-                {dataState.members.map((member) => (
+                {dataState.members.map(member => (
                   <FriendCard
                     key={member.id}
                     member={member}
                     onPunch={() => handlePunchFriend(member.id)}
                     onRemove={() => handleRemoveFriend(member.id)}
-                    removeText={t("habitDetail.friends.remove")}
-                    punchText={t("habitDetail.friends.punch")}
+                    removeText={t('habitDetail.friends.remove')}
+                    punchText={t('habitDetail.friends.punch')}
                   />
                 ))}
               </div>
             ) : (
               <p className="habit-detail__friends-subtitle">
-                {t("habitDetail.friends.subtitle")}
+                {t('habitDetail.friends.subtitle')}
               </p>
             )}
-
+            
             <div className="habit-detail__share-buttons">
-              <button
+              <button 
                 className="habit-detail__btn habit-detail__btn--primary habit-detail__btn--share"
                 onClick={handleAddFriend}
               >
-                {t("habitDetail.friends.addFriend")}
+                {t('habitDetail.friends.addFriend')}
               </button>
             </div>
           </div>
 
           {isCreator && (
-            <button
+            <button 
               className="habit-detail__btn habit-detail__btn--danger"
-              onClick={() =>
-                setUiState((prev) => ({ ...prev, showDeleteModal: true }))
-              }
+              onClick={() => setUiState(prev => ({ ...prev, showDeleteModal: true }))}
             >
-              {t("habitDetail.buttons.removeHabit")}
+              {t('habitDetail.buttons.removeHabit')}
             </button>
           )}
         </div>
@@ -882,32 +745,24 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
 
       <DeleteConfirmModal
         isOpen={uiState.showDeleteModal}
-        onClose={() =>
-          setUiState((prev) => ({ ...prev, showDeleteModal: false }))
-        }
+        onClose={() => setUiState(prev => ({ ...prev, showDeleteModal: false }))}
         onConfirm={() => onDelete(habit.id)}
         habitTitle={habit.title}
       />
 
       <CopyLinkModal
         isOpen={uiState.showCopyModal}
-        onClose={() =>
-          setUiState((prev) => ({ ...prev, showCopyModal: false }))
-        }
+        onClose={() => setUiState(prev => ({ ...prev, showCopyModal: false }))}
       />
 
-      <FriendSwipeHint
+      <FriendSwipeHint 
         show={uiState.showFriendHint}
-        onClose={() =>
-          setUiState((prev) => ({ ...prev, showFriendHint: false }))
-        }
+        onClose={() => setUiState(prev => ({ ...prev, showFriendHint: false }))}
       />
 
       <SubscriptionModal
         isOpen={uiState.showSubscriptionModal}
-        onClose={() =>
-          setUiState((prev) => ({ ...prev, showSubscriptionModal: false }))
-        }
+        onClose={() => setUiState(prev => ({ ...prev, showSubscriptionModal: false }))}
         onContinue={handleSubscriptionContinue}
       />
 
@@ -916,90 +771,85 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
           message={dataState.toast.message}
           type={dataState.toast.type}
           duration={3000}
-          onClose={() => setDataState((prev) => ({ ...prev, toast: null }))}
+          onClose={() => setDataState(prev => ({ ...prev, toast: null }))}
         />
       )}
     </>
   );
 };
 
-const FriendCard = React.memo(
-  ({ member, onPunch, onRemove, removeText, punchText }) => {
-    const [swipeOffset, setSwipeOffset] = useState(0);
-    const [startX, setStartX] = useState(0);
-    const [isSwiping, setIsSwiping] = useState(false);
+const FriendCard = React.memo(({ member, onPunch, onRemove, removeText, punchText }) => {
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [startX, setStartX] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+  
+  const SWIPE_THRESHOLD = 60;
+  const MAX_SWIPE = 100;
 
-    const SWIPE_THRESHOLD = 60;
-    const MAX_SWIPE = 100;
+  const handleTouchStart = (e) => {
+    setStartX(e.touches[0].clientX);
+    setIsSwiping(true);
+  };
 
-    const handleTouchStart = (e) => {
-      setStartX(e.touches[0].clientX);
-      setIsSwiping(true);
-    };
+  const handleTouchMove = (e) => {
+    if (!isSwiping) return;
+    
+    const currentX = e.touches[0].clientX;
+    const diff = currentX - startX;
+    const limitedDiff = Math.max(-MAX_SWIPE, Math.min(MAX_SWIPE, diff));
+    setSwipeOffset(limitedDiff);
+  };
 
-    const handleTouchMove = (e) => {
-      if (!isSwiping) return;
-
-      const currentX = e.touches[0].clientX;
-      const diff = currentX - startX;
-      const limitedDiff = Math.max(-MAX_SWIPE, Math.min(MAX_SWIPE, diff));
-      setSwipeOffset(limitedDiff);
-    };
-
-    const handleTouchEnd = () => {
-      if (Math.abs(swipeOffset) >= SWIPE_THRESHOLD) {
-        if (swipeOffset < 0) {
-          onPunch();
-        } else {
-          onRemove();
-        }
+  const handleTouchEnd = () => {
+    if (Math.abs(swipeOffset) >= SWIPE_THRESHOLD) {
+      if (swipeOffset < 0) {
+        onPunch();
+      } else {
+        onRemove();
       }
+    }
+    
+    setSwipeOffset(0);
+    setIsSwiping(false);
+  };
 
-      setSwipeOffset(0);
-      setIsSwiping(false);
-    };
-
-    return (
-      <div className="friend-card-container">
-        {swipeOffset > 20 && (
-          <div className="friend-action friend-action--remove">
-            <span>{removeText}</span>
-          </div>
-        )}
-
-        <div
-          className="friend-card"
-          style={{
-            transform: `translateX(${swipeOffset}px)`,
-            transition: isSwiping ? "none" : "transform 0.3s ease-out",
-          }}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          <img
-            src={
-              member.photo_url ||
-              `https://ui-avatars.com/api/?name=${member.first_name}`
-            }
-            alt={member.first_name}
-            className="friend-card__avatar"
-          />
-          <span className="friend-card__name">
-            {member.first_name} {member.last_name}
-          </span>
+  return (
+    <div className="friend-card-container">
+      {swipeOffset > 20 && (
+        <div className="friend-action friend-action--remove">
+          <span>{removeText}</span>
         </div>
-
-        {swipeOffset < -20 && (
-          <div className="friend-action friend-action--punch">
-            <span>{punchText}</span>
-          </div>
-        )}
+      )}
+      
+      <div 
+        className="friend-card"
+        style={{
+          transform: `translateX(${swipeOffset}px)`,
+          transition: isSwiping ? 'none' : 'transform 0.3s ease-out'
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        <img 
+          src={member.photo_url || `https://ui-avatars.com/api/?name=${member.first_name}`} 
+          alt={member.first_name}
+          className="friend-card__avatar"
+        />
+        <span className="friend-card__name">
+          {member.first_name} {member.last_name}
+        </span>
       </div>
-    );
-  }
-);
+      
+      {swipeOffset < -20 && (
+        <div className="friend-action friend-action--punch">
+          <span>{punchText}</span>
+        </div>
+      )}
+    </div>
+  );
+});
 
-FriendCard.displayName = "FriendCard";
+FriendCard.displayName = 'FriendCard';
 
 export default HabitDetail;

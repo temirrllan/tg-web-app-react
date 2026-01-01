@@ -98,9 +98,7 @@ const HabitCard = React.memo(
         } else {
           await onMark(habit.id, nextStatus);
         }
-         window.dispatchEvent(new CustomEvent('habitStatusChanged', {
-          detail: { habitId: habit.id, status: nextStatus }
-        }));
+
         if (window.Telegram?.WebApp?.HapticFeedback) {
           window.Telegram.WebApp.HapticFeedback.impactOccurred("light");
         }

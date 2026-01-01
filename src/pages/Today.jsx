@@ -530,10 +530,7 @@ const handleMark = useCallback(async (habitId, status) => {
       
       // Выполняем API запрос
       await markHabit(habitId, status, selectedDate);
-      // 🆕 ОТПРАВЛЯЕМ СОБЫТИЕ
-    window.dispatchEvent(new CustomEvent('habitStatusChanged', {
-      detail: { habitId, status }
-    }));
+      
       // ВАЖНО: Не перезагружаем данные автоматически - только если это сегодня
       const today = getTodayDate();
       if (selectedDate === today) {
@@ -586,10 +583,7 @@ const handleMark = useCallback(async (habitId, status) => {
       
       // Выполняем API запрос
       await unmarkHabit(habitId, selectedDate);
-      // 🆕 ОТПРАВЛЯЕМ СОБЫТИЕ
-    window.dispatchEvent(new CustomEvent('habitStatusChanged', {
-      detail: { habitId, status: 'pending' }
-    }));
+      
       // ВАЖНО: Не перезагружаем данные автоматически
       const today = getTodayDate();
       if (selectedDate === today) {
