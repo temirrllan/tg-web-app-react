@@ -254,7 +254,7 @@
   flex-direction: column;
   background: var( white);
   border-radius: 16px;
-  padding: 20px;
+  /* padding: 20px; */
   margin-bottom: 20px;
   text-align: left;
   border: 1px solid var(--border-color, transparent);
