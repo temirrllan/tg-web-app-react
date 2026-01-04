@@ -374,7 +374,7 @@
 
 .friend-card {
   width: 100%;
-  background: var(--bg-tertiary, #F8F8FA);
+  background: var(--bg-tertiary, #DFDFE1);
   border-radius: 16px;
   padding: 12px 16px;
   display: flex;
