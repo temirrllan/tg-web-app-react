@@ -1,4 +1,4 @@
-// src/components/hints/FabHint.jsx - ПОЛНОСТЬЮ ИСПРАВЛЕНО
+// src/components/hints/FabHint.jsx - ИСПРАВЛЕНО: предотвращение повторного открытия
 import React, { useEffect } from 'react';
 import './FabHint.css';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -42,7 +42,7 @@ const FabHint = ({ show, onClose }) => {
   }, [show]);
 
   const handleClose = (e) => {
-    // Останавливаем всплытие события
+    // КРИТИЧНО: Останавливаем всплытие события
     if (e) {
       e.preventDefault();
       e.stopPropagation();
@@ -54,14 +54,29 @@ const FabHint = ({ show, onClose }) => {
     }
     
     console.log('🔴 FabHint closing...');
-    onClose();
+    
+    // НОВОЕ: Задержка перед закрытием, чтобы предотвратить всплытие к FAB
+    setTimeout(() => {
+      onClose();
+    }, 50);
   };
 
   const handleOverlayClick = (e) => {
-    // Закрываем только если клик был на overlay, а не на bubble
-    if (e.target === e.currentTarget) {
+    // КРИТИЧНО: Проверяем, что клик был именно на overlay или cutout-circle
+    const target = e.target;
+    const isOverlay = target.classList.contains('fab-hint-overlay-wrapper');
+    const isCutout = target.classList.contains('fab-hint-cutout-circle');
+    
+    if (isOverlay || isCutout) {
+      e.preventDefault();
+      e.stopPropagation();
       handleClose(e);
     }
+  };
+
+  const handleBubbleClick = (e) => {
+    // Предотвращаем закрытие при клике на сам bubble
+    e.stopPropagation();
   };
 
   if (!show) return null;
@@ -69,19 +84,28 @@ const FabHint = ({ show, onClose }) => {
   return (
     <>
       {/* Затемнённый overlay - перехватывает клики */}
-      <div className="fab-hint-overlay-wrapper" onClick={handleOverlayClick}>
+      <div 
+        className="fab-hint-overlay-wrapper" 
+        onClick={handleOverlayClick}
+        onTouchEnd={handleOverlayClick}
+      >
         {/* Прозрачный круг с огромной тенью = затемнение всего кроме круга */}
-        <div className="fab-hint-cutout-circle" onClick={handleClose} />
+        <div 
+          className="fab-hint-cutout-circle" 
+          onClick={handleOverlayClick}
+          onTouchEnd={handleOverlayClick}
+        />
         
-        <div className="fab-hint-container">
+        <div className="fab-hint-container" onClick={handleBubbleClick}>
           {/* Белый балун с хвостиком */}
-          <div className="fab-hint-bubble" onClick={(e) => e.stopPropagation()}>
+          <div className="fab-hint-bubble" onClick={handleBubbleClick}>
             <p className="fab-hint-text">
               {texts.message}
             </p>
             <button 
               className="fab-hint-button" 
               onClick={handleClose}
+              onTouchEnd={handleClose}
               type="button"
             >
               {texts.gotIt}
