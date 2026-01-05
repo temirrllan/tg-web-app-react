@@ -1,4 +1,4 @@
-// src/components/hints/FabHint.jsx - ИСПРАВЛЕНО ЗАКРЫТИЕ
+// src/components/hints/FabHint.jsx - ПОЛНОСТЬЮ ИСПРАВЛЕНО
 import React, { useEffect } from 'react';
 import './FabHint.css';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -57,18 +57,25 @@ const FabHint = ({ show, onClose }) => {
     onClose();
   };
 
+  const handleOverlayClick = (e) => {
+    // Закрываем только если клик был на overlay, а не на bubble
+    if (e.target === e.currentTarget) {
+      handleClose(e);
+    }
+  };
+
   if (!show) return null;
 
   return (
     <>
-      {/* Затемнённый overlay - перехватывает клики для закрытия */}
-      <div className="fab-hint-overlay-wrapper" onClick={handleClose}>
+      {/* Затемнённый overlay - перехватывает клики */}
+      <div className="fab-hint-overlay-wrapper" onClick={handleOverlayClick}>
         {/* Прозрачный круг с огромной тенью = затемнение всего кроме круга */}
-        <div className="fab-hint-cutout-circle" />
+        <div className="fab-hint-cutout-circle" onClick={handleClose} />
         
-        <div className="fab-hint-container" onClick={(e) => e.stopPropagation()}>
+        <div className="fab-hint-container">
           {/* Белый балун с хвостиком */}
-          <div className="fab-hint-bubble">
+          <div className="fab-hint-bubble" onClick={(e) => e.stopPropagation()}>
             <p className="fab-hint-text">
               {texts.message}
             </p>
