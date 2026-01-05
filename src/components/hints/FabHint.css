@@ -1,4 +1,4 @@
-/* src/components/hints/FabHint.css - СИНХРОНИЗИРОВАННЫЕ ПОЗИЦИИ */
+/* src/components/hints/FabHint.css - ИСПРАВЛЕНО ЗАКРЫТИЕ */
 
 .fab-hint-overlay-wrapper {
   position: fixed;
@@ -9,10 +9,10 @@
   z-index: 9998; /* Ниже FAB (9999) */
   animation: fadeIn 0.4s ease-out;
   pointer-events: auto;
-  background: rgba(0, 0, 0, 0.65);
+  /* БЕЗ фона - фон создаёт cutout-circle */
 }
 
-/* Прозрачный круг с огромной тенью - ТОЧНО ТАМ ЖЕ ГДЕ FAB */
+/* Прозрачный круг с огромной тенью - создаёт затемнение с вырезом */
 .fab-hint-cutout-circle {
   position: fixed;
   bottom: 24px;
@@ -20,11 +20,10 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  pointer-events: none;
+  pointer-events: none; /* НЕ перехватывает клики */
   
-  /* Прозрачный круг - вырезает затемнение */
-  background: transparent;
-  box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.65);
+  /* Огромная box-shadow = затемнение всего экрана кроме круга */
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.65);
 }
 
 .fab-hint-container {
@@ -244,12 +243,8 @@
 }
 
 /* ==================== ТЕМНАЯ ТЕМА ==================== */
-.dark-theme .fab-hint-overlay-wrapper {
-  background: rgba(0, 0, 0, 0.75);
-}
-
 .dark-theme .fab-hint-cutout-circle {
-  box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.75);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75);
 }
 
 .dark-theme .fab-hint-bubble {
