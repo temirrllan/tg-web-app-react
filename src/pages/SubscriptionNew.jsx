@@ -64,7 +64,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
     { 
       id: 'month',
       name: t('subscriptionNew.plans.month.name'), 
-      total: 1, // тута 59
+      total: 59, // тута 59
       perMonth: 59,
       badge: null
     },
