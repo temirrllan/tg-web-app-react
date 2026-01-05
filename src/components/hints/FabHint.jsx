@@ -57,25 +57,19 @@ const FabHint = ({ show, onClose }) => {
     onClose();
   };
 
-  const handleOverlayClick = (e) => {
-    // Закрываем только при клике на сам overlay, не на балун
-    if (e.target === e.currentTarget) {
-      handleClose(e);
-    }
-  };
-
   if (!show) return null;
 
   return (
     <>
-      {/* Затемнённый overlay с вырезом через box-shadow */}
-      <div className="fab-hint-overlay-wrapper" onClick={handleOverlayClick}>
+      {/* Затемнённый overlay - НЕ перехватывает клики */}
+      <div className="fab-hint-overlay-wrapper">
         {/* Прозрачный круг с огромной тенью = затемнение всего кроме круга */}
+        {/* ✅ Этот элемент ПЕРЕХВАТЫВАЕТ клики для закрытия */}
         <div className="fab-hint-cutout-circle" onClick={handleClose} />
         
         <div className="fab-hint-container">
           {/* Белый балун с хвостиком */}
-          <div className="fab-hint-bubble" onClick={(e) => e.stopPropagation()}>
+          <div className="fab-hint-bubble">
             <p className="fab-hint-text">
               {texts.message}
             </p>
@@ -91,7 +85,7 @@ const FabHint = ({ show, onClose }) => {
       </div>
       
       {/* Пульсирующие круги ПОВЕРХ всего */}
-      <div className="fab-hint-pulse-container" onClick={handleClose}>
+      <div className="fab-hint-pulse-container">
         <div className="fab-hint-pulse" />
       </div>
     </>
