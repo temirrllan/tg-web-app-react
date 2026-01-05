@@ -678,7 +678,7 @@ const Today = ({ shouldShowFabHint = false }) => {
           </div>
         {/* </PullToRefresh> */}
         
-        <FabHint show={showFabHint} onClose={handleFabHintClose} />
+        {/* <FabHint show={showFabHint} onClose={handleFabHintClose} /> */}
 
         <SwipeHint 
           show={showSwipeHint} 
