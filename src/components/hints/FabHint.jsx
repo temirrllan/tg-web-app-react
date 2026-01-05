@@ -1,4 +1,4 @@
-// src/components/hints/FabHint.jsx - МЕТОД BOX-SHADOW
+// src/components/hints/FabHint.jsx - ИСПРАВЛЕНО ЗАКРЫТИЕ
 import React, { useEffect } from 'react';
 import './FabHint.css';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -6,15 +6,15 @@ import { useTranslation } from '../../hooks/useTranslation';
 // Переводы для подсказки
 const translations = {
   en: {
-    message: 'Tap here to see something!',
+    message: 'Tap here to create your first habit!',
     gotIt: 'Got it!'
   },
   ru: {
-    message: 'Нажмите сюда, чтобы увидеть что-то!',
+    message: 'Нажмите сюда, чтобы создать свою первую привычку!',
     gotIt: 'Понятно!'
   },
   kk: {
-    message: 'Бірдеңе көру үшін осы жерді басыңыз!',
+    message: 'Алғашқы әдетіңізді жасау үшін осы жерді басыңыз!',
     gotIt: 'Түсінікті!'
   }
 };
@@ -41,13 +41,27 @@ const FabHint = ({ show, onClose }) => {
     }
   }, [show]);
 
-  const handleClose = () => {
+  const handleClose = (e) => {
+    // Останавливаем всплытие события
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     // Вибрация при закрытии
     if (window.Telegram?.WebApp?.HapticFeedback) {
       window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
     }
     
+    console.log('🔴 FabHint closing...');
     onClose();
+  };
+
+  const handleOverlayClick = (e) => {
+    // Закрываем только при клике на сам overlay, не на балун
+    if (e.target === e.currentTarget) {
+      handleClose(e);
+    }
   };
 
   if (!show) return null;
@@ -55,17 +69,21 @@ const FabHint = ({ show, onClose }) => {
   return (
     <>
       {/* Затемнённый overlay с вырезом через box-shadow */}
-      <div className="fab-hint-overlay-wrapper" onClick={handleClose}>
+      <div className="fab-hint-overlay-wrapper" onClick={handleOverlayClick}>
         {/* Прозрачный круг с огромной тенью = затемнение всего кроме круга */}
-        <div className="fab-hint-cutout-circle" />
+        <div className="fab-hint-cutout-circle" onClick={handleClose} />
         
-        <div className="fab-hint-container" onClick={(e) => e.stopPropagation()}>
+        <div className="fab-hint-container">
           {/* Белый балун с хвостиком */}
-          <div className="fab-hint-bubble">
+          <div className="fab-hint-bubble" onClick={(e) => e.stopPropagation()}>
             <p className="fab-hint-text">
               {texts.message}
             </p>
-            <button className="fab-hint-button" onClick={handleClose}>
+            <button 
+              className="fab-hint-button" 
+              onClick={handleClose}
+              type="button"
+            >
               {texts.gotIt}
             </button>
           </div>
@@ -73,7 +91,7 @@ const FabHint = ({ show, onClose }) => {
       </div>
       
       {/* Пульсирующие круги ПОВЕРХ всего */}
-      <div className="fab-hint-pulse-container">
+      <div className="fab-hint-pulse-container" onClick={handleClose}>
         <div className="fab-hint-pulse" />
       </div>
     </>
