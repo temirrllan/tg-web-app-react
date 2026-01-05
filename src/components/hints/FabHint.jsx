@@ -61,13 +61,12 @@ const FabHint = ({ show, onClose }) => {
 
   return (
     <>
-      {/* Затемнённый overlay - НЕ перехватывает клики */}
-      <div className="fab-hint-overlay-wrapper">
+      {/* Затемнённый overlay - перехватывает клики для закрытия */}
+      <div className="fab-hint-overlay-wrapper" onClick={handleClose}>
         {/* Прозрачный круг с огромной тенью = затемнение всего кроме круга */}
-        {/* ✅ Этот элемент ПЕРЕХВАТЫВАЕТ клики для закрытия */}
-        <div className="fab-hint-cutout-circle" onClick={handleClose} />
+        <div className="fab-hint-cutout-circle" />
         
-        <div className="fab-hint-container">
+        <div className="fab-hint-container" onClick={(e) => e.stopPropagation()}>
           {/* Белый балун с хвостиком */}
           <div className="fab-hint-bubble">
             <p className="fab-hint-text">
