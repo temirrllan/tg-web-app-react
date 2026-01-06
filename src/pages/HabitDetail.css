@@ -257,7 +257,7 @@
   /* padding: 20px; */
   margin-bottom: 20px;
   text-align: left;
-  border: 1px solid var(--border-color, transparent);
+  /* border: 1px solid var(--border-color, transparent); */
 }
 
 .habit-detail__friends-title {
