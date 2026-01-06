@@ -1,6 +1,6 @@
-// src/pages/Today.jsx - С ПОЛНОЙ АНАЛИТИКОЙ
+// src/pages/Today.jsx - ИСПРАВЛЕНО: FabHint больше не зацикливается
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import Layout from "../components/layout/Layout";
 import Header from "../components/layout/Header";
 import HabitCard from "../components/habits/HabitCard";
@@ -66,6 +66,9 @@ const Today = ({ shouldShowFabHint = false }) => {
   const [userSubscription, setUserSubscription] = useState(null);
   const [showFabHint, setShowFabHint] = useState(false);
 
+  // 🔥 КРИТИЧНО: Используем ref для отслеживания, была ли уже показана подсказка
+  const fabHintShownRef = useRef(false);
+
   const getTodayDate = () => {
     const today = new Date();
     const year = today.getFullYear();
@@ -97,23 +100,32 @@ const Today = ({ shouldShowFabHint = false }) => {
     selected_date: selectedDate,
   });
 
+  // 🔥 ИСПРАВЛЕНО: Показываем FabHint только ОДИН раз
   useEffect(() => {
     console.log('🔍 FAB Hint check:', {
       shouldShowFabHint,
       loading,
       dateLoading,
-      habitsCount: dateHabits.length
+      habitsCount: dateHabits.length,
+      alreadyShown: fabHintShownRef.current
     });
+    
+    // Если подсказка уже была показана - НЕ показываем снова
+    if (fabHintShownRef.current) {
+      console.log('⏭️ FabHint already shown, skipping');
+      return;
+    }
     
     if (shouldShowFabHint && 
         !loading && 
         !dateLoading &&
         dateHabits.length === 0) {
       
-      console.log('🎯 Showing FAB hint for new user (ignoring localStorage)');
+      console.log('🎯 Showing FAB hint for new user (first time only)');
       
       const timer = setTimeout(() => {
         setShowFabHint(true);
+        fabHintShownRef.current = true; // ✅ Отмечаем что показали
         
         // 📊 Аналитика
         track(EVENTS.INTERACTIONS.FAB_HINT_SHOWN, {
@@ -128,7 +140,9 @@ const Today = ({ shouldShowFabHint = false }) => {
   }, [shouldShowFabHint, loading, dateLoading, dateHabits.length, track]);
 
   const handleFabHintClose = () => {
+    console.log('🔴 FabHint closing permanently');
     setShowFabHint(false);
+    fabHintShownRef.current = true; // ✅ Убеждаемся что ref установлен
     localStorage.setItem('hasSeenFabHint', 'true');
     
     track('fab_hint_closed', {
@@ -622,7 +636,6 @@ const Today = ({ shouldShowFabHint = false }) => {
   return (
     <>
       <Layout>
-        {/* <PullToRefresh onRefresh={handleRefresh}> */}
           <Header user={user} onProfileClick={() => setShowProfile(true)} />
 
           <div className="today">
@@ -676,9 +689,9 @@ const Today = ({ shouldShowFabHint = false }) => {
               </div>
             )}
           </div>
-        {/* </PullToRefresh> */}
         
-        {/* <FabHint show={showFabHint} onClose={handleFabHintClose} /> */}
+        {/* 🔥 FabHint показывается только если showFabHint === true */}
+        <FabHint show={showFabHint} onClose={handleFabHintClose} />
 
         <SwipeHint 
           show={showSwipeHint} 
