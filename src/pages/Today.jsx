@@ -504,87 +504,146 @@ const Today = ({ shouldShowFabHint = false }) => {
   }, [dateHabits.length, isEditableDate, track]);
 
   const handleMark = useCallback(async (habitId, status) => {
-    if (!isEditableDate) return;
+  if (!isEditableDate) return;
+  
+  try {
+    // 🔍 Находим текущую привычку и её предыдущий статус
+    const currentHabit = dateHabits.find(h => h.id === habitId);
+    const previousStatus = currentHabit?.today_status || 'pending';
     
-    try {
-      setDateHabits(prev => 
-        prev.map(h => h.id === habitId ? { ...h, today_status: status } : h)
-      );
+    console.log('📊 Marking habit:', {
+      habitId,
+      previousStatus,
+      newStatus: status,
+      currentCompleted: dateStats.completed
+    });
+    
+    // ✅ Оптимистично обновляем UI
+    setDateHabits(prev => 
+      prev.map(h => h.id === habitId ? { ...h, today_status: status } : h)
+    );
+    
+    // 🔢 ПРАВИЛЬНЫЙ подсчёт completed
+    setDateStats(prev => {
+      let newCompleted = prev.completed;
       
-      const newCompleted = status === 'completed' 
-        ? dateStats.completed + 1 
-        : dateStats.completed;
-      setDateStats(prev => ({ ...prev, completed: newCompleted }));
-      
-      await markHabit(habitId, status, selectedDate);
-      
-      const today = getTodayDate();
-      if (selectedDate === today) {
-        // Для сегодня - обновление через useEffect выше
-      } else {
-        console.log(`✅ Habit ${habitId} marked as ${status} for ${selectedDate}`);
+      // Если раньше было completed - уменьшаем
+      if (previousStatus === 'completed') {
+        newCompleted = Math.max(0, newCompleted - 1);
       }
       
-      track(EVENTS.HABITS.MARKED, {
-        habit_id: habitId,
-        status: status,
-        date: selectedDate,
-        total_completed: newCompleted,
-        total_habits: dateStats.total,
-        completion_rate: ((newCompleted / dateStats.total) * 100).toFixed(1),
-      });
-      
-      if (newCompleted === dateStats.total && dateStats.total > 0) {
-        track(EVENTS.ACHIEVEMENTS.ALL_COMPLETED, {
-          date: selectedDate,
-          total_habits: dateStats.total,
-        });
+      // Если новый статус completed - увеличиваем
+      if (status === 'completed') {
+        newCompleted = newCompleted + 1;
       }
       
-    } catch (error) {
-      trackError(error, {
-        context: 'habit_marking',
-        habit_id: habitId,
+      console.log('📊 Stats update:', {
+        previous: prev.completed,
+        new: newCompleted,
+        total: prev.total
       });
-      await reloadCurrentDateHabits();
+      
+      return { ...prev, completed: newCompleted };
+    });
+    
+    // 🌐 Отправляем на сервер
+    await markHabit(habitId, status, selectedDate);
+    
+    const today = getTodayDate();
+    if (selectedDate === today) {
+      // Для сегодня - обновление через useEffect
+      console.log('✅ Updated today habits');
+    } else {
+      console.log(`✅ Habit ${habitId} marked as ${status} for ${selectedDate}`);
     }
-  }, [isEditableDate, selectedDate, markHabit, dateStats, reloadCurrentDateHabits, track, trackError]);
+    
+    // 📊 Аналитика
+    const finalStats = dateStats.completed + (status === 'completed' ? 1 : 0) - (previousStatus === 'completed' ? 1 : 0);
+    
+    track(EVENTS.HABITS.MARKED, {
+      habit_id: habitId,
+      status: status,
+      previous_status: previousStatus,
+      date: selectedDate,
+      total_completed: finalStats,
+      total_habits: dateStats.total,
+      completion_rate: ((finalStats / dateStats.total) * 100).toFixed(1),
+    });
+    
+    if (finalStats === dateStats.total && dateStats.total > 0) {
+      track(EVENTS.ACHIEVEMENTS.ALL_COMPLETED, {
+        date: selectedDate,
+        total_habits: dateStats.total,
+      });
+    }
+    
+  } catch (error) {
+    trackError(error, {
+      context: 'habit_marking',
+      habit_id: habitId,
+    });
+    await reloadCurrentDateHabits();
+  }
+}, [isEditableDate, selectedDate, markHabit, dateStats, dateHabits, reloadCurrentDateHabits, track, trackError]);
 
   const handleUnmark = useCallback(async (habitId) => {
-    if (!isEditableDate) return;
+  if (!isEditableDate) return;
+  
+  try {
+    // 🔍 Находим текущую привычку и её предыдущий статус
+    const currentHabit = dateHabits.find(h => h.id === habitId);
+    const previousStatus = currentHabit?.today_status || 'pending';
     
-    try {
-      setDateHabits(prev => 
-        prev.map(h => h.id === habitId ? { ...h, today_status: 'pending' } : h)
-      );
+    console.log('📊 Unmarking habit:', {
+      habitId,
+      previousStatus,
+      currentCompleted: dateStats.completed
+    });
+    
+    // ✅ Оптимистично обновляем UI
+    setDateHabits(prev => 
+      prev.map(h => h.id === habitId ? { ...h, today_status: 'pending' } : h)
+    );
+    
+    // 🔢 ПРАВИЛЬНЫЙ подсчёт - уменьшаем только если было completed
+    setDateStats(prev => {
+      const newCompleted = previousStatus === 'completed' 
+        ? Math.max(0, prev.completed - 1)
+        : prev.completed;
       
-      setDateStats(prev => ({ 
-        ...prev, 
-        completed: Math.max(0, prev.completed - 1) 
-      }));
-      
-      await unmarkHabit(habitId, selectedDate);
-      
-      const today = getTodayDate();
-      if (selectedDate === today) {
-        // Для сегодня - обновление через useEffect
-      } else {
-        console.log(`✅ Habit ${habitId} unmarked for ${selectedDate}`);
-      }
-      
-      track(EVENTS.HABITS.UNMARKED, {
-        habit_id: habitId,
-        date: selectedDate,
+      console.log('📊 Stats update (unmark):', {
+        previous: prev.completed,
+        new: newCompleted,
+        wasCompleted: previousStatus === 'completed'
       });
       
-    } catch (error) {
-      trackError(error, {
-        context: 'habit_unmarking',
-        habit_id: habitId,
-      });
-      await reloadCurrentDateHabits();
+      return { ...prev, completed: newCompleted };
+    });
+    
+    // 🌐 Отправляем на сервер
+    await unmarkHabit(habitId, selectedDate);
+    
+    const today = getTodayDate();
+    if (selectedDate === today) {
+      console.log('✅ Updated today habits');
+    } else {
+      console.log(`✅ Habit ${habitId} unmarked for ${selectedDate}`);
     }
-  }, [isEditableDate, selectedDate, unmarkHabit, reloadCurrentDateHabits, track, trackError]);
+    
+    track(EVENTS.HABITS.UNMARKED, {
+      habit_id: habitId,
+      previous_status: previousStatus,
+      date: selectedDate,
+    });
+    
+  } catch (error) {
+    trackError(error, {
+      context: 'habit_unmarking',
+      habit_id: habitId,
+    });
+    await reloadCurrentDateHabits();
+  }
+}, [isEditableDate, selectedDate, unmarkHabit, dateStats, dateHabits, reloadCurrentDateHabits, track, trackError]);
 
   const getMotivationalBackgroundColor = () => {
     if (datePhrase && datePhrase.backgroundColor) {
