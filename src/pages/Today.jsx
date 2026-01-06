@@ -523,28 +523,29 @@ const Today = ({ shouldShowFabHint = false }) => {
       prev.map(h => h.id === habitId ? { ...h, today_status: status } : h)
     );
     
-    // 🔢 ПРАВИЛЬНЫЙ подсчёт completed
-    setDateStats(prev => {
-      let newCompleted = prev.completed;
-      
-      // Если раньше было completed - уменьшаем
-      if (previousStatus === 'completed') {
-        newCompleted = Math.max(0, newCompleted - 1);
-      }
-      
-      // Если новый статус completed - увеличиваем
-      if (status === 'completed') {
-        newCompleted = newCompleted + 1;
-      }
-      
-      console.log('📊 Stats update:', {
-        previous: prev.completed,
-        new: newCompleted,
-        total: prev.total
-      });
-      
-      return { ...prev, completed: newCompleted };
+    // 🔢 ПРАВИЛЬНЫЙ подсчёт completed - МГНОВЕННО
+    let finalCompleted = dateStats.completed;
+    
+    // Если раньше было completed - уменьшаем
+    if (previousStatus === 'completed') {
+      finalCompleted = Math.max(0, finalCompleted - 1);
+    }
+    
+    // Если новый статус completed - увеличиваем
+    if (status === 'completed') {
+      finalCompleted = finalCompleted + 1;
+    }
+    
+    console.log('📊 Stats update:', {
+      previous: dateStats.completed,
+      new: finalCompleted,
+      total: dateStats.total
     });
+    
+    setDateStats(prev => ({
+      ...prev,
+      completed: finalCompleted
+    }));
     
     // 🌐 Отправляем на сервер
     await markHabit(habitId, status, selectedDate);
@@ -558,19 +559,17 @@ const Today = ({ shouldShowFabHint = false }) => {
     }
     
     // 📊 Аналитика
-    const finalStats = dateStats.completed + (status === 'completed' ? 1 : 0) - (previousStatus === 'completed' ? 1 : 0);
-    
     track(EVENTS.HABITS.MARKED, {
       habit_id: habitId,
       status: status,
       previous_status: previousStatus,
       date: selectedDate,
-      total_completed: finalStats,
+      total_completed: finalCompleted,
       total_habits: dateStats.total,
-      completion_rate: ((finalStats / dateStats.total) * 100).toFixed(1),
+      completion_rate: ((finalCompleted / dateStats.total) * 100).toFixed(1),
     });
     
-    if (finalStats === dateStats.total && dateStats.total > 0) {
+    if (finalCompleted === dateStats.total && dateStats.total > 0) {
       track(EVENTS.ACHIEVEMENTS.ALL_COMPLETED, {
         date: selectedDate,
         total_habits: dateStats.total,
@@ -586,7 +585,7 @@ const Today = ({ shouldShowFabHint = false }) => {
   }
 }, [isEditableDate, selectedDate, markHabit, dateStats, dateHabits, reloadCurrentDateHabits, track, trackError]);
 
-  const handleUnmark = useCallback(async (habitId) => {
+const handleUnmark = useCallback(async (habitId) => {
   if (!isEditableDate) return;
   
   try {
@@ -605,20 +604,21 @@ const Today = ({ shouldShowFabHint = false }) => {
       prev.map(h => h.id === habitId ? { ...h, today_status: 'pending' } : h)
     );
     
-    // 🔢 ПРАВИЛЬНЫЙ подсчёт - уменьшаем только если было completed
-    setDateStats(prev => {
-      const newCompleted = previousStatus === 'completed' 
-        ? Math.max(0, prev.completed - 1)
-        : prev.completed;
-      
-      console.log('📊 Stats update (unmark):', {
-        previous: prev.completed,
-        new: newCompleted,
-        wasCompleted: previousStatus === 'completed'
-      });
-      
-      return { ...prev, completed: newCompleted };
+    // 🔢 ПРАВИЛЬНЫЙ подсчёт - МГНОВЕННО
+    const finalCompleted = previousStatus === 'completed' 
+      ? Math.max(0, dateStats.completed - 1)
+      : dateStats.completed;
+    
+    console.log('📊 Stats update (unmark):', {
+      previous: dateStats.completed,
+      new: finalCompleted,
+      wasCompleted: previousStatus === 'completed'
     });
+    
+    setDateStats(prev => ({
+      ...prev,
+      completed: finalCompleted
+    }));
     
     // 🌐 Отправляем на сервер
     await unmarkHabit(habitId, selectedDate);
