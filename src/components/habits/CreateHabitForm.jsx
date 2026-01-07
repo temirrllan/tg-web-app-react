@@ -41,7 +41,7 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
   const [repeatMode, setRepeatMode] = useState('everyday');
 
   // 🆕 Константы лимитов
-  const TITLE_MAX_LENGTH = 15;
+  const TITLE_MAX_LENGTH = 25;
   const GOAL_MAX_LENGTH = 35;
 
   useEffect(() => {
