@@ -503,13 +503,10 @@ const Today = ({ shouldShowFabHint = false }) => {
     }
   }, [dateHabits.length, isEditableDate, track]);
 
-// ИСПРАВЛЕННЫЕ ФУНКЦИИ handleMark и handleUnmark для Today.jsx
-
 const handleMark = useCallback(async (habitId, status) => {
   if (!isEditableDate) return;
   
   try {
-    // 🔍 Находим текущую привычку и её предыдущий статус
     const currentHabit = dateHabits.find(h => h.id === habitId);
     const previousStatus = currentHabit?.today_status || 'pending';
     
@@ -525,43 +522,35 @@ const handleMark = useCallback(async (habitId, status) => {
       prev.map(h => h.id === habitId ? { ...h, today_status: status } : h)
     );
     
-    // 🔢 ПРАВИЛЬНЫЙ подсчёт completed с учётом всех статусов
-    let finalCompleted = dateStats.completed;
-    
-    // Шаг 1: Если предыдущий статус был 'completed' - уменьшаем счётчик
-    if (previousStatus === 'completed') {
-      finalCompleted = Math.max(0, finalCompleted - 1);
-    }
-    
-    // Шаг 2: Если новый статус 'completed' - увеличиваем счётчик
-    if (status === 'completed') {
-      finalCompleted = finalCompleted + 1;
-    }
-    
-    // Важно: для 'skipped', 'failed', 'pending' счётчик не увеличивается
-    
-    console.log('📊 Stats update:', {
-      previous: dateStats.completed,
-      new: finalCompleted,
-      total: dateStats.total,
-      previousStatus,
-      newStatus: status
+    // 🔢 ПРАВИЛЬНЫЙ подсчёт completed
+    setDateStats(prev => {
+      let newCompleted = prev.completed;
+      
+      // Если раньше было completed - убираем из счётчика
+      if (previousStatus === 'completed') {
+        newCompleted = Math.max(0, newCompleted - 1);
+      }
+      
+      // Если новый статус completed - добавляем в счётчик
+      if (status === 'completed') {
+        newCompleted = newCompleted + 1;
+      }
+      
+      console.log('📊 Stats update:', {
+        previous: prev.completed,
+        new: newCompleted,
+        previousStatus,
+        newStatus: status
+      });
+      
+      return {
+        ...prev,
+        completed: newCompleted
+      };
     });
-    
-    setDateStats(prev => ({
-      ...prev,
-      completed: finalCompleted
-    }));
     
     // 🌐 Отправляем на сервер
     await markHabit(habitId, status, selectedDate);
-    
-    const today = getTodayDate();
-    if (selectedDate === today) {
-      console.log('✅ Updated today habits');
-    } else {
-      console.log(`✅ Habit ${habitId} marked as ${status} for ${selectedDate}`);
-    }
     
     // 📊 Аналитика
     track(EVENTS.HABITS.MARKED, {
@@ -569,12 +558,11 @@ const handleMark = useCallback(async (habitId, status) => {
       status: status,
       previous_status: previousStatus,
       date: selectedDate,
-      total_completed: finalCompleted,
+      total_completed: dateStats.completed,
       total_habits: dateStats.total,
-      completion_rate: ((finalCompleted / dateStats.total) * 100).toFixed(1),
     });
     
-    if (finalCompleted === dateStats.total && dateStats.total > 0) {
+    if (status === 'completed' && (dateStats.completed + 1) === dateStats.total && dateStats.total > 0) {
       track(EVENTS.ACHIEVEMENTS.ALL_COMPLETED, {
         date: selectedDate,
         total_habits: dateStats.total,
@@ -594,7 +582,6 @@ const handleUnmark = useCallback(async (habitId) => {
   if (!isEditableDate) return;
   
   try {
-    // 🔍 Находим текущую привычку и её предыдущий статус
     const currentHabit = dateHabits.find(h => h.id === habitId);
     const previousStatus = currentHabit?.today_status || 'pending';
     
@@ -610,30 +597,25 @@ const handleUnmark = useCallback(async (habitId) => {
     );
     
     // 🔢 ПРАВИЛЬНЫЙ подсчёт - уменьшаем ТОЛЬКО если было 'completed'
-    const finalCompleted = previousStatus === 'completed' 
-      ? Math.max(0, dateStats.completed - 1)
-      : dateStats.completed;
-    
-    console.log('📊 Stats update (unmark):', {
-      previous: dateStats.completed,
-      new: finalCompleted,
-      wasCompleted: previousStatus === 'completed'
+    setDateStats(prev => {
+      const newCompleted = previousStatus === 'completed' 
+        ? Math.max(0, prev.completed - 1)
+        : prev.completed;
+      
+      console.log('📊 Stats update (unmark):', {
+        previous: prev.completed,
+        new: newCompleted,
+        wasCompleted: previousStatus === 'completed'
+      });
+      
+      return {
+        ...prev,
+        completed: newCompleted
+      };
     });
-    
-    setDateStats(prev => ({
-      ...prev,
-      completed: finalCompleted
-    }));
     
     // 🌐 Отправляем на сервер
     await unmarkHabit(habitId, selectedDate);
-    
-    const today = getTodayDate();
-    if (selectedDate === today) {
-      console.log('✅ Updated today habits');
-    } else {
-      console.log(`✅ Habit ${habitId} unmarked for ${selectedDate}`);
-    }
     
     track(EVENTS.HABITS.UNMARKED, {
       habit_id: habitId,
