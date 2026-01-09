@@ -503,7 +503,9 @@ const Today = ({ shouldShowFabHint = false }) => {
     }
   }, [dateHabits.length, isEditableDate, track]);
 
-  const handleMark = useCallback(async (habitId, status) => {
+// ИСПРАВЛЕННЫЕ ФУНКЦИИ handleMark и handleUnmark для Today.jsx
+
+const handleMark = useCallback(async (habitId, status) => {
   if (!isEditableDate) return;
   
   try {
@@ -523,23 +525,27 @@ const Today = ({ shouldShowFabHint = false }) => {
       prev.map(h => h.id === habitId ? { ...h, today_status: status } : h)
     );
     
-    // 🔢 ПРАВИЛЬНЫЙ подсчёт completed - МГНОВЕННО
+    // 🔢 ПРАВИЛЬНЫЙ подсчёт completed с учётом всех статусов
     let finalCompleted = dateStats.completed;
     
-    // Если раньше было completed - уменьшаем
+    // Шаг 1: Если предыдущий статус был 'completed' - уменьшаем счётчик
     if (previousStatus === 'completed') {
       finalCompleted = Math.max(0, finalCompleted - 1);
     }
     
-    // Если новый статус completed - увеличиваем
+    // Шаг 2: Если новый статус 'completed' - увеличиваем счётчик
     if (status === 'completed') {
       finalCompleted = finalCompleted + 1;
     }
     
+    // Важно: для 'skipped', 'failed', 'pending' счётчик не увеличивается
+    
     console.log('📊 Stats update:', {
       previous: dateStats.completed,
       new: finalCompleted,
-      total: dateStats.total
+      total: dateStats.total,
+      previousStatus,
+      newStatus: status
     });
     
     setDateStats(prev => ({
@@ -552,7 +558,6 @@ const Today = ({ shouldShowFabHint = false }) => {
     
     const today = getTodayDate();
     if (selectedDate === today) {
-      // Для сегодня - обновление через useEffect
       console.log('✅ Updated today habits');
     } else {
       console.log(`✅ Habit ${habitId} marked as ${status} for ${selectedDate}`);
@@ -599,12 +604,12 @@ const handleUnmark = useCallback(async (habitId) => {
       currentCompleted: dateStats.completed
     });
     
-    // ✅ Оптимистично обновляем UI
+    // ✅ Оптимистично обновляем UI (unmark всегда переводит в 'pending')
     setDateHabits(prev => 
       prev.map(h => h.id === habitId ? { ...h, today_status: 'pending' } : h)
     );
     
-    // 🔢 ПРАВИЛЬНЫЙ подсчёт - МГНОВЕННО
+    // 🔢 ПРАВИЛЬНЫЙ подсчёт - уменьшаем ТОЛЬКО если было 'completed'
     const finalCompleted = previousStatus === 'completed' 
       ? Math.max(0, dateStats.completed - 1)
       : dateStats.completed;
