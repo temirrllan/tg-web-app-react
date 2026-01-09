@@ -503,6 +503,10 @@ const Today = ({ shouldShowFabHint = false }) => {
     }
   }, [dateHabits.length, isEditableDate, track]);
 
+  
+
+
+
 const handleMark = useCallback(async (habitId, status) => {
   if (!isEditableDate) return;
   
@@ -517,52 +521,47 @@ const handleMark = useCallback(async (habitId, status) => {
       currentCompleted: dateStats.completed
     });
     
-    // ✅ Оптимистично обновляем UI
-    setDateHabits(prev => 
-      prev.map(h => h.id === habitId ? { ...h, today_status: status } : h)
-    );
+    // ✅ ВАЖНО: Сначала обновляем привычки
+    setDateHabits(prev => {
+      const updated = prev.map(h => 
+        h.id === habitId ? { ...h, today_status: status } : h
+      );
+      console.log('✅ Habits updated:', updated);
+      return updated;
+    });
     
-    // 🔢 ПРАВИЛЬНЫЙ подсчёт completed с учётом ВСЕХ статусов
+    // ✅ ВАЖНО: Потом обновляем статистику через функциональное обновление
     setDateStats(prev => {
       let newCompleted = prev.completed;
       
-      // Шаг 1: Если раньше было 'completed' - УБИРАЕМ из счётчика
+      // Если раньше было completed - убираем
       if (previousStatus === 'completed') {
         newCompleted = Math.max(0, newCompleted - 1);
-        console.log('⬇️ Removed from completed (was completed):', newCompleted);
       }
       
-      // Шаг 2: Если НОВЫЙ статус 'completed' - ДОБАВЛЯЕМ в счётчик
+      // Если новый статус completed - добавляем
       if (status === 'completed') {
         newCompleted = newCompleted + 1;
-        console.log('⬆️ Added to completed (now completed):', newCompleted);
       }
       
-      // Для 'skipped', 'failed', 'pending' - НЕ добавляем в completed
-      
-      console.log('📊 Final stats update:', {
-        previousCompleted: prev.completed,
-        newCompleted: newCompleted,
-        previousStatus,
-        newStatus: status,
-        change: newCompleted - prev.completed
-      });
-      
-      return {
+      const newStats = {
         ...prev,
         completed: newCompleted
       };
+      
+      console.log('📊 Stats updated:', {
+        old: prev.completed,
+        new: newCompleted,
+        previousStatus,
+        newStatus: status
+      });
+      
+      return newStats;
     });
     
-    // 🌐 Отправляем на сервер
+    // Отправляем на сервер
     await markHabit(habitId, status, selectedDate);
     
-    const today = getTodayDate();
-    if (selectedDate === today) {
-      console.log('✅ Updated today habits');
-    }
-    
-    // 📊 Аналитика
     track(EVENTS.HABITS.MARKED, {
       habit_id: habitId,
       status: status,
@@ -576,9 +575,10 @@ const handleMark = useCallback(async (habitId, status) => {
       context: 'habit_marking',
       habit_id: habitId,
     });
+    // При ошибке перезагружаем данные
     await reloadCurrentDateHabits();
   }
-}, [isEditableDate, selectedDate, markHabit, dateStats, dateHabits, reloadCurrentDateHabits, track, trackError]);
+}, [isEditableDate, selectedDate, markHabit, dateStats.completed, dateHabits, reloadCurrentDateHabits, track, trackError]);
 
 const handleUnmark = useCallback(async (habitId) => {
   if (!isEditableDate) return;
@@ -678,7 +678,18 @@ const handleUnmark = useCallback(async (habitId) => {
   }
 
   const displayHabits = dateLoading ? [] : dateHabits;
-  const displayStats = dateStats;
+const displayStats = dateLoading ? { completed: 0, total: 0 } : dateStats;
+
+// Добавьте этот useEffect после объявления displayStats
+useEffect(() => {
+  console.log('📊 Stats changed:', {
+    completed: displayStats.completed,
+    total: displayStats.total,
+    dateStats: dateStats,
+    dateHabits: dateHabits.length
+  });
+}, [displayStats.completed, displayStats.total, dateStats, dateHabits.length]);
+
   const showReadOnlyNotice = !isEditableDate && isCurrentWeekDate(selectedDate);
 
   return (
