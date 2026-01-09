@@ -522,25 +522,30 @@ const handleMark = useCallback(async (habitId, status) => {
       prev.map(h => h.id === habitId ? { ...h, today_status: status } : h)
     );
     
-    // 🔢 ПРАВИЛЬНЫЙ подсчёт completed
+    // 🔢 ПРАВИЛЬНЫЙ подсчёт completed с учётом ВСЕХ статусов
     setDateStats(prev => {
       let newCompleted = prev.completed;
       
-      // Если раньше было completed - убираем из счётчика
+      // Шаг 1: Если раньше было 'completed' - УБИРАЕМ из счётчика
       if (previousStatus === 'completed') {
         newCompleted = Math.max(0, newCompleted - 1);
+        console.log('⬇️ Removed from completed (was completed):', newCompleted);
       }
       
-      // Если новый статус completed - добавляем в счётчик
+      // Шаг 2: Если НОВЫЙ статус 'completed' - ДОБАВЛЯЕМ в счётчик
       if (status === 'completed') {
         newCompleted = newCompleted + 1;
+        console.log('⬆️ Added to completed (now completed):', newCompleted);
       }
       
-      console.log('📊 Stats update:', {
-        previous: prev.completed,
-        new: newCompleted,
+      // Для 'skipped', 'failed', 'pending' - НЕ добавляем в completed
+      
+      console.log('📊 Final stats update:', {
+        previousCompleted: prev.completed,
+        newCompleted: newCompleted,
         previousStatus,
-        newStatus: status
+        newStatus: status,
+        change: newCompleted - prev.completed
       });
       
       return {
@@ -552,24 +557,21 @@ const handleMark = useCallback(async (habitId, status) => {
     // 🌐 Отправляем на сервер
     await markHabit(habitId, status, selectedDate);
     
+    const today = getTodayDate();
+    if (selectedDate === today) {
+      console.log('✅ Updated today habits');
+    }
+    
     // 📊 Аналитика
     track(EVENTS.HABITS.MARKED, {
       habit_id: habitId,
       status: status,
       previous_status: previousStatus,
       date: selectedDate,
-      total_completed: dateStats.completed,
-      total_habits: dateStats.total,
     });
     
-    if (status === 'completed' && (dateStats.completed + 1) === dateStats.total && dateStats.total > 0) {
-      track(EVENTS.ACHIEVEMENTS.ALL_COMPLETED, {
-        date: selectedDate,
-        total_habits: dateStats.total,
-      });
-    }
-    
   } catch (error) {
+    console.error('❌ handleMark error:', error);
     trackError(error, {
       context: 'habit_marking',
       habit_id: habitId,
