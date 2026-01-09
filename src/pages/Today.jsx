@@ -701,9 +701,9 @@ useEffect(() => {
             <div className="today__stats">
               <div className="today__container">
                 <h2 className="today__title">{t('todays.completed')}</h2>
-                <span className="today__count">
-                  {displayStats.completed} {t('todays.outof')} {displayStats.total} {t('todays.Habits')}
-                </span>
+                <span className="today__count" key={`${displayStats.completed}-${displayStats.total}`}>
+  {displayStats.completed} {t('todays.outof')} {displayStats.total} {t('todays.Habits')}
+</span>
               </div>
 
               <div className="today__container2">
