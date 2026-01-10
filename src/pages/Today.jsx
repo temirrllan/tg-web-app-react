@@ -1,6 +1,6 @@
-// src/pages/Today.jsx - ИСПРАВЛЕНО: FabHint больше не зацикливается
+// src/pages/Today.jsx - С ПОЛНОЙ АНАЛИТИКОЙ
 
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Layout from "../components/layout/Layout";
 import Header from "../components/layout/Header";
 import HabitCard from "../components/habits/HabitCard";
@@ -66,9 +66,6 @@ const Today = ({ shouldShowFabHint = false }) => {
   const [userSubscription, setUserSubscription] = useState(null);
   const [showFabHint, setShowFabHint] = useState(false);
 
-  // 🔥 КРИТИЧНО: Используем ref для отслеживания, была ли уже показана подсказка
-  const fabHintShownRef = useRef(false);
-
   const getTodayDate = () => {
     const today = new Date();
     const year = today.getFullYear();
@@ -100,32 +97,23 @@ const Today = ({ shouldShowFabHint = false }) => {
     selected_date: selectedDate,
   });
 
-  // 🔥 ИСПРАВЛЕНО: Показываем FabHint только ОДИН раз
   useEffect(() => {
     console.log('🔍 FAB Hint check:', {
       shouldShowFabHint,
       loading,
       dateLoading,
-      habitsCount: dateHabits.length,
-      alreadyShown: fabHintShownRef.current
+      habitsCount: dateHabits.length
     });
-    
-    // Если подсказка уже была показана - НЕ показываем снова
-    if (fabHintShownRef.current) {
-      console.log('⏭️ FabHint already shown, skipping');
-      return;
-    }
     
     if (shouldShowFabHint && 
         !loading && 
         !dateLoading &&
         dateHabits.length === 0) {
       
-      console.log('🎯 Showing FAB hint for new user (first time only)');
+      console.log('🎯 Showing FAB hint for new user (ignoring localStorage)');
       
       const timer = setTimeout(() => {
         setShowFabHint(true);
-        fabHintShownRef.current = true; // ✅ Отмечаем что показали
         
         // 📊 Аналитика
         track(EVENTS.INTERACTIONS.FAB_HINT_SHOWN, {
@@ -140,9 +128,7 @@ const Today = ({ shouldShowFabHint = false }) => {
   }, [shouldShowFabHint, loading, dateLoading, dateHabits.length, track]);
 
   const handleFabHintClose = () => {
-    console.log('🔴 FabHint closing permanently');
     setShowFabHint(false);
-    fabHintShownRef.current = true; // ✅ Убеждаемся что ref установлен
     localStorage.setItem('hasSeenFabHint', 'true');
     
     track('fab_hint_closed', {
@@ -503,136 +489,88 @@ const Today = ({ shouldShowFabHint = false }) => {
     }
   }, [dateHabits.length, isEditableDate, track]);
 
-  
-
-
-
-const handleMark = useCallback(async (habitId, status) => {
-  if (!isEditableDate) return;
-  
-  try {
-    const currentHabit = dateHabits.find(h => h.id === habitId);
-    const previousStatus = currentHabit?.today_status || 'pending';
+  const handleMark = useCallback(async (habitId, status) => {
+    if (!isEditableDate) return;
     
-    console.log('📊 Marking habit:', {
-      habitId,
-      previousStatus,
-      newStatus: status,
-      currentCompleted: dateStats.completed
-    });
-    
-    // ✅ ВАЖНО: Сначала обновляем привычки
-    setDateHabits(prev => {
-      const updated = prev.map(h => 
-        h.id === habitId ? { ...h, today_status: status } : h
+    try {
+      setDateHabits(prev => 
+        prev.map(h => h.id === habitId ? { ...h, today_status: status } : h)
       );
-      console.log('✅ Habits updated:', updated);
-      return updated;
-    });
-    
-    // ✅ ВАЖНО: Потом обновляем статистику через функциональное обновление
-    setDateStats(prev => {
-      let newCompleted = prev.completed;
       
-      // Если раньше было completed - убираем
-      if (previousStatus === 'completed') {
-        newCompleted = Math.max(0, newCompleted - 1);
+      const newCompleted = status === 'completed' 
+        ? dateStats.completed + 1 
+        : dateStats.completed;
+      setDateStats(prev => ({ ...prev, completed: newCompleted }));
+      
+      await markHabit(habitId, status, selectedDate);
+      
+      const today = getTodayDate();
+      if (selectedDate === today) {
+        // Для сегодня - обновление через useEffect выше
+      } else {
+        console.log(`✅ Habit ${habitId} marked as ${status} for ${selectedDate}`);
       }
       
-      // Если новый статус completed - добавляем
-      if (status === 'completed') {
-        newCompleted = newCompleted + 1;
-      }
-      
-      const newStats = {
-        ...prev,
-        completed: newCompleted
-      };
-      
-      console.log('📊 Stats updated:', {
-        old: prev.completed,
-        new: newCompleted,
-        previousStatus,
-        newStatus: status
+      track(EVENTS.HABITS.MARKED, {
+        habit_id: habitId,
+        status: status,
+        date: selectedDate,
+        total_completed: newCompleted,
+        total_habits: dateStats.total,
+        completion_rate: ((newCompleted / dateStats.total) * 100).toFixed(1),
       });
       
-      return newStats;
-    });
-    
-    // Отправляем на сервер
-    await markHabit(habitId, status, selectedDate);
-    
-    track(EVENTS.HABITS.MARKED, {
-      habit_id: habitId,
-      status: status,
-      previous_status: previousStatus,
-      date: selectedDate,
-    });
-    
-  } catch (error) {
-    console.error('❌ handleMark error:', error);
-    trackError(error, {
-      context: 'habit_marking',
-      habit_id: habitId,
-    });
-    // При ошибке перезагружаем данные
-    await reloadCurrentDateHabits();
-  }
-}, [isEditableDate, selectedDate, markHabit, dateStats.completed, dateHabits, reloadCurrentDateHabits, track, trackError]);
+      if (newCompleted === dateStats.total && dateStats.total > 0) {
+        track(EVENTS.ACHIEVEMENTS.ALL_COMPLETED, {
+          date: selectedDate,
+          total_habits: dateStats.total,
+        });
+      }
+      
+    } catch (error) {
+      trackError(error, {
+        context: 'habit_marking',
+        habit_id: habitId,
+      });
+      await reloadCurrentDateHabits();
+    }
+  }, [isEditableDate, selectedDate, markHabit, dateStats, reloadCurrentDateHabits, track, trackError]);
 
-const handleUnmark = useCallback(async (habitId) => {
-  if (!isEditableDate) return;
-  
-  try {
-    const currentHabit = dateHabits.find(h => h.id === habitId);
-    const previousStatus = currentHabit?.today_status || 'pending';
+  const handleUnmark = useCallback(async (habitId) => {
+    if (!isEditableDate) return;
     
-    console.log('📊 Unmarking habit:', {
-      habitId,
-      previousStatus,
-      currentCompleted: dateStats.completed
-    });
-    
-    // ✅ Оптимистично обновляем UI (unmark всегда переводит в 'pending')
-    setDateHabits(prev => 
-      prev.map(h => h.id === habitId ? { ...h, today_status: 'pending' } : h)
-    );
-    
-    // 🔢 ПРАВИЛЬНЫЙ подсчёт - уменьшаем ТОЛЬКО если было 'completed'
-    setDateStats(prev => {
-      const newCompleted = previousStatus === 'completed' 
-        ? Math.max(0, prev.completed - 1)
-        : prev.completed;
+    try {
+      setDateHabits(prev => 
+        prev.map(h => h.id === habitId ? { ...h, today_status: 'pending' } : h)
+      );
       
-      console.log('📊 Stats update (unmark):', {
-        previous: prev.completed,
-        new: newCompleted,
-        wasCompleted: previousStatus === 'completed'
+      setDateStats(prev => ({ 
+        ...prev, 
+        completed: Math.max(0, prev.completed - 1) 
+      }));
+      
+      await unmarkHabit(habitId, selectedDate);
+      
+      const today = getTodayDate();
+      if (selectedDate === today) {
+        // Для сегодня - обновление через useEffect
+      } else {
+        console.log(`✅ Habit ${habitId} unmarked for ${selectedDate}`);
+      }
+      
+      track(EVENTS.HABITS.UNMARKED, {
+        habit_id: habitId,
+        date: selectedDate,
       });
       
-      return {
-        ...prev,
-        completed: newCompleted
-      };
-    });
-    
-    // 🌐 Отправляем на сервер
-    await unmarkHabit(habitId, selectedDate);
-    
-    track(EVENTS.HABITS.UNMARKED, {
-      habit_id: habitId,
-      previous_status: previousStatus,
-      date: selectedDate,
-    });
-    
-  } catch (error) {
-    trackError(error, {
-      context: 'habit_unmarking',
-      habit_id: habitId,
-    });
-    await reloadCurrentDateHabits();
-  }
-}, [isEditableDate, selectedDate, unmarkHabit, dateStats, dateHabits, reloadCurrentDateHabits, track, trackError]);
+    } catch (error) {
+      trackError(error, {
+        context: 'habit_unmarking',
+        habit_id: habitId,
+      });
+      await reloadCurrentDateHabits();
+    }
+  }, [isEditableDate, selectedDate, unmarkHabit, reloadCurrentDateHabits, track, trackError]);
 
   const getMotivationalBackgroundColor = () => {
     if (datePhrase && datePhrase.backgroundColor) {
@@ -678,32 +616,22 @@ const handleUnmark = useCallback(async (habitId) => {
   }
 
   const displayHabits = dateLoading ? [] : dateHabits;
-const displayStats = dateLoading ? { completed: 0, total: 0 } : dateStats;
-
-// Добавьте этот useEffect после объявления displayStats
-useEffect(() => {
-  console.log('📊 Stats changed:', {
-    completed: displayStats.completed,
-    total: displayStats.total,
-    dateStats: dateStats,
-    dateHabits: dateHabits.length
-  });
-}, [displayStats.completed, displayStats.total, dateStats, dateHabits.length]);
-
+  const displayStats = dateStats;
   const showReadOnlyNotice = !isEditableDate && isCurrentWeekDate(selectedDate);
 
   return (
     <>
       <Layout>
+        {/* <PullToRefresh onRefresh={handleRefresh}> */}
           <Header user={user} onProfileClick={() => setShowProfile(true)} />
 
           <div className="today">
             <div className="today__stats">
               <div className="today__container">
                 <h2 className="today__title">{t('todays.completed')}</h2>
-                <span className="today__count" key={`${displayStats.completed}-${displayStats.total}`}>
-  {displayStats.completed} {t('todays.outof')} {displayStats.total} {t('todays.Habits')}
-</span>
+                <span className="today__count">
+                  {displayStats.completed} {t('todays.outof')} {displayStats.total} {t('todays.Habits')}
+                </span>
               </div>
 
               <div className="today__container2">
@@ -748,9 +676,9 @@ useEffect(() => {
               </div>
             )}
           </div>
+        {/* </PullToRefresh> */}
         
-        {/* 🔥 FabHint показывается только если showFabHint === true */}
-        <FabHint show={showFabHint} onClose={handleFabHintClose} />
+        {/* <FabHint show={showFabHint} onClose={handleFabHintClose} /> */}
 
         <SwipeHint 
           show={showSwipeHint} 
