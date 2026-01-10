@@ -1,75 +1,84 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Habit Tracker</title>
-        <script src="https://telegram.org/js/telegram-web-app.js"></script><script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-    <script>eruda.init();</script>
-        <script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>
+      eruda.init();
+    </script> -->
+    <script>
       (function initThemeImmediately() {
         try {
           // Получаем сохраненную тему
-          const savedTheme = localStorage.getItem('app-theme');
-          
+          const savedTheme = localStorage.getItem("app-theme");
+
           // Определяем активную тему
           let activeTheme = savedTheme;
-          
+
           if (!activeTheme) {
             // Проверяем системные настройки
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-              activeTheme = 'dark';
+            if (
+              window.matchMedia &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches
+            ) {
+              activeTheme = "dark";
             } else {
-              activeTheme = 'light';
+              activeTheme = "light";
             }
           }
-          
-          const isDark = activeTheme === 'dark';
-          
+
+          const isDark = activeTheme === "dark";
+
           // Применяем CSS класс НЕМЕДЛЕННО
-          document.documentElement.classList.remove('light-theme', 'dark-theme');
-          document.documentElement.classList.add(activeTheme + '-theme');
-          
+          document.documentElement.classList.remove(
+            "light-theme",
+            "dark-theme"
+          );
+          document.documentElement.classList.add(activeTheme + "-theme");
+
           // Применяем к Telegram WebApp
-          const applyTelegramTheme = function() {
+          const applyTelegramTheme = function () {
             const tg = window.Telegram?.WebApp;
             if (!tg) return;
-            
+
             try {
               if (isDark) {
-                if (typeof tg.setBackgroundColor === 'function') {
-                  tg.setBackgroundColor('#000000');
+                if (typeof tg.setBackgroundColor === "function") {
+                  tg.setBackgroundColor("#000000");
                 }
-                if (typeof tg.setHeaderColor === 'function') {
-                  tg.setHeaderColor('#1C1C1E');
+                if (typeof tg.setHeaderColor === "function") {
+                  tg.setHeaderColor("#1C1C1E");
                 }
-                if (typeof tg.setBottomBarColor === 'function') {
-                  tg.setBottomBarColor('#1C1C1E');
+                if (typeof tg.setBottomBarColor === "function") {
+                  tg.setBottomBarColor("#1C1C1E");
                 }
               } else {
-                if (typeof tg.setBackgroundColor === 'function') {
-                  tg.setBackgroundColor('#F2F2F7');
+                if (typeof tg.setBackgroundColor === "function") {
+                  tg.setBackgroundColor("#F2F2F7");
                 }
-                if (typeof tg.setHeaderColor === 'function') {
-                  tg.setHeaderColor('#FFFFFF');
+                if (typeof tg.setHeaderColor === "function") {
+                  tg.setHeaderColor("#FFFFFF");
                 }
-                if (typeof tg.setBottomBarColor === 'function') {
-                  tg.setBottomBarColor('#FFFFFF');
+                if (typeof tg.setBottomBarColor === "function") {
+                  tg.setBottomBarColor("#FFFFFF");
                 }
               }
             } catch (error) {
-              console.error('Failed to apply Telegram theme early:', error);
+              console.error("Failed to apply Telegram theme early:", error);
             }
           };
-          
+
           // Применяем Telegram тему
           if (window.Telegram?.WebApp) {
             applyTelegramTheme();
           } else {
             // Ждем загрузки
             let attempts = 0;
-            const checkTelegram = setInterval(function() {
+            const checkTelegram = setInterval(function () {
               attempts++;
               if (window.Telegram?.WebApp) {
                 clearInterval(checkTelegram);
@@ -79,24 +88,23 @@
               }
             }, 100);
           }
-          
         } catch (error) {
-          console.error('Early theme init failed:', error);
+          console.error("Early theme init failed:", error);
         }
       })();
     </script>
-        <style>
+    <style>
       /* Применяем базовые цвета ДО загрузки CSS */
       html.light-theme {
-        background-color: #F2F2F7;
-        color: #1D1D1F;
+        background-color: #f2f2f7;
+        color: #1d1d1f;
       }
-      
+
       html.dark-theme {
         background-color: #000000;
-        color: #FFFFFF;
+        color: #ffffff;
       }
-      
+
       body {
         margin: 0;
         padding: 0;
@@ -109,6 +117,5 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-    
   </body>
 </html>
