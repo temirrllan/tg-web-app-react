@@ -40,6 +40,12 @@ function AppContent() {
         tg.expand();
         tg.ready();
         
+        // 📊 Трекинг инициализации
+        analytics.track('app_initialized', {
+          platform: tg.platform,
+          version: tg.version,
+        });
+        
         if (tg.BackButton) {
           tg.BackButton.hide();
         }
@@ -48,6 +54,7 @@ function AppContent() {
       }
     }
   }, [tg]);
+
 
   useEffect(() => {
     const initAuth = async () => {
@@ -143,7 +150,11 @@ function AppContent() {
           
           if (response.isNewUser === true) {
             console.log('🆕 NEW USER - SHOWING ONBOARDING + WILL SHOW FAB HINT');
-            
+            // 📊 Трекинг нового пользователя
+  analytics.track('onboarding_started', {
+    user_id: response.user.id,
+    language: response.user.language,
+  });
             // 🆕 Очищаем localStorage от старых подсказок для нового пользователя
             console.log('🧹 Clearing old hints from localStorage for new user');
             localStorage.removeItem('hasSeenFabHint');
