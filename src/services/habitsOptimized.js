@@ -1,4 +1,4 @@
-// src/services/habitsOptimized.js
+// src/services/habitsOptimized.js - ИСПРАВЛЕНА РАБОТА С ДАТАМИ
 
 import api from './api';
 import cacheService from './cacheService';
@@ -200,17 +200,12 @@ export const habitService = {
   },
 
   /**
-   * Отметить привычку (с оптимистичным обновлением)
+   * ✅ КРИТИЧНО: Отметить привычку (БЕЗ оптимистичного обновления)
    */
   async markHabit(habitId, status = 'completed', date) {
     const markDate = date || new Date().toISOString().split('T')[0];
     
-    // Оптимистичное обновление кэша
-    const todayKey = CACHE_KEYS.todayHabits();
-    const dateKey = CACHE_KEYS.habitsForDate(markDate);
-    
-    this.updateHabitStatusInCache(todayKey, habitId, status);
-    this.updateHabitStatusInCache(dateKey, habitId, status);
+    console.log(`🎯 markHabit API call: habitId=${habitId}, status=${status}, date=${markDate}`);
     
     try {
       const { data } = await api.post(`/habits/${habitId}/mark`, {
@@ -218,83 +213,51 @@ export const habitService = {
         date: markDate
       });
       
-      // Принудительно обновляем кэш с сервера
-      await this.getTodayHabits(true);
-      if (markDate !== new Date().toISOString().split('T')[0]) {
-        await this.getHabitsForDate(markDate, true);
+      console.log('✅ markHabit API response:', data);
+      
+      // ✅ КРИТИЧНО: Инвалидируем ТОЛЬКО кэш для конкретной даты
+      cacheService.invalidate(`habits_date_${markDate}`);
+      
+      // Если это сегодня - инвалидируем также today кэш
+      const today = new Date().toISOString().split('T')[0];
+      if (markDate === today) {
+        cacheService.invalidate('habits_today');
       }
       
       return data;
     } catch (error) {
-      // Откатываем оптимистичное обновление
-      cacheService.invalidate('habits_');
+      console.error('❌ markHabit API error:', error);
       throw error;
     }
   },
 
   /**
-   * Снять отметку
+   * ✅ КРИТИЧНО: Снять отметку (БЕЗ оптимистичного обновления)
    */
   async unmarkHabit(habitId, date) {
     const unmarkDate = date || new Date().toISOString().split('T')[0];
     
-    // Оптимистичное обновление
-    const todayKey = CACHE_KEYS.todayHabits();
-    const dateKey = CACHE_KEYS.habitsForDate(unmarkDate);
-    
-    this.updateHabitStatusInCache(todayKey, habitId, 'pending');
-    this.updateHabitStatusInCache(dateKey, habitId, 'pending');
+    console.log(`🎯 unmarkHabit API call: habitId=${habitId}, date=${unmarkDate}`);
     
     try {
       const { data } = await api.delete(`/habits/${habitId}/mark?date=${unmarkDate}`);
       
-      // Обновляем с сервера
-      await this.getTodayHabits(true);
-      if (unmarkDate !== new Date().toISOString().split('T')[0]) {
-        await this.getHabitsForDate(unmarkDate, true);
+      console.log('✅ unmarkHabit API response:', data);
+      
+      // ✅ КРИТИЧНО: Инвалидируем ТОЛЬКО кэш для конкретной даты
+      cacheService.invalidate(`habits_date_${unmarkDate}`);
+      
+      // Если это сегодня - инвалидируем также today кэш
+      const today = new Date().toISOString().split('T')[0];
+      if (unmarkDate === today) {
+        cacheService.invalidate('habits_today');
       }
       
       return data;
     } catch (error) {
-      cacheService.invalidate('habits_');
+      console.error('❌ unmarkHabit API error:', error);
       throw error;
     }
-  },
-
-  /**
-   * Обновление статуса в кэше (для оптимистичных обновлений)
-   */
-  updateHabitStatusInCache(cacheKey, habitId, newStatus) {
-    const cached = cacheService.get(cacheKey);
-    if (!cached || !cached.habits) return;
-
-    const updatedHabits = cached.habits.map(habit => {
-      if (habit.id === habitId) {
-        return { ...habit, today_status: newStatus };
-      }
-      return habit;
-    });
-
-    const updatedData = {
-      ...cached,
-      habits: updatedHabits,
-      stats: this.recalculateStats(updatedHabits)
-    };
-
-    cacheService.set(cacheKey, updatedData, CACHE_TTL.FAST);
-  },
-
-  /**
-   * Пересчёт статистики для оптимистичного обновления
-   */
-  recalculateStats(habits) {
-    const completed = habits.filter(h => h.today_status === 'completed').length;
-    const total = habits.length;
-    const failed = habits.filter(h => h.today_status === 'failed').length;
-    const skipped = habits.filter(h => h.today_status === 'skipped').length;
-    const pending = habits.filter(h => h.today_status === 'pending').length;
-
-    return { completed, total, failed, skipped, pending };
   },
 
   /**

@@ -232,7 +232,6 @@ const Today = ({ shouldShowFabHint = false }) => {
   };
 
   const reloadCurrentDateHabits = useCallback(async () => {
-    const todayStr = getTodayDate();
     setDateLoading(true);
     
     try {
@@ -243,6 +242,7 @@ const Today = ({ shouldShowFabHint = false }) => {
         setDateStats(result.stats || { completed: 0, total: 0 });
         setDatePhrase(result.phrase);
         
+        const todayStr = getTodayDate();
         if (selectedDate === todayStr) {
           await refresh();
         }
@@ -258,15 +258,6 @@ const Today = ({ shouldShowFabHint = false }) => {
     setSelectedDate(date);
     setIsEditableDate(isEditable);
     setDateLoading(true);
-    
-    window.TelegramAnalytics?.track('date_changed', {
-      from_date: selectedDate,
-      to_date: date,
-      is_editable: isEditable,
-      is_today: date === getTodayDate(),
-      is_yesterday: date === getYesterdayDate(),
-    });
-    console.log('📊 Analytics: date_changed');
     
     try {
       const result = await loadHabitsForDate(date);
@@ -284,7 +275,7 @@ const Today = ({ shouldShowFabHint = false }) => {
     } finally {
       setDateLoading(false);
     }
-  }, [selectedDate, loadHabitsForDate]);
+  }, [loadHabitsForDate]);
 
   // ✅ УПРОЩЕННАЯ СИНХРОНИЗАЦИЯ - только при первой загрузке или смене даты
   useEffect(() => {
@@ -509,7 +500,7 @@ const Today = ({ shouldShowFabHint = false }) => {
     try {
       console.log(`🎯 Marking habit ${habitId} as ${status} for date: ${selectedDate}`);
       
-      // ✅ ОПТИМИСТИЧНОЕ ОБНОВЛЕНИЕ - только для текущего выбранного дня
+      // ✅ Оптимистичное обновление UI для выбранной даты
       setDateHabits(prev => 
         prev.map(h => h.id === habitId ? { ...h, today_status: status } : h)
       );
@@ -519,10 +510,10 @@ const Today = ({ shouldShowFabHint = false }) => {
         : dateStats.completed;
       setDateStats(prev => ({ ...prev, completed: newCompleted }));
       
-      // Отправляем на сервер с указанием КОНКРЕТНОЙ даты
+      // Отправляем на сервер с КОНКРЕТНОЙ датой
       await markHabit(habitId, status, selectedDate);
       
-      // ✅ КРИТИЧНО: Принудительно перезагружаем данные для ВЫБРАННОЙ даты
+      // ✅ КРИТИЧНО: Перезагружаем данные ТОЛЬКО для выбранной даты
       console.log(`🔄 Reloading habits for selected date: ${selectedDate}`);
       const updatedData = await loadHabitsForDate(selectedDate);
       
@@ -532,38 +523,30 @@ const Today = ({ shouldShowFabHint = false }) => {
         setDatePhrase(updatedData.phrase);
       }
       
-      // ✅ Если это сегодня - обновляем также todayHabits через refresh
+      // ✅ Если это сегодня - также обновляем todayHabits
       const today = getTodayDate();
       if (selectedDate === today) {
         await refresh();
       }
       
-      // 📊 Привычка отмечена
       window.TelegramAnalytics?.track('habit_marked', {
         habit_id: habitId,
         status: status,
         date: selectedDate,
         total_completed: newCompleted,
         total_habits: dateStats.total,
-        completion_rate: ((newCompleted / dateStats.total) * 100).toFixed(1),
       });
-      console.log('📊 Analytics: habit_marked', status);
-      
-      // 📊 Все привычки выполнены
-      if (newCompleted === dateStats.total && dateStats.total > 0) {
-        window.TelegramAnalytics?.track('all_habits_completed', {
-          date: selectedDate,
-          total_habits: dateStats.total,
-        });
-        console.log('📊 Analytics: all_habits_completed');
-      }
       
     } catch (error) {
       console.error('Error marking habit:', error);
-      // Откатываем оптимистичное обновление при ошибке
-      await reloadCurrentDateHabits();
+      const updatedData = await loadHabitsForDate(selectedDate);
+      if (updatedData) {
+        setDateHabits(updatedData.habits || []);
+        setDateStats(updatedData.stats || { completed: 0, total: 0 });
+        setDatePhrase(updatedData.phrase);
+      }
     }
-  }, [isEditableDate, selectedDate, markHabit, dateStats, reloadCurrentDateHabits, loadHabitsForDate, refresh]);
+  }, [isEditableDate, selectedDate, markHabit, dateStats, loadHabitsForDate, refresh]);
 
   const handleUnmark = useCallback(async (habitId) => {
     if (!isEditableDate) return;
@@ -571,7 +554,6 @@ const Today = ({ shouldShowFabHint = false }) => {
     try {
       console.log(`🎯 Unmarking habit ${habitId} for date: ${selectedDate}`);
       
-      // ✅ ОПТИМИСТИЧНОЕ ОБНОВЛЕНИЕ - только для текущего выбранного дня
       setDateHabits(prev => 
         prev.map(h => h.id === habitId ? { ...h, today_status: 'pending' } : h)
       );
@@ -581,10 +563,8 @@ const Today = ({ shouldShowFabHint = false }) => {
         completed: Math.max(0, prev.completed - 1) 
       }));
       
-      // Отправляем на сервер с указанием КОНКРЕТНОЙ даты
       await unmarkHabit(habitId, selectedDate);
       
-      // ✅ КРИТИЧНО: Принудительно перезагружаем данные для ВЫБРАННОЙ даты
       console.log(`🔄 Reloading habits for selected date: ${selectedDate}`);
       const updatedData = await loadHabitsForDate(selectedDate);
       
@@ -594,25 +574,26 @@ const Today = ({ shouldShowFabHint = false }) => {
         setDatePhrase(updatedData.phrase);
       }
       
-      // ✅ Если это сегодня - обновляем также todayHabits через refresh
       const today = getTodayDate();
       if (selectedDate === today) {
         await refresh();
       }
       
-      // 📊 Привычка снята с отметки
       window.TelegramAnalytics?.track('habit_unmarked', {
         habit_id: habitId,
         date: selectedDate,
       });
-      console.log('📊 Analytics: habit_unmarked');
       
     } catch (error) {
       console.error('Error unmarking habit:', error);
-      // Откатываем оптимистичное обновление при ошибке
-      await reloadCurrentDateHabits();
+      const updatedData = await loadHabitsForDate(selectedDate);
+      if (updatedData) {
+        setDateHabits(updatedData.habits || []);
+        setDateStats(updatedData.stats || { completed: 0, total: 0 });
+        setDatePhrase(updatedData.phrase);
+      }
     }
-  }, [isEditableDate, selectedDate, unmarkHabit, reloadCurrentDateHabits, loadHabitsForDate, refresh]);
+  }, [isEditableDate, selectedDate, unmarkHabit, loadHabitsForDate, refresh]);
 
   const getMotivationalBackgroundColor = () => {
     if (datePhrase && datePhrase.backgroundColor) {
