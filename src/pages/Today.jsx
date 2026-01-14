@@ -1,6 +1,6 @@
-// src/pages/Today.jsx - ИСПРАВЛЕНА РАБОТА С ДАТАМИ
+// src/pages/Today.jsx - ИСПРАВЛЕНА ИЗОЛЯЦИЯ ДАННЫХ ПО ДАТАМ
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import Layout from "../components/layout/Layout";
 import Header from "../components/layout/Header";
 import HabitCard from "../components/habits/HabitCard";
@@ -27,7 +27,6 @@ const Today = ({ shouldShowFabHint = false }) => {
   const { user } = useTelegram();
   useTelegramTheme();
 
-  // 📊 Отслеживание просмотра страницы при монтировании
   useEffect(() => {
     window.TelegramAnalytics?.track('page_view', {
       page: 'today',
@@ -83,23 +82,27 @@ const Today = ({ shouldShowFabHint = false }) => {
   
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
   const [isEditableDate, setIsEditableDate] = useState(true);
-  const [dateHabits, setDateHabits] = useState([]);
+  
+  // 🆕 КРИТИЧНО: Отдельное хранилище данных для каждой даты
+  const [dateDataCache, setDateDataCache] = useState({});
+  
   const [dateLoading, setDateLoading] = useState(false);
-  const [dateStats, setDateStats] = useState({ completed: 0, total: 0 });
-  const [datePhrase, setDatePhrase] = useState(null);
+
+  // 🆕 Реф для отслеживания текущей операции свайпа
+  const currentSwipeOperation = useRef(null);
 
   useEffect(() => {
     console.log('🔍 FAB Hint check:', {
       shouldShowFabHint,
       loading,
       dateLoading,
-      habitsCount: dateHabits.length
+      habitsCount: dateDataCache[selectedDate]?.habits?.length || 0
     });
     
     if (shouldShowFabHint && 
         !loading && 
         !dateLoading &&
-        dateHabits.length === 0) {
+        (!dateDataCache[selectedDate]?.habits || dateDataCache[selectedDate].habits.length === 0)) {
       
       console.log('🎯 Showing FAB hint for new user (ignoring localStorage)');
       
@@ -116,14 +119,14 @@ const Today = ({ shouldShowFabHint = false }) => {
       
       return () => clearTimeout(timer);
     }
-  }, [shouldShowFabHint, loading, dateLoading, dateHabits.length]);
+  }, [shouldShowFabHint, loading, dateLoading, dateDataCache, selectedDate]);
 
   const handleFabHintClose = () => {
     setShowFabHint(false);
     localStorage.setItem('hasSeenFabHint', 'true');
     
     window.TelegramAnalytics?.track('fab_hint_closed', {
-      habits_count: dateHabits.length
+      habits_count: dateDataCache[selectedDate]?.habits?.length || 0
     });
     console.log('📊 Analytics: fab_hint_closed');
   };
@@ -147,7 +150,7 @@ const Today = ({ shouldShowFabHint = false }) => {
     
     window.TelegramAnalytics?.track('fab_clicked', {
       can_create_more: subscriptionStatus.canCreateMore,
-      current_habits_count: dateHabits.length,
+      current_habits_count: dateDataCache[selectedDate]?.habits?.length || 0,
       is_premium: subscriptionStatus.isPremium,
     });
     console.log('📊 Analytics: fab_clicked');
@@ -156,14 +159,14 @@ const Today = ({ shouldShowFabHint = false }) => {
       setShowCreateForm(true);
       
       window.TelegramAnalytics?.track('create_form_opened', {
-        current_habits_count: dateHabits.length,
+        current_habits_count: dateDataCache[selectedDate]?.habits?.length || 0,
       });
       console.log('📊 Analytics: create_form_opened');
     } else {
       setShowSubscriptionModal(true);
       
       window.TelegramAnalytics?.track('subscription_limit_reached', {
-        current_habits_count: dateHabits.length,
+        current_habits_count: dateDataCache[selectedDate]?.habits?.length || 0,
         limit: subscriptionStatus.limit,
       });
       console.log('📊 Analytics: subscription_limit_reached');
@@ -217,7 +220,7 @@ const Today = ({ shouldShowFabHint = false }) => {
       
       window.TelegramAnalytics?.track('habit_deleted', {
         habit_id: habitId,
-        total_habits_after: dateHabits.length - 1,
+        total_habits_after: (dateDataCache[selectedDate]?.habits?.length || 1) - 1,
       });
       console.log('📊 Analytics: habit_deleted');
       
@@ -231,17 +234,36 @@ const Today = ({ shouldShowFabHint = false }) => {
     }
   };
 
+  // 🆕 КРИТИЧНО: Обновление данных СТРОГО для конкретной даты
+  const updateDateCache = useCallback((date, data) => {
+    console.log(`📦 Updating cache for date ${date}:`, {
+      habits: data.habits?.length,
+      completed: data.stats?.completed,
+      total: data.stats?.total
+    });
+    
+    setDateDataCache(prev => ({
+      ...prev,
+      [date]: {
+        habits: data.habits || [],
+        stats: data.stats || { completed: 0, total: 0 },
+        phrase: data.phrase || null,
+        timestamp: Date.now()
+      }
+    }));
+  }, []);
+
   const reloadCurrentDateHabits = useCallback(async () => {
+    console.log(`🔄 Reloading habits for date: ${selectedDate}`);
     setDateLoading(true);
     
     try {
       const result = await loadHabitsForDate(selectedDate);
       
       if (result) {
-        setDateHabits(result.habits || []);
-        setDateStats(result.stats || { completed: 0, total: 0 });
-        setDatePhrase(result.phrase);
+        updateDateCache(selectedDate, result);
         
+        // Если это сегодня - также обновляем today cache
         const todayStr = getTodayDate();
         if (selectedDate === todayStr) {
           await refresh();
@@ -252,52 +274,60 @@ const Today = ({ shouldShowFabHint = false }) => {
     } finally {
       setDateLoading(false);
     }
-  }, [selectedDate, loadHabitsForDate, refresh]);
+  }, [selectedDate, loadHabitsForDate, refresh, updateDateCache]);
 
   const handleDateSelect = useCallback(async (date, isEditable) => {
+    console.log(`📅 Date selected: ${date}, editable: ${isEditable}`);
+    
     setSelectedDate(date);
     setIsEditableDate(isEditable);
     setDateLoading(true);
     
     try {
+      // Проверяем кэш
+      const cached = dateDataCache[date];
+      const cacheAge = cached ? Date.now() - cached.timestamp : Infinity;
+      const isCacheValid = cacheAge < 30000; // 30 секунд
+      
+      if (cached && isCacheValid) {
+        console.log(`✅ Using cached data for ${date} (age: ${Math.round(cacheAge / 1000)}s)`);
+        setDateLoading(false);
+        return;
+      }
+      
+      // Загружаем свежие данные
+      console.log(`🌐 Loading fresh data for ${date}`);
       const result = await loadHabitsForDate(date);
       
       if (result) {
-        setDateHabits(result.habits || []);
-        setDateStats(result.stats || { completed: 0, total: 0 });
-        setDatePhrase(result.phrase);
+        updateDateCache(date, result);
       }
     } catch (error) {
       console.error(`Failed to load habits for date ${date}:`, error);
-      setDateHabits([]);
-      setDateStats({ completed: 0, total: 0 });
-      setDatePhrase(null);
+      updateDateCache(date, { 
+        habits: [], 
+        stats: { completed: 0, total: 0 },
+        phrase: null
+      });
     } finally {
       setDateLoading(false);
     }
-  }, [loadHabitsForDate]);
+  }, [loadHabitsForDate, dateDataCache, updateDateCache]);
 
-  // ✅ УПРОЩЕННАЯ СИНХРОНИЗАЦИЯ - только при первой загрузке или смене даты
+  // 🆕 КРИТИЧНО: Синхронизация todayHabits в кэш ТОЛЬКО для сегодняшнего дня
   useEffect(() => {
     const today = getTodayDate();
     
-    // Синхронизируем ТОЛЬКО если:
-    // 1. Это сегодня
-    // 2. Не идёт загрузка
-    // 3. Данные действительно изменились (не ручная модификация)
-    if (selectedDate === today && !dateLoading && !loading) {
-      // Проверяем, изменились ли данные с сервера
-      const serverDataChanged = JSON.stringify(todayHabits) !== JSON.stringify(dateHabits);
+    if (!loading && todayHabits.length > 0) {
+      console.log(`🔄 Syncing todayHabits to cache for ${today}`);
       
-      // Обновляем только если данные пришли с сервера (не локальные изменения)
-      if (serverDataChanged && todayHabits.length > 0) {
-        console.log('🔄 Syncing todayHabits to dateHabits (server update)');
-        setDateHabits(todayHabits);
-        setDateStats(stats);
-        setDatePhrase(phrase);
-      }
+      updateDateCache(today, {
+        habits: todayHabits,
+        stats: stats,
+        phrase: phrase
+      });
     }
-  }, [todayHabits, stats, phrase, selectedDate]);
+  }, [todayHabits, stats, phrase, loading, updateDateCache]);
 
   const handleRefresh = useCallback(async () => {
     try {
@@ -311,6 +341,13 @@ const Today = ({ shouldShowFabHint = false }) => {
       });
       console.log('📊 Analytics: pull_to_refresh');
       
+      // Очищаем кэш для текущей даты
+      setDateDataCache(prev => {
+        const newCache = { ...prev };
+        delete newCache[selectedDate];
+        return newCache;
+      });
+      
       await forceRefresh();
       
       if (selectedDate !== getTodayDate()) {
@@ -321,25 +358,30 @@ const Today = ({ shouldShowFabHint = false }) => {
     }
   }, [forceRefresh, selectedDate, reloadCurrentDateHabits]);
 
-  // ✅ Инициализация при первой загрузке
+  // Инициализация при первой загрузке
   useEffect(() => {
     const today = getTodayDate();
-    if (!loading && selectedDate === today) {
-      console.log('📥 Initial sync: setting dateHabits from todayHabits');
-      setDateHabits(todayHabits);
-      setDateStats(stats);
-      setDatePhrase(phrase);
+    if (!loading && selectedDate === today && todayHabits.length > 0) {
+      console.log('📥 Initial sync: setting today cache');
+      updateDateCache(today, {
+        habits: todayHabits,
+        stats: stats,
+        phrase: phrase
+      });
     }
-  }, [loading]); // Выполняется только один раз когда loading становится false
+  }, [loading]);
 
   const handleCreateHabit = async (habitData) => {
     try {
       await createHabit(habitData);
       setShowCreateForm(false);
+      
+      // Очищаем кэш и перезагружаем
+      setDateDataCache({});
       await reloadCurrentDateHabits();
       await checkUserSubscription();
       
-      const currentCount = todayHabits.length + 1;
+      const currentCount = (dateDataCache[selectedDate]?.habits?.length || 0) + 1;
       if (currentCount === 1) {
         localStorage.removeItem('hasSeenSwipeHint');
       }
@@ -383,6 +425,8 @@ const Today = ({ shouldShowFabHint = false }) => {
     
     const updatedSubscription = await habitService.checkSubscriptionLimits();
     if (updatedSubscription && updatedSubscription.isPremium) {
+      // Очищаем кэш и перезагружаем
+      setDateDataCache({});
       await reloadCurrentDateHabits();
       
       window.TelegramAnalytics?.track('subscription_activated', {
@@ -394,23 +438,25 @@ const Today = ({ shouldShowFabHint = false }) => {
   };
 
   const getMotivationalMessage = () => {
-    const currentPhrase = datePhrase;
+    const currentData = dateDataCache[selectedDate];
+    const currentPhrase = currentData?.phrase;
+    const currentStats = currentData?.stats || { completed: 0, total: 0 };
     
     if (currentPhrase && currentPhrase.text) {
       return currentPhrase.text;
     }
     
-    if (dateStats.total === 0) {
+    if (currentStats.total === 0) {
       return t('todays.createYourFirstHabit');
     }
-    if (dateStats.completed === 0) {
+    if (currentStats.completed === 0) {
       return t("todays.youCanDoIt");
     }
-    if (dateStats.completed === dateStats.total) {
+    if (currentStats.completed === currentStats.total) {
       return t("todays.allDoneAmazing");
     }
     
-    const percentage = (dateStats.completed / dateStats.total) * 100;
+    const percentage = (currentStats.completed / currentStats.total) * 100;
     if (percentage >= 70) return t("habits.almostThere");
     if (percentage >= 50) return t("habits.greatProgress");
     
@@ -418,13 +464,17 @@ const Today = ({ shouldShowFabHint = false }) => {
   };
 
   const getMotivationalEmoji = () => {
-    if (datePhrase && datePhrase.emoji) {
-      return datePhrase.emoji;
+    const currentData = dateDataCache[selectedDate];
+    const currentPhrase = currentData?.phrase;
+    const currentStats = currentData?.stats || { completed: 0, total: 0 };
+    
+    if (currentPhrase && currentPhrase.emoji) {
+      return currentPhrase.emoji;
     }
     
-    if (dateStats.total === 0) return "🚀";
-    if (dateStats.completed === 0) return "💪";
-    if (dateStats.completed === dateStats.total) return "🎉";
+    if (currentStats.total === 0) return "🚀";
+    if (currentStats.completed === 0) return "💪";
+    if (currentStats.completed === currentStats.total) return "🎉";
     return "✨";
   };
 
@@ -473,60 +523,78 @@ const Today = ({ shouldShowFabHint = false }) => {
   };
 
   useEffect(() => {
+    const currentHabits = dateDataCache[selectedDate]?.habits || [];
     const hasSeenHint = localStorage.getItem('hasSeenSwipeHint');
     const previousHabitsCount = parseInt(localStorage.getItem('previousHabitsCount') || '0');
     
-    if (dateHabits.length > 0 && isEditableDate) {
-      if (!hasSeenHint || (previousHabitsCount === 0 && dateHabits.length === 1)) {
+    if (currentHabits.length > 0 && isEditableDate) {
+      if (!hasSeenHint || (previousHabitsCount === 0 && currentHabits.length === 1)) {
         setTimeout(() => {
           setShowSwipeHint(true);
           localStorage.setItem('hasSeenSwipeHint', 'true');
           
           window.TelegramAnalytics?.track('swipe_hint_shown', {
-            habits_count: dateHabits.length,
+            habits_count: currentHabits.length,
             is_first_time: !hasSeenHint,
           });
           console.log('📊 Analytics: swipe_hint_shown');
         }, 1000);
       }
       
-      localStorage.setItem('previousHabitsCount', String(dateHabits.length));
+      localStorage.setItem('previousHabitsCount', String(currentHabits.length));
     }
-  }, [dateHabits.length, isEditableDate]);
+  }, [dateDataCache, selectedDate, isEditableDate]);
 
+  // 🆕 КРИТИЧНО: Изолированная обработка свайпа с защитой от перекрёстных обновлений
   const handleMark = useCallback(async (habitId, status) => {
     if (!isEditableDate) return;
     
+    // Защита от одновременных операций
+    if (currentSwipeOperation.current) {
+      console.log('⚠️ Another swipe operation in progress, skipping...');
+      return;
+    }
+    
+    const operationId = `${selectedDate}-${habitId}-${status}-${Date.now()}`;
+    currentSwipeOperation.current = operationId;
+    
     try {
-      console.log(`🎯 Marking habit ${habitId} as ${status} for date: ${selectedDate}`);
+      console.log(`🎯 [${operationId}] Marking habit ${habitId} as ${status} for date: ${selectedDate}`);
       
-      // ✅ Оптимистичное обновление UI для выбранной даты
-      setDateHabits(prev => 
-        prev.map(h => h.id === habitId ? { ...h, today_status: status } : h)
-      );
-      
-      const newCompleted = status === 'completed' 
-        ? dateStats.completed + 1 
-        : dateStats.completed;
-      setDateStats(prev => ({ ...prev, completed: newCompleted }));
-      
-      // Отправляем на сервер с КОНКРЕТНОЙ датой
-      await markHabit(habitId, status, selectedDate);
-      
-      // ✅ КРИТИЧНО: Перезагружаем данные ТОЛЬКО для выбранной даты
-      console.log(`🔄 Reloading habits for selected date: ${selectedDate}`);
-      const updatedData = await loadHabitsForDate(selectedDate);
-      
-      if (updatedData) {
-        setDateHabits(updatedData.habits || []);
-        setDateStats(updatedData.stats || { completed: 0, total: 0 });
-        setDatePhrase(updatedData.phrase);
+      // 1️⃣ Оптимистичное обновление ТОЛЬКО для текущей даты
+      const currentData = dateDataCache[selectedDate];
+      if (!currentData) {
+        console.error('No data for current date');
+        return;
       }
       
-      // ✅ Если это сегодня - также обновляем todayHabits
+      const updatedHabits = currentData.habits.map(h => 
+        h.id === habitId ? { ...h, today_status: status } : h
+      );
+      
+      const newCompleted = updatedHabits.filter(h => h.today_status === 'completed').length;
+      
+      updateDateCache(selectedDate, {
+        ...currentData,
+        habits: updatedHabits,
+        stats: { ...currentData.stats, completed: newCompleted }
+      });
+      
+      // 2️⃣ Отправляем на сервер с ЯВНОЙ датой
+      await markHabit(habitId, status, selectedDate);
+      
+      // 3️⃣ Перезагружаем данные ТОЛЬКО для текущей даты
+      console.log(`🔄 [${operationId}] Reloading habits for selected date: ${selectedDate}`);
+      const freshData = await loadHabitsForDate(selectedDate);
+      
+      if (freshData && currentSwipeOperation.current === operationId) {
+        updateDateCache(selectedDate, freshData);
+      }
+      
+      // 4️⃣ Если это сегодня - также обновляем today cache в фоне
       const today = getTodayDate();
       if (selectedDate === today) {
-        await refresh();
+        refresh();
       }
       
       window.TelegramAnalytics?.track('habit_marked', {
@@ -534,49 +602,73 @@ const Today = ({ shouldShowFabHint = false }) => {
         status: status,
         date: selectedDate,
         total_completed: newCompleted,
-        total_habits: dateStats.total,
+        total_habits: currentData.stats.total,
       });
       
     } catch (error) {
-      console.error('Error marking habit:', error);
-      const updatedData = await loadHabitsForDate(selectedDate);
-      if (updatedData) {
-        setDateHabits(updatedData.habits || []);
-        setDateStats(updatedData.stats || { completed: 0, total: 0 });
-        setDatePhrase(updatedData.phrase);
+      console.error(`❌ [${operationId}] Error marking habit:`, error);
+      
+      // Откатываем к данным с сервера
+      const freshData = await loadHabitsForDate(selectedDate);
+      if (freshData) {
+        updateDateCache(selectedDate, freshData);
+      }
+    } finally {
+      if (currentSwipeOperation.current === operationId) {
+        currentSwipeOperation.current = null;
       }
     }
-  }, [isEditableDate, selectedDate, markHabit, dateStats, loadHabitsForDate, refresh]);
+  }, [isEditableDate, selectedDate, markHabit, dateDataCache, loadHabitsForDate, refresh, updateDateCache]);
 
   const handleUnmark = useCallback(async (habitId) => {
     if (!isEditableDate) return;
     
+    // Защита от одновременных операций
+    if (currentSwipeOperation.current) {
+      console.log('⚠️ Another swipe operation in progress, skipping...');
+      return;
+    }
+    
+    const operationId = `${selectedDate}-${habitId}-unmark-${Date.now()}`;
+    currentSwipeOperation.current = operationId;
+    
     try {
-      console.log(`🎯 Unmarking habit ${habitId} for date: ${selectedDate}`);
+      console.log(`🎯 [${operationId}] Unmarking habit ${habitId} for date: ${selectedDate}`);
       
-      setDateHabits(prev => 
-        prev.map(h => h.id === habitId ? { ...h, today_status: 'pending' } : h)
-      );
-      
-      setDateStats(prev => ({ 
-        ...prev, 
-        completed: Math.max(0, prev.completed - 1) 
-      }));
-      
-      await unmarkHabit(habitId, selectedDate);
-      
-      console.log(`🔄 Reloading habits for selected date: ${selectedDate}`);
-      const updatedData = await loadHabitsForDate(selectedDate);
-      
-      if (updatedData) {
-        setDateHabits(updatedData.habits || []);
-        setDateStats(updatedData.stats || { completed: 0, total: 0 });
-        setDatePhrase(updatedData.phrase);
+      // 1️⃣ Оптимистичное обновление
+      const currentData = dateDataCache[selectedDate];
+      if (!currentData) {
+        console.error('No data for current date');
+        return;
       }
       
+      const updatedHabits = currentData.habits.map(h => 
+        h.id === habitId ? { ...h, today_status: 'pending' } : h
+      );
+      
+      const newCompleted = updatedHabits.filter(h => h.today_status === 'completed').length;
+      
+      updateDateCache(selectedDate, {
+        ...currentData,
+        habits: updatedHabits,
+        stats: { ...currentData.stats, completed: newCompleted }
+      });
+      
+      // 2️⃣ Отправляем на сервер
+      await unmarkHabit(habitId, selectedDate);
+      
+      // 3️⃣ Перезагружаем данные
+      console.log(`🔄 [${operationId}] Reloading habits for selected date: ${selectedDate}`);
+      const freshData = await loadHabitsForDate(selectedDate);
+      
+      if (freshData && currentSwipeOperation.current === operationId) {
+        updateDateCache(selectedDate, freshData);
+      }
+      
+      // 4️⃣ Обновляем today cache если нужно
       const today = getTodayDate();
       if (selectedDate === today) {
-        await refresh();
+        refresh();
       }
       
       window.TelegramAnalytics?.track('habit_unmarked', {
@@ -585,33 +677,39 @@ const Today = ({ shouldShowFabHint = false }) => {
       });
       
     } catch (error) {
-      console.error('Error unmarking habit:', error);
-      const updatedData = await loadHabitsForDate(selectedDate);
-      if (updatedData) {
-        setDateHabits(updatedData.habits || []);
-        setDateStats(updatedData.stats || { completed: 0, total: 0 });
-        setDatePhrase(updatedData.phrase);
+      console.error(`❌ [${operationId}] Error unmarking habit:`, error);
+      
+      const freshData = await loadHabitsForDate(selectedDate);
+      if (freshData) {
+        updateDateCache(selectedDate, freshData);
+      }
+    } finally {
+      if (currentSwipeOperation.current === operationId) {
+        currentSwipeOperation.current = null;
       }
     }
-  }, [isEditableDate, selectedDate, unmarkHabit, loadHabitsForDate, refresh]);
+  }, [isEditableDate, selectedDate, unmarkHabit, dateDataCache, loadHabitsForDate, refresh, updateDateCache]);
 
   const getMotivationalBackgroundColor = () => {
-    if (datePhrase && datePhrase.backgroundColor) {
-      return datePhrase.backgroundColor;
+    const currentData = dateDataCache[selectedDate];
+    const currentPhrase = currentData?.phrase;
+    const currentStats = currentData?.stats || { completed: 0, total: 0 };
+    
+    if (currentPhrase && currentPhrase.backgroundColor) {
+      return currentPhrase.backgroundColor;
     }
     
-    if (dateStats.total === 0) return '#FFE4B5';
-    if (dateStats.completed === 0) return '#FFB3BA';
-    if (dateStats.completed === dateStats.total) return '#87CEEB';
+    if (currentStats.total === 0) return '#FFE4B5';
+    if (currentStats.completed === 0) return '#FFB3BA';
+    if (currentStats.completed === currentStats.total) return '#87CEEB';
     
-    const percentage = (dateStats.completed / dateStats.total) * 100;
+    const percentage = (currentStats.completed / currentStats.total) * 100;
     if (percentage >= 70) return '#B5E7A0';
     if (percentage >= 50) return '#A7D96C';
     
     return '#FFB3BA';
   };
 
-  // 📊 Отслеживание времени на странице
   useEffect(() => {
     const startTime = Date.now();
     
@@ -621,12 +719,12 @@ const Today = ({ shouldShowFabHint = false }) => {
         window.TelegramAnalytics?.track('page_session_ended', {
           page: 'today',
           duration_seconds: sessionDuration,
-          habits_count: dateHabits.length,
-          completed_count: dateStats.completed,
+          habits_count: dateDataCache[selectedDate]?.habits?.length || 0,
+          completed_count: dateDataCache[selectedDate]?.stats?.completed || 0,
         });
       }
     };
-  }, [dateHabits.length, dateStats.completed]);
+  }, [dateDataCache, selectedDate]);
 
   if (showSubscriptionPage) {
     return (
@@ -655,8 +753,15 @@ const Today = ({ shouldShowFabHint = false }) => {
     return <Profile onClose={() => setShowProfile(false)} />;
   }
 
-  const displayHabits = dateLoading ? [] : dateHabits;
-  const displayStats = dateStats;
+  // Получаем данные для текущей выбранной даты
+  const currentDateData = dateDataCache[selectedDate] || { 
+    habits: [], 
+    stats: { completed: 0, total: 0 },
+    phrase: null
+  };
+  
+  const displayHabits = dateLoading ? [] : currentDateData.habits;
+  const displayStats = currentDateData.stats;
   const showReadOnlyNotice = !isEditableDate && isCurrentWeekDate(selectedDate);
 
   return (
@@ -764,7 +869,6 @@ const Today = ({ shouldShowFabHint = false }) => {
         onClose={() => {
           setShowSubscriptionModal(false);
           
-          // 📊 Модал подписки закрыт
           window.TelegramAnalytics?.track('subscription_modal_closed', {
             was_dismissed: true,
           });
