@@ -161,7 +161,12 @@ function AppContent() {
             localStorage.removeItem('hasSeenWeekHint');
             localStorage.removeItem('hasSeenSwipeHint');
             localStorage.removeItem('previousHabitsCount');
-            
+            for (let i = localStorage.length - 1; i >= 0; i--) {
+  const key = localStorage.key(i);
+  if (key && key.startsWith('cache_habits_')) {
+    localStorage.removeItem(key);
+  }
+}
             setShowOnboarding(true);
             setShouldShowFabHint(true); // ✅ Устанавливаем флаг для подсказки
           } else {
