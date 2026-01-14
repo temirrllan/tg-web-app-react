@@ -1,11 +1,11 @@
-// src/services/cacheService.js - MEMORY-ONLY CACHE (БЕЗ localStorage)
+// src/services/cacheService.js - ПОЛНОСТЬЮ НОВАЯ ВЕРСИЯ
 
 class CacheService {
   constructor() {
     this.cache = new Map();
-    this.pendingRequests = new Map();
-    this.subscribers = new Map();
-    this.cacheVersion = '3.0.0'; // Новая версия - memory-only
+    this.pendingRequests = new Map(); // Для дедупликации запросов
+    this.subscribers = new Map(); // Подписчики на изменения
+    this.cacheVersion = '2.0.0';
   }
 
   /**
@@ -13,7 +13,7 @@ class CacheService {
    */
   async fetch(key, fetchFn, options = {}) {
     const {
-      ttl = 5 * 60 * 1000,
+      ttl = 5 * 60 * 1000, // 5 минут по умолчанию
       forceRefresh = false,
       optimistic = false
     } = options;
@@ -66,59 +66,85 @@ class CacheService {
   }
 
   /**
-   * Сохранить в кэш (ТОЛЬКО memory, БЕЗ localStorage)
+   * Сохранить в кэш
    */
   set(key, data, ttl = 5 * 60 * 1000) {
-    const entry = {
-      data,
-      timestamp: Date.now(),
-      ttl,
-      version: this.cacheVersion
-    };
+  const entry = {
+    data,
+    timestamp: Date.now(),
+    ttl,
+    version: this.cacheVersion
+  };
 
-    // ✅ ТОЛЬКО memory cache - никакого localStorage
-    this.cache.set(key, entry);
-    
-    console.log('💾 Saved to memory cache only:', key);
+  this.cache.set(key, entry);
+  
+  // 🚫 НЕ сохраняем привычки в localStorage - только memory cache
+  // Это предотвращает загрузку устаревших данных при перезагрузке
+  if (!key.includes('habits_')) {
+    try {
+      localStorage.setItem(`cache_${key}`, JSON.stringify(entry));
+    } catch (e) {
+      console.warn('localStorage save failed:', e);
+    }
+  } else {
+    console.log('⏭️ Skipping localStorage for habits cache:', key);
   }
+}
 
   /**
-   * Получить из кэша (ТОЛЬКО memory, БЕЗ localStorage)
+   * Получить из кэша
    */
   get(key) {
-    // ✅ ТОЛЬКО memory cache - никакого localStorage
-    const entry = this.cache.get(key);
-
-    if (!entry) {
-      console.log('❌ Cache MISS (memory only):', key);
-      return null;
+  // Проверяем memory cache
+  let entry = this.cache.get(key);
+  
+  // 🚫 НЕ читаем привычки из localStorage - только из памяти
+  if (!entry && !key.includes('habits_')) {
+    try {
+      const stored = localStorage.getItem(`cache_${key}`);
+      if (stored) {
+        entry = JSON.parse(stored);
+        // Восстанавливаем в memory cache
+        this.cache.set(key, entry);
+      }
+    } catch (e) {
+      console.warn('localStorage read failed:', e);
     }
-
-    // Проверяем валидность
-    if (this.isValid(entry)) {
-      console.log('✅ Cache HIT (memory):', key);
-      return entry.data;
-    }
-
-    // Кэш истёк
-    console.log('⏰ Cache EXPIRED:', key);
-    this.cache.delete(key);
-    
-    return null;
   }
+
+  if (!entry) return null;
+
+  // Проверяем валидность
+  if (this.isValid(entry)) {
+    return entry.data;
+  }
+
+  // Кэш истёк
+  this.cache.delete(key);
+  try {
+    localStorage.removeItem(`cache_${key}`);
+  } catch (e) {}
+  
+  return null;
+}
 
   /**
    * Получить устаревший кэш (для fallback при ошибках)
    */
   getStale(key) {
-    // ✅ ТОЛЬКО memory cache
     const entry = this.cache.get(key);
     if (entry && entry.data) {
-      console.log('⚠️ Using stale cache from memory:', key);
       return entry.data;
     }
 
-    console.log('❌ No stale cache available:', key);
+    try {
+      const stored = localStorage.getItem(`cache_${key}`);
+      if (stored) {
+        const entry = JSON.parse(stored);
+        return entry.data;
+      }
+    } catch (e) {}
+
     return null;
   }
 
@@ -144,6 +170,7 @@ class CacheService {
     const age = Date.now() - entry.timestamp;
     const halfTtl = entry.ttl / 2;
     
+    // Обновляем когда прошло больше половины TTL
     return age > halfTtl;
   }
 
@@ -151,6 +178,7 @@ class CacheService {
    * Фоновое обновление
    */
   async refreshInBackground(key, fetchFn, ttl) {
+    // Не запускаем если уже идет обновление
     if (this.pendingRequests.has(key)) {
       return;
     }
@@ -174,7 +202,7 @@ class CacheService {
     
     const keysToDelete = [];
     
-    // ✅ ТОЛЬКО memory cache
+    // Memory cache
     for (const key of this.cache.keys()) {
       if (key.includes(pattern)) {
         keysToDelete.push(key);
@@ -182,7 +210,15 @@ class CacheService {
       }
     }
 
-    console.log('🗑️ Deleted from memory:', keysToDelete);
+    // localStorage
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('cache_') && key.includes(pattern)) {
+          localStorage.removeItem(key);
+        }
+      }
+    } catch (e) {}
 
     // Уведомляем подписчиков об инвалидации
     keysToDelete.forEach(key => {
@@ -199,6 +235,7 @@ class CacheService {
     }
     this.subscribers.get(key).add(callback);
 
+    // Возвращаем функцию отписки
     return () => {
       const subs = this.subscribers.get(key);
       if (subs) {
@@ -227,9 +264,19 @@ class CacheService {
    * Очистить весь кэш
    */
   clear() {
-    console.log('🧹 Clearing all cache');
     this.cache.clear();
     this.pendingRequests.clear();
+    
+    try {
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('cache_')) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+    } catch (e) {}
   }
 
   /**

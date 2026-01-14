@@ -281,55 +281,43 @@ useEffect(() => {
   }, [selectedDate, loadHabitsForDate, refresh, updateDateCache]);
 
   const handleDateSelect = useCallback(async (date, isEditable) => {
-    console.log(`📅 Date selected: ${date}, editable: ${isEditable}`);
+  console.log(`📅 Date selected: ${date}, editable: ${isEditable}`);
+  
+  setSelectedDate(date);
+  setIsEditableDate(isEditable);
+  setDateLoading(true);
+  
+  try {
+    // ✅ ВСЕГДА загружаем свежие данные с сервера (игнорируем кэш)
+    console.log(`🌐 Always loading fresh data for ${date} (no cache)`);
+    const result = await loadHabitsForDate(date);
     
-    setSelectedDate(date);
-    setIsEditableDate(isEditable);
-    setDateLoading(true);
-    
-    try {
-      // Проверяем кэш
-      const cached = dateDataCache[date];
-      const cacheAge = cached ? Date.now() - cached.timestamp : Infinity;
-      const isCacheValid = cacheAge < 30000; // 30 секунд
-      
-      if (cached && isCacheValid) {
-        console.log(`✅ Using cached data for ${date} (age: ${Math.round(cacheAge / 1000)}s)`);
-        setDateLoading(false);
-        return;
-      }
-      
-      // Загружаем свежие данные
-      console.log(`🌐 Loading fresh data for ${date}`);
-      const result = await loadHabitsForDate(date);
-      
-      if (result) {
-        updateDateCache(date, result);
-      }
-    } catch (error) {
-      console.error(`Failed to load habits for date ${date}:`, error);
-      updateDateCache(date, { 
-        habits: [], 
-        stats: { completed: 0, total: 0 },
-        phrase: null
-      });
-    } finally {
-      setDateLoading(false);
+    if (result) {
+      updateDateCache(date, result);
     }
-  }, [loadHabitsForDate, dateDataCache, updateDateCache]);
+  } catch (error) {
+    console.error(`Failed to load habits for date ${date}:`, error);
+    updateDateCache(date, { 
+      habits: [], 
+      stats: { completed: 0, total: 0 },
+      phrase: null
+    });
+  } finally {
+    setDateLoading(false);
+  }
+}, [loadHabitsForDate, updateDateCache]);
 
   // 🆕 КРИТИЧНО: Синхронизация todayHabits в кэш ТОЛЬКО при первой загрузке
+// 🆕 Синхронизация todayHabits ТОЛЬКО при первой загрузке (один раз)
 useEffect(() => {
   const today = getTodayDate();
   
-  if (!loading && todayHabits.length > 0) {
-    // ✅ Обновляем кэш ТОЛЬКО если его нет или он очень старый
+  if (!loading && selectedDate === today && todayHabits.length > 0) {
     const cached = dateDataCache[today];
-    const cacheAge = cached ? Date.now() - cached.timestamp : Infinity;
-    const shouldUpdate = !cached || cacheAge > 60000; // 1 минута
     
-    if (shouldUpdate) {
-      console.log(`🔄 Syncing todayHabits to cache for ${today}`);
+    // Обновляем ТОЛЬКО если кэша нет совсем
+    if (!cached) {
+      console.log(`📥 Initial load: setting today cache from todayHabits`);
       
       updateDateCache(today, {
         habits: todayHabits,
@@ -337,10 +325,10 @@ useEffect(() => {
         phrase: phrase
       });
     } else {
-      console.log(`⏭️ Skipping sync - cache is fresh (age: ${Math.round(cacheAge / 1000)}s)`);
+      console.log(`⏭️ Cache already exists for today, skipping sync`);
     }
   }
-}, [todayHabits, stats, phrase, loading, updateDateCache, dateDataCache]);
+}, [loading, todayHabits.length]); // Только при изменении loading и количества
 
   const handleRefresh = useCallback(async () => {
     try {
@@ -371,18 +359,7 @@ useEffect(() => {
     }
   }, [forceRefresh, selectedDate, reloadCurrentDateHabits]);
 
-  // Инициализация при первой загрузке
-  useEffect(() => {
-    const today = getTodayDate();
-    if (!loading && selectedDate === today && todayHabits.length > 0) {
-      console.log('📥 Initial sync: setting today cache');
-      updateDateCache(today, {
-        habits: todayHabits,
-        stats: stats,
-        phrase: phrase
-      });
-    }
-  }, [loading]);
+  
 
   const handleCreateHabit = async (habitData) => {
     try {
