@@ -1,28 +1,18 @@
-// src/hooks/useHabits.js - ИСПРАВЛЕНА ПРОБЛЕМА С ДАТАМИ
+// src/hooks/useHabits.js - ВСЕГДА загружаем с сервера (БЕЗ начального кэша)
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { habitService } from '../services/habits';
 import { vibrate } from '../utils/helpers';
 
-/**
- * 🔥 СИНХРОННАЯ загрузка из localStorage при инициализации
- */
-function loadInitialCacheSync() {
-  console.log('🚫 localStorage cache disabled - will load from server');
-  return null;
-}
-
 export const useHabits = () => {
-  // 🔥 МГНОВЕННАЯ инициализация из кэша
-  const initialCache = loadInitialCacheSync();
-  
+  // ✅ Всегда начинаем с пустого состояния - БЕЗ кэша
   const [habits, setHabits] = useState([]);
-  const [todayHabits, setTodayHabits] = useState(initialCache?.habits || []);
-  const [stats, setStats] = useState(initialCache?.stats || { completed: 0, total: 0 });
-  const [phrase, setPhrase] = useState(initialCache?.phrase || { text: '', emoji: '' });
+  const [todayHabits, setTodayHabits] = useState([]);
+  const [stats, setStats] = useState({ completed: 0, total: 0 });
+  const [phrase, setPhrase] = useState({ text: '', emoji: '' });
   
-  // 🔥 НЕ показываем loader если есть кэш
-  const [loading, setLoading] = useState(!initialCache);
+  // ✅ Всегда показываем loader при первой загрузке
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
   const isFirstLoad = useRef(true);
@@ -30,18 +20,17 @@ export const useHabits = () => {
   const lastFetchRef = useRef(null);
 
   /**
-   * 🚀 Фоновая загрузка (без блокировки UI)
+   * 🚀 Загрузка привычек на сегодня
    */
   const loadTodayHabits = useCallback(async (showLoading = false, force = false) => {
     const now = Date.now();
     
-    // 🆕 Предотвращаем частые запросы (не чаще 1 раза в секунду)
+    // Предотвращаем частые запросы
     if (!force && lastFetchRef.current && (now - lastFetchRef.current) < 1000) {
       console.log('⚠️ Skipping duplicate fetch (too soon)');
       return;
     }
     
-    // Предотвращаем дублирование запросов
     if (isFetching.current) {
       console.log('⏳ Already fetching, skipping...');
       return;
@@ -59,7 +48,6 @@ export const useHabits = () => {
       const today = new Date().toISOString().split('T')[0];
       console.log(`📊 Loading habits for TODAY: ${today}`);
       
-      // 🔥 Загружаем с кэшем - МГНОВЕННО
       const data = await habitService.getTodayHabits();
 
       const normalizedHabits = data?.habits || [];
@@ -84,7 +72,6 @@ export const useHabits = () => {
     } catch (err) {
       console.error('❌ loadTodayHabits error:', err);
       
-      // При ошибке НЕ стираем кэш
       if (todayHabits.length === 0) {
         setError(err.message || 'Failed to load today habits');
       }
@@ -100,7 +87,6 @@ export const useHabits = () => {
       
       const today = new Date().toISOString().split('T')[0];
       
-      // Загружаем с кэшем
       const result = date === today 
         ? await habitService.getTodayHabits()
         : await habitService.getHabitsForDate(date);
@@ -141,17 +127,10 @@ export const useHabits = () => {
       
       console.log(`✏️ Marking habit ${habitId} as ${status} for ${date}`);
       
-      const today = new Date().toISOString().split('T')[0];
-      
-      // ✅ КРИТИЧНО: НЕ обновляем UI локально - только отправляем на сервер
-      // Это предотвратит перекрёстное обновление между днями
-      
-      // Отправляем на сервер
       const result = await habitService.markHabit(habitId, status, date);
       
       console.log('✅ Mark habit response:', result);
       
-      // ✅ Возвращаем обновлённые данные, которые вызывающая функция обработает
       return result;
     } catch (err) {
       console.error('❌ markHabit error:', err);
@@ -170,11 +149,6 @@ export const useHabits = () => {
       
       console.log(`↩️ Unmarking habit ${habitId} for ${date}`);
       
-      const today = new Date().toISOString().split('T')[0];
-      
-      // ✅ КРИТИЧНО: НЕ обновляем UI локально - только отправляем на сервер
-      
-      // Отправляем на сервер
       const result = await habitService.unmarkHabit(habitId, date);
       
       console.log('✅ Unmark habit response:', result);
@@ -191,9 +165,8 @@ export const useHabits = () => {
     try {
       const result = await habitService.createHabit(habitData);
       
-      // Обновляем данные после создания
       await Promise.all([
-        loadTodayHabits(false, true), // force = true
+        loadTodayHabits(false, true),
         loadAllHabits()
       ]);
       
@@ -208,10 +181,9 @@ export const useHabits = () => {
     try {
       await habitService.deleteHabit(habitId);
       
-      // Обновляем данные после удаления
       await Promise.all([
         loadAllHabits(),
-        loadTodayHabits(false, true) // force = true
+        loadTodayHabits(false, true)
       ]);
     } catch (err) {
       setError(err.message);
@@ -221,39 +193,20 @@ export const useHabits = () => {
 
   const refreshDateData = useCallback(async (date) => {
     console.log(`🔄 Refreshing data for date: ${date}`);
-    const today = new Date().toISOString().split('T')[0];
-    
-    if (date === today) {
-      await loadTodayHabits(false, true); // force = true
-      return {
-        habits: todayHabits,
-        stats: stats,
-        phrase: phrase
-      };
-    } else {
-      return await loadHabitsForDate(date);
-    }
-  }, [loadTodayHabits, loadHabitsForDate, todayHabits, stats, phrase]);
+    return await loadHabitsForDate(date);
+  }, [loadHabitsForDate]);
 
   const forceRefresh = useCallback(async () => {
     console.log('🔄 Force refresh - clearing cache');
     habitService.invalidateHabitsCache();
     lastFetchRef.current = null;
-    await loadTodayHabits(true, true); // showLoading = true, force = true
+    await loadTodayHabits(true, true);
   }, [loadTodayHabits]);
 
-  // 🚀 Загрузка при монтировании
+  // 🚀 Загрузка при монтировании - ВСЕГДА с сервера
   useEffect(() => {
-    // Если уже есть кэш - загружаем в фоне
-    if (initialCache) {
-      console.log('⚡ Initial cache loaded, fetching updates in background...');
-      loadTodayHabits(false, false);
-    } else {
-      // Если нет кэша - показываем loader
-      console.log('📡 No cache, loading with loader...');
-      loadTodayHabits(true, false);
-    }
-    
+    console.log('📡 Loading habits from server (no cache)...');
+    loadTodayHabits(true, true);
     loadAllHabits();
   }, []);
 
