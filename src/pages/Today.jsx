@@ -489,123 +489,89 @@ const Today = ({ shouldShowFabHint = false }) => {
     }
   }, [dateHabits.length, isEditableDate, track]);
 
-// Исправленные функции для Today.jsx
-
-const handleMark = useCallback(async (habitId, status) => {
-  if (!isEditableDate) return;
-  
-  try {
-    // Сохраняем предыдущий статус для корректного обновления счетчика
-    const currentHabit = dateHabits.find(h => h.id === habitId);
-    const previousStatus = currentHabit?.today_status;
+  const handleMark = useCallback(async (habitId, status) => {
+    if (!isEditableDate) return;
     
-    // Оптимистично обновляем UI
-    setDateHabits(prev => 
-      prev.map(h => h.id === habitId ? { ...h, today_status: status } : h)
-    );
-    
-    // Правильно обновляем счетчик
-    setDateStats(prev => {
-      let newCompleted = prev.completed;
+    try {
+      setDateHabits(prev => 
+        prev.map(h => h.id === habitId ? { ...h, today_status: status } : h)
+      );
       
-      // Если раньше была completed, уменьшаем
-      if (previousStatus === 'completed') {
-        newCompleted--;
+      const newCompleted = status === 'completed' 
+        ? dateStats.completed + 1 
+        : dateStats.completed;
+      setDateStats(prev => ({ ...prev, completed: newCompleted }));
+      
+      await markHabit(habitId, status, selectedDate);
+      
+      const today = getTodayDate();
+      if (selectedDate === today) {
+        // Для сегодня - обновление через useEffect выше
+      } else {
+        console.log(`✅ Habit ${habitId} marked as ${status} for ${selectedDate}`);
       }
       
-      // Если новый статус completed, увеличиваем
-      if (status === 'completed') {
-        newCompleted++;
-      }
-      
-      return { ...prev, completed: Math.max(0, newCompleted) };
-    });
-    
-    await markHabit(habitId, status, selectedDate);
-    
-    const today = getTodayDate();
-    if (selectedDate === today) {
-      // Для сегодня - обновление через useEffect
-    } else {
-      console.log(`✅ Habit ${habitId} marked as ${status} for ${selectedDate}`);
-    }
-    
-    // Аналитика
-    const newCompleted = status === 'completed' 
-      ? (previousStatus === 'completed' ? dateStats.completed : dateStats.completed + 1)
-      : (previousStatus === 'completed' ? dateStats.completed - 1 : dateStats.completed);
-    
-    track(EVENTS.HABITS.MARKED, {
-      habit_id: habitId,
-      status: status,
-      previous_status: previousStatus,
-      date: selectedDate,
-      total_completed: newCompleted,
-      total_habits: dateStats.total,
-      completion_rate: ((newCompleted / dateStats.total) * 100).toFixed(1),
-    });
-    
-    if (newCompleted === dateStats.total && dateStats.total > 0) {
-      track(EVENTS.ACHIEVEMENTS.ALL_COMPLETED, {
+      track(EVENTS.HABITS.MARKED, {
+        habit_id: habitId,
+        status: status,
         date: selectedDate,
+        total_completed: newCompleted,
         total_habits: dateStats.total,
+        completion_rate: ((newCompleted / dateStats.total) * 100).toFixed(1),
       });
-    }
-    
-  } catch (error) {
-    trackError(error, {
-      context: 'habit_marking',
-      habit_id: habitId,
-    });
-    await reloadCurrentDateHabits();
-  }
-}, [isEditableDate, selectedDate, markHabit, dateStats, dateHabits, reloadCurrentDateHabits, track, trackError]);
-
-const handleUnmark = useCallback(async (habitId) => {
-  if (!isEditableDate) return;
-  
-  try {
-    // Сохраняем предыдущий статус
-    const currentHabit = dateHabits.find(h => h.id === habitId);
-    const previousStatus = currentHabit?.today_status;
-    
-    // Оптимистично обновляем UI
-    setDateHabits(prev => 
-      prev.map(h => h.id === habitId ? { ...h, today_status: 'pending' } : h)
-    );
-    
-    // Уменьшаем счетчик только если был completed
-    setDateStats(prev => {
-      const newCompleted = previousStatus === 'completed' 
-        ? Math.max(0, prev.completed - 1)
-        : prev.completed;
       
-      return { ...prev, completed: newCompleted };
-    });
-    
-    await unmarkHabit(habitId, selectedDate);
-    
-    const today = getTodayDate();
-    if (selectedDate === today) {
-      // Для сегодня - обновление через useEffect
-    } else {
-      console.log(`✅ Habit ${habitId} unmarked for ${selectedDate}`);
+      if (newCompleted === dateStats.total && dateStats.total > 0) {
+        track(EVENTS.ACHIEVEMENTS.ALL_COMPLETED, {
+          date: selectedDate,
+          total_habits: dateStats.total,
+        });
+      }
+      
+    } catch (error) {
+      trackError(error, {
+        context: 'habit_marking',
+        habit_id: habitId,
+      });
+      await reloadCurrentDateHabits();
     }
+  }, [isEditableDate, selectedDate, markHabit, dateStats, reloadCurrentDateHabits, track, trackError]);
+
+  const handleUnmark = useCallback(async (habitId) => {
+    if (!isEditableDate) return;
     
-    track(EVENTS.HABITS.UNMARKED, {
-      habit_id: habitId,
-      previous_status: previousStatus,
-      date: selectedDate,
-    });
-    
-  } catch (error) {
-    trackError(error, {
-      context: 'habit_unmarking',
-      habit_id: habitId,
-    });
-    await reloadCurrentDateHabits();
-  }
-}, [isEditableDate, selectedDate, unmarkHabit, dateHabits, reloadCurrentDateHabits, track, trackError]);
+    try {
+      setDateHabits(prev => 
+        prev.map(h => h.id === habitId ? { ...h, today_status: 'pending' } : h)
+      );
+      
+      setDateStats(prev => ({ 
+        ...prev, 
+        completed: Math.max(0, prev.completed - 1) 
+      }));
+      
+      await unmarkHabit(habitId, selectedDate);
+      
+      const today = getTodayDate();
+      if (selectedDate === today) {
+        // Для сегодня - обновление через useEffect
+      } else {
+        console.log(`✅ Habit ${habitId} unmarked for ${selectedDate}`);
+      }
+      
+      track(EVENTS.HABITS.UNMARKED, {
+        habit_id: habitId,
+        date: selectedDate,
+      });
+      
+    } catch (error) {
+      trackError(error, {
+        context: 'habit_unmarking',
+        habit_id: habitId,
+      });
+      await reloadCurrentDateHabits();
+    }
+  }, [isEditableDate, selectedDate, unmarkHabit, reloadCurrentDateHabits, track, trackError]);
+
   const getMotivationalBackgroundColor = () => {
     if (datePhrase && datePhrase.backgroundColor) {
       return datePhrase.backgroundColor;
