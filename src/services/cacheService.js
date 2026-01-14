@@ -69,59 +69,64 @@ class CacheService {
    * Сохранить в кэш
    */
   set(key, data, ttl = 5 * 60 * 1000) {
-    const entry = {
-      data,
-      timestamp: Date.now(),
-      ttl,
-      version: this.cacheVersion
-    };
+  const entry = {
+    data,
+    timestamp: Date.now(),
+    ttl,
+    version: this.cacheVersion
+  };
 
-    this.cache.set(key, entry);
-    
-    // Сохраняем в localStorage для персистентности
+  this.cache.set(key, entry);
+  
+  // 🚫 НЕ сохраняем привычки в localStorage - только memory cache
+  // Это предотвращает загрузку устаревших данных при перезагрузке
+  if (!key.includes('habits_')) {
     try {
       localStorage.setItem(`cache_${key}`, JSON.stringify(entry));
     } catch (e) {
       console.warn('localStorage save failed:', e);
     }
+  } else {
+    console.log('⏭️ Skipping localStorage for habits cache:', key);
   }
+}
 
   /**
    * Получить из кэша
    */
   get(key) {
-    // Проверяем memory cache
-    let entry = this.cache.get(key);
-    
-    // Если нет в памяти, проверяем localStorage
-    if (!entry) {
-      try {
-        const stored = localStorage.getItem(`cache_${key}`);
-        if (stored) {
-          entry = JSON.parse(stored);
-          // Восстанавливаем в memory cache
-          this.cache.set(key, entry);
-        }
-      } catch (e) {
-        console.warn('localStorage read failed:', e);
-      }
-    }
-
-    if (!entry) return null;
-
-    // Проверяем валидность
-    if (this.isValid(entry)) {
-      return entry.data;
-    }
-
-    // Кэш истёк
-    this.cache.delete(key);
+  // Проверяем memory cache
+  let entry = this.cache.get(key);
+  
+  // 🚫 НЕ читаем привычки из localStorage - только из памяти
+  if (!entry && !key.includes('habits_')) {
     try {
-      localStorage.removeItem(`cache_${key}`);
-    } catch (e) {}
-    
-    return null;
+      const stored = localStorage.getItem(`cache_${key}`);
+      if (stored) {
+        entry = JSON.parse(stored);
+        // Восстанавливаем в memory cache
+        this.cache.set(key, entry);
+      }
+    } catch (e) {
+      console.warn('localStorage read failed:', e);
+    }
   }
+
+  if (!entry) return null;
+
+  // Проверяем валидность
+  if (this.isValid(entry)) {
+    return entry.data;
+  }
+
+  // Кэш истёк
+  this.cache.delete(key);
+  try {
+    localStorage.removeItem(`cache_${key}`);
+  } catch (e) {}
+  
+  return null;
+}
 
   /**
    * Получить устаревший кэш (для fallback при ошибках)

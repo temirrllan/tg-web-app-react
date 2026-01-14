@@ -161,9 +161,11 @@ function AppContent() {
             localStorage.removeItem('hasSeenWeekHint');
             localStorage.removeItem('hasSeenSwipeHint');
             localStorage.removeItem('previousHabitsCount');
-            for (let i = localStorage.length - 1; i >= 0; i--) {
+            // Очищаем ВСЕ кэши привычек из localStorage
+for (let i = localStorage.length - 1; i >= 0; i--) {
   const key = localStorage.key(i);
-  if (key && key.startsWith('cache_habits_')) {
+  if (key && key.startsWith('cache_habits')) {
+    console.log('🗑️ Removing stale habits cache:', key);
     localStorage.removeItem(key);
   }
 }
@@ -173,6 +175,15 @@ function AppContent() {
             console.log('👤 EXISTING USER - SKIPPING ONBOARDING');
             // НЕ показываем onboarding
             // НЕ показываем подсказки
+            // 🆕 Очищаем кэш привычек даже для существующих пользователей при входе
+  console.log('🧹 Clearing habits cache for existing user');
+  for (let i = localStorage.length - 1; i >= 0; i--) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('cache_habits')) {
+      console.log('🗑️ Removing stale habits cache:', key);
+      localStorage.removeItem(key);
+    }
+  }
           }
           
         } else {

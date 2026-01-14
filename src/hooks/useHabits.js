@@ -8,35 +8,8 @@ import { vibrate } from '../utils/helpers';
  * 🔥 СИНХРОННАЯ загрузка из localStorage при инициализации
  */
 function loadInitialCacheSync() {
-  try {
-    const cacheKey = 'cache_habits_today';
-    const stored = localStorage.getItem(cacheKey);
-    
-    if (!stored) {
-      return null;
-    }
-    
-    const cached = JSON.parse(stored);
-    
-    // Проверяем свежесть (принимаем даже устаревший кэш)
-    const age = Date.now() - (cached.timestamp || 0);
-    const maxAge = 10 * 60 * 1000; // 10 минут максимум
-    
-    if (age > maxAge) {
-      console.log('⚠️ Cache too old, skipping');
-      return null;
-    }
-    
-    console.log('✅ INSTANT LOAD from localStorage:', {
-      habits: cached.data?.habits?.length || 0,
-      age: Math.round(age / 1000) + 's'
-    });
-    
-    return cached.data;
-  } catch (error) {
-    console.error('❌ Failed to load initial cache:', error);
-    return null;
-  }
+  console.log('🚫 localStorage cache disabled - will load from server');
+  return null;
 }
 
 export const useHabits = () => {
