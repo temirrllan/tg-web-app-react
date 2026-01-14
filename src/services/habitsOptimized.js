@@ -203,62 +203,47 @@ export const habitService = {
    * ✅ КРИТИЧНО: Отметить привычку (БЕЗ оптимистичного обновления)
    */
   async markHabit(habitId, status = 'completed', date) {
-    const markDate = date || new Date().toISOString().split('T')[0];
+  const markDate = date || new Date().toISOString().split('T')[0];
+  
+  console.log(`🎯 markHabit API call: habitId=${habitId}, status=${status}, date=${markDate}`);
+  
+  try {
+    const { data } = await api.post(`/habits/${habitId}/mark`, {
+      status,
+      date: markDate
+    });
     
-    console.log(`🎯 markHabit API call: habitId=${habitId}, status=${status}, date=${markDate}`);
+    console.log('✅ markHabit API response:', data);
     
-    try {
-      const { data } = await api.post(`/habits/${habitId}/mark`, {
-        status,
-        date: markDate
-      });
-      
-      console.log('✅ markHabit API response:', data);
-      
-      // ✅ КРИТИЧНО: Инвалидируем ТОЛЬКО кэш для конкретной даты
-      cacheService.invalidate(`habits_date_${markDate}`);
-      
-      // Если это сегодня - инвалидируем также today кэш
-      const today = new Date().toISOString().split('T')[0];
-      if (markDate === today) {
-        cacheService.invalidate('habits_today');
-      }
-      
-      return data;
-    } catch (error) {
-      console.error('❌ markHabit API error:', error);
-      throw error;
-    }
-  },
+    // ✅ КРИТИЧНО: Инвалидируем ВСЕ кэши привычек чтобы загрузить свежие данные
+    cacheService.invalidate('habits_');
+    
+    return data;
+  } catch (error) {
+    console.error('❌ markHabit API error:', error);
+    throw error;
+  }
+},
 
-  /**
-   * ✅ КРИТИЧНО: Снять отметку (БЕЗ оптимистичного обновления)
-   */
-  async unmarkHabit(habitId, date) {
-    const unmarkDate = date || new Date().toISOString().split('T')[0];
+async unmarkHabit(habitId, date) {
+  const unmarkDate = date || new Date().toISOString().split('T')[0];
+  
+  console.log(`🎯 unmarkHabit API call: habitId=${habitId}, date=${unmarkDate}`);
+  
+  try {
+    const { data } = await api.delete(`/habits/${habitId}/mark?date=${unmarkDate}`);
     
-    console.log(`🎯 unmarkHabit API call: habitId=${habitId}, date=${unmarkDate}`);
+    console.log('✅ unmarkHabit API response:', data);
     
-    try {
-      const { data } = await api.delete(`/habits/${habitId}/mark?date=${unmarkDate}`);
-      
-      console.log('✅ unmarkHabit API response:', data);
-      
-      // ✅ КРИТИЧНО: Инвалидируем ТОЛЬКО кэш для конкретной даты
-      cacheService.invalidate(`habits_date_${unmarkDate}`);
-      
-      // Если это сегодня - инвалидируем также today кэш
-      const today = new Date().toISOString().split('T')[0];
-      if (unmarkDate === today) {
-        cacheService.invalidate('habits_today');
-      }
-      
-      return data;
-    } catch (error) {
-      console.error('❌ unmarkHabit API error:', error);
-      throw error;
-    }
-  },
+    // ✅ КРИТИЧНО: Инвалидируем ВСЕ кэши привычек чтобы загрузить свежие данные
+    cacheService.invalidate('habits_');
+    
+    return data;
+  } catch (error) {
+    console.error('❌ unmarkHabit API error:', error);
+    throw error;
+  }
+},
 
   /**
    * Обновить язык пользователя

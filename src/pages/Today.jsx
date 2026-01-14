@@ -62,7 +62,11 @@ const Today = ({ shouldShowFabHint = false }) => {
   const [habitToEdit, setHabitToEdit] = useState(null);
   const [userSubscription, setUserSubscription] = useState(null);
   const [showFabHint, setShowFabHint] = useState(false);
-
+// 🆕 Очистка кэша при монтировании для гарантии свежих данных
+useEffect(() => {
+  console.log('🧹 Clearing date cache on mount to ensure fresh data');
+  setDateDataCache({});
+}, []);
   const getTodayDate = () => {
     const today = new Date();
     const year = today.getFullYear();
