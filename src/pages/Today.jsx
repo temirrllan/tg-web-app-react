@@ -314,11 +314,17 @@ const Today = ({ shouldShowFabHint = false }) => {
     }
   }, [loadHabitsForDate, dateDataCache, updateDateCache]);
 
-  // 🆕 КРИТИЧНО: Синхронизация todayHabits в кэш ТОЛЬКО для сегодняшнего дня
-  useEffect(() => {
-    const today = getTodayDate();
+  // 🆕 КРИТИЧНО: Синхронизация todayHabits в кэш ТОЛЬКО при первой загрузке
+useEffect(() => {
+  const today = getTodayDate();
+  
+  if (!loading && todayHabits.length > 0) {
+    // ✅ Обновляем кэш ТОЛЬКО если его нет или он очень старый
+    const cached = dateDataCache[today];
+    const cacheAge = cached ? Date.now() - cached.timestamp : Infinity;
+    const shouldUpdate = !cached || cacheAge > 60000; // 1 минута
     
-    if (!loading && todayHabits.length > 0) {
+    if (shouldUpdate) {
       console.log(`🔄 Syncing todayHabits to cache for ${today}`);
       
       updateDateCache(today, {
@@ -326,8 +332,11 @@ const Today = ({ shouldShowFabHint = false }) => {
         stats: stats,
         phrase: phrase
       });
+    } else {
+      console.log(`⏭️ Skipping sync - cache is fresh (age: ${Math.round(cacheAge / 1000)}s)`);
     }
-  }, [todayHabits, stats, phrase, loading, updateDateCache]);
+  }
+}, [todayHabits, stats, phrase, loading, updateDateCache, dateDataCache]);
 
   const handleRefresh = useCallback(async () => {
     try {
