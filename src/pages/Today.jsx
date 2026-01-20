@@ -21,6 +21,7 @@ import { useTranslation } from '../hooks/useTranslation';
 import PullToRefresh from '../components/common/PullToRefresh';
 import { useTelegramTheme } from '../hooks/useTelegramTheme';
 import FabHint from '../components/hints/FabHint';
+import WeekHint from '../components/hints/WeekHint'; // 🆕 ДОБАВИТЬ ЭТУ СТРОКУ
 
 const Today = ({ shouldShowFabHint = false }) => {
   const { t } = useTranslation();
@@ -62,6 +63,8 @@ const Today = ({ shouldShowFabHint = false }) => {
   const [habitToEdit, setHabitToEdit] = useState(null);
   const [userSubscription, setUserSubscription] = useState(null);
   const [showFabHint, setShowFabHint] = useState(false);
+    const [showWeekHint, setShowWeekHint] = useState(false); // 🆕 ДОБАВИТЬ ЭТУ СТРОКУ
+
 // 🆕 Очистка кэша при монтировании для гарантии свежих данных
 useEffect(() => {
   console.log('🧹 Clearing date cache on mount to ensure fresh data');
@@ -133,6 +136,26 @@ useEffect(() => {
       habits_count: dateDataCache[selectedDate]?.habits?.length || 0
     });
     console.log('📊 Analytics: fab_hint_closed');
+
+    const hasSeenWeekHint = localStorage.getItem('hasSeenWeekHint');
+    if (!hasSeenWeekHint) {
+      setTimeout(() => {
+        setShowWeekHint(true);
+        
+        window.TelegramAnalytics?.track('week_hint_shown', {
+          trigger: 'after_fab_hint'
+        });
+        console.log('📊 Analytics: week_hint_shown');
+      }, 300);
+    }
+  };
+
+  const handleWeekHintClose = () => {
+    setShowWeekHint(false);
+    localStorage.setItem('hasSeenWeekHint', 'true');
+    
+    window.TelegramAnalytics?.track('week_hint_closed', {});
+    console.log('📊 Analytics: week_hint_closed');
   };
 
   useEffect(() => {
@@ -812,6 +835,7 @@ useEffect(() => {
         </div>
 
         <FabHint show={showFabHint} onClose={handleFabHintClose} />
+        <WeekHint show={showWeekHint} onClose={handleWeekHintClose} />
 
         <SwipeHint 
           show={showSwipeHint} 

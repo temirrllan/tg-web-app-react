@@ -1,4 +1,4 @@
-/* src/components/hints/WeekNavigationHint.css - С ПРАВИЛЬНЫМ ВЫРЕЗОМ */
+/* src/components/hints/WeekHint.css */
 
 .week-hint-overlay-wrapper {
   position: fixed;
@@ -9,16 +9,7 @@
   z-index: 9998;
   animation: fadeIn 0.4s ease-out;
   pointer-events: auto;
-}
-
-/* SVG маска для выреза */
-.week-hint-svg-mask {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
+  background: rgba(0, 0, 0, 0.65);
 }
 
 .week-hint-container {
@@ -30,27 +21,26 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  padding-top: 320px;
+  padding-top: 120px;
   pointer-events: none;
 }
 
-/* Белый балун с хвостиком */
+/* Белый балун с речевым хвостиком */
 .week-hint-bubble {
   position: relative;
   margin: 0 16px;
   background: #FFFFFF;
   border-radius: 20px;
-  padding: 20px;
+  padding: 16px 20px;
   box-shadow: 
     0 8px 24px rgba(0, 0, 0, 0.15),
     0 2px 8px rgba(0, 0, 0, 0.08);
   animation: bubbleAppear 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
   pointer-events: auto;
-  z-index: 10000;
 }
 
-/* Хвостик направлен вверх к WeekNavigation */
-.week-hint-bubble::before {
+/* Хвостик речевого пузыря (указывает вверх на неделю) */
+.week-hint-bubble::after {
   content: '';
   position: absolute;
   top: -12px;
@@ -73,26 +63,43 @@
   text-align: center;
 }
 
-/* Анимированная стрелка указывающая на WeekNavigation */
-.week-hint-arrow-container {
+/* Подсветка области week navigation */
+.week-hint-highlight {
   position: fixed;
-  top: 280px;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  pointer-events: none;
+  z-index: 9997;
+  background: rgba(167, 217, 108, 0.1);
+  border-bottom: 2px solid #A7D96C;
+  animation: highlightPulse 2s ease-in-out infinite;
+}
+
+/* Анимация свайпа (стрелки влево-вправо) */
+.week-hint-swipe-indicator {
+  position: fixed;
+  top: 40px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   pointer-events: none;
-  animation: arrowBounce 1.5s ease-in-out infinite;
+  z-index: 9999;
+  animation: swipeAnimation 2s ease-in-out infinite;
 }
 
 .week-hint-arrow {
-  font-size: 48px;
+  font-size: 24px;
   color: #A7D96C;
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+  font-weight: bold;
 }
 
 /* Кнопка "Понятно" */
 .week-hint-button {
-  margin-top: 16px;
+  margin-top: 12px;
   width: 100%;
   background: #A7D96C;
   color: #1D1D1F;
@@ -141,43 +148,36 @@
   }
 }
 
-@keyframes arrowBounce {
+@keyframes highlightPulse {
   0%, 100% {
-    transform: translateX(-50%) translateY(0);
+    background: rgba(167, 217, 108, 0.1);
   }
   50% {
-    transform: translateX(-50%) translateY(-10px);
+    background: rgba(167, 217, 108, 0.2);
   }
 }
 
-@keyframes pulseRing {
-  0% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
+@keyframes swipeAnimation {
+  0%, 100% {
+    transform: translateX(-50%);
   }
-  50% {
-    transform: translate(-50%, -50%) scale(1.5);
-    opacity: 0.5;
+  25% {
+    transform: translateX(-60%);
   }
-  100% {
-    transform: translate(-50%, -50%) scale(2);
-    opacity: 0;
+  75% {
+    transform: translateX(-40%);
   }
 }
 
 /* ==================== АДАПТИВНОСТЬ ==================== */
-
 @media (max-width: 430px) {
   .week-hint-container {
-    padding-top: 300px;
-  }
-  
-  .week-hint-arrow-container {
-    top: 245px;
+    padding-top: 110px;
   }
   
   .week-hint-bubble {
-    padding: 18px;
+    margin: 0 12px;
+    padding: 16px 18px;
   }
   
   .week-hint-text {
@@ -191,16 +191,8 @@
 }
 
 @media (max-width: 375px) {
-  .week-hint-container {
-    padding-top: 290px;
-  }
-  
-  .week-hint-arrow-container {
-    top: 235px;
-  }
-  
   .week-hint-bubble {
-    padding: 16px;
+    padding: 14px 16px;
   }
   
   .week-hint-text {
@@ -211,13 +203,13 @@
     padding: 12px 16px;
     font-size: 14px;
   }
-  
-  .week-hint-arrow {
-    font-size: 40px;
-  }
 }
 
 /* ==================== ТЕМНАЯ ТЕМА ==================== */
+.dark-theme .week-hint-overlay-wrapper {
+  background: rgba(0, 0, 0, 0.75);
+}
+
 .dark-theme .week-hint-bubble {
   background: #2C2C2E;
   box-shadow: 
@@ -225,7 +217,7 @@
     0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.dark-theme .week-hint-bubble::before {
+.dark-theme .week-hint-bubble::after {
   border-bottom-color: #2C2C2E;
   filter: drop-shadow(0 -4px 4px rgba(0, 0, 0, 0.2));
 }
@@ -243,7 +235,11 @@
   background: #95C55D;
 }
 
+.dark-theme .week-hint-highlight {
+  background: rgba(167, 217, 108, 0.15);
+  border-bottom-color: #A7D96C;
+}
+
 .dark-theme .week-hint-arrow {
   color: #A7D96C;
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
 }
