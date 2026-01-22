@@ -127,31 +127,7 @@ useEffect(() => {
       return () => clearTimeout(timer);
     }
   }, [shouldShowFabHint, loading, dateLoading, dateDataCache, selectedDate]);
-// 🆕 useEffect для показа WeekHint после FabHint для новых пользователей
-  useEffect(() => {
-    // Проверяем: если FabHint был показан для нового пользователя, ждем его закрытия
-    if (shouldShowFabHint && !loading && !dateLoading) {
-      const hasSeenFabHint = localStorage.getItem('hasSeenFabHint');
-      const hasSeenWeekHint = localStorage.getItem('hasSeenWeekHint');
-      
-      // Если уже видел FabHint, но еще не видел WeekHint
-      if (hasSeenFabHint && !hasSeenWeekHint) {
-        console.log('🎯 New user has closed FabHint, showing WeekHint');
-        
-        const timer = setTimeout(() => {
-          setShowWeekHint(true);
-          
-          window.TelegramAnalytics?.track('week_hint_shown', {
-            is_new_user: true,
-            trigger: 'after_fab_hint_for_new_user'
-          });
-          console.log('📊 Analytics: week_hint_shown (new user)');
-        }, 500);
-        
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [shouldShowFabHint, loading, dateLoading, showFabHint]);
+
   const handleFabHintClose = () => {
     setShowFabHint(false);
     localStorage.setItem('hasSeenFabHint', 'true');
@@ -160,16 +136,14 @@ useEffect(() => {
       habits_count: dateDataCache[selectedDate]?.habits?.length || 0
     });
     console.log('📊 Analytics: fab_hint_closed');
-    
-    // 🆕 ВСЕГДА показываем WeekHint после FabHint для новых пользователей
+
     const hasSeenWeekHint = localStorage.getItem('hasSeenWeekHint');
-    if (!hasSeenWeekHint || shouldShowFabHint) {
+    if (!hasSeenWeekHint) {
       setTimeout(() => {
         setShowWeekHint(true);
         
         window.TelegramAnalytics?.track('week_hint_shown', {
-          trigger: 'after_fab_hint',
-          is_new_user: shouldShowFabHint
+          trigger: 'after_fab_hint'
         });
         console.log('📊 Analytics: week_hint_shown');
       }, 300);
