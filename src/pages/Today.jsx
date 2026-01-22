@@ -160,14 +160,16 @@ useEffect(() => {
       habits_count: dateDataCache[selectedDate]?.habits?.length || 0
     });
     console.log('📊 Analytics: fab_hint_closed');
-
+    
+    // 🆕 ВСЕГДА показываем WeekHint после FabHint для новых пользователей
     const hasSeenWeekHint = localStorage.getItem('hasSeenWeekHint');
-    if (!hasSeenWeekHint) {
+    if (!hasSeenWeekHint || shouldShowFabHint) {
       setTimeout(() => {
         setShowWeekHint(true);
         
         window.TelegramAnalytics?.track('week_hint_shown', {
-          trigger: 'after_fab_hint'
+          trigger: 'after_fab_hint',
+          is_new_user: shouldShowFabHint
         });
         console.log('📊 Analytics: week_hint_shown');
       }, 300);
