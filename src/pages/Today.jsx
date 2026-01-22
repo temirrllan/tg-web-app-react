@@ -129,46 +129,10 @@ useEffect(() => {
   }, [shouldShowFabHint, loading, dateLoading, dateDataCache, selectedDate]);
 
 
-// 🆕 useEffect для показа WeekHint ПОСЛЕ закрытия FabHint
-  useEffect(() => {
-    const hasSeenFabHint = localStorage.getItem('hasSeenFabHint');
-    const hasSeenWeekHint = localStorage.getItem('hasSeenWeekHint');
-    
-    console.log('🔍 WeekHint check:', {
-      hasSeenFabHint,
-      hasSeenWeekHint,
-      showFabHint,
-      showWeekHint,
-      loading,
-      dateLoading,
-      shouldShowFabHint
-    });
-    
-    if (hasSeenFabHint && !hasSeenWeekHint && !showFabHint && !loading && !dateLoading) {
-      console.log('✅ ALL CONDITIONS MET - Showing WeekHint');
-      
-      const timer = setTimeout(() => {
-        console.log('⏰ Timer fired - setting showWeekHint to true');
-        setShowWeekHint(true);
-        
-        window.TelegramAnalytics?.track('week_hint_shown', {
-          is_new_user: shouldShowFabHint,
-          trigger: 'after_fab_hint_closed'
-        });
-        console.log('📊 Analytics: week_hint_shown (after FabHint closed)');
-      }, 400);
-      
-      return () => {
-        console.log('🧹 Cleaning up WeekHint timer');
-        clearTimeout(timer);
-      };
-    } else {
-      console.log('❌ Conditions NOT met for WeekHint');
-    }
-  }, [showFabHint, loading, dateLoading, shouldShowFabHint, showWeekHint]);
 
 
 
+  
   const handleFabHintClose = () => {
     setShowFabHint(false);
     localStorage.setItem('hasSeenFabHint', 'true');
