@@ -794,6 +794,21 @@ const FriendCard = ({ member, onPunch, onRemove, removeText, punchText }) => {
     setSwipeOffset(0);
     setIsSwiping(false);
   };
+// Определяем статус и текст
+  const getStatusInfo = () => {
+  switch (member.today_status) {
+    case 'completed':
+      return { text: t('friendStatus.doneToday'), className: 'friend-card__status--done' };
+    case 'failed':
+      return { text: t('friendStatus.failedToday'), className: 'friend-card__status--failed' };
+    case 'skipped':
+      return { text: t('friendStatus.skipped'), className: 'friend-card__status--skipped' };
+    default:
+      return { text: t('friendStatus.undoneYet'), className: 'friend-card__status--undone' };
+  }
+};
+
+  const statusInfo = getStatusInfo();
 
   return (
     <div className="friend-card-container">
@@ -818,9 +833,14 @@ const FriendCard = ({ member, onPunch, onRemove, removeText, punchText }) => {
           alt={member.first_name}
           className="friend-card__avatar"
         />
-        <span className="friend-card__name">
-          {member.first_name} {member.last_name}
-        </span>
+        <div className="friend-card__info">
+          <span className="friend-card__name">
+            {member.first_name} {member.last_name}
+          </span>
+          <span className={`friend-card__status ${statusInfo.className}`}>
+            {statusInfo.text}
+          </span>
+        </div>
       </div>
       
       {swipeOffset < -20 && (

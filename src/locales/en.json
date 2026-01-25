@@ -88,6 +88,12 @@
     "evening": "Evening",
     "night": "Night"
   } ,
+  "friendStatus": {
+  "doneToday": "Done Today",
+  "undoneYet": "Undone Yet",
+  "failedToday": "Failed Today",
+  "skipped": "Skipped"
+},
   "createHabit": {
     "dayPeriod": {
       "title": "Day Period",

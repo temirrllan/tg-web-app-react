@@ -393,15 +393,57 @@
   border-radius: 50%;
   object-fit: cover;
   background: var(--border-color, #E5E5EA);
+  flex-shrink: 0;
 }
-
-.friend-card__name {
+.friend-card__info {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.friend-card__name {
   font-size: 17px;
   font-weight: 500;
   color: var(--text-primary, #000);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.friend-card__status {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
+.friend-card__status--done {
+  color: #34C759;
+}
+
+.friend-card__status--undone {
+  color: #8E8E93;
+}
+
+.friend-card__status--failed {
+  color: #FF3B30;
+}
+
+.friend-card__status--skipped {
+  color: #FF9500;
+}
+
+/* Dark theme для friend card */
+.dark-theme .friend-card {
+  background: #2C2C2E;
+}
+
+.dark-theme .friend-card__name {
+  color: #FFFFFF;
+}
+
+.dark-theme .friend-card__status--undone {
+  color: #98989D;
+}
 .friend-action {
   position: absolute;
   top: 0;
