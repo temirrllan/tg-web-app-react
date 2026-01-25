@@ -14,16 +14,18 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
 
   const [showRepeatDropdown, setShowRepeatDropdown] = useState(false);
   const [showTimeDropdown, setShowTimeDropdown] = useState(false);
+  const [showDayPeriodDropdown, setShowDayPeriodDropdown] = useState(false);
   const [repeatActive, setRepeatActive] = useState(false);
   const [timeActive, setTimeActive] = useState(false);
+  const [dayPeriodActive, setDayPeriodActive] = useState(false);
 
   const repeatRef = useRef(null);
   const timeRef = useRef(null);
+  const dayPeriodRef = useRef(null);
   useNavigation(onClose);
 
   const [showDaysAnimation, setShowDaysAnimation] = useState(false);
 
-  // 🆕 Счетчики символов
   const [titleLength, setTitleLength] = useState(0);
   const [goalLength, setGoalLength] = useState(0);
 
@@ -35,14 +37,22 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
     schedule_days: [1, 2, 3, 4, 5, 6, 7],
     reminder_time: '',
     reminder_enabled: true,
-    is_bad_habit: false
+    is_bad_habit: false,
+    day_period: 'morning' // 🆕 Значение по умолчанию
   });
 
   const [repeatMode, setRepeatMode] = useState('everyday');
 
-  // 🆕 Константы лимитов
   const TITLE_MAX_LENGTH = 25;
   const GOAL_MAX_LENGTH = 35;
+
+  // 🆕 Day Period опции
+  const DAY_PERIODS = [
+    { id: 'morning', icon: '🌅', label: t('createHabit.dayPeriod.morning') || 'Morning' },
+    { id: 'afternoon', icon: '☀️', label: t('createHabit.dayPeriod.afternoon') || 'Afternoon' },
+    { id: 'evening', icon: '🌆', label: t('createHabit.dayPeriod.evening') || 'Evening' },
+    { id: 'night', icon: '🌙', label: t('createHabit.dayPeriod.night') || 'Night' }
+  ];
 
   useEffect(() => {
     loadCategories();
@@ -55,6 +65,9 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
       }
       if (timeRef.current && !timeRef.current.contains(event.target)) {
         setShowTimeDropdown(false);
+      }
+      if (dayPeriodRef.current && !dayPeriodRef.current.contains(event.target)) {
+        setShowDayPeriodDropdown(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -86,16 +99,13 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
     }
   };
 
-  // 🆕 Обновленный handleInputChange с проверкой длины
   const handleInputChange = (field, value) => {
     if (field === 'title') {
-      // Ограничиваем длину title до 15 символов
       if (value.length <= TITLE_MAX_LENGTH) {
         setFormData(prev => ({ ...prev, [field]: value }));
         setTitleLength(value.length);
       }
     } else if (field === 'goal') {
-      // Ограничиваем длину goal до 35 символов
       if (value.length <= GOAL_MAX_LENGTH) {
         setFormData(prev => ({ ...prev, [field]: value }));
         setGoalLength(value.length);
@@ -153,6 +163,13 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
     setShowTimeDropdown(false);
   };
 
+  // 🆕 Обработчик выбора Day Period
+  const handleDayPeriodSelect = (period) => {
+    setFormData(prev => ({ ...prev, day_period: period }));
+    setDayPeriodActive(true);
+    setShowDayPeriodDropdown(false);
+  };
+
   const formatTime12h = (time) => {
     if (!time) return t('createHabit.default');
     const [hours, minutes] = time.split(':');
@@ -176,6 +193,13 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
   const getTimeLabel = () => {
     if (!timeActive || !formData.reminder_time) return t('createHabit.default');
     return formatTime12h(formData.reminder_time);
+  };
+
+  // 🆕 Получить label для Day Period
+  const getDayPeriodLabel = () => {
+    if (!dayPeriodActive && !formData.day_period) return t('createHabit.default');
+    const selected = DAY_PERIODS.find(p => p.id === formData.day_period);
+    return selected ? `${selected.icon} ${selected.label}` : t('createHabit.default');
   };
 
   const handleSubmit = async (e) => {
@@ -219,7 +243,7 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
     <div className="create-habit">
       <form className="create-habit__form" onSubmit={handleSubmit}>
         <div className="create-habit__content">
-          {/* Habit name with character counter */}
+          {/* Habit name */}
           <div className="form-section">
             <label className="form-label">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -247,7 +271,7 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
             </p>
           </div>
 
-          {/* Goal with character counter */}
+          {/* Goal */}
           <div className="form-section">
             <label className="form-label">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -304,6 +328,33 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
               )}
             </div>
           )}
+
+          {/* 🆕 DAY PERIOD - НОВАЯ СЕКЦИЯ */}
+          <div className="form-section-row" ref={dayPeriodRef}>
+            <span className="form-label-title">{t('createHabit.dayPeriod.title') || 'Day Period'}</span>
+            <button
+              type="button"
+              className={`dropdown-button ${dayPeriodActive ? 'active' : ''}`}
+              onClick={(e) => { e.preventDefault(); setShowDayPeriodDropdown(!showDayPeriodDropdown); }}
+            >
+              {getDayPeriodLabel()}
+            </button>
+
+            {showDayPeriodDropdown && (
+              <div className="dropdown-menu">
+                {DAY_PERIODS.map(period => (
+                  <button 
+                    key={period.id}
+                    type="button" 
+                    className="dropdown-item" 
+                    onClick={(e) => { e.preventDefault(); handleDayPeriodSelect(period.id); }}
+                  >
+                    {period.icon} {period.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Schedule (only for good habits) */}
           {!formData.is_bad_habit && (
@@ -393,7 +444,6 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
           )}
 
           {/* Bad habit toggle */}
-          {/* Bad habit toggle */}
           <div className="form-section">
             <div className="bad-habit-toggle">
               <div className="bad-habit-label">
@@ -428,4 +478,3 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
 };
 
 export default CreateHabitForm;
-

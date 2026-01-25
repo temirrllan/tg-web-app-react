@@ -440,6 +440,72 @@
   animation-delay: 0.2s;
 }
 
+
+
+/* src/pages/Today.css - ДОБАВИТЬ В КОНЕЦ */
+
+/* ==================== DAY PERIOD SECTIONS ==================== */
+
+.day-period-section {
+  margin-bottom: 24px;
+}
+
+.day-period-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+
+.day-period-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.day-period-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1D1D1F;
+  margin: 0;
+  flex: 1;
+  transition: color 0.3s ease;
+}
+
+.day-period-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: #8E8E93;
+  background: #F2F2F7;
+  padding: 4px 12px;
+  border-radius: 12px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.day-period-habits {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Темная тема для day period */
+.dark-theme .day-period-title {
+  color: #FFFFFF;
+}
+
+.dark-theme .day-period-count {
+  background: #2C2C2E;
+  color: #8E8E93;
+}
+
+
+
+
+
+
+
+
+
 @keyframes shimmer {
   0% {
     background-position: -200% 0;

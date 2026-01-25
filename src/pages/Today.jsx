@@ -65,6 +65,41 @@ const Today = ({ shouldShowFabHint = false }) => {
   const [showFabHint, setShowFabHint] = useState(false);
     const [showWeekHint, setShowWeekHint] = useState(false); // 🆕 ДОБАВИТЬ ЭТУ СТРОКУ
 
+
+
+
+    const groupHabitsByDayPeriod = (habits) => {
+  const periods = {
+    morning: [],
+    afternoon: [],
+    evening: [],
+    night: []
+  };
+  
+  habits.forEach(habit => {
+    const period = habit.day_period || 'morning';
+    if (periods[period]) {
+      periods[period].push(habit);
+    }
+  });
+  
+  return periods;
+};
+
+const getDayPeriodInfo = (period) => {
+  const info = {
+    morning: { icon: '🌅', label: t('dayPeriod.morning') || 'Morning' },
+    afternoon: { icon: '☀️', label: t('dayPeriod.afternoon') || 'Afternoon' },
+    evening: { icon: '🌆', label: t('dayPeriod.evening') || 'Evening' },
+    night: { icon: '🌙', label: t('dayPeriod.night') || 'Night' }
+  };
+  
+  return info[period] || info.morning;
+};
+
+
+
+
 // 🆕 Очистка кэша при монтировании для гарантии свежих данных
 useEffect(() => {
   console.log('🧹 Clearing date cache on mount to ensure fresh data');
@@ -782,6 +817,10 @@ useEffect(() => {
   const displayStats = currentDateData.stats;
   const showReadOnlyNotice = !isEditableDate && isCurrentWeekDate(selectedDate);
 
+
+
+
+  
   return (
     <>
       <Layout>
@@ -825,7 +864,30 @@ useEffect(() => {
             <EmptyState onCreateClick={() => handleFabClick()} />
           ) : (
             <div className="today__habits">
-              {displayHabits.map((habit) => (
+              {/* 🆕 ГРУППИРОВКА ПО DAY PERIOD */}
+    {(() => {
+      const groupedHabits = groupHabitsByDayPeriod(displayHabits);
+      const periods = ['morning', 'afternoon', 'evening', 'night'];
+      
+      return periods.map(period => {
+        const habitsInPeriod = groupedHabits[period];
+        
+        if (habitsInPeriod.length === 0) return null;
+        
+        const periodInfo = getDayPeriodInfo(period);
+        
+        return (
+          <div key={period} className="day-period-section">
+            <div className="day-period-header">
+              <span className="day-period-icon">{periodInfo.icon}</span>
+              <h3 className="day-period-title">{periodInfo.label}</h3>
+              <span className="day-period-count">
+                {habitsInPeriod.filter(h => h.today_status === 'completed').length}/{habitsInPeriod.length}
+              </span>
+            </div>
+            
+            <div className="day-period-habits">
+              {habitsInPeriod.map((habit) => (
                 <HabitCard
                   key={`${habit.id}-${selectedDate}-${habit.today_status}`}
                   habit={habit}
@@ -835,6 +897,11 @@ useEffect(() => {
                   readOnly={!isEditableDate}
                 />
               ))}
+            </div>
+          </div>
+        );
+      });
+    })()}
             </div>
           )}
         </div>
