@@ -764,7 +764,7 @@ const FriendCard = ({ member, onPunch, onRemove, removeText, punchText }) => {
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [startX, setStartX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
-  
+  const { t } = useTranslation();
   const SWIPE_THRESHOLD = 60;
   const MAX_SWIPE = 100;
 
