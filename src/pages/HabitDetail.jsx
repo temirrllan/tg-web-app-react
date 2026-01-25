@@ -764,40 +764,46 @@ const FriendCard = ({ member, onPunch, onRemove, removeText, punchText }) => {
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [startX, setStartX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
-  const { t } = useTranslation();
+  
   const SWIPE_THRESHOLD = 60;
   const MAX_SWIPE = 100;
+
+  // 🔥 ПРОВЕРКА: можно ли панчить этого друга
   const canPunch = member.today_status !== 'completed';
+  
+  console.log(`👤 Friend ${member.first_name}: status=${member.today_status}, canPunch=${canPunch}`);
+
   const handleTouchStart = (e) => {
-    if (!canPunch) {
-      console.log(`⛔ Cannot punch ${member.first_name} - already completed`);
-      return;
-    }
     setStartX(e.touches[0].clientX);
     setIsSwiping(true);
   };
 
   const handleTouchMove = (e) => {
-      if (!isSwiping || !canPunch) return;
+    if (!isSwiping) return;
     
     const currentX = e.touches[0].clientX;
     const diff = currentX - startX;
+    
+    // Если свайпаем влево (панч) и нельзя панчить - блокируем
+    if (diff < 0 && !canPunch) {
+      console.log(`⛔ Cannot swipe left for ${member.first_name} - already completed`);
+      return;
+    }
+    
+    // Для удаления (вправо) - всегда разрешаем
     const limitedDiff = Math.max(-MAX_SWIPE, Math.min(MAX_SWIPE, diff));
     setSwipeOffset(limitedDiff);
   };
 
   const handleTouchEnd = () => {
-    if (!canPunch) {
-      setSwipeOffset(0);
-      setIsSwiping(false);
-      return;
-    }
-
-
     if (Math.abs(swipeOffset) >= SWIPE_THRESHOLD) {
       if (swipeOffset < 0) {
-        onPunch();
+        // Свайп влево = панч (только если можно)
+        if (canPunch) {
+          onPunch();
+        }
       } else {
+        // Свайп вправо = удаление (всегда доступно)
         onRemove();
       }
     }
@@ -806,33 +812,34 @@ const FriendCard = ({ member, onPunch, onRemove, removeText, punchText }) => {
     setIsSwiping(false);
   };
 
+  // Mouse handlers для десктопа
   const handleMouseDown = (e) => {
-    if (!canPunch) return;
-    
     e.preventDefault();
     setStartX(e.clientX);
     setIsSwiping(true);
   };
 
   const handleMouseMove = (e) => {
-    if (!isSwiping || !canPunch) return;
+    if (!isSwiping) return;
     
     const currentX = e.clientX;
     const diff = currentX - startX;
+    
+    // Блокируем свайп влево только если нельзя панчить
+    if (diff < 0 && !canPunch) {
+      return;
+    }
+    
     const limitedDiff = Math.max(-MAX_SWIPE, Math.min(MAX_SWIPE, diff));
     setSwipeOffset(limitedDiff);
   };
 
   const handleMouseUp = () => {
-    if (!canPunch) {
-      setSwipeOffset(0);
-      setIsSwiping(false);
-      return;
-    }
-    
     if (Math.abs(swipeOffset) >= SWIPE_THRESHOLD) {
       if (swipeOffset < 0) {
-        onPunch();
+        if (canPunch) {
+          onPunch();
+        }
       } else {
         onRemove();
       }
@@ -849,8 +856,7 @@ const FriendCard = ({ member, onPunch, onRemove, removeText, punchText }) => {
     }
   };
 
-
-// Определяем статус и текст
+  // Определяем статус и текст
   const getStatusInfo = () => {
     switch (member.today_status) {
       case 'completed':
@@ -868,7 +874,7 @@ const FriendCard = ({ member, onPunch, onRemove, removeText, punchText }) => {
 
   return (
     <div className="friend-card-container">
-      {/* Кнопка удаления (свайп вправо) - всегда доступна */}
+      {/* Кнопка удаления (свайп вправо) - ВСЕГДА доступна */}
       {swipeOffset > 20 && (
         <div className="friend-action friend-action--remove">
           <span>{removeText}</span>
@@ -876,12 +882,11 @@ const FriendCard = ({ member, onPunch, onRemove, removeText, punchText }) => {
       )}
       
       <div 
-        className={`friend-card ${!canPunch ? 'friend-card--disabled' : ''}`}
+        className="friend-card"
         style={{
           transform: `translateX(${swipeOffset}px)`,
           transition: isSwiping ? 'none' : 'transform 0.3s ease-out',
-          cursor: canPunch ? 'grab' : 'default',
-          opacity: canPunch ? 1 : 0.7
+          cursor: 'grab'
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
