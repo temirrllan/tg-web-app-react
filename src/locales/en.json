@@ -82,6 +82,12 @@
     "hobby": "Hobby",
     "mindfulness": "Mindfulness"
   },
+  "dayPeriod": {
+    "morning": "Morning",
+    "afternoon": "Afternoon",
+    "evening": "Evening",
+    "night": "Night"
+  } ,
   "createHabit": {
     "dayPeriod": {
       "title": "Day Period",

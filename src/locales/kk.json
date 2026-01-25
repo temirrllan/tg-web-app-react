@@ -82,6 +82,12 @@
     "hobby": "Хобби",
     "mindfulness": "Санасыздық"
   },
+  "dayPeriod": {
+    "morning": "Таң",
+    "afternoon": "Күндіз",
+    "evening": "Кеш",
+    "night": "Түн"
+  },
   "createHabit": {
     "dayPeriod": {
       "title": "Күннің мезгілі",
