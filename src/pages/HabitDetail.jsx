@@ -767,14 +767,18 @@ const FriendCard = ({ member, onPunch, onRemove, removeText, punchText }) => {
   const { t } = useTranslation();
   const SWIPE_THRESHOLD = 60;
   const MAX_SWIPE = 100;
-
+  const canPunch = member.today_status !== 'completed';
   const handleTouchStart = (e) => {
+    if (!canPunch) {
+      console.log(`⛔ Cannot punch ${member.first_name} - already completed`);
+      return;
+    }
     setStartX(e.touches[0].clientX);
     setIsSwiping(true);
   };
 
   const handleTouchMove = (e) => {
-    if (!isSwiping) return;
+      if (!isSwiping || !canPunch) return;
     
     const currentX = e.touches[0].clientX;
     const diff = currentX - startX;
@@ -783,6 +787,13 @@ const FriendCard = ({ member, onPunch, onRemove, removeText, punchText }) => {
   };
 
   const handleTouchEnd = () => {
+    if (!canPunch) {
+      setSwipeOffset(0);
+      setIsSwiping(false);
+      return;
+    }
+
+
     if (Math.abs(swipeOffset) >= SWIPE_THRESHOLD) {
       if (swipeOffset < 0) {
         onPunch();
@@ -794,24 +805,70 @@ const FriendCard = ({ member, onPunch, onRemove, removeText, punchText }) => {
     setSwipeOffset(0);
     setIsSwiping(false);
   };
+
+  const handleMouseDown = (e) => {
+    if (!canPunch) return;
+    
+    e.preventDefault();
+    setStartX(e.clientX);
+    setIsSwiping(true);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isSwiping || !canPunch) return;
+    
+    const currentX = e.clientX;
+    const diff = currentX - startX;
+    const limitedDiff = Math.max(-MAX_SWIPE, Math.min(MAX_SWIPE, diff));
+    setSwipeOffset(limitedDiff);
+  };
+
+  const handleMouseUp = () => {
+    if (!canPunch) {
+      setSwipeOffset(0);
+      setIsSwiping(false);
+      return;
+    }
+    
+    if (Math.abs(swipeOffset) >= SWIPE_THRESHOLD) {
+      if (swipeOffset < 0) {
+        onPunch();
+      } else {
+        onRemove();
+      }
+    }
+    
+    setSwipeOffset(0);
+    setIsSwiping(false);
+  };
+
+  const handleMouseLeave = () => {
+    if (isSwiping) {
+      setSwipeOffset(0);
+      setIsSwiping(false);
+    }
+  };
+
+
 // Определяем статус и текст
   const getStatusInfo = () => {
-  switch (member.today_status) {
-    case 'completed':
-      return { text: t('friendStatus.doneToday'), className: 'friend-card__status--done' };
-    case 'failed':
-      return { text: t('friendStatus.failedToday'), className: 'friend-card__status--failed' };
-    case 'skipped':
-      return { text: t('friendStatus.skipped'), className: 'friend-card__status--skipped' };
-    default:
-      return { text: t('friendStatus.undoneYet'), className: 'friend-card__status--undone' };
-  }
-};
+    switch (member.today_status) {
+      case 'completed':
+        return { text: 'Done Today', className: 'friend-card__status--done' };
+      case 'failed':
+        return { text: 'Failed Today', className: 'friend-card__status--failed' };
+      case 'skipped':
+        return { text: 'Skipped', className: 'friend-card__status--skipped' };
+      default:
+        return { text: 'Undone Yet', className: 'friend-card__status--undone' };
+    }
+  };
 
   const statusInfo = getStatusInfo();
 
   return (
     <div className="friend-card-container">
+      {/* Кнопка удаления (свайп вправо) - всегда доступна */}
       {swipeOffset > 20 && (
         <div className="friend-action friend-action--remove">
           <span>{removeText}</span>
@@ -819,14 +876,20 @@ const FriendCard = ({ member, onPunch, onRemove, removeText, punchText }) => {
       )}
       
       <div 
-        className="friend-card"
+        className={`friend-card ${!canPunch ? 'friend-card--disabled' : ''}`}
         style={{
           transform: `translateX(${swipeOffset}px)`,
-          transition: isSwiping ? 'none' : 'transform 0.3s ease-out'
+          transition: isSwiping ? 'none' : 'transform 0.3s ease-out',
+          cursor: canPunch ? 'grab' : 'default',
+          opacity: canPunch ? 1 : 0.7
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
       >
         <img 
           src={member.photo_url || `https://ui-avatars.com/api/?name=${member.first_name}`} 
@@ -843,7 +906,8 @@ const FriendCard = ({ member, onPunch, onRemove, removeText, punchText }) => {
         </div>
       </div>
       
-      {swipeOffset < -20 && (
+      {/* Кнопка панча (свайп влево) - только если можно панчить */}
+      {swipeOffset < -20 && canPunch && (
         <div className="friend-action friend-action--punch">
           <span>{punchText}</span>
         </div>

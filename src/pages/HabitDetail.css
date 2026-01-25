@@ -444,6 +444,18 @@
 .dark-theme .friend-card__status--undone {
   color: #98989D;
 }
+
+/* Disabled friend card (уже выполнено) */
+.friend-card--disabled {
+  cursor: default !important;
+  opacity: 0.7;
+}
+
+.friend-card--disabled:active {
+  cursor: default !important;
+}
+
+
 .friend-action {
   position: absolute;
   top: 0;
