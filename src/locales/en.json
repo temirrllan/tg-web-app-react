@@ -83,6 +83,13 @@
     "mindfulness": "Mindfulness"
   },
   "createHabit": {
+    "dayPeriod": {
+      "title": "Day Period",
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "evening": "Evening",
+      "night": "Night"
+    },
     "habitName": "Habit name",
     "habitNamePlaceholder": "What is your goal?",
     "habitNameHint": "Being specific is better. Instead of \"Jog\", think \"Jog for 20 minutes\" or \"Jog for 2 miles\"",

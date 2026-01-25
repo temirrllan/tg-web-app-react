@@ -83,6 +83,13 @@
     "mindfulness": "Санасыздық"
   },
   "createHabit": {
+    "dayPeriod": {
+      "title": "Күннің мезгілі",
+      "morning": "Таң",
+      "afternoon": "Күндіз",
+      "evening": "Кеш",
+      "night": "Түн"
+    },
     "habitName": "Әдет атауы",
     "habitNamePlaceholder": "Сіздің мақсатыңыз қандай?",
     "habitNameHint": "Нақты жазған дұрыс. «Жүгіру» орнына «20 минут жүгіру» немесе «2 км жүгіру» деп көріңіз.",

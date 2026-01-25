@@ -65,6 +65,13 @@
     
   
   "createHabit": {
+    "dayPeriod": {
+      "title": "Время дня",
+      "morning": "Утро",
+      "afternoon": "День",
+      "evening": "Вечер",
+      "night": "Ночь"
+    },
     "habitName": "Название привычки",
     "habitNamePlaceholder": "Какова ваша цель?",
     "habitNameHint": "Конкретика лучше. Вместо «Бег», попробуйте «Бег 20 минут» или «Пробежать 2 км».",
