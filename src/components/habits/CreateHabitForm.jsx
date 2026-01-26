@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { habitService } from '../../services/habits';
-import { DAYS_OF_WEEK } from '../../utils/constants';
-import './CreateHabitForm.css';
-import { useNavigation } from '../../hooks/useNavigation';
-import { useTranslation } from '../../hooks/useTranslation';
+import React, { useState, useEffect, useRef } from "react";
+import { habitService } from "../../services/habits";
+import { DAYS_OF_WEEK } from "../../utils/constants";
+import "./CreateHabitForm.css";
+import { useNavigation } from "../../hooks/useNavigation";
+import { useTranslation } from "../../hooks/useTranslation";
 
 const CreateHabitForm = ({ onClose, onSuccess }) => {
   const { t } = useTranslation();
@@ -14,14 +14,16 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
 
   const [showRepeatDropdown, setShowRepeatDropdown] = useState(false);
   const [showTimeDropdown, setShowTimeDropdown] = useState(false);
-  const [showDayPeriodDropdown, setShowDayPeriodDropdown] = useState(false);
+  // ❌ УДАЛИТЬ: const [showDayPeriodDropdown, setShowDayPeriodDropdown] = useState(false);
+
   const [repeatActive, setRepeatActive] = useState(false);
   const [timeActive, setTimeActive] = useState(false);
-  const [dayPeriodActive, setDayPeriodActive] = useState(false);
+  // ❌ УДАЛИТЬ: const [dayPeriodActive, setDayPeriodActive] = useState(false);
 
   const repeatRef = useRef(null);
   const timeRef = useRef(null);
-  const dayPeriodRef = useRef(null);
+  // ❌ УДАЛИТЬ: const dayPeriodRef = useRef(null);
+
   useNavigation(onClose);
 
   const [showDaysAnimation, setShowDaysAnimation] = useState(false);
@@ -30,29 +32,27 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
   const [goalLength, setGoalLength] = useState(0);
 
   const [formData, setFormData] = useState({
-    title: '',
-    goal: '',
+    title: "",
+    goal: "",
     category_id: null,
-    schedule_type: 'daily',
+    schedule_type: "daily",
     schedule_days: [1, 2, 3, 4, 5, 6, 7],
-    reminder_time: '',
+    reminder_time: "",
     reminder_enabled: true,
     is_bad_habit: false,
-    day_period: 'morning' // 🆕 Значение по умолчанию
+    // ❌ УДАЛИТЬ: day_period: 'morning'
   });
 
-  const [repeatMode, setRepeatMode] = useState('everyday');
+  const [repeatMode, setRepeatMode] = useState("everyday");
 
   const TITLE_MAX_LENGTH = 25;
   const GOAL_MAX_LENGTH = 35;
 
-  // 🆕 Day Period опции
-  const DAY_PERIODS = [
-    { id: 'morning', icon: '🌅', label: t('createHabit.dayPeriod.morning') || 'Morning' },
-    { id: 'afternoon', icon: '☀️', label: t('createHabit.dayPeriod.afternoon') || 'Afternoon' },
-    { id: 'evening', icon: '🌆', label: t('createHabit.dayPeriod.evening') || 'Evening' },
-    { id: 'night', icon: '🌙', label: t('createHabit.dayPeriod.night') || 'Night' }
-  ];
+  // ❌ УДАЛИТЬ весь блок DAY_PERIODS
+  // const DAY_PERIODS = [
+  //   { id: 'morning', icon: '🌅', label: t('createHabit.dayPeriod.morning') || 'Morning' },
+  //   ...
+  // ];
 
   useEffect(() => {
     loadCategories();
@@ -66,16 +66,14 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
       if (timeRef.current && !timeRef.current.contains(event.target)) {
         setShowTimeDropdown(false);
       }
-      if (dayPeriodRef.current && !dayPeriodRef.current.contains(event.target)) {
-        setShowDayPeriodDropdown(false);
-      }
+      // ❌ УДАЛИТЬ проверку dayPeriodRef
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   useEffect(() => {
-    if (repeatActive && repeatMode !== 'everyday') {
+    if (repeatActive && repeatMode !== "everyday") {
       setTimeout(() => setShowDaysAnimation(true), 50);
     } else {
       setShowDaysAnimation(false);
@@ -88,30 +86,30 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
       const data = await habitService.getCategories();
       if (data.success && data.categories) {
         const uniqueCategories = Array.from(
-          new Map(data.categories.map(cat => [cat.id, cat])).values()
+          new Map(data.categories.map((cat) => [cat.id, cat])).values(),
         );
         setCategories(uniqueCategories);
       }
     } catch (error) {
-      console.error('Failed to load categories:', error);
+      console.error("Failed to load categories:", error);
     } finally {
       setCategoriesLoading(false);
     }
   };
 
   const handleInputChange = (field, value) => {
-    if (field === 'title') {
+    if (field === "title") {
       if (value.length <= TITLE_MAX_LENGTH) {
-        setFormData(prev => ({ ...prev, [field]: value }));
+        setFormData((prev) => ({ ...prev, [field]: value }));
         setTitleLength(value.length);
       }
-    } else if (field === 'goal') {
+    } else if (field === "goal") {
       if (value.length <= GOAL_MAX_LENGTH) {
-        setFormData(prev => ({ ...prev, [field]: value }));
+        setFormData((prev) => ({ ...prev, [field]: value }));
         setGoalLength(value.length);
       }
     } else {
-      setFormData(prev => ({ ...prev, [field]: value }));
+      setFormData((prev) => ({ ...prev, [field]: value }));
     }
   };
 
@@ -119,15 +117,15 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
     const days = [...formData.schedule_days];
     if (days.includes(dayId)) {
       if (days.length > 1) {
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          schedule_days: days.filter(d => d !== dayId)
+          schedule_days: days.filter((d) => d !== dayId),
         }));
       }
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        schedule_days: [...days, dayId].sort((a, b) => a - b)
+        schedule_days: [...days, dayId].sort((a, b) => a - b),
       }));
     }
   };
@@ -136,22 +134,41 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
     let newDays = [];
     setRepeatMode(type);
 
-    if (type === 'everyday') {
+    if (type === "everyday") {
       newDays = [1, 2, 3, 4, 5, 6, 7];
-      setFormData(prev => ({ ...prev, schedule_type: 'daily', schedule_days: newDays }));
-    } else if (type === 'weekdays') {
+      setFormData((prev) => ({
+        ...prev,
+        schedule_type: "daily",
+        schedule_days: newDays,
+      }));
+    } else if (type === "weekdays") {
       newDays = [1, 2, 3, 4, 5];
-      setFormData(prev => ({ ...prev, schedule_type: 'weekdays', schedule_days: newDays }));
-    } else if (type === 'weekend') {
+      setFormData((prev) => ({
+        ...prev,
+        schedule_type: "weekdays",
+        schedule_days: newDays,
+      }));
+    } else if (type === "weekend") {
       newDays = [6, 7];
-      setFormData(prev => ({ ...prev, schedule_type: 'weekend', schedule_days: newDays }));
-    } else if (type === 'custom') {
-      if (formData.schedule_days.length === 7 || formData.schedule_days.length === 0) {
+      setFormData((prev) => ({
+        ...prev,
+        schedule_type: "weekend",
+        schedule_days: newDays,
+      }));
+    } else if (type === "custom") {
+      if (
+        formData.schedule_days.length === 7 ||
+        formData.schedule_days.length === 0
+      ) {
         newDays = [1, 2, 3, 4, 5];
       } else {
         newDays = formData.schedule_days;
       }
-      setFormData(prev => ({ ...prev, schedule_type: 'custom', schedule_days: newDays }));
+      setFormData((prev) => ({
+        ...prev,
+        schedule_type: "custom",
+        schedule_days: newDays,
+      }));
     }
 
     setShowRepeatDropdown(false);
@@ -163,50 +180,45 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
     setShowTimeDropdown(false);
   };
 
-  // 🆕 Обработчик выбора Day Period
-  const handleDayPeriodSelect = (period) => {
-    setFormData(prev => ({ ...prev, day_period: period }));
-    setDayPeriodActive(true);
-    setShowDayPeriodDropdown(false);
-  };
+  // ❌ УДАЛИТЬ функцию handleDayPeriodSelect полностью
 
   const formatTime12h = (time) => {
-    if (!time) return t('createHabit.default');
-    const [hours, minutes] = time.split(':');
+    if (!time) return t("createHabit.default");
+    const [hours, minutes] = time.split(":");
     const hour = parseInt(hours);
-    const ampm = hour >= 12 ? t('createHabit.pm') : t('createHabit.am');
+    const ampm = hour >= 12 ? t("createHabit.pm") : t("createHabit.am");
     const displayHour = hour % 12 || 12;
     return `${displayHour}:${minutes} ${ampm}`;
   };
 
   const getRepeatLabel = () => {
-    if (!repeatActive) return t('createHabit.default');
+    if (!repeatActive) return t("createHabit.default");
     switch (repeatMode) {
-      case 'everyday': return t('createHabit.repeat.everyDay');
-      case 'weekdays': return t('createHabit.repeat.weekdays');
-      case 'weekend':  return t('createHabit.repeat.weekend');
-      case 'custom':   return t('createHabit.repeat.custom');
-      default:         return t('createHabit.repeat.everyDay');
+      case "everyday":
+        return t("createHabit.repeat.everyDay");
+      case "weekdays":
+        return t("createHabit.repeat.weekdays");
+      case "weekend":
+        return t("createHabit.repeat.weekend");
+      case "custom":
+        return t("createHabit.repeat.custom");
+      default:
+        return t("createHabit.repeat.everyDay");
     }
   };
 
   const getTimeLabel = () => {
-    if (!timeActive || !formData.reminder_time) return t('createHabit.default');
+    if (!timeActive || !formData.reminder_time) return t("createHabit.default");
     return formatTime12h(formData.reminder_time);
   };
 
-  // 🆕 Получить label для Day Period
-  const getDayPeriodLabel = () => {
-    if (!dayPeriodActive && !formData.day_period) return t('createHabit.default');
-    const selected = DAY_PERIODS.find(p => p.id === formData.day_period);
-    return selected ? `${selected.icon} ${selected.label}` : t('createHabit.default');
-  };
+  // ❌ УДАЛИТЬ функцию getDayPeriodLabel полностью
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (formData.schedule_days.length === 0) {
-      alert(t('createHabit.errors.selectAtLeastOneDay'));
+      alert(t("createHabit.errors.selectAtLeastOneDay"));
       return;
     }
 
@@ -214,31 +226,47 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
     try {
       const dataToSubmit = {
         ...formData,
-        reminder_time: formData.reminder_time ? `${formData.reminder_time}:00` : null
+        reminder_time: formData.reminder_time
+          ? `${formData.reminder_time}:00`
+          : null,
+        // ✅ day_period НЕ отправляем - сервер вычислит сам
       };
       await onSuccess(dataToSubmit);
       onClose();
     } catch (error) {
-      alert(`${t('createHabit.errors.createFailed')}: ${error.message || t('createHabit.errors.unknown')}`);
+      alert(
+        `${t("createHabit.errors.createFailed")}: ${error.message || t("createHabit.errors.unknown")}`,
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const isFormValid = () => {
-    return formData.title.trim() &&
-           formData.goal.trim() &&
-           (!formData.is_bad_habit ? formData.category_id : true) &&
-           formData.schedule_days.length > 0;
+    return (
+      formData.title.trim() &&
+      formData.goal.trim() &&
+      (!formData.is_bad_habit ? formData.category_id : true) &&
+      formData.schedule_days.length > 0
+    );
   };
-
   const shouldUseWhiteText = (category) => {
     const color = category.color;
     if (!color) return false;
-    const darkColors = ['#EF4444', '#10B981', '#3B82F6', '#8B5CF6', '#6366F1', '#F59E0B', '#14B8A6', '#84CC16', '#6B7280', '#A855F7'];
+    const darkColors = [
+      "#EF4444",
+      "#10B981",
+      "#3B82F6",
+      "#8B5CF6",
+      "#6366F1",
+      "#F59E0B",
+      "#14B8A6",
+      "#84CC16",
+      "#6B7280",
+      "#A855F7",
+    ];
     return darkColors.includes(color);
   };
-
   return (
     <div className="create-habit">
       <form className="create-habit__form" onSubmit={handleSubmit}>
@@ -246,78 +274,111 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
           {/* Habit name */}
           <div className="form-section">
             <label className="form-label">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span className="form-label-title">{t('createHabit.habitName')}</span>
-                <span style={{ 
-                  fontSize: '13px', 
-                  color: titleLength >= TITLE_MAX_LENGTH ? '#FF3B30' : '#8E8E93',
-                  fontWeight: titleLength >= TITLE_MAX_LENGTH ? '600' : '400'
-                }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <span className="form-label-title">
+                  {t("createHabit.habitName")}
+                </span>
+                <span
+                  style={{
+                    fontSize: "13px",
+                    color:
+                      titleLength >= TITLE_MAX_LENGTH ? "#FF3B30" : "#8E8E93",
+                    fontWeight: titleLength >= TITLE_MAX_LENGTH ? "600" : "400",
+                  }}
+                >
                   {titleLength}/{TITLE_MAX_LENGTH}
                 </span>
               </div>
               <input
                 type="text"
                 className="form-input"
-                placeholder={t('createHabit.habitNamePlaceholder')}
+                placeholder={t("createHabit.habitNamePlaceholder")}
                 value={formData.title}
-                onChange={(e) => handleInputChange('title', e.target.value)}
+                onChange={(e) => handleInputChange("title", e.target.value)}
                 maxLength={TITLE_MAX_LENGTH}
                 required
               />
             </label>
-            <p className="form-hint">
-              {t('createHabit.habitNameHint')}
-            </p>
+            <p className="form-hint">{t("createHabit.habitNameHint")}</p>
           </div>
-
           {/* Goal */}
           <div className="form-section">
             <label className="form-label">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span className="form-label-title">{t('createHabit.goal')}</span>
-                <span style={{ 
-                  fontSize: '13px', 
-                  color: goalLength >= GOAL_MAX_LENGTH ? '#FF3B30' : '#8E8E93',
-                  fontWeight: goalLength >= GOAL_MAX_LENGTH ? '600' : '400'
-                }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <span className="form-label-title">
+                  {t("createHabit.goal")}
+                </span>
+                <span
+                  style={{
+                    fontSize: "13px",
+                    color:
+                      goalLength >= GOAL_MAX_LENGTH ? "#FF3B30" : "#8E8E93",
+                    fontWeight: goalLength >= GOAL_MAX_LENGTH ? "600" : "400",
+                  }}
+                >
                   {goalLength}/{GOAL_MAX_LENGTH}
                 </span>
               </div>
               <input
                 className="form-textarea"
-                placeholder={t('createHabit.goalPlaceholder')}
+                placeholder={t("createHabit.goalPlaceholder")}
                 value={formData.goal}
-                onChange={(e) => handleInputChange('goal', e.target.value)}
+                onChange={(e) => handleInputChange("goal", e.target.value)}
                 maxLength={GOAL_MAX_LENGTH}
                 required
               />
             </label>
           </div>
-
           {/* Category */}
           {!formData.is_bad_habit && (
             <div className="form-section">
-              <span className="form-label-title">{t('createHabit.category')}</span>
+              <span className="form-label-title">
+                {t("createHabit.category")}
+              </span>
               {!categoriesLoading && categories.length > 0 && (
                 <div className="category-scroll-container">
                   <div className="category-scroll">
-                    {categories.map(category => {
+                    {categories.map((category) => {
                       const isSelected = formData.category_id === category.id;
-                      const useWhiteText = isSelected && shouldUseWhiteText(category);
+                      const useWhiteText =
+                        isSelected && shouldUseWhiteText(category);
                       return (
                         <button
                           key={category.id}
-                          className={`category-item ${isSelected ? 'category-item--selected' : ''} ${useWhiteText ? 'category-item--colored' : ''}`}
-                          onClick={(e) => { e.preventDefault(); handleInputChange('category_id', category.id); }}
+                          className={`category-item ${isSelected ? "category-item--selected" : ""} ${useWhiteText ? "category-item--colored" : ""}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleInputChange("category_id", category.id);
+                          }}
                           type="button"
                           style={{
-                            backgroundColor: isSelected ? category.color : category.color + '20',
-                            color: useWhiteText ? 'white' : undefined
+                            backgroundColor: isSelected
+                              ? category.color
+                              : category.color + "20",
+                            color: useWhiteText ? "white" : undefined,
                           }}
                         >
-                          <div className="category-item__icon">{category.icon}</div>
-                          <span className="category-item__name" style={{ color: useWhiteText ? 'white' : undefined }}>
+                          <div className="category-item__icon">
+                            {category.icon}
+                          </div>
+                          <span
+                            className="category-item__name"
+                            style={{
+                              color: useWhiteText ? "white" : undefined,
+                            }}
+                          >
                             {category.name}
                           </span>
                         </button>
@@ -328,76 +389,86 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
               )}
             </div>
           )}
-
-          {/* 🆕 DAY PERIOD - НОВАЯ СЕКЦИЯ */}
-          <div className="form-section-row" ref={dayPeriodRef}>
-            <span className="form-label-title">{t('createHabit.dayPeriod.title') || 'Day Period'}</span>
-            <button
-              type="button"
-              className={`dropdown-button ${dayPeriodActive ? 'active' : ''}`}
-              onClick={(e) => { e.preventDefault(); setShowDayPeriodDropdown(!showDayPeriodDropdown); }}
-            >
-              {getDayPeriodLabel()}
-            </button>
-
-            {showDayPeriodDropdown && (
-              <div className="dropdown-menu">
-                {DAY_PERIODS.map(period => (
-                  <button 
-                    key={period.id}
-                    type="button" 
-                    className="dropdown-item" 
-                    onClick={(e) => { e.preventDefault(); handleDayPeriodSelect(period.id); }}
-                  >
-                    {period.icon} {period.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
           {/* Schedule (only for good habits) */}
           {!formData.is_bad_habit && (
             <>
               {/* Repeat */}
               <div className="form-section-row" ref={repeatRef}>
-                <span className="form-label-title">{t('createHabit.repeat.title')}</span>
+                <span className="form-label-title">
+                  {t("createHabit.repeat.title")}
+                </span>
                 <button
                   type="button"
-                  className={`dropdown-button ${repeatActive ? 'active' : ''}`}
-                  onClick={(e) => { e.preventDefault(); setShowRepeatDropdown(!showRepeatDropdown); }}
+                  className={`dropdown-button ${repeatActive ? "active" : ""}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowRepeatDropdown(!showRepeatDropdown);
+                  }}
                 >
                   {getRepeatLabel()}
                 </button>
-
                 {showRepeatDropdown && (
                   <div className="dropdown-menu">
-                    <button type="button" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleRepeatSelect('everyday'); }}>
-                      {t('createHabit.repeat.everyDay')}
+                    <button
+                      type="button"
+                      className="dropdown-item"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleRepeatSelect("everyday");
+                      }}
+                    >
+                      {t("createHabit.repeat.everyDay")}
                     </button>
-                    <button type="button" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleRepeatSelect('weekdays'); }}>
-                      {t('createHabit.repeat.weekdays')}
+                    <button
+                      type="button"
+                      className="dropdown-item"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleRepeatSelect("weekdays");
+                      }}
+                    >
+                      {t("createHabit.repeat.weekdays")}
                     </button>
-                    <button type="button" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleRepeatSelect('weekend'); }}>
-                      {t('createHabit.repeat.weekend')}
+                    <button
+                      type="button"
+                      className="dropdown-item"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleRepeatSelect("weekend");
+                      }}
+                    >
+                      {t("createHabit.repeat.weekend")}
                     </button>
-                    <button type="button" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleRepeatSelect('custom'); }}>
-                      {t('createHabit.repeat.custom')}
+                    <button
+                      type="button"
+                      className="dropdown-item"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleRepeatSelect("custom");
+                      }}
+                    >
+                      {t("createHabit.repeat.custom")}
                     </button>
                   </div>
                 )}
               </div>
-
               {/* On which days? */}
-              {repeatActive && repeatMode !== 'everyday' && (
-                <div className={`form-section days-section ${showDaysAnimation ? 'days-section--visible' : ''}`}>
-                  <span className="form-label-title">{t('createHabit.onWhichDays')}</span>
+              {repeatActive && repeatMode !== "everyday" && (
+                <div
+                  className={`form-section days-section ${showDaysAnimation ? "days-section--visible" : ""}`}
+                >
+                  <span className="form-label-title">
+                    {t("createHabit.onWhichDays")}
+                  </span>
                   <div className="days-selector">
-                    {DAYS_OF_WEEK.map(day => (
+                    {DAYS_OF_WEEK.map((day) => (
                       <button
                         key={day.id}
-                        className={`day-button ${formData.schedule_days.includes(day.id) ? 'day-button--selected' : ''}`}
-                        onClick={(e) => { e.preventDefault(); handleDayToggle(day.id); }}
+                        className={`day-button ${formData.schedule_days.includes(day.id) ? "day-button--selected" : ""}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleDayToggle(day.id);
+                        }}
                         type="button"
                       >
                         {day.short}
@@ -406,14 +477,18 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
                   </div>
                 </div>
               )}
-
               {/* Reminder time */}
               <div className="form-section-rw2" ref={timeRef}>
-                <span className="form-label-title">{t('createHabit.pingMe')}</span>
+                <span className="form-label-title">
+                  {t("createHabit.pingMe")}
+                </span>
                 <button
                   type="button"
-                  className={`dropdown-button ${timeActive ? 'active' : ''}`}
-                  onClick={(e) => { e.preventDefault(); setShowTimeDropdown(!showTimeDropdown); }}
+                  className={`dropdown-button ${timeActive ? "active" : ""}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowTimeDropdown(!showTimeDropdown);
+                  }}
                 >
                   {getTimeLabel()}
                 </button>
@@ -421,19 +496,24 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
                 {showTimeDropdown && (
                   <div className="time-picker-dropdown">
                     <div className="time-picker-header">
-                      <span>{t('createHabit.selectTime')}</span>
+                      <span>{t("createHabit.selectTime")}</span>
                       <button
                         type="button"
                         className="time-picker-done"
-                        onClick={(e) => { e.preventDefault(); handleTimeSelect(); }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleTimeSelect();
+                        }}
                       >
-                        {t('common.done')}
+                        {t("common.done")}
                       </button>
                     </div>
                     <input
                       type="time"
                       value={formData.reminder_time}
-                      onChange={(e) => { handleInputChange('reminder_time', e.target.value); }}
+                      onChange={(e) => {
+                        handleInputChange("reminder_time", e.target.value);
+                      }}
                       className="time-picker-input"
                       autoFocus
                     />
@@ -447,12 +527,16 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
           <div className="form-section">
             <div className="bad-habit-toggle">
               <div className="bad-habit-label">
-                <span className="form-label-title">{t('createHabit.badHabit')} 😈</span>
+                <span className="form-label-title">
+                  {t("createHabit.badHabit")} 😈
+                </span>
               </div>
               <button
                 type="button"
-                className={`toggle-switch ${formData.is_bad_habit ? 'toggle-switch--active' : ''}`}
-                onClick={() => handleInputChange('is_bad_habit', !formData.is_bad_habit)}
+                className={`toggle-switch ${formData.is_bad_habit ? "toggle-switch--active" : ""}`}
+                onClick={() =>
+                  handleInputChange("is_bad_habit", !formData.is_bad_habit)
+                }
                 aria-label="Toggle bad habit"
               >
                 <div className="toggle-switch__slider" />
@@ -460,21 +544,23 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
             </div>
             <p className="form-hint">
               {formData.is_bad_habit
-                ? t('createHabit.badHabitHintOn')
-                : t('createHabit.badHabitHintOff')}
+                ? t("createHabit.badHabitHintOn")
+                : t("createHabit.badHabitHintOff")}
             </p>
           </div>
         </div>
-
         {/* Submit */}
         <div className="form-footer">
-          <button type="submit" className="submit-button" disabled={loading || !isFormValid()}>
-            {loading ? t('createHabit.creating') : t('createHabit.create')}
+          <button
+            type="submit"
+            className="submit-button"
+            disabled={loading || !isFormValid()}
+          >
+            {loading ? t("createHabit.creating") : t("createHabit.create")}
           </button>
         </div>
       </form>
     </div>
   );
 };
-
 export default CreateHabitForm;

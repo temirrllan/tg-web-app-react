@@ -14,14 +14,15 @@ const EditHabitForm = ({ habit, onClose, onSuccess }) => {
 
   const [showRepeatDropdown, setShowRepeatDropdown] = useState(false);
   const [showTimeDropdown, setShowTimeDropdown] = useState(false);
-  const [showDayPeriodDropdown, setShowDayPeriodDropdown] = useState(false);
+  // ❌ УДАЛИТЬ: const [showDayPeriodDropdown, setShowDayPeriodDropdown] = useState(false);
+  
   const [repeatActive, setRepeatActive] = useState(true);
   const [timeActive, setTimeActive] = useState(!!habit.reminder_time);
-  const [dayPeriodActive, setDayPeriodActive] = useState(true);
+  // ❌ УДАЛИТЬ: const [dayPeriodActive, setDayPeriodActive] = useState(true);
 
   const repeatRef = useRef(null);
   const timeRef = useRef(null);
-  const dayPeriodRef = useRef(null);
+  // ❌ УДАЛИТЬ: const dayPeriodRef = useRef(null);
 
   useNavigation(onClose);
 
@@ -33,13 +34,7 @@ const EditHabitForm = ({ habit, onClose, onSuccess }) => {
   const TITLE_MAX_LENGTH = 15;
   const GOAL_MAX_LENGTH = 35;
 
-  // 🆕 Day Period опции
-  const DAY_PERIODS = [
-    { id: 'morning', icon: '🌅', label: t('createHabit.dayPeriod.morning') || 'Morning' },
-    { id: 'afternoon', icon: '☀️', label: t('createHabit.dayPeriod.afternoon') || 'Afternoon' },
-    { id: 'evening', icon: '🌆', label: t('createHabit.dayPeriod.evening') || 'Evening' },
-    { id: 'night', icon: '🌙', label: t('createHabit.dayPeriod.night') || 'Night' }
-  ];
+  // ❌ УДАЛИТЬ DAY_PERIODS
 
   const [formData, setFormData] = useState({
     title: habit.title || '',
@@ -50,7 +45,7 @@ const EditHabitForm = ({ habit, onClose, onSuccess }) => {
     reminder_time: habit.reminder_time ? habit.reminder_time.substring(0, 5) : '',
     reminder_enabled: habit.reminder_enabled !== false,
     is_bad_habit: habit.is_bad_habit || false,
-    day_period: habit.day_period || 'morning' // 🆕 Добавили day_period
+    // ❌ УДАЛИТЬ: day_period: habit.day_period || 'morning'
   });
 
   useEffect(() => {
@@ -65,9 +60,7 @@ const EditHabitForm = ({ habit, onClose, onSuccess }) => {
       if (timeRef.current && !timeRef.current.contains(event.target)) {
         setShowTimeDropdown(false);
       }
-      if (dayPeriodRef.current && !dayPeriodRef.current.contains(event.target)) {
-        setShowDayPeriodDropdown(false);
-      }
+      // ❌ УДАЛИТЬ проверку dayPeriodRef
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -159,12 +152,7 @@ const EditHabitForm = ({ habit, onClose, onSuccess }) => {
     setShowTimeDropdown(false);
   };
 
-  // 🆕 Обработчик выбора Day Period
-  const handleDayPeriodSelect = (period) => {
-    setFormData(prev => ({ ...prev, day_period: period }));
-    setDayPeriodActive(true);
-    setShowDayPeriodDropdown(false);
-  };
+  // ❌ УДАЛИТЬ handleDayPeriodSelect
 
   const getRepeatLabel = () => {
     const days = formData.schedule_days;
@@ -183,11 +171,7 @@ const EditHabitForm = ({ habit, onClose, onSuccess }) => {
     return `${displayHour}:${minutes} ${ampm}`;
   };
 
-  // 🆕 Получить label для Day Period
-  const getDayPeriodLabel = () => {
-    const selected = DAY_PERIODS.find(p => p.id === formData.day_period);
-    return selected ? `${selected.icon} ${selected.label}` : t('createHabit.default');
-  };
+  // ❌ УДАЛИТЬ getDayPeriodLabel
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -202,6 +186,7 @@ const EditHabitForm = ({ habit, onClose, onSuccess }) => {
       const dataToSubmit = {
         ...formData,
         reminder_time: formData.reminder_time ? `${formData.reminder_time}:00` : null
+        // ✅ day_period НЕ отправляем
       };
 
       await habitService.updateHabit(habit.id, dataToSubmit);
@@ -323,38 +308,7 @@ const EditHabitForm = ({ habit, onClose, onSuccess }) => {
             </div>
           )}
 
-          {/* 🆕 DAY PERIOD */}
-          <div className="form-section-row" ref={dayPeriodRef}>
-            <span className="form-label-title">{t('createHabit.dayPeriod.title') || 'Day Period'}</span>
-            <button
-              type="button"
-              className={`dropdown-button ${dayPeriodActive ? 'active' : ''}`}
-              onClick={(e) => {
-                e.preventDefault();
-                setShowDayPeriodDropdown(!showDayPeriodDropdown);
-              }}
-            >
-              {getDayPeriodLabel()}
-            </button>
-
-            {showDayPeriodDropdown && (
-              <div className="dropdown-menu">
-                {DAY_PERIODS.map(period => (
-                  <button 
-                    key={period.id}
-                    type="button" 
-                    className="dropdown-item" 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleDayPeriodSelect(period.id);
-                    }}
-                  >
-                    {period.icon} {period.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* ❌ УДАЛИТЬ секцию DAY PERIOD */}
 
           {/* Schedule (только для good habits) */}
           {!formData.is_bad_habit && (
