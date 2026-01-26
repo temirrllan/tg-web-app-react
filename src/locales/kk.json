@@ -145,6 +145,11 @@
     "alreadyHave": "Сізде қазірдің өзінде {{plan}} бар",
     "alreadyHaveWithDays": "Сізде {{plan}} бар ({{days}} күн қалды)",
     "plans": {
+      "month": {
+        "name": "Айына",
+        "total": "Барлығы {{stars}} ⭐",
+        "perMonth": "Айына {{stars}} ⭐"
+      },
       "sixMonths": {
         "name": "6 айға",
         "total": "Барлығы {{stars}} ⭐",

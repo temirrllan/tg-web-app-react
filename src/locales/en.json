@@ -151,6 +151,11 @@
     "alreadyHave": "You already have {{plan}}",
     "alreadyHaveWithDays": "You already have {{plan}} ({{days}} days left)",
     "plans": {
+      "month": {
+        "name": "Per Month",
+        "total": "{{stars}} ⭐ total",
+        "perMonth": "{{stars}} ⭐/month"
+      },
       "sixMonths": {
         "name": "For 6 Months",
         "total": "{{stars}} ⭐ total",
