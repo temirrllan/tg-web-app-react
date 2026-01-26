@@ -168,41 +168,11 @@ const HabitCard = React.memo(
 
         setHasMoved(true);
 
-        // Вычисляем скорость свайпа
-        const now = Date.now();
-        const timeDiff = now - lastMoveTime.current;
-        if (timeDiff > 0) {
-          const velocity = (currentX - lastMoveX.current) / timeDiff;
-          setSwipeVelocity(velocity);
-          lastMoveTime.current = now;
-          lastMoveX.current = currentX;
-        }
-
         // Проверяем возможность свайпа
-        if (diffX < 0 && !getNextStatusLeft()) {
-          // Резиновый эффект при свайпе влево когда нельзя
-          const rubberDiff = diffX * 0.15; // Сильное сопротивление
-          setSwipeOffset(Math.max(-30, rubberDiff));
-          return;
-        }
-        if (diffX > 0 && !getNextStatusRight()) {
-          // Резиновый эффект при свайпе вправо когда нельзя
-          const rubberDiff = diffX * 0.15;
-          setSwipeOffset(Math.min(30, rubberDiff));
-          return;
-        }
+        if (diffX < 0 && !getNextStatusLeft()) return;
+        if (diffX > 0 && !getNextStatusRight()) return;
 
-        // Применяем плавное сопротивление при достижении краёв
-        let limitedDiff = diffX;
-        
-        if (Math.abs(diffX) > MAX_SWIPE) {
-          const excess = Math.abs(diffX) - MAX_SWIPE;
-          const resistance = Math.pow(0.8, excess / 10); // Экспоненциальное сопротивление
-          limitedDiff = diffX > 0 
-            ? MAX_SWIPE + (excess * resistance)
-            : -(MAX_SWIPE + (excess * resistance));
-        }
-        
+        const limitedDiff = Math.max(-MAX_SWIPE, Math.min(MAX_SWIPE, diffX));
         setSwipeOffset(limitedDiff);
       }
     };
