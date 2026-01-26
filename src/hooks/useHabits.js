@@ -80,7 +80,9 @@ export const useHabits = () => {
       setPhrase(normalizedPhrase);
       setError(null);
       
+      if (isFirstLoad.current) {
       isFirstLoad.current = false;
+    }
     } catch (err) {
       console.error('❌ loadTodayHabits error:', err);
       
@@ -287,6 +289,7 @@ export const useHabits = () => {
     phrase,
     loading,
     error,
+    isFirstLoad: isFirstLoad.current,
     markHabit,
     unmarkHabit,
     createHabit,

@@ -41,6 +41,7 @@ const Today = ({ shouldShowFabHint = false }) => {
     stats,
     phrase,
     loading,
+    isFirstLoad,
     markHabit,
     unmarkHabit,
     createHabit,
@@ -379,19 +380,20 @@ useEffect(() => {
     const cached = dateDataCache[today];
     
     // Обновляем ТОЛЬКО если кэша нет совсем
-    if (!cached) {
+    if (!cached || !cached.timestamp) {
       console.log(`📥 Initial load: setting today cache from todayHabits`);
       
       updateDateCache(today, {
         habits: todayHabits,
         stats: stats,
-        phrase: phrase
+        phrase: phrase,
+        timestamp: Date.now()
       });
     } else {
       console.log(`⏭️ Cache already exists for today, skipping sync`);
     }
   }
-}, [loading, todayHabits.length]); // Только при изменении loading и количества
+}, [loading, isFirstLoad, todayHabits.length, todayHabits, stats, phrase, selectedDate]); // Только при изменении loading и количества
 
   const handleRefresh = useCallback(async () => {
     try {
