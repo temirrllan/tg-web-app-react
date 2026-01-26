@@ -352,11 +352,16 @@ useEffect(() => {
   setDateLoading(true);
   
   try {
-    // ✅ ВСЕГДА загружаем свежие данные с сервера (игнорируем кэш)
-    console.log(`🌐 Always loading fresh data for ${date} (no cache)`);
+    // ✅ ВСЕГДА загружаем свежие данные с сервера
+    console.log(`🌐 Loading fresh data for ${date}`);
+    
+    // 🆕 Сначала инвалидируем кэш для этой даты
+    habitService.invalidateHabitsCache();
+    
     const result = await loadHabitsForDate(date);
     
     if (result) {
+      console.log(`✅ Loaded ${result.habits?.length || 0} habits for ${date}`);
       updateDateCache(date, result);
     }
   } catch (error) {
@@ -376,24 +381,27 @@ useEffect(() => {
 useEffect(() => {
   const today = getTodayDate();
   
-  if (!loading && selectedDate === today && todayHabits.length > 0) {
-    const cached = dateDataCache[today];
+  // При первом рендере загружаем данные для сегодняшнего дня
+  if (selectedDate === today && !dateDataCache[today]) {
+    console.log('📥 Initial load: fetching today habits');
     
-    // Обновляем ТОЛЬКО если кэша нет совсем
-    if (!cached || !cached.timestamp) {
-      console.log(`📥 Initial load: setting today cache from todayHabits`);
-      
-      updateDateCache(today, {
-        habits: todayHabits,
-        stats: stats,
-        phrase: phrase,
-        timestamp: Date.now()
-      });
-    } else {
-      console.log(`⏭️ Cache already exists for today, skipping sync`);
-    }
+    const loadInitialData = async () => {
+      setDateLoading(true);
+      try {
+        const result = await loadHabitsForDate(today);
+        if (result) {
+          updateDateCache(today, result);
+        }
+      } catch (error) {
+        console.error('Failed to load initial data:', error);
+      } finally {
+        setDateLoading(false);
+      }
+    };
+    
+    loadInitialData();
   }
-}, [loading, isFirstLoad, todayHabits.length, todayHabits, stats, phrase, selectedDate]); // Только при изменении loading и количества
+}, []);
 
   const handleRefresh = useCallback(async () => {
     try {
@@ -637,7 +645,8 @@ useEffect(() => {
       
       // 2️⃣ Отправляем на сервер с ЯВНОЙ датой
       await markHabit(habitId, status, selectedDate);
-      
+      habitService.invalidateHabitsCache();
+
       // 3️⃣ Перезагружаем данные ТОЛЬКО для текущей даты
       console.log(`🔄 [${operationId}] Reloading habits for selected date: ${selectedDate}`);
       const freshData = await loadHabitsForDate(selectedDate);
@@ -711,7 +720,8 @@ useEffect(() => {
       
       // 2️⃣ Отправляем на сервер
       await unmarkHabit(habitId, selectedDate);
-      
+      habitService.invalidateHabitsCache();
+
       // 3️⃣ Перезагружаем данные
       console.log(`🔄 [${operationId}] Reloading habits for selected date: ${selectedDate}`);
       const freshData = await loadHabitsForDate(selectedDate);
