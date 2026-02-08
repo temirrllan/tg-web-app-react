@@ -546,3 +546,20 @@
 .dark-theme .habit-detail__creator-notice {
   background: rgba(10, 132, 255, 0.15);
 }
+
+/* Добавить В КОНЕЦ файла src/pages/HabitDetail.css */
+
+/* Скрыть кнопку Edit для locked привычек */
+.habit-detail__edit-btn--locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #C7C7CC;
+  border-color: #C7C7CC;
+  color: #8E8E93;
+}
+
+.dark-theme .habit-detail__edit-btn--locked {
+  background: #48484A;
+  border-color: #48484A;
+  color: #6E6E73;
+}

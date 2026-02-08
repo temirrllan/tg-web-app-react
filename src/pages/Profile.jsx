@@ -10,6 +10,7 @@ import { useTelegramTheme } from '../hooks/useTelegramTheme';
 
 const Profile = ({ onClose }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   const [subscription, setSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -253,6 +254,21 @@ if (showSettings) {
             </button>
           ))}
         </div>
+        <div className="profile-section">
+        <button 
+          className="special-habits-button"
+          onClick={() => navigate('/packs')}
+        >
+          <span className="button-icon">✨</span>
+          <div className="button-content">
+            <div className="button-title">Специальные привычки</div>
+            <div className="button-subtitle">
+              Привычки великих людей
+            </div>
+          </div>
+          <span className="button-arrow">→</span>
+        </button>
+      </div>
 
         <div className="profile__section">
           {settingsItems.map((item) => (

@@ -256,16 +256,26 @@ useEffect(() => {
   };
 
   const handleEditHabit = (habit) => {
-    setHabitToEdit(habit);
-    setShowEditForm(true);
-    setShowHabitDetail(false);
-    
-    window.TelegramAnalytics?.track('habit_edit_started', {
-      habit_id: habit.id,
-      habit_name: habit.name,
-    });
-    console.log('📊 Analytics: habit_edit_started');
-  };
+  // 🔒 ПРОВЕРКА: запретить редактирование locked привычек
+  if (habit.is_locked) {
+    if (window.Telegram?.WebApp?.showAlert) {
+      window.Telegram.WebApp.showAlert('🔒 Эта привычка из специального пакета и не может быть изменена');
+    } else {
+      alert('🔒 Эта привычка из специального пакета и не может быть изменена');
+    }
+    return;
+  }
+
+  setHabitToEdit(habit);
+  setShowEditForm(true);
+  setShowHabitDetail(false);
+  
+  window.TelegramAnalytics?.track('habit_edit_started', {
+    habit_id: habit.id,
+    habit_name: habit.name,
+  });
+  console.log('📊 Analytics: habit_edit_started');
+};
 
   const handleEditSuccess = async () => {
     setShowEditForm(false);
@@ -279,28 +289,40 @@ useEffect(() => {
   };
 
   const handleDeleteHabit = async (habitId) => {
-    try {
-      await deleteHabit(habitId);
-      setShowHabitDetail(false);
-      setSelectedHabit(null);
-      await reloadCurrentDateHabits();
-      await checkUserSubscription();
-      
-      window.TelegramAnalytics?.track('habit_deleted', {
-        habit_id: habitId,
-        total_habits_after: (dateDataCache[selectedDate]?.habits?.length || 1) - 1,
-      });
-      console.log('📊 Analytics: habit_deleted');
-      
-    } catch (error) {
-      console.error('Failed to delete habit:', error);
-      
-      window.TelegramAnalytics?.track('habit_deletion_failed', {
-        habit_id: habitId,
-        error: error.message,
-      });
+  // 🔒 ПРОВЕРКА: запретить удаление locked привычек
+  const currentHabit = selectedHabit;
+  
+  if (currentHabit?.is_locked) {
+    if (window.Telegram?.WebApp?.showAlert) {
+      window.Telegram.WebApp.showAlert('🔒 Эта привычка из специального пакета и не может быть удалена');
+    } else {
+      alert('🔒 Эта привычка из специального пакета и не может быть удалена');
     }
-  };
+    return;
+  }
+
+  try {
+    await deleteHabit(habitId);
+    setShowHabitDetail(false);
+    setSelectedHabit(null);
+    await reloadCurrentDateHabits();
+    await checkUserSubscription();
+    
+    window.TelegramAnalytics?.track('habit_deleted', {
+      habit_id: habitId,
+      total_habits_after: (dateDataCache[selectedDate]?.habits?.length || 1) - 1,
+    });
+    console.log('📊 Analytics: habit_deleted');
+    
+  } catch (error) {
+    console.error('Failed to delete habit:', error);
+    
+    window.TelegramAnalytics?.track('habit_deletion_failed', {
+      habit_id: habitId,
+      error: error.message,
+    });
+  }
+};
 
   // 🆕 КРИТИЧНО: Обновление данных СТРОГО для конкретной даты
   const updateDateCache = useCallback((date, data) => {

@@ -16,6 +16,7 @@ const HabitCard = React.memo(
     const cardRef = useRef(null);
     const lastActionRef = useRef(null);
     const { t } = useTranslation();
+const isLocked = habit.is_locked || false;
 
     const currentStatus = habit.today_status || HABIT_STATUSES.PENDING;
     const isCompleted = currentStatus === HABIT_STATUSES.COMPLETED;
@@ -393,7 +394,8 @@ const HabitCard = React.memo(
             ref={cardRef}
             className={`habit-card ${getCardState()} ${
               isAnimating ? "animating" : ""
-            } ${isSwiping ? "swiping" : ""}`}
+            } ${isSwiping ? "swiping" : ""}
+             ${isLocked ? "locked" : ""}`}
             style={{
               transform: `translateX(${swipeOffset}px)`,
               transition: isSwiping ? "none" : "transform 0.3s ease-out",
@@ -407,6 +409,11 @@ const HabitCard = React.memo(
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseLeave}
           >
+            {isLocked && (
+  <div className="lock-badge">
+    🔒
+  </div>
+)}
             <div className="habit-card-content">
               <div className={`habit-icon ${getCardState()}`}>
                 <span className="habit-emoji">{getCategoryEmoji()}</span>

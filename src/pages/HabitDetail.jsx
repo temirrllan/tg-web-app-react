@@ -586,13 +586,15 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
               </div>
               
               {!ownerInfoLoading && isCreator && (
-                <button 
-                  className="habit-detail__edit-btn"
-                  onClick={handleEditClick}
-                >
-                  {t('habitDetail.edit')}
-                </button>
-              )}
+  <button 
+    className={`habit-detail__edit-btn ${habit.is_locked ? 'habit-detail__edit-btn--locked' : ''}`}
+    onClick={handleEditClick}
+    disabled={habit.is_locked}
+    title={habit.is_locked ? 'Привычка из пакета не может быть изменена' : 'Редактировать'}
+  >
+    {habit.is_locked ? '🔒 Заблокировано' : t('habitDetail.edit')}
+  </button>
+)}
             </div>
 
             {habit.goal && (
