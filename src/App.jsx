@@ -11,8 +11,7 @@ import Today from './pages/Today';
 import Profile from './pages/Profile';
 import Loader from './components/common/Loader';
 import './App.css';
-import PackStore from './pages/PackStore';
-import PackDetail from './pages/PackDetail';
+
 function AppContent() {
   const { tg, user: tgUser, webApp, isReady, isLoading } = useTelegram();
   const [user, setUser] = useState(null);
