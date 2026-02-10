@@ -31,7 +31,7 @@ const EditHabitForm = ({ habit, onClose, onSuccess }) => {
   const [titleLength, setTitleLength] = useState(habit.title?.length || 0);
   const [goalLength, setGoalLength] = useState(habit.goal?.length || 0);
 
-  const TITLE_MAX_LENGTH = 15;
+  const TITLE_MAX_LENGTH = 25;
   const GOAL_MAX_LENGTH = 35;
 
   // ❌ УДАЛИТЬ DAY_PERIODS
