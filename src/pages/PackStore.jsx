@@ -1,116 +1,120 @@
-// frontend/src/pages/PackStore.jsx - Магазин пакетов
+// frontend/src/pages/PackStore.jsx - Страница магазина пакетов
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../services/api';
+import packService from '../services/packService';
 import './PackStore.css';
 
-const PackStore = () => {
+const PackStore = ({ onNavigate }) => {
+  const navigate = useNavigate();
   const [packs, setPacks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchPacks();
+    loadPacks();
   }, []);
 
-  const fetchPacks = async () => {
+  const loadPacks = async () => {
     try {
-      const response = await api.get('/packs/store');
-      setPacks(response.data.data);
-    } catch (error) {
-      console.error('Error fetching packs:', error);
+      setLoading(true);
+      setError(null);
+      const response = await packService.getStorePacks();
+      
+      if (response.success) {
+        setPacks(response.data);
+      }
+    } catch (err) {
+      console.error('Failed to load packs:', err);
+      setError('Failed to load packs. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePackClick = (slug) => {
-    navigate(`/packs/${slug}`);
+  const handlePackClick = (pack) => {
+    onNavigate('pack-detail', { slug: pack.slug });
   };
 
   if (loading) {
     return (
-      <div className="pack-store-loading">
-        <div className="spinner"></div>
+      <div className="pack-store-container">
+        <div className="loading-spinner">
+          <div className="spinner"></div>
+          <p>Loading packs...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="pack-store-container">
+        <div className="error-message">
+          <p>{error}</p>
+          <button onClick={loadPacks} className="retry-button">
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="pack-store">
-      <div className="pack-store-header">
-        <button 
-          className="back-button"
-          onClick={() => navigate('/profile')}
-        >
-          ← Назад
-        </button>
-        <h1>Специальные привычки</h1>
-        <p className="subtitle">
-          Внедрите привычки великих людей в свою жизнь
-        </p>
-      </div>
+    <div className="pack-store-container">
+      <header className="pack-store-header">
+        <h1>📦 Habit Packs</h1>
+        <p className="subtitle">Ready-made habit collections from experts</p>
+      </header>
 
       <div className="packs-grid">
         {packs.map((pack) => (
           <div 
-            key={pack.id}
+            key={pack.id} 
             className={`pack-card ${pack.is_purchased ? 'purchased' : ''}`}
-            onClick={() => handlePackClick(pack.slug)}
+            onClick={() => handlePackClick(pack)}
           >
-            <div className="pack-card-image">
-              <img 
-                src={pack.cover_image_url} 
-                alt={pack.title}
-                onError={(e) => {
-                  e.target.src = '/placeholder-avatar.png';
-                }}
-              />
-              {pack.is_purchased && (
-                <div className="purchased-badge">
-                  <span>✓</span>
-                </div>
-              )}
-            </div>
+            {pack.cover_image_url && (
+              <div className="pack-cover">
+                <img src={pack.cover_image_url} alt={pack.title} />
+              </div>
+            )}
 
-            <div className="pack-card-content">
-              <h3>{pack.title}</h3>
-              <p className="pack-subtitle">{pack.subtitle}</p>
+            <div className="pack-content">
+              <h3 className="pack-title">{pack.title}</h3>
               
-              {pack.short_description && (
-                <p className="pack-description">
-                  {pack.short_description}
-                </p>
+              {pack.subtitle && (
+                <p className="pack-subtitle">{pack.subtitle}</p>
               )}
 
               <div className="pack-stats">
-                <span className="stat">
-                  <span className="stat-icon">📝</span>
-                  {pack.count_habits} привычек
-                </span>
-                <span className="stat">
+                <div className="stat">
+                  <span className="stat-icon">✅</span>
+                  <span className="stat-value">{pack.count_habits} habits</span>
+                </div>
+                <div className="stat">
                   <span className="stat-icon">🏆</span>
-                  {pack.count_achievements} достижений
-                </span>
+                  <span className="stat-value">{pack.count_achievements} achievements</span>
+                </div>
               </div>
 
-              <div className="pack-card-footer">
+              <div className="pack-footer">
                 {pack.is_purchased ? (
-                  <button className="pack-button purchased">
-                    Открыто
-                  </button>
+                  <div className="purchased-badge">
+                    <span className="badge-icon">✓</span>
+                    <span>Owned</span>
+                  </div>
                 ) : (
-                  <button className="pack-button">
+                  <div className="pack-price">
                     {pack.price_stars === 0 ? (
-                      'Получить бесплатно'
+                      <span className="free-badge">FREE</span>
                     ) : (
                       <>
-                        <span className="star-icon">⭐</span>
-                        {pack.price_stars}
+                        <span className="price-value">{pack.price_stars}</span>
+                        <span className="price-currency">⭐</span>
                       </>
                     )}
-                  </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -120,7 +124,9 @@ const PackStore = () => {
 
       {packs.length === 0 && (
         <div className="empty-state">
-          <p>Пакеты скоро появятся</p>
+          <p className="empty-icon">📦</p>
+          <p className="empty-text">No packs available yet</p>
+          <p className="empty-subtext">Check back soon for new habit collections!</p>
         </div>
       )}
     </div>

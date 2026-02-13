@@ -1,98 +1,129 @@
 /* frontend/src/pages/PackDetail.css */
 
-.pack-detail {
+.pack-detail-container {
+  padding: 0;
+  max-width: 800px;
+  margin: 0 auto;
   min-height: 100vh;
-  background: #f5f5f5;
-  padding-bottom: 80px;
+  background: var(--bg-primary, #f5f5f5);
 }
 
 .pack-detail-header {
-  padding: 15px 20px;
-  background: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.pack-cover {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px;
+  text-align: center;
   position: relative;
-  width: 100%;
-  height: 300px;
-  overflow: hidden;
 }
 
-.pack-cover img {
+.back-button {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: background 0.2s;
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.pack-detail-cover {
+  width: 120px;
+  height: 120px;
+  margin: 20px auto;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.pack-detail-cover img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.pack-cover-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-  color: white;
-  padding: 30px 20px 20px;
-}
-
-.pack-cover-overlay h1 {
+.pack-detail-title {
   font-size: 28px;
   font-weight: 700;
-  margin: 0 0 5px 0;
+  margin: 16px 0 8px;
 }
 
-.pack-cover-overlay p {
+.pack-detail-subtitle {
   font-size: 16px;
   opacity: 0.9;
-  margin: 0;
+  margin-bottom: 20px;
+  line-height: 1.4;
 }
 
-.pack-section {
-  background: white;
-  margin: 15px 0;
-  padding: 20px;
+.pack-detail-stats {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-top: 24px;
 }
 
-.pack-section h2 {
-  font-size: 20px;
+.pack-detail-stats .stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pack-detail-stats .stat-value {
+  font-size: 32px;
   font-weight: 700;
-  margin: 0 0 15px 0;
-  color: #1a1a1a;
+  margin-bottom: 4px;
 }
 
-.biography-text {
+.pack-detail-stats .stat-label {
   font-size: 14px;
-  line-height: 1.6;
-  color: #333;
+  opacity: 0.8;
 }
 
-.progress-section {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.progress-bar {
-  width: 100%;
-  height: 8px;
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
-  overflow: hidden;
-  margin: 10px 0;
-}
-
-.progress-fill {
-  height: 100%;
+.pack-description {
   background: white;
-  transition: width 0.3s;
+  padding: 24px;
+  margin: 16px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.progress-text {
-  font-size: 14px;
-  margin: 8px 0 0 0;
-  opacity: 0.9;
+.pack-description h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text-primary, #000);
 }
 
-.habits-list, .achievements-list {
+.pack-description p {
+  line-height: 1.6;
+  color: var(--text-secondary, #666);
+}
+
+.pack-habits {
+  background: white;
+  padding: 24px;
+  margin: 16px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.pack-habits h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text-primary, #000);
+}
+
+.habits-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -100,107 +131,188 @@
 
 .habit-item {
   display: flex;
-  align-items: flex-start;
   gap: 12px;
-  padding: 12px;
-  background: #f9f9f9;
-  border-radius: 8px;
+  padding: 16px;
+  background: var(--bg-secondary, #f9f9f9);
+  border-radius: 12px;
   transition: background 0.2s;
 }
 
-.habit-item.locked {
-  opacity: 0.6;
+.habit-item:hover {
+  background: var(--bg-hover, #f0f0f0);
 }
 
 .habit-icon {
-  font-size: 24px;
+  font-size: 32px;
   flex-shrink: 0;
 }
 
-.habit-content {
+.habit-info {
   flex: 1;
 }
 
-.habit-title {
-  font-size: 15px;
+.habit-info h4 {
+  font-size: 16px;
   font-weight: 600;
-  color: #1a1a1a;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
+  color: var(--text-primary, #000);
 }
 
-.habit-meta {
-  display: flex;
-  gap: 10px;
+.habit-info p {
+  font-size: 14px;
+  color: var(--text-secondary, #666);
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.habit-goal-preview {
+  font-size: 14px;
+  color: var(--text-secondary, #666);
+  font-style: italic;
+}
+
+.habit-time {
+  display: inline-block;
   font-size: 12px;
-  color: #666;
+  color: var(--primary-color, #4CAF50);
+  background: var(--primary-light, #e8f5e9);
+  padding: 4px 8px;
+  border-radius: 6px;
+  margin-top: 4px;
+}
+
+.pack-achievements {
+  background: white;
+  padding: 24px;
+  margin: 16px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.pack-achievements h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text-primary, #000);
+}
+
+.achievements-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .achievement-item {
   display: flex;
-  align-items: flex-start;
   gap: 12px;
-  padding: 15px;
-  background: #f9f9f9;
-  border-radius: 8px;
-  border: 2px solid transparent;
+  padding: 16px;
+  border-radius: 12px;
   transition: all 0.2s;
 }
 
 .achievement-item.achieved {
-  background: #e8f5e9;
-  border-color: #4CAF50;
+  background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+  color: white;
+}
+
+.achievement-item.locked {
+  background: var(--bg-secondary, #f9f9f9);
+  opacity: 0.6;
 }
 
 .achievement-icon {
-  font-size: 28px;
+  font-size: 32px;
   flex-shrink: 0;
 }
 
-.achievement-content {
-  flex: 1;
-}
-
-.achievement-title {
+.achievement-info h4 {
   font-size: 16px;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin-bottom: 5px;
-}
-
-.achievement-description {
-  font-size: 13px;
-  color: #666;
-  margin-bottom: 8px;
-  line-height: 1.4;
-}
-
-.achievement-progress {
-  font-size: 12px;
-  color: #888;
   font-weight: 600;
+  margin-bottom: 4px;
 }
 
-.pack-footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+.achievement-info p {
+  font-size: 14px;
+  margin-bottom: 8px;
+  opacity: 0.9;
+}
+
+.achievement-requirement {
+  display: inline-block;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.1);
+  padding: 4px 8px;
+  border-radius: 6px;
+  margin-top: 4px;
+}
+
+.achievement-date {
+  display: block;
+  font-size: 12px;
+  margin-top: 8px;
+  opacity: 0.8;
+}
+
+.pack-progress {
   background: white;
-  padding: 15px 20px;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-  z-index: 100;
+  padding: 24px;
+  margin: 16px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.pack-progress h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text-primary, #000);
+}
+
+.progress-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.progress-stat {
+  text-align: center;
+  padding: 16px;
+  background: var(--bg-secondary, #f9f9f9);
+  border-radius: 12px;
+}
+
+.progress-value {
+  display: block;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--primary-color, #4CAF50);
+  margin-bottom: 4px;
+}
+
+.progress-label {
+  font-size: 14px;
+  color: var(--text-secondary, #666);
+}
+
+.pack-purchase-section {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  padding: 16px;
+  border-top: 1px solid var(--border-color, #eee);
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .purchase-button {
   width: 100%;
   padding: 16px;
-  border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -217,12 +329,42 @@
   cursor: not-allowed;
 }
 
-.pack-detail-loading, .pack-not-found {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  padding: 20px;
-  text-align: center;
+.spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.button-icon {
+  font-size: 20px;
+}
+
+@media (max-width: 768px) {
+  .pack-detail-header {
+    padding: 16px;
+  }
+
+  .back-button {
+    top: 16px;
+    left: 16px;
+  }
+
+  .pack-detail-title {
+    font-size: 24px;
+  }
+
+  .pack-detail-stats {
+    gap: 24px;
+  }
+
+  .pack-description,
+  .pack-habits,
+  .pack-achievements,
+  .pack-progress {
+    margin: 12px;
+    padding: 16px;
+  }
 }

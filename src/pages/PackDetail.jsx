@@ -1,11 +1,11 @@
-// frontend/src/pages/PackDetail.jsx - Детальная страница пакета
+// frontend/src/pages/PackDetail.jsx - Страница детальной информации о пакете
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import api from '../services/api';
+import packService from '../services/packService';
 import './PackDetail.css';
 
-const PackDetail = () => {
+const PackDetail = ({ slug, onNavigate }) => {
   const { slug } = useParams();
   const navigate = useNavigate();
   const [pack, setPack] = useState(null);
@@ -14,57 +14,68 @@ const PackDetail = () => {
   const [progress, setProgress] = useState(null);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchPackDetail();
+    loadPackDetail();
   }, [slug]);
 
-  const fetchPackDetail = async () => {
+  const loadPackDetail = async () => {
     try {
-      const response = await api.get(`/packs/store/${slug}`);
-      const { pack, habits, achievements, progress } = response.data.data;
-      setPack(pack);
-      setHabits(habits);
-      setAchievements(achievements);
-      setProgress(progress);
-    } catch (error) {
-      console.error('Error fetching pack detail:', error);
+      setLoading(true);
+      setError(null);
+      const response = await packService.getPackDetail(slug);
+      
+      if (response.success) {
+        setPack(response.data.pack);
+        setHabits(response.data.habits);
+        setAchievements(response.data.achievements);
+        setProgress(response.data.progress);
+      }
+    } catch (err) {
+      console.error('Failed to load pack detail:', err);
+      setError('Failed to load pack details. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   const handlePurchase = async () => {
-    if (purchasing || pack.is_purchased) return;
+    if (!pack || purchasing) return;
 
-    setPurchasing(true);
     try {
-      const response = await api.post('/packs/orders/create', {
-        pack_id: pack.id,
-      });
+      setPurchasing(true);
+      const response = await packService.createOrder(pack.id);
 
-      const { type, order_id, invoice_url } = response.data.data;
-
-      if (type === 'free') {
-        // Бесплатный пакет - перезагружаем данные
-        await fetchPackDetail();
-        alert('Пакет успешно активирован!');
-        navigate('/');
-      } else {
-        // Платный пакет - открываем Telegram Stars
-        if (window.Telegram?.WebApp) {
-          window.Telegram.WebApp.openInvoice(invoice_url, (status) => {
-            if (status === 'paid') {
-              fetchPackDetail();
-              alert('Покупка успешна! Привычки добавлены.');
-              navigate('/');
-            }
-          });
+      if (response.success) {
+        if (response.data.type === 'free') {
+          // Бесплатный пакет - перезагружаем страницу
+          alert('Pack added to your collection! 🎉');
+          loadPackDetail();
+        } else if (response.data.type === 'paid') {
+          // Платный пакет - открываем Telegram Stars invoice
+          const invoiceUrl = response.data.invoice_url;
+          
+          if (window.Telegram?.WebApp) {
+            window.Telegram.WebApp.openInvoice(invoiceUrl, (status) => {
+              if (status === 'paid') {
+                alert('Payment successful! Pack added to your collection! 🎉');
+                loadPackDetail();
+              } else if (status === 'cancelled') {
+                alert('Payment cancelled');
+              } else if (status === 'failed') {
+                alert('Payment failed. Please try again.');
+              }
+            });
+          } else {
+            // Fallback для не-Telegram окружения
+            window.open(invoiceUrl, '_blank');
+          }
         }
       }
-    } catch (error) {
-      console.error('Error purchasing pack:', error);
-      alert(error.response?.data?.error || 'Ошибка при покупке');
+    } catch (err) {
+      console.error('Purchase error:', err);
+      alert(err.response?.data?.error || 'Failed to purchase pack. Please try again.');
     } finally {
       setPurchasing(false);
     }
@@ -72,108 +83,91 @@ const PackDetail = () => {
 
   if (loading) {
     return (
-      <div className="pack-detail-loading">
-        <div className="spinner"></div>
+      <div className="pack-detail-container">
+        <div className="loading-spinner">
+          <div className="spinner"></div>
+          <p>Loading pack...</p>
+        </div>
       </div>
     );
   }
 
-  if (!pack) {
+  if (error || !pack) {
     return (
-      <div className="pack-not-found">
-        <p>Пакет не найден</p>
-        <button onClick={() => navigate('/packs')}>
-          Вернуться в магазин
-        </button>
+      <div className="pack-detail-container">
+        <div className="error-message">
+          <p>{error || 'Pack not found'}</p>
+          <button onClick={() => onNavigate('packs')} className="back-button">
+    ← Back
+  </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="pack-detail">
+    <div className="pack-detail-container">
       {/* Header */}
       <div className="pack-detail-header">
-        <button 
-          className="back-button"
-          onClick={() => navigate('/packs')}
-        >
-          ← Назад
+        <button onClick={() => navigate('/packs')} className="back-button">
+          ← Back
         </button>
-      </div>
 
-      {/* Cover */}
-      <div className="pack-cover">
-        <img 
-          src={pack.cover_image_url} 
-          alt={pack.title}
-          onError={(e) => {
-            e.target.src = '/placeholder-avatar.png';
-          }}
-        />
-        <div className="pack-cover-overlay">
-          <h1>{pack.title}</h1>
-          <p>{pack.subtitle}</p>
-        </div>
-      </div>
-
-      {/* Biography */}
-      {pack.long_description && (
-        <div className="pack-section biography">
-          <h2>О персоне</h2>
-          <div 
-            className="biography-text"
-            dangerouslySetInnerHTML={{ __html: pack.long_description }}
-          />
-        </div>
-      )}
-
-      {/* Progress (if purchased) */}
-      {pack.is_purchased && progress && (
-        <div className="pack-section progress-section">
-          <h2>Ваш прогресс</h2>
-          <div className="progress-bar">
-            <div 
-              className="progress-fill"
-              style={{ 
-                width: `${(progress.completed_count / progress.total_count) * 100}%` 
-              }}
-            />
+        {pack.cover_image_url && (
+          <div className="pack-detail-cover">
+            <img src={pack.cover_image_url} alt={pack.title} />
           </div>
-          <p className="progress-text">
-            {progress.completed_count} из {progress.total_count} привычек выполнено
-          </p>
+        )}
+
+        <h1 className="pack-detail-title">{pack.title}</h1>
+        
+        {pack.subtitle && (
+          <p className="pack-detail-subtitle">{pack.subtitle}</p>
+        )}
+
+        <div className="pack-detail-stats">
+          <div className="stat">
+            <span className="stat-value">{pack.count_habits}</span>
+            <span className="stat-label">Habits</span>
+          </div>
+          <div className="stat">
+            <span className="stat-value">{pack.count_achievements}</span>
+            <span className="stat-label">Achievements</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Description */}
+      {pack.long_description && (
+        <div className="pack-description">
+          <h2>About this pack</h2>
+          <div dangerouslySetInnerHTML={{ __html: pack.long_description }} />
         </div>
       )}
 
       {/* Habits List */}
-      <div className="pack-section habits-section">
-        <h2>Привычки ({pack.count_habits})</h2>
+      <div className="pack-habits">
+        <h2>
+          {pack.is_purchased ? 'Your Habits' : 'Included Habits'}
+        </h2>
+        
         <div className="habits-list">
           {habits.map((habit, index) => (
-            <div 
-              key={index}
-              className={`habit-item ${!pack.is_purchased ? 'locked' : ''}`}
-            >
-              <div className="habit-icon">
+            <div key={index} className="habit-item">
+              {habit.category_icon && (
+                <span className="habit-icon">{habit.category_icon}</span>
+              )}
+              <div className="habit-info">
                 {pack.is_purchased ? (
-                  <span>{habit.category_icon || '📝'}</span>
-                ) : (
-                  <span>🔒</span>
-                )}
-              </div>
-              <div className="habit-content">
-                <div className="habit-title">{habit.goal}</div>
-                {pack.is_purchased && (
-                  <div className="habit-meta">
-                    <span className="habit-category">
-                      {habit.category_name}
-                    </span>
+                  <>
+                    <h4>{habit.title}</h4>
+                    <p>{habit.goal}</p>
                     {habit.reminder_time && (
-                      <span className="habit-time">
-                        🕐 {habit.reminder_time.substring(0, 5)}
-                      </span>
+                      <span className="habit-time">⏰ {habit.reminder_time}</span>
                     )}
-                  </div>
+                  </>
+                ) : (
+                  <p className="habit-goal-preview">{habit.goal}</p>
                 )}
               </div>
             </div>
@@ -182,54 +176,73 @@ const PackDetail = () => {
       </div>
 
       {/* Achievements */}
-      <div className="pack-section achievements-section">
-        <h2>Достижения ({pack.count_achievements})</h2>
-        <div className="achievements-list">
-          {achievements.map((achievement) => (
-            <div 
-              key={achievement.id}
-              className={`achievement-item ${achievement.is_achieved ? 'achieved' : ''}`}
-            >
-              <div className="achievement-icon">
-                {achievement.is_achieved ? '🏆' : '⚪'}
-              </div>
-              <div className="achievement-content">
-                <div className="achievement-title">
-                  {achievement.title}
+      {achievements.length > 0 && (
+        <div className="pack-achievements">
+          <h2>Achievements</h2>
+          
+          <div className="achievements-list">
+            {achievements.map((achievement) => (
+              <div 
+                key={achievement.id} 
+                className={`achievement-item ${achievement.is_achieved ? 'achieved' : 'locked'}`}
+              >
+                <div className="achievement-icon">
+                  {achievement.is_achieved ? '🏆' : '🔒'}
                 </div>
-                <div className="achievement-description">
-                  {achievement.description}
-                </div>
-                <div className="achievement-progress">
-                  {pack.is_purchased && progress ? (
-                    <>
-                      {Math.min(progress.completed_count, achievement.required_completions)} / {achievement.required_completions}
-                    </>
-                  ) : (
-                    `Требуется: ${achievement.required_completions}`
+                <div className="achievement-info">
+                  <h4>{achievement.title}</h4>
+                  <p>{achievement.description}</p>
+                  <span className="achievement-requirement">
+                    {achievement.required_completions} completions required
+                  </span>
+                  {achievement.is_achieved && achievement.achieved_at && (
+                    <span className="achievement-date">
+                      Unlocked: {new Date(achievement.achieved_at).toLocaleDateString()}
+                    </span>
                   )}
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Progress (if purchased) */}
+      {pack.is_purchased && progress && (
+        <div className="pack-progress">
+          <h2>Your Progress</h2>
+          <div className="progress-stats">
+            <div className="progress-stat">
+              <span className="progress-value">
+                {progress.completed_count}/{progress.total_count}
+              </span>
+              <span className="progress-label">Habits Completed (Last 30 days)</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Purchase Button */}
       {!pack.is_purchased && (
-        <div className="pack-footer">
+        <div className="pack-purchase-section">
           <button 
-            className="purchase-button"
             onClick={handlePurchase}
             disabled={purchasing}
+            className="purchase-button"
           >
             {purchasing ? (
-              'Обработка...'
+              <>
+                <span className="spinner-small"></span>
+                Processing...
+              </>
             ) : pack.price_stars === 0 ? (
-              'Получить бесплатно'
+              <>
+                <span>Get for FREE</span>
+                <span className="button-icon">📦</span>
+              </>
             ) : (
               <>
-                Разблокировать за <span className="star-icon">⭐</span> {pack.price_stars}
+                <span>Purchase for {pack.price_stars} ⭐</span>
               </>
             )}
           </button>
