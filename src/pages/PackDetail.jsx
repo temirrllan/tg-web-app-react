@@ -5,7 +5,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import packService from '../services/packService';
 import './PackDetail.css';
 
-const PackDetail = ({ slug, onNavigate }) => {
+const PackDetail = ({  onNavigate }) => {
   const { slug } = useParams();
   const navigate = useNavigate();
   const [pack, setPack] = useState(null);
