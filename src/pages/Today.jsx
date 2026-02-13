@@ -23,7 +23,7 @@ import { useTelegramTheme } from '../hooks/useTelegramTheme';
 import FabHint from '../components/hints/FabHint';
 import WeekHint from '../components/hints/WeekHint'; // 🆕 ДОБАВИТЬ ЭТУ СТРОКУ
 
-const Today = ({ shouldShowFabHint = false, onNavigate }) => {
+const Today = ({ shouldShowFabHint = false }) => {
   const { t } = useTranslation();
   const { user } = useTelegram();
   useTelegramTheme();
@@ -929,12 +929,6 @@ useEffect(() => {
         <button className="fab" onClick={handleFabClick}>
           +
         </button>
-        <button 
-    onClick={() => onNavigate('packs')}
-    className="browse-packs-button"
-  >
-    📦 Browse Packs
-  </button>
       </Layout>
 
       {showCreateForm && (

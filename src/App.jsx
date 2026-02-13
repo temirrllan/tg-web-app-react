@@ -1,4 +1,4 @@
-// src/App.jsx - С ПОДДЕРЖКОЙ НАВИГАЦИИ ПАКЕТОВ И ДОСТИЖЕНИЙ
+// src/App.jsx - ФИНАЛЬНАЯ ВЕРСИЯ С ОЧИСТКОЙ ПОДСКАЗОК
 
 import React, { useState, useEffect, useContext } from 'react';
 import { authenticateUser } from './services/auth';
@@ -9,9 +9,6 @@ import { ThemeProvider } from './context/ThemeContext';
 import Onboarding from './components/Onboarding';
 import Today from './pages/Today';
 import Profile from './pages/Profile';
-import PackStore from './pages/PackStore';
-import PackDetail from './pages/PackDetail';
-import Achievements from './pages/Achievements';
 import Loader from './components/common/Loader';
 import './App.css';
 
@@ -21,11 +18,9 @@ function AppContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   
-  // 🆕 Навигация между страницами
-  const [currentPage, setCurrentPage] = useState('today'); // 'today' | 'packs' | 'pack-detail' | 'achievements' | 'profile'
-  const [selectedPackSlug, setSelectedPackSlug] = useState(null);
-  
+  // 🆕 Флаг для показа подсказки FAB
   const [shouldShowFabHint, setShouldShowFabHint] = useState(false);
   
   const { initializeLanguage, language } = useContext(LanguageContext);
@@ -36,8 +31,7 @@ function AppContent() {
     error,
     showOnboarding,
     isReady,
-    isLoading,
-    currentPage
+    isLoading
   });
 
   useEffect(() => {
@@ -46,6 +40,7 @@ function AppContent() {
         tg.expand();
         tg.ready();
         
+        // 📊 Трекинг инициализации
         analytics.track('app_initialized', {
           platform: tg.platform,
           version: tg.version,
@@ -59,6 +54,7 @@ function AppContent() {
       }
     }
   }, [tg]);
+
 
   useEffect(() => {
     const initAuth = async () => {
@@ -147,44 +143,47 @@ function AppContent() {
             }
           }
           
+          // 🔥 КРИТИЧНО: Onboarding ТОЛЬКО для новых пользователей
           console.log('🔍 === ONBOARDING CHECK ===');
           console.log('isNewUser value:', response.isNewUser);
           console.log('isNewUser type:', typeof response.isNewUser);
           
           if (response.isNewUser === true) {
             console.log('🆕 NEW USER - SHOWING ONBOARDING + WILL SHOW FAB HINT');
-            analytics.track('onboarding_started', {
-              user_id: response.user.id,
-              language: response.user.language,
-            });
-            
+            // 📊 Трекинг нового пользователя
+  analytics.track('onboarding_started', {
+    user_id: response.user.id,
+    language: response.user.language,
+  });
+            // 🆕 Очищаем localStorage от старых подсказок для нового пользователя
             console.log('🧹 Clearing old hints from localStorage for new user');
             localStorage.removeItem('hasSeenFabHint');
             localStorage.removeItem('hasSeenWeekHint');
             localStorage.removeItem('hasSeenSwipeHint');
             localStorage.removeItem('previousHabitsCount');
-            
-            for (let i = localStorage.length - 1; i >= 0; i--) {
-              const key = localStorage.key(i);
-              if (key && key.startsWith('cache_habits')) {
-                console.log('🗑️ Removing stale habits cache:', key);
-                localStorage.removeItem(key);
-              }
-            }
-            
+            // Очищаем ВСЕ кэши привычек из localStorage
+for (let i = localStorage.length - 1; i >= 0; i--) {
+  const key = localStorage.key(i);
+  if (key && key.startsWith('cache_habits')) {
+    console.log('🗑️ Removing stale habits cache:', key);
+    localStorage.removeItem(key);
+  }
+}
             setShowOnboarding(true);
-            setShouldShowFabHint(true);
+            setShouldShowFabHint(true); // ✅ Устанавливаем флаг для подсказки
           } else {
             console.log('👤 EXISTING USER - SKIPPING ONBOARDING');
-            
-            console.log('🧹 Clearing habits cache for existing user');
-            for (let i = localStorage.length - 1; i >= 0; i--) {
-              const key = localStorage.key(i);
-              if (key && key.startsWith('cache_habits')) {
-                console.log('🗑️ Removing stale habits cache:', key);
-                localStorage.removeItem(key);
-              }
-            }
+            // НЕ показываем onboarding
+            // НЕ показываем подсказки
+            // 🆕 Очищаем кэш привычек даже для существующих пользователей при входе
+  console.log('🧹 Clearing habits cache for existing user');
+  for (let i = localStorage.length - 1; i >= 0; i--) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('cache_habits')) {
+      console.log('🗑️ Removing stale habits cache:', key);
+      localStorage.removeItem(key);
+    }
+  }
           }
           
         } else {
@@ -255,40 +254,6 @@ function AppContent() {
     };
   }, [user, tg]);
 
-  // 🆕 Функции навигации
-  const navigateTo = (page, params = {}) => {
-    console.log('📍 Navigating to:', page, params);
-    
-    // Трекинг навигации
-    analytics.track('page_view', {
-      page: page,
-      from: currentPage,
-      ...params
-    });
-    
-    setCurrentPage(page);
-    
-    if (page === 'pack-detail' && params.slug) {
-      setSelectedPackSlug(params.slug);
-    }
-    
-    // Управление BackButton
-    if (tg?.BackButton) {
-      if (page === 'today') {
-        tg.BackButton.hide();
-      } else {
-        tg.BackButton.show();
-        tg.BackButton.onClick(() => {
-          if (page === 'pack-detail') {
-            navigateTo('packs');
-          } else {
-            navigateTo('today');
-          }
-        });
-      }
-    }
-  };
-
   if (loading || isLoading) {
     console.log('⏳ Rendering LOADER');
     return (
@@ -334,101 +299,21 @@ function AppContent() {
         onComplete={() => {
           console.log('✅ Onboarding completed');
           setShowOnboarding(false);
+          // shouldShowFabHint остается true - передается в Today
         }} 
       />
     );
   }
 
-  console.log('📱 Rendering MAIN APP - Page:', currentPage);
-
-  // 🆕 Рендер страниц
+  console.log('📱 Rendering MAIN APP');
   return (
-    <div className="app-container">
-      {currentPage === 'today' && (
-        <Today 
-          shouldShowFabHint={shouldShowFabHint}
-          onNavigate={navigateTo}
-        />
+    <>
+      {/* 🆕 Передаем флаг подсказки */}
+      <Today shouldShowFabHint={shouldShowFabHint} />
+      {showProfile && (
+        <Profile onClose={() => setShowProfile(false)} />
       )}
-      
-      {currentPage === 'packs' && (
-        <PackStore 
-          onNavigate={navigateTo}
-        />
-      )}
-      
-      {currentPage === 'pack-detail' && selectedPackSlug && (
-        <PackDetail 
-          slug={selectedPackSlug}
-          onNavigate={navigateTo}
-        />
-      )}
-      
-      {currentPage === 'achievements' && (
-        <Achievements 
-          onNavigate={navigateTo}
-        />
-      )}
-      
-      {currentPage === 'profile' && (
-        <Profile 
-          onClose={() => navigateTo('today')}
-        />
-      )}
-
-      {/* 🆕 Нижняя навигация */}
-      <BottomNavigation 
-        currentPage={currentPage}
-        onNavigate={navigateTo}
-      />
-    </div>
-  );
-}
-
-// 🆕 Компонент нижней навигации
-function BottomNavigation({ currentPage, onNavigate }) {
-  return (
-    <nav className="bottom-navigation">
-      <button
-        className={`nav-item ${currentPage === 'today' ? 'active' : ''}`}
-        onClick={() => onNavigate('today')}
-        data-analytics="nav_click"
-        data-analytics-data='{"page":"today"}'
-      >
-        <span className="nav-icon">🏠</span>
-        <span className="nav-label">Today</span>
-      </button>
-
-      <button
-        className={`nav-item ${currentPage === 'packs' ? 'active' : ''}`}
-        onClick={() => onNavigate('packs')}
-        data-analytics="nav_click"
-        data-analytics-data='{"page":"packs"}'
-      >
-        <span className="nav-icon">📦</span>
-        <span className="nav-label">Packs</span>
-      </button>
-
-      <button
-        className={`nav-item ${currentPage === 'achievements' ? 'active' : ''}`}
-        onClick={() => onNavigate('achievements')}
-        data-analytics="nav_click"
-        data-analytics-data='{"page":"achievements"}'
-      >
-        <span className="nav-icon">🏆</span>
-        <span className="nav-label">Achievements</span>
-      </button>
-
-      <button
-        className={`nav-item ${currentPage === 'profile' ? 'active' : ''}`}
-        onClick={() => onNavigate('profile')}
-        data-analytics="nav_click"
-        data-analytics-data='{"page":"profile"}'
-      >
-        <span className="nav-icon">👤</span>
-        <span className="nav-label">Profile</span>
-      </button>
-    </nav>
+    </>
   );
 }
 
