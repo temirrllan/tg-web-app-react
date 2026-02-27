@@ -1037,7 +1037,6 @@ useEffect(() => {
                     return (
                       <div key={period} className="day-period-section">
                         <div className="day-period-header">
-                          <span className="day-period-icon">{periodInfo.icon}</span>
                           <h3 className="day-period-title">{periodInfo.label}</h3>
                           <span className="day-period-count">
                             {habitsInPeriod.filter(h => h.today_status === 'completed').length}/{habitsInPeriod.length}
@@ -1091,7 +1090,6 @@ useEffect(() => {
                     return (
                       <div key={period} className="day-period-section">
                         <div className="day-period-header">
-                          <span className="day-period-icon">{periodInfo.icon}</span>
                           <h3 className="day-period-title">{periodInfo.label}</h3>
                           <span className="day-period-count">
                             {habitsInPeriod.filter(h => h.today_status === 'completed').length}/{habitsInPeriod.length}
