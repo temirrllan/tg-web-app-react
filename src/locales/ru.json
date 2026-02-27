@@ -229,6 +229,66 @@
         "removeFriendConfirm": "Удалить этого друга из привычки?"
       }
     },
+    "specialHabits": {
+    "tabSpecial": "✨ Особые",
+    "tabMy": "❤️ Мои",
+    "emptyTitle": "Особых привычек пока нет",
+    "emptyDesc": "Купите набор привычек знаменитостей в магазине",
+    "browseStore": "Открыть магазин",
+    "addMenu": {
+      "title": "Добавить привычку",
+      "customHabit": "Своя привычка",
+      "customHabitDesc": "Создайте свою привычку",
+      "specialHabits": "Особые привычки",
+      "specialHabitsDesc": "Магазин наборов привычек знаменитостей",
+      "cancel": "Отмена"
+    },
+    "shop": {
+      "title": "Особые привычки",
+      "searchPlaceholder": "Поиск знаменитости или привычки...",
+      "filterAll": "Все",
+      "filterPaid": "Платные",
+      "filterFree": "Бесплатные",
+      "habits": "привычек",
+      "freeBadge": "БЕСПЛАТНО",
+      "ownedBadge": "✓ Куплено",
+      "noPacks": "Ничего не найдено"
+    },
+    "packDetail": {
+      "unlockButton": "Получить привычки",
+      "ownedButton": "Привычки уже добавлены",
+      "biography": "Биография",
+      "learnMore": "Подробнее",
+      "achievements": "Достижения",
+      "myHabits": "Мои привычки",
+      "statsHabits": "Привычки",
+      "statsAchievement": "Достижение",
+      "statsPrice": "Цена",
+      "freeBadge": "БЕСПЛАТНО",
+      "dayPeriod": {
+        "morning": "Утро",
+        "afternoon": "День",
+        "evening": "Вечер",
+        "night": "Ночь"
+      },
+      "purchasing": "Покупаем...",
+      "purchaseError": "Ошибка покупки. Попробуйте ещё раз."
+    },
+    "detail": {
+      "motivation": "Молодец, друг! 🔥",
+      "achievements": "Достижения",
+      "stats": {
+        "daysStreak": "Дней подряд",
+        "week": "Неделя",
+        "month": "Месяц",
+        "year": "Год"
+      }
+    },
+    "achievement": {
+      "congratulations": "Поздравляем! Вы получили награду!",
+      "thanks": "Спасибо! 🙏"
+    }
+  },
     "subscriptionNew": {
     "title": "Стань PRO",
     "subtitle": "Открой все функции",

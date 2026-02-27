@@ -12,6 +12,7 @@ import HabitDetail from './HabitDetail';
 import { useHabits } from "../hooks/useHabits";
 import { useTelegram } from "../hooks/useTelegram";
 import { habitService } from '../services/habits';
+import { specialHabitsService } from '../services/specialHabits';
 import "./Today.css";
 import SwipeHint from '../components/habits/SwipeHint';
 import EditHabitForm from '../components/habits/EditHabitForm';
@@ -21,7 +22,12 @@ import { useTranslation } from '../hooks/useTranslation';
 import PullToRefresh from '../components/common/PullToRefresh';
 import { useTelegramTheme } from '../hooks/useTelegramTheme';
 import FabHint from '../components/hints/FabHint';
-import WeekHint from '../components/hints/WeekHint'; // 🆕 ДОБАВИТЬ ЭТУ СТРОКУ
+import WeekHint from '../components/hints/WeekHint';
+import AddHabitMenu from '../components/modals/AddHabitMenu';
+import SpecialHabitsShop from './SpecialHabitsShop';
+import SpecialHabitPackDetail from './SpecialHabitPackDetail';
+import SpecialHabitDetail from './SpecialHabitDetail';
+import AchievementUnlockedPopup from '../components/modals/AchievementUnlockedPopup';
 
 const Today = ({ shouldShowFabHint = false }) => {
   const { t } = useTranslation();
@@ -64,7 +70,19 @@ const Today = ({ shouldShowFabHint = false }) => {
   const [habitToEdit, setHabitToEdit] = useState(null);
   const [userSubscription, setUserSubscription] = useState(null);
   const [showFabHint, setShowFabHint] = useState(false);
-    const [showWeekHint, setShowWeekHint] = useState(false); // 🆕 ДОБАВИТЬ ЭТУ СТРОКУ
+  const [showWeekHint, setShowWeekHint] = useState(false);
+
+  // ── Special Habits state ────────────────────────────────────────────────────
+  const [activeTab, setActiveTab] = useState('my'); // 'my' | 'special'
+  const [showAddHabitMenu, setShowAddHabitMenu] = useState(false);
+  const [showSpecialShop, setShowSpecialShop] = useState(false);
+  const [selectedPack, setSelectedPack] = useState(null);
+  const [showPackDetail, setShowPackDetail] = useState(false);
+  const [specialHabits, setSpecialHabits] = useState([]);
+  const [specialHabitsLoading, setSpecialHabitsLoading] = useState(false);
+  const [selectedSpecialHabit, setSelectedSpecialHabit] = useState(null);
+  const [showSpecialHabitDetail, setShowSpecialHabitDetail] = useState(false);
+  const [achievementQueue, setAchievementQueue] = useState([]);
 
 
 
@@ -212,33 +230,96 @@ useEffect(() => {
     }
   };
 
+  // ── Special habits loading ──────────────────────────────────────────────────
+  const loadSpecialHabitsForDate = useCallback(async (date) => {
+    setSpecialHabitsLoading(true);
+    try {
+      const data = await specialHabitsService.getSpecialHabitsForDate(date);
+      setSpecialHabits(data.habits || []);
+    } catch (err) {
+      console.error('Failed to load special habits:', err);
+      setSpecialHabits([]);
+    } finally {
+      setSpecialHabitsLoading(false);
+    }
+  }, []);
+
+  // Load special habits whenever date changes AND special tab is active
+  useEffect(() => {
+    if (activeTab === 'special') {
+      loadSpecialHabitsForDate(selectedDate);
+    }
+  }, [activeTab, selectedDate, loadSpecialHabitsForDate]);
+
+  // ── Special habit mark / unmark ─────────────────────────────────────────────
+  const handleSpecialMark = useCallback(async (habitId, status) => {
+    if (!isEditableDate) return;
+
+    // Optimistic update
+    setSpecialHabits(prev => prev.map(h =>
+      h.id === habitId ? { ...h, today_status: status } : h
+    ));
+
+    try {
+      const result = await specialHabitsService.markSpecialHabit(habitId, status, selectedDate);
+
+      if (result.newly_unlocked && result.newly_unlocked.length > 0) {
+        setAchievementQueue(prev => [...prev, ...result.newly_unlocked]);
+      }
+    } catch (err) {
+      console.error('Failed to mark special habit:', err);
+      // Roll back on error
+      await loadSpecialHabitsForDate(selectedDate);
+    }
+
+    // Re-fetch to get server truth
+    await loadSpecialHabitsForDate(selectedDate);
+  }, [isEditableDate, selectedDate, loadSpecialHabitsForDate]);
+
+  const handleSpecialUnmark = useCallback(async (habitId) => {
+    if (!isEditableDate) return;
+
+    setSpecialHabits(prev => prev.map(h =>
+      h.id === habitId ? { ...h, today_status: 'pending' } : h
+    ));
+
+    try {
+      const result = await specialHabitsService.unmarkSpecialHabit(habitId, selectedDate);
+      if (result.newly_unlocked && result.newly_unlocked.length > 0) {
+        setAchievementQueue(prev => [...prev, ...result.newly_unlocked]);
+      }
+    } catch (err) {
+      console.error('Failed to unmark special habit:', err);
+    }
+
+    await loadSpecialHabitsForDate(selectedDate);
+  }, [isEditableDate, selectedDate, loadSpecialHabitsForDate]);
+
+  // ── FAB click: show AddHabitMenu instead of direct CreateForm ───────────────
   const handleFabClick = async () => {
+    setShowAddHabitMenu(true);
+  };
+
+  const handleMenuCustomHabit = async () => {
+    setShowAddHabitMenu(false);
     const subscriptionStatus = await habitService.checkSubscriptionLimits();
     setUserSubscription(subscriptionStatus);
-    
+
     window.TelegramAnalytics?.track('fab_clicked', {
       can_create_more: subscriptionStatus.canCreateMore,
-      current_habits_count: dateDataCache[selectedDate]?.habits?.length || 0,
       is_premium: subscriptionStatus.isPremium,
     });
-    console.log('📊 Analytics: fab_clicked');
-    
+
     if (subscriptionStatus.canCreateMore) {
       setShowCreateForm(true);
-      
-      window.TelegramAnalytics?.track('create_form_opened', {
-        current_habits_count: dateDataCache[selectedDate]?.habits?.length || 0,
-      });
-      console.log('📊 Analytics: create_form_opened');
     } else {
       setShowSubscriptionModal(true);
-      
-      window.TelegramAnalytics?.track('subscription_limit_reached', {
-        current_habits_count: dateDataCache[selectedDate]?.habits?.length || 0,
-        limit: subscriptionStatus.limit,
-      });
-      console.log('📊 Analytics: subscription_limit_reached');
     }
+  };
+
+  const handleMenuSpecialHabits = () => {
+    setShowAddHabitMenu(false);
+    setShowSpecialShop(true);
   };
 
   const handleHabitClick = (habit) => {
@@ -815,7 +896,56 @@ useEffect(() => {
   }
 
   if (showProfile) {
-    return <Profile onClose={() => setShowProfile(false)} />;
+    return <Profile
+      onClose={() => setShowProfile(false)}
+      onOpenSpecialShop={() => { setShowProfile(false); setShowSpecialShop(true); }}
+    />;
+  }
+
+  // ── Special Habits pages ─────────────────────────────────────────────────
+  if (showSpecialHabitDetail && selectedSpecialHabit) {
+    return (
+      <SpecialHabitDetail
+        habit={selectedSpecialHabit}
+        onClose={() => {
+          setShowSpecialHabitDetail(false);
+          setSelectedSpecialHabit(null);
+        }}
+      />
+    );
+  }
+
+  if (showPackDetail && selectedPack) {
+    return (
+      <SpecialHabitPackDetail
+        pack={selectedPack}
+        onClose={() => {
+          setShowPackDetail(false);
+          setSelectedPack(null);
+          // Refresh special habits after potential purchase
+          loadSpecialHabitsForDate(selectedDate);
+        }}
+        onGoToSpecialTab={() => {
+          setShowPackDetail(false);
+          setSelectedPack(null);
+          setActiveTab('special');
+          loadSpecialHabitsForDate(selectedDate);
+        }}
+      />
+    );
+  }
+
+  if (showSpecialShop) {
+    return (
+      <SpecialHabitsShop
+        onClose={() => setShowSpecialShop(false)}
+        onPackSelect={(pack) => {
+          setSelectedPack(pack);
+          setShowPackDetail(true);
+          setShowSpecialShop(false);
+        }}
+      />
+    );
   }
 
   // Получаем данные для текущей выбранной даты
@@ -857,10 +987,29 @@ useEffect(() => {
             </div>
           </div>
 
-          <WeekNavigation 
+          <WeekNavigation
             selectedDate={selectedDate}
             onDateSelect={handleDateSelect}
           />
+
+          {/* ── My / Special tab switcher ── */}
+          <div className="today__tabs">
+            <button
+              className={`today__tab ${activeTab === 'special' ? 'today__tab--active' : ''}`}
+              onClick={() => {
+                setActiveTab('special');
+                loadSpecialHabitsForDate(selectedDate);
+              }}
+            >
+              {t('specialHabits.tabSpecial') || '✨ Special'}
+            </button>
+            <button
+              className={`today__tab ${activeTab === 'my' ? 'today__tab--active' : ''}`}
+              onClick={() => setActiveTab('my')}
+            >
+              {t('specialHabits.tabMy') || '❤️ My'}
+            </button>
+          </div>
 
           {showReadOnlyNotice && (
             <div className="today__readonly-notice">
@@ -868,53 +1017,107 @@ useEffect(() => {
             </div>
           )}
 
-          {dateLoading ? (
-            <div className="today__habits-loading">
-              <HabitsSkeleton />
-            </div>
-          ) : displayHabits.length === 0 ? (
-            <EmptyState onCreateClick={() => handleFabClick()} />
-          ) : (
-            <div className="today__habits">
-              {/* 🆕 ГРУППИРОВКА ПО DAY PERIOD */}
-    {(() => {
-      const groupedHabits = groupHabitsByDayPeriod(displayHabits);
-      const periods = ['morning', 'afternoon', 'evening', 'night'];
-      
-      return periods.map(period => {
-        const habitsInPeriod = groupedHabits[period];
-        
-        if (habitsInPeriod.length === 0) return null;
-        
-        const periodInfo = getDayPeriodInfo(period);
-        
-        return (
-          <div key={period} className="day-period-section">
-            <div className="day-period-header">
-              <span className="day-period-icon">{periodInfo.icon}</span>
-              <h3 className="day-period-title">{periodInfo.label}</h3>
-              <span className="day-period-count">
-                {habitsInPeriod.filter(h => h.today_status === 'completed').length}/{habitsInPeriod.length}
-              </span>
-            </div>
-            
-            <div className="day-period-habits">
-              {habitsInPeriod.map((habit) => (
-                <HabitCard
-                  key={`${habit.id}-${selectedDate}-${habit.today_status}`}
-                  habit={habit}
-                  onMark={isEditableDate ? handleMark : undefined}
-                  onUnmark={isEditableDate ? handleUnmark : undefined}
-                  onClick={handleHabitClick}
-                  readOnly={!isEditableDate}
-                />
-              ))}
-            </div>
-          </div>
-        );
-      });
-    })()}
-            </div>
+          {/* ── MY habits tab ── */}
+          {activeTab === 'my' && (
+            dateLoading ? (
+              <div className="today__habits-loading">
+                <HabitsSkeleton />
+              </div>
+            ) : displayHabits.length === 0 ? (
+              <EmptyState onCreateClick={() => handleFabClick()} />
+            ) : (
+              <div className="today__habits">
+                {(() => {
+                  const groupedHabits = groupHabitsByDayPeriod(displayHabits);
+                  const periods = ['morning', 'afternoon', 'evening', 'night'];
+                  return periods.map(period => {
+                    const habitsInPeriod = groupedHabits[period];
+                    if (habitsInPeriod.length === 0) return null;
+                    const periodInfo = getDayPeriodInfo(period);
+                    return (
+                      <div key={period} className="day-period-section">
+                        <div className="day-period-header">
+                          <span className="day-period-icon">{periodInfo.icon}</span>
+                          <h3 className="day-period-title">{periodInfo.label}</h3>
+                          <span className="day-period-count">
+                            {habitsInPeriod.filter(h => h.today_status === 'completed').length}/{habitsInPeriod.length}
+                          </span>
+                        </div>
+                        <div className="day-period-habits">
+                          {habitsInPeriod.map((habit) => (
+                            <HabitCard
+                              key={`${habit.id}-${selectedDate}-${habit.today_status}`}
+                              habit={habit}
+                              onMark={isEditableDate ? handleMark : undefined}
+                              onUnmark={isEditableDate ? handleUnmark : undefined}
+                              onClick={handleHabitClick}
+                              readOnly={!isEditableDate}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            )
+          )}
+
+          {/* ── SPECIAL habits tab ── */}
+          {activeTab === 'special' && (
+            specialHabitsLoading ? (
+              <div className="today__habits-loading"><HabitsSkeleton /></div>
+            ) : specialHabits.length === 0 ? (
+              <div className="today__special-empty">
+                <p className="today__special-empty-icon">✨</p>
+                <p className="today__special-empty-title">{t('specialHabits.emptyTitle') || 'No Special Habits Yet'}</p>
+                <p className="today__special-empty-desc">{t('specialHabits.emptyDesc') || 'Purchase a Celebrity Habit Pack from the store'}</p>
+                <button
+                  className="today__special-empty-btn"
+                  onClick={() => setShowSpecialShop(true)}
+                >
+                  {t('specialHabits.browseStore') || 'Browse Store'}
+                </button>
+              </div>
+            ) : (
+              <div className="today__habits">
+                {(() => {
+                  const groupedHabits = groupHabitsByDayPeriod(specialHabits);
+                  const periods = ['morning', 'afternoon', 'evening', 'night'];
+                  return periods.map(period => {
+                    const habitsInPeriod = groupedHabits[period];
+                    if (habitsInPeriod.length === 0) return null;
+                    const periodInfo = getDayPeriodInfo(period);
+                    return (
+                      <div key={period} className="day-period-section">
+                        <div className="day-period-header">
+                          <span className="day-period-icon">{periodInfo.icon}</span>
+                          <h3 className="day-period-title">{periodInfo.label}</h3>
+                          <span className="day-period-count">
+                            {habitsInPeriod.filter(h => h.today_status === 'completed').length}/{habitsInPeriod.length}
+                          </span>
+                        </div>
+                        <div className="day-period-habits">
+                          {habitsInPeriod.map((habit) => (
+                            <HabitCard
+                              key={`special-${habit.id}-${selectedDate}-${habit.today_status}`}
+                              habit={habit}
+                              onMark={isEditableDate ? handleSpecialMark : undefined}
+                              onUnmark={isEditableDate ? handleSpecialUnmark : undefined}
+                              onClick={(h) => {
+                                setSelectedSpecialHabit(h);
+                                setShowSpecialHabitDetail(true);
+                              }}
+                              readOnly={!isEditableDate}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            )
           )}
         </div>
 
@@ -966,13 +1169,27 @@ useEffect(() => {
         isOpen={showSubscriptionModal}
         onClose={() => {
           setShowSubscriptionModal(false);
-          
+
           window.TelegramAnalytics?.track('subscription_modal_closed', {
             was_dismissed: true,
           });
           console.log('📊 Analytics: subscription_modal_closed');
         }}
         onSelectPlan={handleSubscriptionPlanSelect}
+      />
+
+      {/* ── Add Habit bottom sheet menu ── */}
+      <AddHabitMenu
+        isOpen={showAddHabitMenu}
+        onClose={() => setShowAddHabitMenu(false)}
+        onCustomHabit={handleMenuCustomHabit}
+        onSpecialHabits={handleMenuSpecialHabits}
+      />
+
+      {/* ── Achievement unlocked popup (queue-based) ── */}
+      <AchievementUnlockedPopup
+        achievement={achievementQueue[0] || null}
+        onClose={() => setAchievementQueue(prev => prev.slice(1))}
       />
     </>
   );

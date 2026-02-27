@@ -8,7 +8,7 @@ import Settings from './Settings';
 import { useTranslation } from '../hooks/useTranslation';
 import { useTelegramTheme } from '../hooks/useTelegramTheme';
 
-const Profile = ({ onClose }) => {
+const Profile = ({ onClose, onOpenSpecialShop }) => {
   const { t } = useTranslation();
 
   const [subscription, setSubscription] = useState(null);
@@ -123,6 +123,11 @@ const handleMenuClick = (itemId) => {
       break;
     case 'settings':
       setShowSettings(true);
+      break;
+    case 'special_habits':
+      if (onOpenSpecialShop) {
+        onOpenSpecialShop();
+      }
       break;
     case 'support':
       tg?.openLink?.('https://t.me/Migin_Sergey');

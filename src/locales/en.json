@@ -280,6 +280,66 @@
       "title": "History"
     }
   },
+  "specialHabits": {
+    "tabSpecial": "✨ Special",
+    "tabMy": "❤️ My",
+    "emptyTitle": "No Special Habits Yet",
+    "emptyDesc": "Purchase a Celebrity Habit Pack from the store",
+    "browseStore": "Browse Store",
+    "addMenu": {
+      "title": "Add Habit",
+      "customHabit": "Custom Habit",
+      "customHabitDesc": "Create your own habit",
+      "specialHabits": "Special Habits",
+      "specialHabitsDesc": "Celebrity habit packs store",
+      "cancel": "Cancel"
+    },
+    "shop": {
+      "title": "Special Habits",
+      "searchPlaceholder": "Search celebrity or habit...",
+      "filterAll": "All",
+      "filterPaid": "Paid",
+      "filterFree": "Free",
+      "habits": "habits",
+      "freeBadge": "FREE",
+      "ownedBadge": "✓ Owned",
+      "noPacks": "No packs found"
+    },
+    "packDetail": {
+      "unlockButton": "Unlock the Habit",
+      "ownedButton": "I Have This Habits",
+      "biography": "Biography",
+      "learnMore": "Learn more",
+      "achievements": "Achievements",
+      "myHabits": "My Habits",
+      "statsHabits": "Habits",
+      "statsAchievement": "Achievement",
+      "statsPrice": "Price",
+      "freeBadge": "FREE",
+      "dayPeriod": {
+        "morning": "Morning",
+        "afternoon": "Afternoon",
+        "evening": "Evening",
+        "night": "Night"
+      },
+      "purchasing": "Purchasing...",
+      "purchaseError": "Purchase failed. Please try again."
+    },
+    "detail": {
+      "motivation": "Good Job My Friend! 🔥",
+      "achievements": "Achievements",
+      "stats": {
+        "daysStreak": "Days Streak",
+        "week": "Week",
+        "month": "Month",
+        "year": "Year"
+      }
+    },
+    "achievement": {
+      "congratulations": "Congratulations! You have won an award!",
+      "thanks": "Thanks! 🙏"
+    }
+  },
   "subscriptionNew": {
     "title": "Start Like a PRO",
     "subtitle": "Unlock All Features",

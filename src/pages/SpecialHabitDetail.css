@@ -1,0 +1,208 @@
+/* SpecialHabitDetail.css */
+
+.special-habit-detail {
+  min-height: 100vh;
+  background: var(--bg-primary, #f2f2f7);
+  padding-bottom: 40px;
+}
+
+.special-habit-detail--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.special-habit-detail__content {
+  padding: 16px;
+}
+
+/* Header */
+.special-habit-detail__header {
+  text-align: center;
+  padding: 20px 0 24px;
+}
+
+.special-habit-detail__emoji {
+  font-size: 52px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.special-habit-detail__title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary, #1c1c1e);
+  margin-bottom: 6px;
+}
+
+.special-habit-detail__goal {
+  font-size: 14px;
+  color: var(--text-secondary, #8e8e93);
+  margin-bottom: 10px;
+}
+
+.special-habit-detail__badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+  color: #7c3aed;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Statistics */
+.special-habit-detail__statistics {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+
+.special-habit-detail__stat-card {
+  flex: 1;
+  min-width: 70px;
+  background: var(--bg-primary, #fff);
+  border-radius: 14px;
+  padding: 14px 8px 12px;
+  text-align: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+
+.special-habit-detail__stat-circle {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 8px;
+  background: conic-gradient(
+    var(--color, #A7D96C) calc(var(--progress, 0) * 1%),
+    var(--bg-tertiary, #f2f2f7) 0
+  );
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.special-habit-detail__stat-circle::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  background: var(--bg-primary, #fff);
+  border-radius: 50%;
+}
+
+.special-habit-detail__stat-value {
+  position: relative;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary, #1c1c1e);
+  z-index: 1;
+}
+
+.special-habit-detail__stat-total {
+  position: relative;
+  font-size: 10px;
+  color: var(--text-secondary, #8e8e93);
+  z-index: 1;
+}
+
+.special-habit-detail__stat-title {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary, #8e8e93);
+}
+
+/* Motivation */
+.special-habit-detail__motivation {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border-radius: 14px;
+  padding: 16px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: #92400e;
+  margin-bottom: 20px;
+}
+
+/* Achievements */
+.special-habit-detail__achievements {
+  margin-bottom: 20px;
+}
+
+.special-habit-detail__section-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-primary, #1c1c1e);
+  margin-bottom: 12px;
+}
+
+.special-habit-detail__achievement-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.special-habit-detail__achievement {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-primary, #fff);
+  border-radius: 12px;
+  padding: 12px;
+  opacity: 0.45;
+  filter: grayscale(0.6);
+}
+
+.special-habit-detail__achievement--unlocked {
+  opacity: 1;
+  filter: none;
+  border: 1px solid #f59e0b;
+}
+
+.special-habit-detail__achievement-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.special-habit-detail__achievement-icon img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.special-habit-detail__achievement-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.special-habit-detail__achievement-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #1c1c1e);
+}
+
+.special-habit-detail__achievement-desc {
+  font-size: 12px;
+  color: var(--text-secondary, #8e8e93);
+}
+
+.special-habit-detail__achievement-progress {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #8e8e93);
+}
+
+.special-habit-detail__achievement-progress--done {
+  color: #f59e0b;
+}

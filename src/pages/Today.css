@@ -775,6 +775,113 @@
   }
 }
 
+/* ──────────────────────────────────────────────
+   TAB SWITCHER  (Special / My)
+────────────────────────────────────────────── */
+.today__tabs {
+  display: flex;
+  gap: 8px;
+  padding: 8px 16px 0;
+  margin-bottom: 4px;
+}
+
+.today__tab {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 12px;
+  background: #f0f0f0;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.today__tab--active {
+  background: #A7D96C;
+  color: #1D1D1F;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(167, 217, 108, 0.4);
+}
+
+.today__tab:active {
+  transform: scale(0.97);
+}
+
+/* ──────────────────────────────────────────────
+   SPECIAL HABITS EMPTY STATE
+────────────────────────────────────────────── */
+.today__special-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  gap: 12px;
+  text-align: center;
+}
+
+.today__special-empty-icon {
+  font-size: 48px;
+  line-height: 1;
+  margin: 0;
+}
+
+.today__special-empty-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1D1D1F;
+  margin: 0;
+}
+
+.today__special-empty-desc {
+  font-size: 14px;
+  color: #8E8E93;
+  margin: 0;
+  max-width: 240px;
+  line-height: 1.4;
+}
+
+.today__special-empty-btn {
+  margin-top: 8px;
+  padding: 12px 28px;
+  background: linear-gradient(135deg, #A7D96C 0%, #7BC443 100%);
+  color: #1D1D1F;
+  border: none;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(167, 217, 108, 0.35);
+  transition: all 0.2s ease;
+}
+
+.today__special-empty-btn:active {
+  transform: scale(0.97);
+}
+
+/* ──────────────────────────────────────────────
+   DARK THEME — tabs & special empty
+────────────────────────────────────────────── */
+.dark-theme .today__tab {
+  background: #2C2C2E;
+  color: #AEAEB2;
+}
+
+.dark-theme .today__tab--active {
+  background: #A7D96C;
+  color: #1D1D1F;
+}
+
+.dark-theme .today__special-empty-title {
+  color: #F2F2F7;
+}
+
+.dark-theme .today__special-empty-desc {
+  color: #636366;
+}
+
 /* Темная тема */
 .dark-theme .fab {
   background: #A7D96C;

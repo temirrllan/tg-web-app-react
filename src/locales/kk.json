@@ -274,6 +274,66 @@
       "title": "Тарих"
     }
   },
+  "specialHabits": {
+    "tabSpecial": "✨ Арнайы",
+    "tabMy": "❤️ Менің",
+    "emptyTitle": "Арнайы әдеттер жоқ",
+    "emptyDesc": "Дүкеннен атақты адамдардың әдет жинағын сатып алыңыз",
+    "browseStore": "Дүкенді ашу",
+    "addMenu": {
+      "title": "Әдет қосу",
+      "customHabit": "Өз әдетіңіз",
+      "customHabitDesc": "Өз әдетіңізді жасаңыз",
+      "specialHabits": "Арнайы әдеттер",
+      "specialHabitsDesc": "Атақтылардың әдет жинақтары дүкені",
+      "cancel": "Болдырмау"
+    },
+    "shop": {
+      "title": "Арнайы әдеттер",
+      "searchPlaceholder": "Атақты немесе әдет іздеу...",
+      "filterAll": "Барлығы",
+      "filterPaid": "Ақылы",
+      "filterFree": "Тегін",
+      "habits": "әдет",
+      "freeBadge": "ТЕГІН",
+      "ownedBadge": "✓ Сатып алынды",
+      "noPacks": "Ештеңе табылмады"
+    },
+    "packDetail": {
+      "unlockButton": "Әдеттерді алу",
+      "ownedButton": "Әдеттер қосылды",
+      "biography": "Өмірбаяны",
+      "learnMore": "Толығырақ",
+      "achievements": "Жетістіктер",
+      "myHabits": "Менің әдеттерім",
+      "statsHabits": "Әдеттер",
+      "statsAchievement": "Жетістік",
+      "statsPrice": "Бағасы",
+      "freeBadge": "ТЕГІН",
+      "dayPeriod": {
+        "morning": "Таң",
+        "afternoon": "Күндіз",
+        "evening": "Кеш",
+        "night": "Түн"
+      },
+      "purchasing": "Сатып алынуда...",
+      "purchaseError": "Сатып алу сәтсіз аяқталды. Қайталап көріңіз."
+    },
+    "detail": {
+      "motivation": "Керемет, дос! 🔥",
+      "achievements": "Жетістіктер",
+      "stats": {
+        "daysStreak": "Күндер қатарынан",
+        "week": "Апта",
+        "month": "Ай",
+        "year": "Жыл"
+      }
+    },
+    "achievement": {
+      "congratulations": "Құттықтаймыз! Сіз марапат алдыңыз!",
+      "thanks": "Рахмет! 🙏"
+    }
+  },
   "subscriptionNew": {
     "title": "PRO мүмкіндіктері",
     "subtitle": "Ең жақсы нұсқаңызды іске қосыңыз!",
