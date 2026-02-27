@@ -1,126 +1,114 @@
-/* AddHabitMenu.css */
+/* AddHabitMenu.css — floating FAB speed-dial style */
 
-.add-habit-menu__overlay {
+/* ── Backdrop ───────────────────────────────────────────────────────────── */
+.ahm-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 1000;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  z-index: 9997;
+  background: rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.ahm-backdrop--visible {
+  pointer-events: all;
+  opacity: 1;
+}
+
+/* ── Container — aligned exactly above FAB ──────────────────────────────── */
+/* FAB: bottom 24px, right 24px, 56px tall → menu bottom = 24+56+14 = 94px */
+.ahm-container {
+  position: fixed;
+  bottom: 94px;
+  right: 24px;
+  z-index: 9998;
   display: flex;
+  flex-direction: column;
   align-items: flex-end;
-  animation: fadeIn 0.15s ease;
+  gap: 10px;
+  pointer-events: none;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+.ahm-container--open {
+  pointer-events: all;
 }
 
-.add-habit-menu__sheet {
-  width: 100%;
-  background: var(--bg-primary, #fff);
-  border-radius: 20px 20px 0 0;
-  padding: 12px 16px 32px;
-  animation: slideUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0); }
-}
-
-.add-habit-menu__handle {
-  width: 36px;
-  height: 4px;
-  background: var(--separator, #e5e5ea);
-  border-radius: 2px;
-  margin: 0 auto 16px;
-}
-
-.add-habit-menu__title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-secondary, #8e8e93);
-  text-align: center;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 16px;
-}
-
-.add-habit-menu__option {
+/* ── Each row (label + round btn) ──────────────────────────────────────── */
+.ahm-row {
   display: flex;
   align-items: center;
-  gap: 14px;
-  width: 100%;
-  padding: 16px 14px;
-  border-radius: 14px;
+  gap: 10px;
+  opacity: 0;
+  transform: translateY(16px) scale(0.88);
+  transition:
+    opacity 0.26s cubic-bezier(0.34, 1.56, 0.64, 1),
+    transform 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Custom Habit comes up first */
+.ahm-row--custom  { transition-delay: 50ms; }
+
+/* Special Habits comes up second (closer to FAB, smaller delay) */
+.ahm-row--special { transition-delay: 0ms; }
+
+.ahm-row--visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* ── Label pill ─────────────────────────────────────────────────────────── */
+.ahm-label {
+  background: #fff;
+  color: #1c1c1e;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 9px 16px;
+  border-radius: 22px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.13);
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* ── Round button ───────────────────────────────────────────────────────── */
+.ahm-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
   border: none;
-  background: var(--bg-secondary, #f2f2f7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
   cursor: pointer;
-  margin-bottom: 10px;
-  text-align: left;
-  transition: opacity 0.15s;
-}
-
-.add-habit-menu__option:active {
-  opacity: 0.7;
-}
-
-.add-habit-menu__option-icon {
-  font-size: 28px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
   flex-shrink: 0;
 }
 
-.add-habit-menu__option-text {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.ahm-btn:active {
+  transform: scale(0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.add-habit-menu__option-label {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary, #1c1c1e);
+/* Custom Habit — soft pink */
+.ahm-btn--custom {
+  background: #fff0f3;
 }
 
-.add-habit-menu__option-desc {
-  font-size: 13px;
-  color: var(--text-secondary, #8e8e93);
+/* Special Habits — warm yellow */
+.ahm-btn--special {
+  background: #fffbe6;
 }
 
-.add-habit-menu__option-arrow {
-  font-size: 22px;
-  color: var(--text-secondary, #8e8e93);
+.ahm-sparkle {
+  font-size: 20px;
+  color: #f59e0b;
+  font-style: normal;
 }
 
-.add-habit-menu__option--special {
-  background: linear-gradient(135deg, #f5f0ff 0%, #ede9fe 100%);
-}
-
-.add-habit-menu__option--special .add-habit-menu__option-label {
-  background: linear-gradient(135deg, #7c3aed, #a855f7);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.add-habit-menu__cancel {
-  display: block;
-  width: 100%;
-  padding: 15px;
-  border-radius: 14px;
-  border: none;
-  background: var(--bg-secondary, #f2f2f7);
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--text-secondary, #8e8e93);
-  cursor: pointer;
-  margin-top: 4px;
-  transition: opacity 0.15s;
-}
-
-.add-habit-menu__cancel:active {
-  opacity: 0.7;
+/* ── FAB rotation when menu is open (applied via .fab--open in Today.jsx) ─ */
+.fab--open {
+  transform: rotate(45deg) !important;
+  background: #ff6b6b !important;
 }

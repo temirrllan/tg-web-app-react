@@ -2,14 +2,7 @@
 import React, { useEffect } from 'react';
 import './AddHabitMenu.css';
 
-/**
- * Bottom-sheet that appears when the user taps the "+" FAB.
- * Background is blurred. Two options:
- *   ❤️  Custom Habit   → navigates to CreateHabitForm
- *   ✨  Special Habits  → navigates to SpecialHabitsShop
- */
 const AddHabitMenu = ({ isOpen, onClose, onCustomHabit, onSpecialHabits }) => {
-  // Close on escape key
   useEffect(() => {
     if (!isOpen) return;
     const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -17,47 +10,35 @@ const AddHabitMenu = ({ isOpen, onClose, onCustomHabit, onSpecialHabits }) => {
     return () => document.removeEventListener('keydown', handleKey);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
-
   return (
-    <div className="add-habit-menu__overlay" onClick={onClose}>
+    <>
+      {/* Backdrop — closes menu on outside tap */}
       <div
-        className="add-habit-menu__sheet"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="add-habit-menu__handle" />
+        className={`ahm-backdrop ${isOpen ? 'ahm-backdrop--visible' : ''}`}
+        onClick={onClose}
+      />
 
-        <p className="add-habit-menu__title">Add Habit</p>
+      {/* Floating cards above FAB */}
+      <div className={`ahm-container ${isOpen ? 'ahm-container--open' : ''}`}>
 
-        <button
-          className="add-habit-menu__option add-habit-menu__option--custom"
-          onClick={onCustomHabit}
-        >
-          <span className="add-habit-menu__option-icon">❤️</span>
-          <div className="add-habit-menu__option-text">
-            <span className="add-habit-menu__option-label">Custom Habit</span>
-            <span className="add-habit-menu__option-desc">Create your own habit</span>
-          </div>
-          <span className="add-habit-menu__option-arrow">›</span>
-        </button>
+        {/* Custom Habit — slides up second (delay 0ms) */}
+        <div className={`ahm-row ahm-row--custom ${isOpen ? 'ahm-row--visible' : ''}`}>
+          <span className="ahm-label">Custom Habit</span>
+          <button className="ahm-btn ahm-btn--custom" onClick={onCustomHabit}>
+            <span>🩷</span>
+          </button>
+        </div>
 
-        <button
-          className="add-habit-menu__option add-habit-menu__option--special"
-          onClick={onSpecialHabits}
-        >
-          <span className="add-habit-menu__option-icon">✨</span>
-          <div className="add-habit-menu__option-text">
-            <span className="add-habit-menu__option-label">Special Habits</span>
-            <span className="add-habit-menu__option-desc">Celebrity habit packs store</span>
-          </div>
-          <span className="add-habit-menu__option-arrow">›</span>
-        </button>
+        {/* Special Habits — slides up first (delay 60ms) */}
+        <div className={`ahm-row ahm-row--special ${isOpen ? 'ahm-row--visible' : ''}`}>
+          <span className="ahm-label">Special Habits</span>
+          <button className="ahm-btn ahm-btn--special" onClick={onSpecialHabits}>
+            <span className="ahm-sparkle">✦</span>
+          </button>
+        </div>
 
-        <button className="add-habit-menu__cancel" onClick={onClose}>
-          Cancel
-        </button>
       </div>
-    </div>
+    </>
   );
 };
 

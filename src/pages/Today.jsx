@@ -1129,7 +1129,10 @@ useEffect(() => {
           onClose={() => setShowSwipeHint(false)} 
         />
         
-        <button className="fab" onClick={handleFabClick}>
+        <button
+          className={`fab ${showAddHabitMenu ? 'fab--open' : ''}`}
+          onClick={showAddHabitMenu ? () => setShowAddHabitMenu(false) : handleFabClick}
+        >
           +
         </button>
       </Layout>
