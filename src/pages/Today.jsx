@@ -911,6 +911,13 @@ useEffect(() => {
           setShowSpecialHabitDetail(false);
           setSelectedSpecialHabit(null);
         }}
+        onDelete={async (habitId) => {
+          setShowSpecialHabitDetail(false);
+          setSelectedSpecialHabit(null);
+          // Reload special habits after removal
+          await loadSpecialHabitsForDate(selectedDate);
+          await checkUserSubscription();
+        }}
       />
     );
   }
