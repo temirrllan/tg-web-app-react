@@ -115,10 +115,7 @@ const SpecialHabitPackDetail = ({ pack: initialPack, onClose, onGoToSpecialTab }
 
   return (
     <div className="pack-detail">
-      {/* Header */}
-      <div className="pack-detail__header">
-        <button className="pack-detail__back" onClick={onClose}>‹</button>
-      </div>
+
 
       <div className="pack-detail__content">
         {/* Hero / Avatar */}

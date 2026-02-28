@@ -12,33 +12,6 @@
   justify-content: center;
 }
 
-/* Header */
-.pack-detail__header {
-  padding: 12px 16px;
-  position: sticky;
-  top: 0;
-  background: var(--bg-primary, #f2f2f7);
-  z-index: 5;
-}
-
-.pack-detail__back {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-secondary, rgba(255,255,255,0.8));
-  border: none;
-  font-size: 28px;
-  color: var(--text-primary, #1c1c1e);
-  cursor: pointer;
-  border-radius: 50%;
-}
-
-.pack-detail__content {
-  padding: 0 16px;
-}
-
 /* Hero */
 .pack-detail__hero {
   text-align: center;

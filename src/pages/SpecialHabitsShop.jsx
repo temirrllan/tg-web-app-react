@@ -44,12 +44,6 @@ const SpecialHabitsShop = ({ onClose, onPackSelect }) => {
 
   return (
     <div className="shop">
-      {/* Header */}
-      <div className="shop__header">
-        <button className="shop__back" onClick={onClose}>‹</button>
-        <h1 className="shop__heading">Special Habits</h1>
-        <div style={{ width: 40 }} />
-      </div>
 
       {/* Search */}
       <div className="shop__search-wrap">
