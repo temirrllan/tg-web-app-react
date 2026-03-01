@@ -1,318 +1,93 @@
-/* ── SpecialHabitDetail.css ──────────────────────────────────────────────── */
+/* ── SpecialHabitDetail.css ─────────────────────────────────────────────────
+   Only achievement-specific styles.
+   Layout/stats/motivation come from HabitDetail.css
+   ─────────────────────────────────────────────────────────────────────────── */
 
-.shd {
-  min-height: 100vh;
-  background: #f2f2f7;
-  padding-bottom: 40px;
-  overflow-y: auto;
+.shd-achievements {
+  margin-bottom: 20px;
 }
 
-.shd--loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.shd__content {
-  padding: 16px 16px 0;
-}
-
-/* ── Header ─────────────────────────────────────────────────────────────── */
-.shd__header {
-  padding: 12px 0 20px;
-}
-
-.shd__title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-
-.shd__title {
-  font-size: 26px;
-  font-weight: 800;
-  color: #1c1c1e;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  line-height: 1.2;
-}
-
-.shd__emoji {
-  font-style: normal;
-}
-
-.shd__edit-btn {
-  flex-shrink: 0;
-  padding: 6px 18px;
-  border-radius: 20px;
-  border: 1.5px solid #34c759;
-  background: transparent;
-  color: #34c759;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.shd__goal {
-  font-size: 14px;
-  color: #8e8e93;
-  margin: 0;
-  line-height: 1.4;
-}
-
-/* ── Stats 2×2 grid ─────────────────────────────────────────────────────── */
-.shd__stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.shd__stat-card {
-  background: #fff;
-  border-radius: 18px;
-  padding: 16px 12px 14px;
-  text-align: center;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-}
-
-/* Ring wrapper: svg + absolutely centered text */
-.shd__ring-wrap {
-  position: relative;
-  width: 82px;
-  height: 82px;
-  margin: 0 auto 10px;
-}
-
-.shd__ring-center {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-
-.shd__ring-val {
-  font-size: 22px;
-  font-weight: 800;
-  color: #1c1c1e;
-  line-height: 1;
-}
-
-.shd__ring-tot {
-  font-size: 11px;
-  color: #c0c0c8;
-  line-height: 1;
-  margin-top: 1px;
-}
-
-.shd__stat-label {
-  font-size: 13px;
-  font-weight: 700;
-  color: #1c1c1e;
-  margin: 0 0 2px;
-}
-
-.shd__stat-sub {
-  font-size: 11px;
-  color: #aaa;
-  margin: 0;
-}
-
-/* ── Motivation banner ───────────────────────────────────────────────────── */
-.shd__motivation {
-  background: #4caf50;
-  border-radius: 16px;
-  padding: 18px 20px;
-  text-align: center;
+.shd-achievements__title {
   font-size: 20px;
-  font-weight: 700;
-  font-family: 'Georgia', cursive;
-  font-style: italic;
-  color: #fff;
-  margin-bottom: 20px;
-  letter-spacing: 0.2px;
-}
-
-/* ── Sections ────────────────────────────────────────────────────────────── */
-.shd__section {
-  margin-bottom: 20px;
-}
-
-.shd__section-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #1c1c1e;
+  font-weight: 600;
+  color: var(--text-primary, #000);
   margin: 0 0 12px;
 }
 
-/* ── Achievement list ────────────────────────────────────────────────────── */
-.shd__achievement-list {
+.shd-achievements__list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
-.shd__achievement {
+/* Single achievement row */
+.shd-achievement {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #eeeef6;
-  border-radius: 14px;
-  padding: 12px 14px;
-  opacity: 0.55;
+  background: var(--card-bg, #fff);
+  border-radius: 16px;
+  padding: 14px;
+  opacity: 0.45;
+  border: 1px solid transparent;
 }
 
-.shd__achievement--unlocked {
+.shd-achievement--unlocked {
   opacity: 1;
-  background: #dcd8f0;
+  background: #e9e4f8;
+  border-color: #d4caef;
 }
 
-.shd__ach-icon-wrap {
+/* Icon circle */
+.shd-achievement__icon {
   width: 46px;
   height: 46px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(0, 0, 0, 0.06);
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 22px;
   flex-shrink: 0;
   overflow: hidden;
 }
 
-.shd__ach-emoji {
-  font-size: 22px;
-  line-height: 1;
+.shd-achievement--unlocked .shd-achievement__icon {
+  background: rgba(255, 255, 255, 0.55);
 }
 
-.shd__ach-img {
+.shd-achievement__icon img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
 }
 
-.shd__ach-info {
+/* Text */
+.shd-achievement__info {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 3px;
+  min-width: 0;
 }
 
-.shd__ach-title {
-  font-size: 14px;
+.shd-achievement__title {
+  font-size: 15px;
   font-weight: 700;
-  color: #1c1c1e;
+  color: var(--text-primary, #000);
 }
 
-.shd__ach-count {
+.shd-achievement__count {
   font-weight: 700;
-  color: #555;
+  color: var(--text-secondary, #555);
 }
 
-.shd__ach-desc {
-  font-size: 12px;
-  color: #8e8e93;
+.shd-achievement--unlocked .shd-achievement__count {
+  color: #7c3aed;
 }
 
-/* ── Habit Friends ───────────────────────────────────────────────────────── */
-.shd__friends-desc {
+.shd-achievement__desc {
   font-size: 13px;
-  color: #8e8e93;
-  margin: 0 0 14px;
-  line-height: 1.45;
-}
-
-.shd__friends-btns {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.shd__btn {
-  padding: 13px;
-  border-radius: 14px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: opacity 0.15s;
-}
-
-.shd__btn:active { opacity: 0.75; }
-
-.shd__btn--outline {
-  border: 1.5px solid #34c759;
-  background: transparent;
-  color: #34c759;
-}
-
-.shd__btn--solid {
-  border: none;
-  background: #34c759;
-  color: #fff;
-}
-
-/* ── Remove button ───────────────────────────────────────────────────────── */
-.shd__remove-btn {
-  display: block;
-  width: 100%;
-  padding: 14px;
-  border-radius: 14px;
-  border: 1.5px solid #1c1c1e;
-  background: #fff;
-  color: #1c1c1e;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 4px;
-  -webkit-tap-highlight-color: transparent;
-  transition: background 0.15s, color 0.15s;
-}
-
-.shd__remove-btn--confirm {
-  border-color: #ff3b30;
-  color: #ff3b30;
-}
-
-.shd__remove-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* ── Toast ───────────────────────────────────────────────────────────────── */
-.shd__toast {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 10px 20px;
-  border-radius: 24px;
-  font-size: 14px;
-  font-weight: 600;
-  white-space: nowrap;
-  z-index: 9999;
-  animation: shd-toast-in 0.25s ease;
-}
-
-.shd__toast--success {
-  background: #1c1c1e;
-  color: #fff;
-}
-
-.shd__toast--error {
-  background: #ff3b30;
-  color: #fff;
-}
-
-@keyframes shd-toast-in {
-  from { opacity: 0; transform: translateX(-50%) translateY(12px); }
-  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  color: var(--text-tertiary, #8e8e93);
 }
