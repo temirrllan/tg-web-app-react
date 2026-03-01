@@ -1,128 +1,191 @@
-.swipe-hint-overlay {
+/* ── SwipeHint.css ───────────────────────────────────────────────────────── */
+
+/* Dark overlay */
+.sh-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-  animation: fadeIn 0.3s ease-out;
+  z-index: 3000;
+  animation: shFadeIn 0.3s ease-out;
+  padding: 20px;
 }
 
-.swipe-hint {
-  background: white;
-  border-radius: 20px;
-  padding: 24px;
-  margin: 0 20px;
+.sh-overlay--hiding {
+  animation: shFadeOut 0.3s ease-out forwards;
+}
+
+/* Card */
+.sh-card {
+  background: #ffffff;
+  border-radius: 22px;
+  padding: 22px 20px 18px;
+  width: 100%;
   max-width: 340px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-  animation: slideUp 0.3s ease-out;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.18), 0 2px 10px rgba(0, 0, 0, 0.08);
+  animation: shSlideUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.swipe-hint__title {
-  font-size: 20px;
+.sh-card__title {
+  font-size: 19px;
   font-weight: 700;
-  text-align: center;
-  margin-bottom: 20px;
   color: #1C1C1D;
+  text-align: center;
+  margin: 0 0 18px;
 }
 
-.swipe-hint__content {
+/* Swipe rows */
+.sh-rows {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
 }
 
-.swipe-hint__item {
+.sh-row {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 12px 16px;
-  background: #F8F8F8;
-  border-radius: 12px;
+  gap: 14px;
+  background: #F5F5F7;
+  border-radius: 14px;
+  padding: 12px 14px;
 }
 
-.swipe-hint__arrow {
-  width: 40px;
-  height: 40px;
+.sh-row__icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
-  border-radius: 50%;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
   flex-shrink: 0;
 }
 
-.swipe-hint__arrow--left {
-  background: #34C759;
-  color: white;
+.sh-row__icon--left  { background: #34C759; }
+.sh-row__icon--right { background: #FF9500; }
+
+.sh-row__text {
+  font-size: 14px;
+  color: #3C3C43;
+  line-height: 1.45;
+  margin: 0;
 }
 
-.swipe-hint__arrow--right {
-  background: #FF9500;
-  color: white;
+.sh-row__action {
+  color: #1C1C1D;
 }
 
-.swipe-hint__text {
-  flex: 1;
-  font-size: 15px;
+/* Divider */
+.sh-divider {
+  height: 1px;
+  background: #E5E5EA;
+  margin: 16px 0 14px;
+}
+
+/* ── Checkbox "Don't show again" ─────────────────────────────────────────── */
+.sh-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  margin-bottom: 16px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.sh-checkbox__box {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 2px solid #C7C7CC;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.18s, border-color 0.18s;
+}
+
+.sh-checkbox__box--checked {
+  background: #A7D96C;
+  border-color: #A7D96C;
+}
+
+.sh-checkbox__box svg {
+  width: 12px;
+  height: 10px;
+}
+
+.sh-checkbox__label {
+  font-size: 14px;
   color: #3C3C43;
   line-height: 1.4;
 }
 
-.swipe-hint__progress {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  margin-top: 20px;
+/* ── Got it button ───────────────────────────────────────────────────────── */
+.sh-card__btn {
+  width: 100%;
+  background: #A7D96C;
+  color: #1D1D1F;
+  border: none;
+  border-radius: 14px;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 2px 10px rgba(167, 217, 108, 0.35);
 }
 
-.swipe-hint__dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #D1D1D6;
-  transition: all 0.3s;
+.sh-card__btn:active {
+  transform: scale(0.97);
 }
 
-.swipe-hint__dot--active {
-  background: #007AFF;
-  width: 20px;
-  border-radius: 3px;
+/* ── Animations ──────────────────────────────────────────────────────────── */
+@keyframes shFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+@keyframes shFadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
 }
 
-@keyframes slideUp {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+@keyframes shSlideUp {
+  0%   { opacity: 0; transform: translateY(24px) scale(0.95); }
+  60%  { transform: translateY(-4px) scale(1.01); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-@keyframes fadeOut {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
+/* ── Dark theme ──────────────────────────────────────────────────────────── */
+.dark-theme .sh-card {
+  background: #2C2C2E;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45), 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
-.swipe-hint-overlay--hiding {
-  animation: fadeOut 0.3s ease-out forwards;
+.dark-theme .sh-card__title { color: #ffffff; }
+
+.dark-theme .sh-row { background: #3A3A3C; }
+
+.dark-theme .sh-row__text   { color: #EBEBF5; }
+.dark-theme .sh-row__action { color: #ffffff; }
+
+.dark-theme .sh-divider { background: #48484A; }
+
+.dark-theme .sh-checkbox__label { color: #EBEBF5; }
+
+.dark-theme .sh-checkbox__box {
+  background: #3A3A3C;
+  border-color: #636366;
+}
+
+.dark-theme .sh-checkbox__box--checked {
+  background: #A7D96C;
+  border-color: #A7D96C;
 }

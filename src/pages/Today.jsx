@@ -13,6 +13,7 @@ import { useHabits } from "../hooks/useHabits";
 import { useTelegram } from "../hooks/useTelegram";
 import { habitService } from '../services/habits';
 import { specialHabitsService } from '../services/specialHabits';
+import { userService } from '../services/userService';
 import "./Today.css";
 import SwipeHint from '../components/habits/SwipeHint';
 import EditHabitForm from '../components/habits/EditHabitForm';
@@ -29,7 +30,7 @@ import SpecialHabitPackDetail from './SpecialHabitPackDetail';
 import SpecialHabitDetail from './SpecialHabitDetail';
 import AchievementUnlockedPopup from '../components/modals/AchievementUnlockedPopup';
 
-const Today = ({ shouldShowFabHint = false }) => {
+const Today = ({ shouldShowFabHint = false, shouldShowSwipeHint = false }) => {
   const { t } = useTranslation();
   const { user } = useTelegram();
   useTelegramTheme();
@@ -668,26 +669,32 @@ useEffect(() => {
 
   useEffect(() => {
     const currentHabits = dateDataCache[selectedDate]?.habits || [];
-    const hasSeenHint = localStorage.getItem('hasSeenSwipeHint');
-    const previousHabitsCount = parseInt(localStorage.getItem('previousHabitsCount') || '0');
-    
-    if (currentHabits.length > 0 && isEditableDate) {
-      if (!hasSeenHint || (previousHabitsCount === 0 && currentHabits.length === 1)) {
-        setTimeout(() => {
-          setShowSwipeHint(true);
-          localStorage.setItem('hasSeenSwipeHint', 'true');
-          
-          window.TelegramAnalytics?.track('swipe_hint_shown', {
-            habits_count: currentHabits.length,
-            is_first_time: !hasSeenHint,
-          });
-          console.log('📊 Analytics: swipe_hint_shown');
-        }, 1000);
-      }
-      
-      localStorage.setItem('previousHabitsCount', String(currentHabits.length));
+
+    // Show swipe hint only when: DB says show_swipe_hint=true AND there are habits AND day is editable
+    if (shouldShowSwipeHint && currentHabits.length > 0 && isEditableDate) {
+      const timer = setTimeout(() => {
+        setShowSwipeHint(true);
+        window.TelegramAnalytics?.track('swipe_hint_shown', {
+          habits_count: currentHabits.length,
+        });
+        console.log('📊 Analytics: swipe_hint_shown');
+      }, 1000);
+      return () => clearTimeout(timer);
     }
-  }, [dateDataCache, selectedDate, isEditableDate]);
+  }, [dateDataCache, selectedDate, isEditableDate, shouldShowSwipeHint]);
+
+  // Called when SwipeHint closes; dontShowAgain=true → persist to DB
+  const handleSwipeHintClose = async (dontShowAgain) => {
+    setShowSwipeHint(false);
+    if (dontShowAgain) {
+      try {
+        await userService.updatePreferences({ show_swipe_hint: false });
+        console.log('✅ show_swipe_hint saved to DB: false');
+      } catch (err) {
+        console.error('❌ Failed to save swipe hint preference:', err);
+      }
+    }
+  };
 
   // 🆕 КРИТИЧНО: Изолированная обработка свайпа с защитой от перекрёстных обновлений
   const handleMark = useCallback(async (habitId, status) => {
@@ -1122,9 +1129,9 @@ useEffect(() => {
         <FabHint show={showFabHint} onClose={handleFabHintClose} />
         <WeekHint show={showWeekHint} onClose={handleWeekHintClose} />
 
-        <SwipeHint 
-          show={showSwipeHint} 
-          onClose={() => setShowSwipeHint(false)} 
+        <SwipeHint
+          show={showSwipeHint}
+          onClose={handleSwipeHintClose}
         />
         
         <button

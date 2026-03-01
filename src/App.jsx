@@ -20,8 +20,10 @@ function AppContent() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   
-  // 🆕 Флаг для показа подсказки FAB
+  // Флаг для показа подсказки FAB
   const [shouldShowFabHint, setShouldShowFabHint] = useState(false);
+  // Флаг для показа swipe-подсказки (берётся из БД, не localStorage)
+  const [shouldShowSwipeHint, setShouldShowSwipeHint] = useState(false);
   
   const { initializeLanguage, language } = useContext(LanguageContext);
 
@@ -155,35 +157,31 @@ function AppContent() {
     user_id: response.user.id,
     language: response.user.language,
   });
-            // 🆕 Очищаем localStorage от старых подсказок для нового пользователя
+            // Очищаем localStorage от старых подсказок для нового пользователя
             console.log('🧹 Clearing old hints from localStorage for new user');
             localStorage.removeItem('hasSeenFabHint');
             localStorage.removeItem('hasSeenWeekHint');
-            localStorage.removeItem('hasSeenSwipeHint');
-            localStorage.removeItem('previousHabitsCount');
             // Очищаем ВСЕ кэши привычек из localStorage
-for (let i = localStorage.length - 1; i >= 0; i--) {
-  const key = localStorage.key(i);
-  if (key && key.startsWith('cache_habits')) {
-    console.log('🗑️ Removing stale habits cache:', key);
-    localStorage.removeItem(key);
-  }
-}
+            for (let i = localStorage.length - 1; i >= 0; i--) {
+              const key = localStorage.key(i);
+              if (key && key.startsWith('cache_habits')) {
+                localStorage.removeItem(key);
+              }
+            }
             setShowOnboarding(true);
-            setShouldShowFabHint(true); // ✅ Устанавливаем флаг для подсказки
+            setShouldShowFabHint(true);
+            setShouldShowSwipeHint(response.user.show_swipe_hint !== false);
           } else {
             console.log('👤 EXISTING USER - SKIPPING ONBOARDING');
-            // НЕ показываем onboarding
-            // НЕ показываем подсказки
-            // 🆕 Очищаем кэш привычек даже для существующих пользователей при входе
-  console.log('🧹 Clearing habits cache for existing user');
-  for (let i = localStorage.length - 1; i >= 0; i--) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith('cache_habits')) {
-      console.log('🗑️ Removing stale habits cache:', key);
-      localStorage.removeItem(key);
-    }
-  }
+            // Очищаем кэш привычек при входе
+            for (let i = localStorage.length - 1; i >= 0; i--) {
+              const key = localStorage.key(i);
+              if (key && key.startsWith('cache_habits')) {
+                localStorage.removeItem(key);
+              }
+            }
+            // Swipe hint: берём из БД (не localStorage)
+            setShouldShowSwipeHint(response.user.show_swipe_hint !== false);
           }
           
         } else {
@@ -309,7 +307,7 @@ for (let i = localStorage.length - 1; i >= 0; i--) {
   return (
     <>
       {/* 🆕 Передаем флаг подсказки */}
-      <Today shouldShowFabHint={shouldShowFabHint} />
+      <Today shouldShowFabHint={shouldShowFabHint} shouldShowSwipeHint={shouldShowSwipeHint} />
       {showProfile && (
         <Profile onClose={() => setShowProfile(false)} />
       )}
