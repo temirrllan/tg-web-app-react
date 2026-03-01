@@ -1,245 +1,238 @@
-/* src/components/hints/WeekHint.css */
+/* ── WeekHint.css ────────────────────────────────────────────────────────── */
 
-.week-hint-overlay-wrapper {
+/* ─── Full-screen invisible overlay — captures taps to dismiss ─────────── */
+.wh-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 9998;
-  animation: fadeIn 0.4s ease-out;
+  inset: 0;
+  z-index: 9997;
+  background: transparent;
   pointer-events: auto;
-  background: rgba(0, 0, 0, 0.65);
+  animation: whFadeIn 0.3s ease-out;
 }
 
-.week-hint-container {
-  position: relative;
-  width: 100%;
-  max-width: 500px;
-  height: 100%;
-  margin: 0 auto;
+/* ─── Spotlight strip ───────────────────────────────────────────────────── *
+   This rectangle sits exactly over .week-navigation.
+   The massive box-shadow darkens the rest of the screen.
+   z-index is higher than overlay so it appears above the dark veil.      */
+.wh-spotlight {
+  position: fixed;
+  z-index: 9998;
+  pointer-events: none;
+
+  /* The magic: 9999px solid shadow in every direction darkens everything
+     EXCEPT the element itself, which stays bright */
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.65);
+
+  /* Faint green glow to draw attention */
+  outline: 2.5px solid rgba(167, 217, 108, 0.7);
+  outline-offset: 1px;
+
+  /* Fade-in together with overlay */
+  animation: whFadeIn 0.3s ease-out;
+
+  /* Flex container for the swipe animation inside */
   display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  padding-top: 120px;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+/* ─── Swipe animation inside the spotlight strip ────────────────────────── */
+.wh-swipe {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: whSwipeSlide 1.8s ease-in-out infinite;
   pointer-events: none;
 }
 
-/* Белый балун с речевым хвостиком */
-.week-hint-bubble {
-  position: relative;
-  margin: 0 16px;
-  background: #FFFFFF;
-  border-radius: 20px;
-  padding: 16px 20px;
-  box-shadow: 
-    0 8px 24px rgba(0, 0, 0, 0.15),
-    0 2px 8px rgba(0, 0, 0, 0.08);
-  animation: bubbleAppear 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-  pointer-events: auto;
+.wh-swipe__arrow {
+  font-size: 30px;
+  font-weight: 700;
+  color: #A7D96C;
+  line-height: 1;
+  text-shadow: 0 0 8px rgba(167, 217, 108, 0.6);
 }
 
-/* Хвостик речевого пузыря (указывает вверх на неделю) */
-.week-hint-bubble::after {
-  content: '';
+.wh-swipe__arrow--left {
+  animation: whArrowLeft 1.8s ease-in-out infinite;
+}
+
+.wh-swipe__arrow--right {
+  animation: whArrowRight 1.8s ease-in-out infinite;
+}
+
+/* Three moving dots to suggest scroll */
+.wh-swipe__track {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.wh-swipe__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(167, 217, 108, 0.9);
+  animation: whDotPulse 1.8s ease-in-out infinite;
+}
+
+.wh-swipe__dot:nth-child(1) { animation-delay: 0s; }
+.wh-swipe__dot:nth-child(2) { animation-delay: 0.2s; }
+.wh-swipe__dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* ─── Tooltip bubble ────────────────────────────────────────────────────── */
+.wh-bubble {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  z-index: 9999;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 18px 20px 16px;
+  box-shadow:
+    0 10px 32px rgba(0, 0, 0, 0.18),
+    0 2px 10px rgba(0, 0, 0, 0.08);
+  pointer-events: auto;
+  animation: whBubbleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Triangle arrow pointing UP toward week navigation */
+.wh-bubble__arrow {
   position: absolute;
-  top: -12px;
+  top: -11px;
   left: 50%;
   transform: translateX(-50%);
   width: 0;
   height: 0;
-  border-left: 16px solid transparent;
-  border-right: 16px solid transparent;
-  border-bottom: 16px solid #FFFFFF;
-  filter: drop-shadow(0 -4px 4px rgba(0, 0, 0, 0.08));
+  border-left: 13px solid transparent;
+  border-right: 13px solid transparent;
+  border-bottom: 13px solid #ffffff;
+  filter: drop-shadow(0 -3px 3px rgba(0, 0, 0, 0.06));
 }
 
-.week-hint-text {
-  font-size: 16px;
-  line-height: 1.5;
+.wh-bubble__text {
+  font-size: 15px;
+  line-height: 1.55;
   color: #1D1D1F;
-  margin: 0;
+  margin: 0 0 14px;
   font-weight: 500;
   text-align: center;
 }
 
-/* Подсветка области week navigation */
-.week-hint-highlight {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 100px;
-  pointer-events: none;
-  z-index: 9997;
-  background: rgba(167, 217, 108, 0.1);
-  border-bottom: 2px solid #A7D96C;
-  animation: highlightPulse 2s ease-in-out infinite;
-}
-
-/* Анимация свайпа (стрелки влево-вправо) */
-.week-hint-swipe-indicator {
-  position: fixed;
-  top: 40px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  pointer-events: none;
-  z-index: 9999;
-  animation: swipeAnimation 2s ease-in-out infinite;
-}
-
-.week-hint-arrow {
-  font-size: 24px;
-  color: #A7D96C;
-  font-weight: bold;
-}
-
-/* Кнопка "Понятно" */
-.week-hint-button {
-  margin-top: 12px;
+.wh-bubble__btn {
   width: 100%;
   background: #A7D96C;
   color: #1D1D1F;
   border: none;
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 14px 20px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(167, 217, 108, 0.3);
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 2px 10px rgba(167, 217, 108, 0.35);
+  -webkit-tap-highlight-color: transparent;
 }
 
-.week-hint-button:hover {
-  background: #95C55D;
-  box-shadow: 0 4px 12px rgba(167, 217, 108, 0.4);
-  transform: translateY(-2px);
+.wh-bubble__btn:active {
+  transform: scale(0.97);
+  box-shadow: 0 1px 6px rgba(167, 217, 108, 0.3);
 }
 
-.week-hint-button:active {
-  transform: scale(0.96) translateY(0);
-  box-shadow: 0 2px 8px rgba(167, 217, 108, 0.3);
+/* ─── Keyframes ─────────────────────────────────────────────────────────── */
+@keyframes whFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
-/* Анимации */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+@keyframes whBubbleIn {
+  0%   { opacity: 0; transform: translateY(-14px) scale(0.94); }
+  60%  { transform: translateY(4px) scale(1.01); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-@keyframes bubbleAppear {
-  0% {
-    opacity: 0;
-    transform: translateY(-20px) scale(0.9);
-  }
-  60% {
-    transform: translateY(5px) scale(1.02);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+/* Whole swipe group drifts left then right */
+@keyframes whSwipeSlide {
+  0%   { transform: translateX(0); }
+  30%  { transform: translateX(-14px); }
+  70%  { transform: translateX(14px); }
+  100% { transform: translateX(0); }
 }
 
-@keyframes highlightPulse {
-  0%, 100% {
-    background: rgba(167, 217, 108, 0.1);
-  }
-  50% {
-    background: rgba(167, 217, 108, 0.2);
-  }
+/* Arrows fade in and out alternately */
+@keyframes whArrowLeft {
+  0%, 100% { opacity: 0.5; }
+  30%       { opacity: 1; }
+  70%       { opacity: 0.3; }
 }
 
-@keyframes swipeAnimation {
-  0%, 100% {
-    transform: translateX(-50%);
-  }
-  25% {
-    transform: translateX(-60%);
-  }
-  75% {
-    transform: translateX(-40%);
-  }
+@keyframes whArrowRight {
+  0%, 100% { opacity: 0.5; }
+  30%       { opacity: 0.3; }
+  70%       { opacity: 1; }
 }
 
-/* ==================== АДАПТИВНОСТЬ ==================== */
+/* Dots pulse in sequence */
+@keyframes whDotPulse {
+  0%, 100% { transform: scale(1);   opacity: 0.6; }
+  50%       { transform: scale(1.4); opacity: 1;   }
+}
+
+/* ─── Dark theme ────────────────────────────────────────────────────────── */
+.dark-theme .wh-spotlight {
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.78);
+}
+
+.dark-theme .wh-bubble {
+  background: #2C2C2E;
+  box-shadow:
+    0 10px 32px rgba(0, 0, 0, 0.45),
+    0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .wh-bubble__arrow {
+  border-bottom-color: #2C2C2E;
+  filter: drop-shadow(0 -3px 4px rgba(0, 0, 0, 0.25));
+}
+
+.dark-theme .wh-bubble__text {
+  color: #ffffff;
+}
+
+.dark-theme .wh-bubble__btn {
+  background: #A7D96C;
+  color: #1D1D1F;
+}
+
+/* ─── Responsive ────────────────────────────────────────────────────────── */
 @media (max-width: 430px) {
-  .week-hint-container {
-    padding-top: 110px;
+  .wh-bubble {
+    padding: 16px 18px 14px;
   }
-  
-  .week-hint-bubble {
-    margin: 0 12px;
-    padding: 16px 18px;
+
+  .wh-bubble__text {
+    font-size: 14px;
+    margin-bottom: 12px;
   }
-  
-  .week-hint-text {
-    font-size: 15px;
-  }
-  
-  .week-hint-button {
+
+  .wh-bubble__btn {
     padding: 13px 18px;
     font-size: 15px;
   }
 }
 
 @media (max-width: 375px) {
-  .week-hint-bubble {
-    padding: 14px 16px;
+  .wh-bubble {
+    padding: 14px 16px 13px;
   }
-  
-  .week-hint-text {
-    font-size: 14px;
+
+  .wh-bubble__text {
+    font-size: 13px;
   }
-  
-  .week-hint-button {
+
+  .wh-bubble__btn {
     padding: 12px 16px;
     font-size: 14px;
   }
-}
-
-/* ==================== ТЕМНАЯ ТЕМА ==================== */
-.dark-theme .week-hint-overlay-wrapper {
-  background: rgba(0, 0, 0, 0.75);
-}
-
-.dark-theme .week-hint-bubble {
-  background: #2C2C2E;
-  box-shadow: 
-    0 8px 24px rgba(0, 0, 0, 0.4),
-    0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.dark-theme .week-hint-bubble::after {
-  border-bottom-color: #2C2C2E;
-  filter: drop-shadow(0 -4px 4px rgba(0, 0, 0, 0.2));
-}
-
-.dark-theme .week-hint-text {
-  color: #FFFFFF;
-}
-
-.dark-theme .week-hint-button {
-  background: #A7D96C;
-  color: #1D1D1F;
-}
-
-.dark-theme .week-hint-button:hover {
-  background: #95C55D;
-}
-
-.dark-theme .week-hint-highlight {
-  background: rgba(167, 217, 108, 0.15);
-  border-bottom-color: #A7D96C;
-}
-
-.dark-theme .week-hint-arrow {
-  color: #A7D96C;
 }

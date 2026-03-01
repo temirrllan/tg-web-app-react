@@ -1120,7 +1120,7 @@ useEffect(() => {
         </div>
 
         <FabHint show={showFabHint} onClose={handleFabHintClose} />
-        {/* <WeekHint show={showWeekHint} onClose={handleWeekHintClose} /> */}
+        <WeekHint show={showWeekHint} onClose={handleWeekHintClose} />
 
         <SwipeHint 
           show={showSwipeHint} 

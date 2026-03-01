@@ -1,43 +1,58 @@
 // src/components/hints/WeekHint.jsx
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import './WeekHint.css';
 import { useTranslation } from '../../hooks/useTranslation';
 
-// Переводы для подсказки
 const translations = {
   en: {
-    message: 'Swipe to view your habits for different days of the week!',
+    message: 'Scroll left or right to navigate between days of the week!',
     gotIt: 'Got it!'
   },
   ru: {
-    message: 'Свайпайте, чтобы посмотреть привычки за разные дни недели!',
+    message: 'Листайте влево или вправо, чтобы переключаться между днями недели!',
     gotIt: 'Понятно!'
   },
   kk: {
-    message: 'Апта күндері бойынша әдеттеріңізді көру үшін сырғытыңыз!',
+    message: 'Апта күндерін ауыстыру үшін солға немесе оңға жылжытыңыз!',
     gotIt: 'Түсінікті!'
   }
 };
 
 const WeekHint = ({ show, onClose }) => {
   const { language } = useTranslation();
-  
-  // Получаем текущие переводы
   const texts = translations[language] || translations.en;
+
+  // Bounding rect of the week navigation element
+  const [navRect, setNavRect] = useState(null);
 
   useEffect(() => {
     if (show) {
-      // Предотвращаем скролл когда подсказка открыта
+      // Get the exact position of the week navigation
+      const el = document.querySelector('.week-navigation');
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        setNavRect({
+          top: rect.top,
+          left: rect.left,
+          width: rect.width,
+          height: rect.height,
+          bottom: rect.bottom,
+        });
+      }
+
+      // Block page scroll while hint is open
       document.body.style.overflow = 'hidden';
-      
-      // Вибрация при показе
+
+      // Haptic feedback
       if (window.Telegram?.WebApp?.HapticFeedback) {
         window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
       }
-      
+
       return () => {
-        document.body.style.overflow = 'auto';
+        document.body.style.overflow = '';
       };
+    } else {
+      setNavRect(null);
     }
   }, [show]);
 
@@ -46,28 +61,10 @@ const WeekHint = ({ show, onClose }) => {
       e.preventDefault();
       e.stopPropagation();
     }
-    
-    // Вибрация при закрытии
     if (window.Telegram?.WebApp?.HapticFeedback) {
       window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
     }
-    
-    console.log('🔴 WeekHint closing...');
-    
-    setTimeout(() => {
-      onClose();
-    }, 50);
-  };
-
-  const handleOverlayClick = (e) => {
-    const target = e.target;
-    const isOverlay = target.classList.contains('week-hint-overlay-wrapper');
-    
-    if (isOverlay) {
-      e.preventDefault();
-      e.stopPropagation();
-      handleClose(e);
-    }
+    setTimeout(() => onClose(), 50);
   };
 
   const handleBubbleClick = (e) => {
@@ -76,39 +73,63 @@ const WeekHint = ({ show, onClose }) => {
 
   if (!show) return null;
 
+  // Tooltip appears 16px below the week navigation
+  const bubbleTop = navRect ? navRect.bottom + 16 : 180;
+
   return (
     <>
-      {/* Затемнённый overlay */}
-      <div 
-        className="week-hint-overlay-wrapper" 
-        onClick={handleOverlayClick}
-        onTouchEnd={handleOverlayClick}
-      >
-        {/* Подсветка области week navigation */}
-        <div className="week-hint-highlight" />
-        
-        {/* Анимация свайпа */}
-        <div className="week-hint-swipe-indicator">
-          <span className="week-hint-arrow">←</span>
-          <span className="week-hint-arrow">→</span>
-        </div>
-        
-        <div className="week-hint-container" onClick={handleBubbleClick}>
-          {/* Белый балун с хвостиком */}
-          <div className="week-hint-bubble" onClick={handleBubbleClick}>
-            <p className="week-hint-text">
-              {texts.message}
-            </p>
-            <button 
-              className="week-hint-button" 
-              onClick={handleClose}
-              onTouchEnd={handleClose}
-              type="button"
-            >
-              {texts.gotIt}
-            </button>
+      {/* Full-screen overlay — click anywhere to close */}
+      <div
+        className="wh-overlay"
+        onClick={handleClose}
+        onTouchEnd={handleClose}
+      />
+
+      {/* Spotlight rectangle over week navigation —
+          box-shadow darkens everything outside this strip */}
+      {navRect && (
+        <div
+          className="wh-spotlight"
+          style={{
+            top: navRect.top,
+            left: navRect.left,
+            width: navRect.width,
+            height: navRect.height,
+          }}
+        >
+          {/* Animated swipe gesture inside the highlighted strip */}
+          <div className="wh-swipe">
+            <span className="wh-swipe__arrow wh-swipe__arrow--left">‹</span>
+            <div className="wh-swipe__track">
+              <span className="wh-swipe__dot" />
+              <span className="wh-swipe__dot" />
+              <span className="wh-swipe__dot" />
+            </div>
+            <span className="wh-swipe__arrow wh-swipe__arrow--right">›</span>
           </div>
         </div>
+      )}
+
+      {/* Tooltip bubble below the spotlight */}
+      <div
+        className="wh-bubble"
+        style={{ top: bubbleTop }}
+        onClick={handleBubbleClick}
+        onTouchEnd={handleBubbleClick}
+      >
+        {/* Arrow tip pointing up toward week navigation */}
+        <div className="wh-bubble__arrow" />
+
+        <p className="wh-bubble__text">{texts.message}</p>
+
+        <button
+          className="wh-bubble__btn"
+          onClick={handleClose}
+          onTouchEnd={handleClose}
+          type="button"
+        >
+          {texts.gotIt}
+        </button>
       </div>
     </>
   );
