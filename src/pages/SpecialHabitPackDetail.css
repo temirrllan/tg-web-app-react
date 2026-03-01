@@ -1,271 +1,226 @@
-/* SpecialHabitPackDetail.css */
+/* ── SpecialHabitPackDetail.css ─────────────────────────────────────────── */
 
-.pack-detail {
+.pd {
   min-height: 100vh;
-  background: var(--bg-primary, #f2f2f7);
+  background: #f2f2f7;
   padding-bottom: 40px;
+  overflow-y: auto;
 }
 
-.pack-detail--loading {
+.pd--loading {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Hero */
-.pack-detail__hero {
+/* ── Hero (full-width colored banner) ───────────────────────────────────── */
+.pd__hero {
+  width: 100%;
+  padding: 36px 20px 28px;
   text-align: center;
-  padding: 20px 0 24px;
-}
-
-.pack-detail__avatar-wrap {
-  width: 110px;
-  height: 110px;
-  border-radius: 50%;
-  overflow: hidden;
-  margin: 0 auto 14px;
-  border: 3px solid #a855f7;
-  background: linear-gradient(135deg, #ede9fe, #ddd6fe);
-}
-
-.pack-detail__avatar {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.pack-detail__avatar-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 48px;
-}
-
-.pack-detail__name {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--text-primary, #1c1c1e);
-  margin-bottom: 4px;
-}
-
-.pack-detail__profession {
-  font-size: 15px;
-  color: var(--text-secondary, #8e8e93);
-}
-
-/* Stats */
-.pack-detail__stats {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.pack-detail__stat {
-  flex: 1;
-  background: var(--bg-primary, #fff);
-  border-radius: 14px;
-  padding: 12px 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.pd__avatar-wrap {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-bottom: 16px;
+  background: rgba(255,255,255,0.4);
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.55);
+}
+
+.pd__avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.pd__avatar-ph {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 52px;
+}
+
+.pd__name {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1c1c1e;
+  margin: 0 0 4px;
+  letter-spacing: -0.3px;
+}
+
+.pd__profession {
+  font-size: 15px;
+  color: #555;
+  margin: 0;
+}
+
+/* ── Body ───────────────────────────────────────────────────────────────── */
+.pd__body {
+  padding: 16px 16px 0;
+}
+
+/* ── Stats row ──────────────────────────────────────────────────────────── */
+.pd__stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.pd__stat {
+  background: #fff;
+  border-radius: 14px;
+  padding: 12px 10px 13px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 4px;
-  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
 }
 
-.pack-detail__stat-icon {
-  font-size: 20px;
-}
-
-.pack-detail__stat-label {
+.pd__stat-label {
   font-size: 11px;
-  color: var(--text-secondary, #8e8e93);
+  color: #aaa;
+  font-weight: 500;
 }
 
-.pack-detail__stat-value {
+.pd__stat-val {
   font-size: 15px;
   font-weight: 700;
-  color: var(--text-primary, #1c1c1e);
+  color: #1c1c1e;
 }
 
-/* CTA */
-.pack-detail__cta {
+/* ── CTA button ─────────────────────────────────────────────────────────── */
+.pd__cta {
   display: block;
   width: 100%;
-  padding: 16px;
+  padding: 17px;
   border-radius: 16px;
   border: none;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.15s, transform 0.15s;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
+  transition: opacity 0.15s, transform 0.12s;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.pack-detail__cta:active {
-  transform: scale(0.98);
-  opacity: 0.9;
-}
+.pd__cta:active { transform: scale(0.97); }
 
-.pack-detail__cta--buy {
-  background: linear-gradient(135deg, #7c3aed, #a855f7);
+.pd__cta--buy {
+  background: #4caf50;
   color: #fff;
 }
 
-.pack-detail__cta--buy:disabled {
+.pd__cta--buy:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.pack-detail__cta--owned {
-  background: var(--bg-secondary, #e5e5ea);
-  color: var(--text-secondary, #8e8e93);
+/* Owned: muted green, looks disabled */
+.pd__cta--owned {
+  background: #c8e6c9;
+  color: #4caf50;
+  cursor: default;
 }
 
-/* Error */
-.pack-detail__error {
+.pd__error {
   color: #ef4444;
   font-size: 14px;
   text-align: center;
   margin-bottom: 12px;
 }
 
-/* Biography */
-.pack-detail__bio {
-  background: var(--bg-primary, #fff);
-  border-radius: 14px;
-  padding: 16px;
+/* ── Biography ──────────────────────────────────────────────────────────── */
+.pd__bio {
   margin-bottom: 20px;
 }
 
-.pack-detail__section-title {
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--text-primary, #1c1c1e);
-  margin-bottom: 10px;
+.pd__bio-text {
+  font-size: 14px;
+  line-height: 1.65;
+  color: #3a3a3c;
+  margin: 0 0 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.pack-detail__bio-text {
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--text-primary, #1c1c1e);
-}
-
-.pack-detail__learn-more {
-  display: inline-block;
-  margin-top: 10px;
+.pd__learn-more {
   font-size: 14px;
   font-weight: 600;
-  color: #7c3aed;
+  color: #4caf50;
   text-decoration: none;
+  display: inline-block;
 }
 
-/* Habits section */
-.pack-detail__habits-section {
+/* ── Sections ───────────────────────────────────────────────────────────── */
+.pd__section {
   margin-bottom: 20px;
 }
 
-.pack-detail__period {
-  margin-bottom: 14px;
+.pd__section--last {
+  margin-bottom: 12px;
 }
 
-.pack-detail__period-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 0 6px;
+.pd__section-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1c1c1e;
+  margin: 0 0 12px;
 }
 
-.pack-detail__period-label {
-  font-size: 14px;
+/* ── Day period group ───────────────────────────────────────────────────── */
+.pd__period {
+  margin-bottom: 12px;
+}
+
+.pd__period-label {
+  font-size: 13px;
   font-weight: 600;
-  color: var(--text-secondary, #8e8e93);
+  color: #aaa;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
+  margin: 0 0 8px;
 }
 
-.pack-detail__habit-list {
+.pd__habit-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.pack-detail__habit-item {
+/* ── Habit card ─────────────────────────────────────────────────────────── */
+.pd__habit {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: var(--bg-primary, #fff);
-  border-radius: 12px;
-  padding: 12px;
-  transition: none;
+  background: #fff;
+  border-radius: 14px;
+  padding: 13px 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 
-.pack-detail__habit-item--blurred .pack-detail__habit-title,
-.pack-detail__habit-item--blurred .pack-detail__habit-goal,
-.pack-detail__habit-item--blurred .pack-detail__habit-icon {
-  filter: blur(6px);
+/* Locked state: blur whole card */
+.pd__habit--blur {
+  filter: blur(5px);
   user-select: none;
   pointer-events: none;
 }
 
-.pack-detail__habit-icon {
-  font-size: 24px;
-  flex-shrink: 0;
-  width: 36px;
-  text-align: center;
-}
-
-.pack-detail__habit-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.pack-detail__habit-title {
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--text-primary, #1c1c1e);
-}
-
-.pack-detail__habit-goal {
-  font-size: 12px;
-  color: var(--text-secondary, #8e8e93);
-}
-
-/* Achievements section */
-.pack-detail__achievements-section {
-  margin-bottom: 20px;
-}
-
-.pack-detail__achievement-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.pack-detail__achievement {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--bg-primary, #fff);
-  border-radius: 12px;
-  padding: 12px;
-}
-
-.pack-detail__achievement--locked {
-  opacity: 0.45;
-  filter: grayscale(0.6);
-}
-
-.pack-detail__achievement--unlocked {
-  border: 1px solid #f59e0b;
-}
-
-.pack-detail__achievement-icon {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #fef3c7, #fde68a);
+.pd__habit-icon {
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -274,39 +229,90 @@
   flex-shrink: 0;
 }
 
-.pack-detail__achievement-icon img {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-  border-radius: 4px;
+.pd__habit-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
 }
 
-.pack-detail__achievement-info {
+.pd__habit-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1c1c1e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pd__habit-goal {
+  font-size: 12px;
+  color: #8e8e93;
+}
+
+/* ── Achievement cards ──────────────────────────────────────────────────── */
+.pd__ach-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pd__ach {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 16px;
+  padding: 13px 14px;
+}
+
+.pd__ach-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+  color: #fff;
+}
+
+.pd__ach-img {
+  width: 28px;
+  height: 28px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.pd__ach-info {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
+  min-width: 0;
 }
 
-.pack-detail__achievement-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary, #1c1c1e);
+.pd__ach-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1c1c1e;
 }
 
-.pack-detail__achievement-desc {
-  font-size: 12px;
-  color: var(--text-secondary, #8e8e93);
+.pd__ach-count {
+  font-weight: 700;
+  color: #555;
 }
 
-.pack-detail__achievement-progress {
+.pd__ach-desc {
   font-size: 13px;
-  font-weight: 600;
-  color: var(--text-secondary, #8e8e93);
-  min-width: 44px;
-  text-align: right;
+  color: #666;
 }
 
-.pack-detail__achievement--unlocked .pack-detail__achievement-progress {
-  color: #f59e0b;
+/* ── Attribution ────────────────────────────────────────────────────────── */
+.pd__attribution {
+  font-size: 12px;
+  color: #bbb;
+  text-align: center;
+  margin: 8px 0 0;
+  padding-bottom: 8px;
 }
