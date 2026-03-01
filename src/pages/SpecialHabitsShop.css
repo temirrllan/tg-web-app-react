@@ -4,6 +4,8 @@
   min-height: 100vh;
   background: #f2f2f7;
   padding-bottom: 32px;
+  padding-left: 16px;
+  padding-right: 16px;
   overflow-y: auto;
 }
 
