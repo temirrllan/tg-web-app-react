@@ -30,7 +30,7 @@ import SpecialHabitPackDetail from './SpecialHabitPackDetail';
 import SpecialHabitDetail from './SpecialHabitDetail';
 import AchievementUnlockedPopup from '../components/modals/AchievementUnlockedPopup';
 
-const Today = ({ shouldShowFabHint = false, shouldShowSwipeHint = false }) => {
+const Today = ({ shouldShowFabHint = false, shouldShowSwipeHint = false, shouldShowFriendHint = false }) => {
   const { t } = useTranslation();
   const { user } = useTelegram();
   useTelegramTheme();
@@ -898,6 +898,7 @@ useEffect(() => {
         }}
         onEdit={handleEditHabit}
         onDelete={handleDeleteHabit}
+        shouldShowFriendHint={shouldShowFriendHint}
       />
     );
   }

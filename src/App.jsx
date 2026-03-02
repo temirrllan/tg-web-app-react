@@ -24,6 +24,8 @@ function AppContent() {
   const [shouldShowFabHint, setShouldShowFabHint] = useState(false);
   // Флаг для показа swipe-подсказки (берётся из БД, не localStorage)
   const [shouldShowSwipeHint, setShouldShowSwipeHint] = useState(false);
+  // Флаг для показа подсказки по друзьям (берётся из БД)
+  const [shouldShowFriendHint, setShouldShowFriendHint] = useState(false);
   
   const { initializeLanguage, language } = useContext(LanguageContext);
 
@@ -171,6 +173,7 @@ function AppContent() {
             setShowOnboarding(true);
             setShouldShowFabHint(true);
             setShouldShowSwipeHint(response.user.show_swipe_hint !== false);
+            setShouldShowFriendHint(response.user.show_friend_hint !== false);
           } else {
             console.log('👤 EXISTING USER - SKIPPING ONBOARDING');
             // Очищаем кэш привычек при входе
@@ -180,8 +183,9 @@ function AppContent() {
                 localStorage.removeItem(key);
               }
             }
-            // Swipe hint: берём из БД (не localStorage)
+            // Hints: берём из БД (не localStorage)
             setShouldShowSwipeHint(response.user.show_swipe_hint !== false);
+            setShouldShowFriendHint(response.user.show_friend_hint !== false);
           }
           
         } else {
@@ -307,7 +311,7 @@ function AppContent() {
   return (
     <>
       {/* 🆕 Передаем флаг подсказки */}
-      <Today shouldShowFabHint={shouldShowFabHint} shouldShowSwipeHint={shouldShowSwipeHint} />
+      <Today shouldShowFabHint={shouldShowFabHint} shouldShowSwipeHint={shouldShowSwipeHint} shouldShowFriendHint={shouldShowFriendHint} />
       {showProfile && (
         <Profile onClose={() => setShowProfile(false)} />
       )}

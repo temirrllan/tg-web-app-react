@@ -11,6 +11,7 @@ import './HabitDetail.css';
 import FriendSwipeHint from '../components/habits/FriendSwipeHint';
 import { useTranslation } from "../hooks/useTranslation";
 import { useTelegramTheme } from '../hooks/useTelegramTheme';
+import { userService } from '../services/userService';
 const CircularProgress = ({ value, total, color }) => {
   const percentage = total > 0 ? (value / total) * 100 : 0;
   const radius = 42;
@@ -44,7 +45,7 @@ const CircularProgress = ({ value, total, color }) => {
     </svg>
   );
 };
-const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
+const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = false }) => {
   const { tg, user: currentUser } = useTelegram();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
@@ -225,7 +226,13 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
   const loadMembers = async () => {
     try {
       const data = await habitService.getHabitMembers(habit.id);
-      setMembers(data.members || []);
+      const loaded = data.members || [];
+      setMembers(loaded);
+
+      // Show friend swipe hint when there are friends and DB says to show it
+      if (shouldShowFriendHint && loaded.length > 0) {
+        setTimeout(() => setShowFriendHint(true), 900);
+      }
     } catch (error) {
       console.error('Failed to load members:', error);
     }
@@ -275,14 +282,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
       
       console.log('🔗 Generated share URL:', shareUrl);
       console.log('📝 Share text:', shareText);
-      
-      const hasSeenFriendHint = localStorage.getItem('hasSeenFriendHint');
-      if (!hasSeenFriendHint && members.length === 0) {
-        setTimeout(() => {
-          setShowFriendHint(true);
-          localStorage.setItem('hasSeenFriendHint', 'true');
-        }, 2000);
-      }
       
       if (tg?.openTelegramLink) {
         const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
@@ -737,9 +736,19 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete }) => {
         onClose={() => setShowCopyModal(false)}
       />
 
-      <FriendSwipeHint 
+      <FriendSwipeHint
         show={showFriendHint}
-        onClose={() => setShowFriendHint(false)}
+        onClose={async (dontShowAgain) => {
+          setShowFriendHint(false);
+          if (dontShowAgain) {
+            try {
+              await userService.updatePreferences({ show_friend_hint: false });
+              console.log('✅ show_friend_hint saved to DB: false');
+            } catch (err) {
+              console.error('❌ Failed to save friend hint preference:', err);
+            }
+          }
+        }}
       />
 
       <SubscriptionModal
