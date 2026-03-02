@@ -1,11 +1,54 @@
 
+/* ==================== Keyframes ==================== */
+
+/* Страница появляется */
+@keyframes ob-fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Карточка вылетает снизу */
+@keyframes ob-slideUp {
+  from { transform: translateY(60px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* Кнопка появляется чуть позже */
+@keyframes ob-btnAppear {
+  from { transform: translateY(16px) scale(0.96); opacity: 0; }
+  to   { transform: translateY(0)    scale(1);    opacity: 1; }
+}
+
+/* Картинка плавно появляется */
+@keyframes ob-imgAppear {
+  from { opacity: 0; transform: scale(1.04) translateY(0); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+/* Езда: покачивание вверх‑вниз как на велосипеде */
+@keyframes ob-ride {
+  0%   { transform: translateY(0px)  rotate(0deg); }
+  20%  { transform: translateY(-9px) rotate(0.6deg); }
+  45%  { transform: translateY(-5px) rotate(-0.4deg); }
+  65%  { transform: translateY(-10px) rotate(0.5deg); }
+  85%  { transform: translateY(-3px) rotate(-0.3deg); }
+  100% { transform: translateY(0px)  rotate(0deg); }
+}
+
+
+/* ==================== Layout ==================== */
+
 .onboarding {
   height: 100vh;
   background: #fff;
   padding: 0;
   margin: 0;
   width: 100vw;
-  
+  overflow: hidden;
+}
+
+.ob-enter {
+  animation: ob-fadeIn 0.22s ease-out both;
 }
 
 .onboarding__top {
@@ -14,30 +57,41 @@
   overflow: hidden;
 }
 
+
+/* ==================== Image ==================== */
+
+/* До загрузки — прозрачная */
 .onboarding__img {
   width: 100vw;
   min-height: 100%;
-  /* min-height: 270px; */
-  /* max-height: 380px; */
   object-fit: cover;
   display: block;
   margin: 0;
   padding: 0;
+  opacity: 0;
+}
+
+/* После загрузки: появляется + начинает ехать */
+.onboarding__img--riding {
+  /* ob-imgAppear 0.45s → потом ob-ride 2.4s loop */
+  animation:
+    ob-imgAppear 0.45s ease-out forwards,
+    ob-ride      2.4s ease-in-out 0.45s infinite;
 }
 
 
+/* ==================== Card ==================== */
 
 .onboarding__card {
-  /* position: relative; */
-  /* z-index: 3; */
   background: #fff;
- /* width: 100vw;
-  margin: 0 auto; */
-  margin-top: -100px; 
+  margin-top: -100px;
   border-radius: 0 0 32px 32px;
-  /* box-shadow: 0 4px 24px 0 rgba(0,0,0,0.09);     */
   padding: 48px 16px 32px 16px;
   text-align: center;
+}
+
+.ob-card-enter {
+  animation: ob-slideUp 0.42s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
 }
 
 .onboarding__title {
@@ -46,7 +100,6 @@
   color: #1C1C1D;
   margin: 0 0 20px 0;
   line-height: 1.2;
-  
 }
 
 .onboarding__desc {
@@ -56,6 +109,9 @@
   line-height: 1.5;
   font-weight: 700;
 }
+
+
+/* ==================== Button ==================== */
 
 .onboarding__btn {
   width: 100%;
@@ -68,13 +124,18 @@
   padding: 16px 0;
   cursor: pointer;
   box-shadow: 0 2px 12px rgba(0,0,0,0.03);
-  transition: background 0.2s;
-  /* margin-top: 8px; */
+  transition: background 0.2s, transform 0.15s;
 }
 
-.onboarding__btn:hover {
-  background: #a5db45;
+.ob-btn-enter {
+  animation: ob-btnAppear 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.32s both;
 }
+
+.onboarding__btn:hover  { background: #a5db45; }
+.onboarding__btn:active { transform: scale(0.97); }
+
+
+/* ==================== Responsive ==================== */
 
 @media (max-width: 430px) {
   .onboarding__img {
@@ -88,28 +149,12 @@
   }
 }
 
-/* ==================== Onboarding - Dark Theme ==================== */
-.dark-theme .onboarding {
-  background: #000000;
-}
 
-.dark-theme .onboarding__card {
-  background: #1C1C1E;
-}
+/* ==================== Dark Theme ==================== */
 
-.dark-theme .onboarding__title {
-  color: #FFFFFF;
-}
-
-.dark-theme .onboarding__desc {
-  color: #8E8E93;
-}
-
-.dark-theme .onboarding__btn {
-  background: #A7D96C;
-  color: #000000;
-}
-
-.dark-theme .onboarding__btn:hover {
-  background: #95C55D;
-}
+.dark-theme .onboarding        { background: #000000; }
+.dark-theme .onboarding__card  { background: #1C1C1E; }
+.dark-theme .onboarding__title { color: #FFFFFF; }
+.dark-theme .onboarding__desc  { color: #8E8E93; }
+.dark-theme .onboarding__btn   { background: #A7D96C; color: #000000; }
+.dark-theme .onboarding__btn:hover { background: #95C55D; }

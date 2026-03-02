@@ -1,59 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import './Onboarding.css';
 import illustration from '../../public/images/onboarding.png';
 import { useTelegramTheme } from '../hooks/useTelegramTheme';
 
 const Onboarding = ({ onComplete }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
+  const imgRef = useRef(null);
   useTelegramTheme();
 
   useEffect(() => {
-    // Предзагрузка изображения
-    const img = new Image();
-    img.src = illustration;
-    img.onload = () => {
+    // If image is already cached it won't fire onLoad, handle it here
+    if (imgRef.current?.complete) {
       setImageLoaded(true);
-    };
+    }
   }, []);
 
-  // Показываем loader пока изображение не загрузится
-  if (!imageLoaded) {
-    return (
-      <div className="onboarding" style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'var(--bg-primary, #fff)'
-      }}>
-        <div style={{
-          width: '50px',
-          height: '50px',
-          border: '4px solid #f3f3f3',
-          borderTop: '4px solid #A7D96C',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }} />
-        <style>{`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
-      </div>
-    );
-  }
-
   return (
-    <div className="onboarding">
+    <div className="onboarding ob-enter">
       <div className="onboarding__top">
-        <img 
-          src={illustration} 
-          alt="Habit Tracker" 
-          className="onboarding__img"
+        <img
+          ref={imgRef}
+          src={illustration}
+          alt="Habit Tracker"
+          className={`onboarding__img${imageLoaded ? ' onboarding__img--riding' : ''}`}
           loading="eager"
+          onLoad={() => setImageLoaded(true)}
         />
       </div>
-      <div className="onboarding__card">
+      <div className="onboarding__card ob-card-enter">
         <h2 className="onboarding__title">
           Welcome to the<br />
           Habit Tracker!
@@ -63,7 +37,7 @@ const Onboarding = ({ onComplete }) => {
           your goals with our easy-to-use<br />
           tracker.
         </p>
-        <button className="onboarding__btn" onClick={onComplete}>
+        <button className="onboarding__btn ob-btn-enter" onClick={onComplete}>
           Create a New Habit
         </button>
       </div>
