@@ -63,6 +63,9 @@ const Today = ({ shouldShowFabHint = false, shouldShowSwipeHint = false, shouldS
   const [showSubscriptionPage, setShowSubscriptionPage] = useState(false);
   const [selectedSubscriptionPlan, setSelectedSubscriptionPlan] = useState(null);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
+  // Флаг «хинт уже закрыт в этой сессии» — блокирует повторный показ
+  // даже если shouldShowSwipeHint prop всё ещё true (App.jsx не знает об этом)
+  const swipeHintClosedRef = useRef(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [selectedHabit, setSelectedHabit] = useState(null);
@@ -670,8 +673,8 @@ useEffect(() => {
   useEffect(() => {
     const currentHabits = dateDataCache[selectedDate]?.habits || [];
 
-    // Show swipe hint only when: DB says show_swipe_hint=true AND there are habits AND day is editable
-    if (shouldShowSwipeHint && currentHabits.length > 0 && isEditableDate) {
+    // Show swipe hint only when: DB says show_swipe_hint=true AND not yet closed this session AND there are habits AND day is editable
+    if (shouldShowSwipeHint && !swipeHintClosedRef.current && currentHabits.length > 0 && isEditableDate) {
       const timer = setTimeout(() => {
         setShowSwipeHint(true);
         window.TelegramAnalytics?.track('swipe_hint_shown', {
@@ -685,6 +688,8 @@ useEffect(() => {
 
   // Called when SwipeHint closes; dontShowAgain=true → persist to DB
   const handleSwipeHintClose = async (dontShowAgain) => {
+    // Mark as closed immediately so the useEffect never re-shows it
+    swipeHintClosedRef.current = true;
     setShowSwipeHint(false);
     if (dontShowAgain) {
       try {

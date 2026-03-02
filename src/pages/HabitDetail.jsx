@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigation } from '../hooks/useNavigation';
 import { useTelegram } from '../hooks/useTelegram';
 import { habitService } from '../services/habits';
@@ -55,6 +55,8 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [members, setMembers] = useState([]);
   const [showFriendHint, setShowFriendHint] = useState(false);
+  // Блокирует повторный показ хинта после закрытия (даже если shouldShowFriendHint prop ещё true)
+  const friendHintClosedRef = useRef(false);
   const [toast, setToast] = useState(null);
   const [friendLimitData, setFriendLimitData] = useState(null);
   const [ownerInfo, setOwnerInfo] = useState(null);
@@ -229,8 +231,8 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
       const loaded = data.members || [];
       setMembers(loaded);
 
-      // Show friend swipe hint when there are friends and DB says to show it
-      if (shouldShowFriendHint && loaded.length > 0) {
+      // Show friend swipe hint only if: DB says to show it, not yet closed this session, and there are friends
+      if (shouldShowFriendHint && !friendHintClosedRef.current && loaded.length > 0) {
         setTimeout(() => setShowFriendHint(true), 900);
       }
     } catch (error) {
@@ -739,6 +741,8 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
       <FriendSwipeHint
         show={showFriendHint}
         onClose={async (dontShowAgain) => {
+          // Block re-showing immediately, before async DB call
+          friendHintClosedRef.current = true;
           setShowFriendHint(false);
           if (dontShowAgain) {
             try {
