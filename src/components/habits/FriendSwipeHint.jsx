@@ -39,7 +39,7 @@ const translations = {
  *   show    {boolean}  - whether to show the hint
  *   onClose {function(dontShowAgain: boolean)} - called when user closes
  */
-const FriendSwipeHint = ({ show, onClose }) => {
+const FriendSwipeHint = ({ show, onClose, onDontShowChange }) => {
   const { language } = useTranslation();
   const texts = translations[language] || translations.ru;
 
@@ -110,7 +110,12 @@ const FriendSwipeHint = ({ show, onClose }) => {
         {/* "Don't show again" checkbox */}
         <label
           className="fsh-checkbox"
-          onClick={(e) => { e.stopPropagation(); setDontShow(v => !v); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            const next = !dontShow;
+            setDontShow(next);
+            onDontShowChange?.(next);
+          }}
         >
           <span className={`fsh-checkbox__box ${dontShow ? 'fsh-checkbox__box--checked' : ''}`}>
             {dontShow && (

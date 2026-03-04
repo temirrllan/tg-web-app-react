@@ -1140,6 +1140,14 @@ useEffect(() => {
         <SwipeHint
           show={showSwipeHint}
           onClose={handleSwipeHintClose}
+          onDontShowChange={(checked) => {
+            if (checked) {
+              localStorage.setItem('swipe_hint_dismissed', 'true');
+              userService.updatePreferences({ show_swipe_hint: false }).catch(() => {});
+            } else {
+              localStorage.removeItem('swipe_hint_dismissed');
+            }
+          }}
         />
         
         <button

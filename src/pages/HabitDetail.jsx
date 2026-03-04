@@ -741,18 +741,16 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
 
       <FriendSwipeHint
         show={showFriendHint}
-        onClose={async (dontShowAgain) => {
+        onClose={(dontShowAgain) => {
           friendHintClosedRef.current = true;
           setShowFriendHint(false);
-          if (dontShowAgain) {
-            // Save to localStorage immediately as reliable fallback
+        }}
+        onDontShowChange={(checked) => {
+          if (checked) {
             localStorage.setItem('friend_hint_dismissed', 'true');
-            try {
-              await userService.updatePreferences({ show_friend_hint: false });
-              console.log('✅ show_friend_hint saved to DB: false');
-            } catch (err) {
-              console.error('❌ Failed to save friend hint preference to DB (localStorage fallback applied):', err);
-            }
+            userService.updatePreferences({ show_friend_hint: false }).catch(() => {});
+          } else {
+            localStorage.removeItem('friend_hint_dismissed');
           }
         }}
       />
