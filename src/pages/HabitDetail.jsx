@@ -11,7 +11,6 @@ import './HabitDetail.css';
 import FriendSwipeHint from '../components/habits/FriendSwipeHint';
 import { useTranslation } from "../hooks/useTranslation";
 import { useTelegramTheme } from '../hooks/useTelegramTheme';
-import { userService } from '../services/userService';
 const CircularProgress = ({ value, total, color }) => {
   const percentage = total > 0 ? (value / total) * 100 : 0;
   const radius = 42;
@@ -741,17 +740,9 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
 
       <FriendSwipeHint
         show={showFriendHint}
-        onClose={(dontShowAgain) => {
+        onClose={() => {
           friendHintClosedRef.current = true;
           setShowFriendHint(false);
-        }}
-        onDontShowChange={(checked) => {
-          if (checked) {
-            localStorage.setItem('friend_hint_dismissed', 'true');
-            userService.updatePreferences({ friend_hint_dismissed: true }).catch(() => {});
-          } else {
-            localStorage.removeItem('friend_hint_dismissed');
-          }
         }}
       />
 

@@ -13,7 +13,6 @@ import { useHabits } from "../hooks/useHabits";
 import { useTelegram } from "../hooks/useTelegram";
 import { habitService } from '../services/habits';
 import { specialHabitsService } from '../services/specialHabits';
-import { userService } from '../services/userService';
 import "./Today.css";
 import SwipeHint from '../components/habits/SwipeHint';
 import EditHabitForm from '../components/habits/EditHabitForm';
@@ -687,20 +686,10 @@ useEffect(() => {
     }
   }, [dateDataCache, selectedDate, isEditableDate, shouldShowSwipeHint]);
 
-  // Called when SwipeHint closes; dontShowAgain=true → persist to DB + localStorage
-  const handleSwipeHintClose = async (dontShowAgain) => {
+  // SwipeHint закрывается — больше не показываем в этой сессии
+  const handleSwipeHintClose = () => {
     swipeHintClosedRef.current = true;
     setShowSwipeHint(false);
-    if (dontShowAgain) {
-      // Save to localStorage immediately as reliable fallback
-      localStorage.setItem('swipe_hint_dismissed', 'true');
-      try {
-        await userService.updatePreferences({ swipe_hint_dismissed: true });
-        console.log('✅ swipe_hint_dismissed saved to DB: true');
-      } catch (err) {
-        console.error('❌ Failed to save swipe hint preference to DB (localStorage fallback applied):', err);
-      }
-    }
   };
 
   // 🆕 КРИТИЧНО: Изолированная обработка свайпа с защитой от перекрёстных обновлений
@@ -1140,14 +1129,6 @@ useEffect(() => {
         <SwipeHint
           show={showSwipeHint}
           onClose={handleSwipeHintClose}
-          onDontShowChange={(checked) => {
-            if (checked) {
-              localStorage.setItem('swipe_hint_dismissed', 'true');
-              userService.updatePreferences({ swipe_hint_dismissed: true }).catch(() => {});
-            } else {
-              localStorage.removeItem('swipe_hint_dismissed');
-            }
-          }}
         />
         
         <button

@@ -1,5 +1,5 @@
 // src/components/habits/SwipeHint.jsx
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import './SwipeHint.css';
 import { useTranslation } from '../../hooks/useTranslation';
 
@@ -10,7 +10,6 @@ const translations = {
     swipeLeftBold: 'completed',
     swipeRight: 'to mark as',
     swipeRightBold: 'failed / undo',
-    dontShow: "Don't show again",
     gotIt: 'Got it!'
   },
   ru: {
@@ -19,7 +18,6 @@ const translations = {
     swipeLeftBold: 'выполнено',
     swipeRight: '— отметить как',
     swipeRightBold: 'провалено / отмена',
-    dontShow: 'Больше не показывать',
     gotIt: 'Понятно!'
   },
   kk: {
@@ -28,37 +26,30 @@ const translations = {
     swipeLeftBold: 'белгілеу',
     swipeRight: '— орындалмады деп',
     swipeRightBold: 'белгілеу / болдырмау',
-    dontShow: 'Енді көрсетпе',
     gotIt: 'Түсінікті!'
   }
 };
 
 /**
- * SwipeHint
+ * SwipeHint — показывается один раз новым пользователям.
  * Props:
- *   show    {boolean}  - whether to show the hint
- *   onClose {function(dontShowAgain: boolean)} - called when user closes
+ *   show    {boolean}   - показывать или нет
+ *   onClose {function}  - вызывается при закрытии
  */
-const SwipeHint = ({ show, onClose, onDontShowChange }) => {
+const SwipeHint = ({ show, onClose }) => {
   const { language } = useTranslation();
   const texts = translations[language] || translations.ru;
 
   const [isVisible, setIsVisible] = useState(false);
   const [isHiding, setIsHiding]   = useState(false);
-  const [dontShow, setDontShow]   = useState(false);
-
-  // Ref so timers always see the latest dontShow value
-  const dontShowRef = useRef(false);
-  dontShowRef.current = dontShow;
 
   useEffect(() => {
     if (!show) return;
 
     setIsVisible(true);
     setIsHiding(false);
-    setDontShow(false);
 
-    // Auto-dismiss after 6 s — longer so user can check the box
+    // Авто-закрытие через 6 секунд
     const timer = setTimeout(() => triggerClose(), 6000);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -68,7 +59,7 @@ const SwipeHint = ({ show, onClose, onDontShowChange }) => {
     setIsHiding(true);
     setTimeout(() => {
       setIsVisible(false);
-      onClose?.(dontShowRef.current);
+      onClose?.();
     }, 300);
   };
 
@@ -81,10 +72,8 @@ const SwipeHint = ({ show, onClose, onDontShowChange }) => {
     >
       <div className="sh-card" onClick={(e) => e.stopPropagation()}>
 
-        {/* Title */}
         <h3 className="sh-card__title">{texts.title}</h3>
 
-        {/* Swipe rows */}
         <div className="sh-rows">
           <div className="sh-row">
             <div className="sh-row__icon sh-row__icon--left">←</div>
@@ -103,36 +92,8 @@ const SwipeHint = ({ show, onClose, onDontShowChange }) => {
           </div>
         </div>
 
-        {/* Divider */}
         <div className="sh-divider" />
 
-        {/* "Don't show again" checkbox */}
-        <label
-          className="sh-checkbox"
-          onClick={(e) => {
-            e.stopPropagation();
-            const next = !dontShow;
-            setDontShow(next);
-            onDontShowChange?.(next);
-          }}
-        >
-          <span className={`sh-checkbox__box ${dontShow ? 'sh-checkbox__box--checked' : ''}`}>
-            {dontShow && (
-              <svg viewBox="0 0 12 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path
-                  d="M1 5l3.5 3.5L11 1"
-                  stroke="#fff"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            )}
-          </span>
-          <span className="sh-checkbox__label">{texts.dontShow}</span>
-        </label>
-
-        {/* Got it button */}
         <button
           className="sh-card__btn"
           onClick={(e) => { e.stopPropagation(); triggerClose(); }}

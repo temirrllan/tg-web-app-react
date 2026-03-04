@@ -172,8 +172,8 @@ function AppContent() {
             }
             setShowOnboarding(true);
             setShouldShowFabHint(true);
-            setShouldShowSwipeHint(response.user.show_swipe_hint !== false);
-            setShouldShowFriendHint(response.user.show_friend_hint !== false);
+            setShouldShowSwipeHint(true);  // только новым пользователям
+            setShouldShowFriendHint(true); // только новым пользователям
           } else {
             console.log('👤 EXISTING USER - SKIPPING ONBOARDING');
             // Очищаем кэш привычек при входе
@@ -183,9 +183,7 @@ function AppContent() {
                 localStorage.removeItem(key);
               }
             }
-            // Hints: берём из БД (не localStorage)
-            setShouldShowSwipeHint(response.user.show_swipe_hint !== false);
-            setShouldShowFriendHint(response.user.show_friend_hint !== false);
+            // Существующим пользователям подсказки не показываем
           }
           
         } else {
