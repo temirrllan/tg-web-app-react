@@ -231,8 +231,9 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
       const loaded = data.members || [];
       setMembers(loaded);
 
-      // Show friend swipe hint only if: DB says to show it, not yet closed this session, and there are friends
-      if (shouldShowFriendHint && !friendHintClosedRef.current && loaded.length > 0) {
+      // Show friend swipe hint only if: DB says to show it, not dismissed locally, not yet closed this session, and there are friends
+      const friendDismissed = localStorage.getItem('friend_hint_dismissed') === 'true';
+      if (shouldShowFriendHint && !friendDismissed && !friendHintClosedRef.current && loaded.length > 0) {
         setTimeout(() => setShowFriendHint(true), 900);
       }
     } catch (error) {
@@ -741,15 +742,16 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
       <FriendSwipeHint
         show={showFriendHint}
         onClose={async (dontShowAgain) => {
-          // Block re-showing immediately, before async DB call
           friendHintClosedRef.current = true;
           setShowFriendHint(false);
           if (dontShowAgain) {
+            // Save to localStorage immediately as reliable fallback
+            localStorage.setItem('friend_hint_dismissed', 'true');
             try {
               await userService.updatePreferences({ show_friend_hint: false });
               console.log('✅ show_friend_hint saved to DB: false');
             } catch (err) {
-              console.error('❌ Failed to save friend hint preference:', err);
+              console.error('❌ Failed to save friend hint preference to DB (localStorage fallback applied):', err);
             }
           }
         }}

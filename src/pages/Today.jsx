@@ -673,8 +673,9 @@ useEffect(() => {
   useEffect(() => {
     const currentHabits = dateDataCache[selectedDate]?.habits || [];
 
-    // Show swipe hint only when: DB says show_swipe_hint=true AND not yet closed this session AND there are habits AND day is editable
-    if (shouldShowSwipeHint && !swipeHintClosedRef.current && currentHabits.length > 0 && isEditableDate) {
+    // Show swipe hint only when: DB says show_swipe_hint=true AND not dismissed locally AND not yet closed this session AND there are habits AND day is editable
+    const swipeDismissed = localStorage.getItem('swipe_hint_dismissed') === 'true';
+    if (shouldShowSwipeHint && !swipeDismissed && !swipeHintClosedRef.current && currentHabits.length > 0 && isEditableDate) {
       const timer = setTimeout(() => {
         setShowSwipeHint(true);
         window.TelegramAnalytics?.track('swipe_hint_shown', {
@@ -686,17 +687,18 @@ useEffect(() => {
     }
   }, [dateDataCache, selectedDate, isEditableDate, shouldShowSwipeHint]);
 
-  // Called when SwipeHint closes; dontShowAgain=true → persist to DB
+  // Called when SwipeHint closes; dontShowAgain=true → persist to DB + localStorage
   const handleSwipeHintClose = async (dontShowAgain) => {
-    // Mark as closed immediately so the useEffect never re-shows it
     swipeHintClosedRef.current = true;
     setShowSwipeHint(false);
     if (dontShowAgain) {
+      // Save to localStorage immediately as reliable fallback
+      localStorage.setItem('swipe_hint_dismissed', 'true');
       try {
         await userService.updatePreferences({ show_swipe_hint: false });
         console.log('✅ show_swipe_hint saved to DB: false');
       } catch (err) {
-        console.error('❌ Failed to save swipe hint preference:', err);
+        console.error('❌ Failed to save swipe hint preference to DB (localStorage fallback applied):', err);
       }
     }
   };
