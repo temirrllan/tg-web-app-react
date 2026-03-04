@@ -695,8 +695,8 @@ useEffect(() => {
       // Save to localStorage immediately as reliable fallback
       localStorage.setItem('swipe_hint_dismissed', 'true');
       try {
-        await userService.updatePreferences({ show_swipe_hint: false });
-        console.log('✅ show_swipe_hint saved to DB: false');
+        await userService.updatePreferences({ swipe_hint_dismissed: true });
+        console.log('✅ swipe_hint_dismissed saved to DB: true');
       } catch (err) {
         console.error('❌ Failed to save swipe hint preference to DB (localStorage fallback applied):', err);
       }
@@ -1143,7 +1143,7 @@ useEffect(() => {
           onDontShowChange={(checked) => {
             if (checked) {
               localStorage.setItem('swipe_hint_dismissed', 'true');
-              userService.updatePreferences({ show_swipe_hint: false }).catch(() => {});
+              userService.updatePreferences({ swipe_hint_dismissed: true }).catch(() => {});
             } else {
               localStorage.removeItem('swipe_hint_dismissed');
             }

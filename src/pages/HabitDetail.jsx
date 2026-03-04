@@ -748,7 +748,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
         onDontShowChange={(checked) => {
           if (checked) {
             localStorage.setItem('friend_hint_dismissed', 'true');
-            userService.updatePreferences({ show_friend_hint: false }).catch(() => {});
+            userService.updatePreferences({ friend_hint_dismissed: true }).catch(() => {});
           } else {
             localStorage.removeItem('friend_hint_dismissed');
           }
