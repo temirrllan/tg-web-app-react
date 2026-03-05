@@ -163,6 +163,8 @@ function AppContent() {
             console.log('🧹 Clearing old hints from localStorage for new user');
             localStorage.removeItem('hasSeenFabHint');
             localStorage.removeItem('hasSeenWeekHint');
+            localStorage.removeItem('hint_swipe_shown');
+            localStorage.removeItem('hint_friend_shown');
             // Очищаем ВСЕ кэши привычек из localStorage
             for (let i = localStorage.length - 1; i >= 0; i--) {
               const key = localStorage.key(i);

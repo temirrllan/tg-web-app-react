@@ -672,9 +672,10 @@ useEffect(() => {
   useEffect(() => {
     const currentHabits = dateDataCache[selectedDate]?.habits || [];
 
-    // Show swipe hint only when: DB says show_swipe_hint=true AND not dismissed locally AND not yet closed this session AND there are habits AND day is editable
-    const swipeDismissed = localStorage.getItem('swipe_hint_dismissed') === 'true';
-    if (shouldShowSwipeHint && !swipeDismissed && !swipeHintClosedRef.current && currentHabits.length > 0 && isEditableDate) {
+    // Показываем swipe hint: только новым пользователям (shouldShowSwipeHint=true),
+    // один раз за всё время (hint_swipe_shown), и не повторяем в рамках сессии (ref)
+    const swipeShown = localStorage.getItem('hint_swipe_shown') === '1';
+    if (shouldShowSwipeHint && !swipeShown && !swipeHintClosedRef.current && currentHabits.length > 0 && isEditableDate) {
       const timer = setTimeout(() => {
         setShowSwipeHint(true);
         window.TelegramAnalytics?.track('swipe_hint_shown', {
@@ -686,9 +687,10 @@ useEffect(() => {
     }
   }, [dateDataCache, selectedDate, isEditableDate, shouldShowSwipeHint]);
 
-  // SwipeHint закрывается — больше не показываем в этой сессии
+  // SwipeHint закрывается — запоминаем в localStorage (на всё время) + ref (в рамках сессии)
   const handleSwipeHintClose = () => {
     swipeHintClosedRef.current = true;
+    localStorage.setItem('hint_swipe_shown', '1');
     setShowSwipeHint(false);
   };
 

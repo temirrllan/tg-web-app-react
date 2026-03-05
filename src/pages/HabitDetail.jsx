@@ -230,9 +230,10 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
       const loaded = data.members || [];
       setMembers(loaded);
 
-      // Show friend swipe hint only if: DB says to show it, not dismissed locally, not yet closed this session, and there are friends
-      const friendDismissed = localStorage.getItem('friend_hint_dismissed') === 'true';
-      if (shouldShowFriendHint && !friendDismissed && !friendHintClosedRef.current && loaded.length > 0) {
+      // Показываем friend swipe hint: только новым пользователям (shouldShowFriendHint=true),
+      // один раз за всё время (hint_friend_shown), и не повторяем в рамках сессии (ref)
+      const friendShown = localStorage.getItem('hint_friend_shown') === '1';
+      if (shouldShowFriendHint && !friendShown && !friendHintClosedRef.current && loaded.length > 0) {
         setTimeout(() => setShowFriendHint(true), 900);
       }
     } catch (error) {
@@ -742,6 +743,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
         show={showFriendHint}
         onClose={() => {
           friendHintClosedRef.current = true;
+          localStorage.setItem('hint_friend_shown', '1');
           setShowFriendHint(false);
         }}
       />
