@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTelegram } from '../hooks/useTelegram';
+import { useNavigation } from '../hooks/useNavigation';
 import { habitService } from '../services/habits';
 import Loader from '../components/common/Loader';
 import DeleteConfirmModal from '../components/modals/DeleteConfirmModal';
@@ -59,6 +60,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
   const [friendLimitData, setFriendLimitData] = useState(null);
   const [ownerInfo, setOwnerInfo] = useState(null);
   useTelegramTheme();
+  useNavigation(onClose);
 
   const [statistics, setStatistics] = useState({
     currentStreak: 0,
@@ -69,26 +71,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
     yearDays: 0,
     yearTotal: 365
   });
-
-  // ── BackButton: управляем напрямую через window.Telegram.WebApp ──────────────
-  // НЕ через useNavigation/useTelegram — там webApp начинается как null и эффект
-  // срабатывает досрочно, кнопка «Назад» не появляется.
-  const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
-
-  useEffect(() => {
-    const backBtn = window.Telegram?.WebApp?.BackButton;
-    if (!backBtn) return;
-
-    const handleBack = () => onCloseRef.current?.();
-    backBtn.show();
-    backBtn.onClick(handleBack);
-
-    return () => {
-      backBtn.offClick(handleBack);
-      backBtn.hide();
-    };
-  }, []); // один раз на mount/unmount — onClose стабилизирован через ref
 
   const [isCreator, setIsCreator] = useState(false);
 
@@ -182,8 +164,6 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
     setIsCreator(creatorStatus);
   }, [currentUser, ownerInfo, habit.id, habit.creator_id, habit.user_id, habit.parent_habit_id]);
 
-  // BackButton управляется через useNavigation(onClose) выше — дублировать не нужно
-
   useEffect(() => {
     const loadOwnerInfo = async () => {
       try {
@@ -267,7 +247,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
     }
   };
 
-  // Поллинг каждые 8 сек — без кэша, чтобы мгновенно видеть нового друга.
+  // Поллинг каждые 3 сек — без кэша, чтобы быстро видеть нового друга.
   // Используем ref чтобы избежать stale closure внутри setInterval.
   const pollMembersRef = useRef(pollMembers);
   pollMembersRef.current = pollMembers;
@@ -275,8 +255,20 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
   useEffect(() => {
     const interval = setInterval(() => {
       pollMembersRef.current?.();
-    }, 8000);
-    return () => clearInterval(interval);
+    }, 3000);
+
+    // Мгновенный поллинг при возвращении в приложение (e.g. друг перешёл по ссылке)
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        pollMembersRef.current?.();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [habit.id]);
 
   const handleAddFriend = async () => {
