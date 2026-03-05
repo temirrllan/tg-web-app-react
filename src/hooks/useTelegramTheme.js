@@ -1,5 +1,5 @@
 // src/hooks/useTelegramTheme.js
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useTheme } from './useTheme';
 import { useTelegram } from './useTelegram';
 
@@ -53,7 +53,6 @@ export const applyTelegramTheme = (isDark, tg) => {
 export const useTelegramTheme = () => {
   const { theme, isDark } = useTheme();
   const { tg } = useTelegram();
-  const intervalRef = useRef(null);
 
   const applyTheme = useCallback(() => {
     applyTelegramTheme(isDark, tg);
@@ -109,18 +108,8 @@ export const useTelegramTheme = () => {
     };
   }, [tg, applyTheme]);
 
-  // Периодическое восстановление темы
-  useEffect(() => {
-    intervalRef.current = setInterval(() => {
-      applyTheme();
-    }, 500);
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [applyTheme]);
+  // Периодический интервал убран — setHeaderColor каждые 500мс
+  // вызывал перерисовку нативного заголовка Telegram и сбрасывал BackButton
 
   return { theme, isDark, applyTheme };
 };

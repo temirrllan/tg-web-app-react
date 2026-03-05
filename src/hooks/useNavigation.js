@@ -2,8 +2,8 @@ import { useEffect, useRef, useCallback } from 'react';
 
 /**
  * useNavigation — управляет Telegram BackButton.
- * Использует window.Telegram.WebApp напрямую (синхронно),
- * без зависимости от асинхронного useTelegram() чтобы избежать мигания.
+ * Пока компонент активен (isVisible=true) — перехватывает backButton.hide(),
+ * чтобы никакой внешний код (темы, аналитика, интервалы) не мог скрыть кнопку.
  */
 export const useNavigation = (onBack = null, options = {}) => {
   const { isVisible = true } = options;
@@ -20,16 +20,23 @@ export const useNavigation = (onBack = null, options = {}) => {
     };
 
     if (isVisible) {
+      // Сохраняем оригинальный hide и заменяем на no-op,
+      // чтобы никакой внешний код не мог скрыть кнопку пока страница активна
+      const originalHide = backButton.hide;
+      backButton.hide = () => {};
+
       backButton.show();
       backButton.onClick(handleBack);
+
+      return () => {
+        // Восстанавливаем hide и скрываем кнопку при размонтировании
+        backButton.hide = originalHide;
+        backButton.offClick?.(handleBack);
+        backButton.hide();
+      };
     } else {
       backButton.hide();
     }
-
-    return () => {
-      backButton.offClick?.(handleBack);
-      backButton.hide();
-    };
   }, [isVisible]);
 
   const goBack = useCallback(() => {
