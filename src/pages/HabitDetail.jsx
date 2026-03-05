@@ -165,20 +165,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
     setIsCreator(creatorStatus);
   }, [currentUser, ownerInfo, habit.id, habit.creator_id, habit.user_id, habit.parent_habit_id]);
 
-  useEffect(() => {
-    if (!tg) return;
-    try {
-      tg.BackButton.show();
-      tg.BackButton.onClick(onClose);
-
-      return () => {
-        tg.BackButton.offClick(onClose);
-        tg.BackButton.hide();
-      };
-    } catch (err) {
-      console.error('Failed to handle Telegram BackButton:', err);
-    }
-  }, [tg, onClose]);
+  // BackButton управляется через useNavigation(onClose) выше — дублировать не нужно
 
   useEffect(() => {
     const loadOwnerInfo = async () => {
@@ -250,6 +237,18 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
       console.error('Failed to check friend limit:', error);
     }
   };
+
+  // Поллинг: обновляем список участников каждые 8 секунд пока страница открыта.
+  // Это автоматически покажет нового друга и триггернёт FriendSwipeHint.
+  const loadMembersRef = useRef(null);
+  loadMembersRef.current = loadMembers;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadMembersRef.current?.();
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [habit.id]);
 
   const handleAddFriend = async () => {
     console.log('Add Friend clicked, checking limits...');
