@@ -1,21 +1,18 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { useTelegram } from './useTelegram';
 
 /**
  * useNavigation — управляет Telegram BackButton.
- * Показывает "Назад" при монтировании, скрывает при размонтировании.
+ * Использует window.Telegram.WebApp напрямую (синхронно),
+ * без зависимости от асинхронного useTelegram() чтобы избежать мигания.
  */
 export const useNavigation = (onBack = null, options = {}) => {
-  const { tg } = useTelegram();
   const { isVisible = true } = options;
-  // Храним onBack в ref, чтобы не пересоздавать эффект при каждом рендере
   const onBackRef = useRef(onBack);
   onBackRef.current = onBack;
 
   useEffect(() => {
-    if (!tg?.BackButton) return;
-
-    const backButton = tg.BackButton;
+    const backButton = window.Telegram?.WebApp?.BackButton;
+    if (!backButton) return;
 
     const handleBack = () => {
       if (onBackRef.current) onBackRef.current();
@@ -33,8 +30,7 @@ export const useNavigation = (onBack = null, options = {}) => {
       backButton.offClick?.(handleBack);
       backButton.hide();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tg, isVisible]);
+  }, [isVisible]);
 
   const goBack = useCallback(() => {
     if (onBackRef.current) onBackRef.current();
