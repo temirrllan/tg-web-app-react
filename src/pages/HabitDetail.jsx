@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigation } from '../hooks/useNavigation';
 import { useTelegram } from '../hooks/useTelegram';
 import { habitService } from '../services/habits';
 import Loader from '../components/common/Loader';
@@ -71,7 +70,25 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
     yearTotal: 365
   });
 
-  useNavigation(onClose);
+  // ── BackButton: управляем напрямую через window.Telegram.WebApp ──────────────
+  // НЕ через useNavigation/useTelegram — там webApp начинается как null и эффект
+  // срабатывает досрочно, кнопка «Назад» не появляется.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  useEffect(() => {
+    const backBtn = window.Telegram?.WebApp?.BackButton;
+    if (!backBtn) return;
+
+    const handleBack = () => onCloseRef.current?.();
+    backBtn.show();
+    backBtn.onClick(handleBack);
+
+    return () => {
+      backBtn.offClick(handleBack);
+      backBtn.hide();
+    };
+  }, []); // один раз на mount/unmount — onClose стабилизирован через ref
 
   const [isCreator, setIsCreator] = useState(false);
 
@@ -211,20 +228,32 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
     }
   };
 
+  // Обновляет список участников и проверяет показ FriendSwipeHint
+  const applyMembersData = (loaded) => {
+    setMembers(loaded);
+    const friendShown = localStorage.getItem('hint_friend_shown') === '1';
+    if (shouldShowFriendHint && !friendShown && !friendHintClosedRef.current && loaded.length > 0) {
+      setTimeout(() => setShowFriendHint(true), 900);
+    }
+  };
+
+  // Первичная загрузка — может использовать кэш
   const loadMembers = async () => {
     try {
-      const data = await habitService.getHabitMembers(habit.id);
-      const loaded = data.members || [];
-      setMembers(loaded);
-
-      // Показываем friend swipe hint: только новым пользователям (shouldShowFriendHint=true),
-      // один раз за всё время (hint_friend_shown), и не повторяем в рамках сессии (ref)
-      const friendShown = localStorage.getItem('hint_friend_shown') === '1';
-      if (shouldShowFriendHint && !friendShown && !friendHintClosedRef.current && loaded.length > 0) {
-        setTimeout(() => setShowFriendHint(true), 900);
-      }
+      const data = await habitService.getHabitMembers(habit.id, false);
+      applyMembersData(data.members || []);
     } catch (error) {
       console.error('Failed to load members:', error);
+    }
+  };
+
+  // Поллинг — всегда обходит кэш чтобы сразу видеть нового друга
+  const pollMembers = async () => {
+    try {
+      const data = await habitService.getHabitMembers(habit.id, true); // forceRefresh!
+      applyMembersData(data.members || []);
+    } catch (error) {
+      console.error('Failed to poll members:', error);
     }
   };
 
@@ -238,14 +267,14 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
     }
   };
 
-  // Поллинг: обновляем список участников каждые 8 секунд пока страница открыта.
-  // Это автоматически покажет нового друга и триггернёт FriendSwipeHint.
-  const loadMembersRef = useRef(null);
-  loadMembersRef.current = loadMembers;
+  // Поллинг каждые 8 сек — без кэша, чтобы мгновенно видеть нового друга.
+  // Используем ref чтобы избежать stale closure внутри setInterval.
+  const pollMembersRef = useRef(pollMembers);
+  pollMembersRef.current = pollMembers;
 
   useEffect(() => {
     const interval = setInterval(() => {
-      loadMembersRef.current?.();
+      pollMembersRef.current?.();
     }, 8000);
     return () => clearInterval(interval);
   }, [habit.id]);

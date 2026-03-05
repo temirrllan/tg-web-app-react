@@ -39,10 +39,11 @@ export const habitService = {
   },
 
   /**
-   * Получить участников привычки (кэшируется на 2 минуты)
+   * Получить участников привычки (кэшируется на 1 минуту)
+   * forceRefresh=true — обойти кэш (используется при поллинге)
    */
-   async getHabitMembers(habitId) {
-    return await habitServiceOptimized.getHabitMembers(habitId);
+   async getHabitMembers(habitId, forceRefresh = false) {
+    return await habitServiceOptimized.getHabitMembers(habitId, forceRefresh);
   },
 
   /**
