@@ -62,6 +62,16 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
   useTelegramTheme();
   useNavigation(onClose);
 
+  // Защитный повторный показ BackButton: некоторые эффекты инициализации
+  // Telegram могут прятать кнопку после её показа через useNavigation
+  useEffect(() => {
+    const backBtn = window.Telegram?.WebApp?.BackButton;
+    if (!backBtn) return;
+    const t1 = setTimeout(() => backBtn.show(), 100);
+    const t2 = setTimeout(() => backBtn.show(), 500);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+
   const [statistics, setStatistics] = useState({
     currentStreak: 0,
     weekDays: 0,

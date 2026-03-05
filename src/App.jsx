@@ -50,9 +50,7 @@ function AppContent() {
           version: tg.version,
         });
         
-        if (tg.BackButton) {
-          tg.BackButton.hide();
-        }
+        // BackButton управляется компонентами через useNavigation — не трогаем здесь
       } catch (e) {
         console.error('Error initializing Telegram WebApp:', e);
       }
