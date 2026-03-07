@@ -320,3 +320,93 @@
   margin: 8px 0 0;
   padding-bottom: 8px;
 }
+
+/* ── Dark Theme ─────────────────────────────────────────────────────────── */
+.dark-theme .pd {
+  background: #1C1C1E;
+}
+
+.dark-theme .pd__name {
+  color: #FFFFFF;
+}
+
+.dark-theme .pd__profession {
+  color: #8E8E93;
+}
+
+.dark-theme .pd__avatar-wrap {
+  background: rgba(44, 44, 46, 0.5);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.15);
+}
+
+.dark-theme .pd__stat {
+  background: #2C2C2E;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .pd__stat-label {
+  color: #636366;
+}
+
+.dark-theme .pd__stat-val {
+  color: #FFFFFF;
+}
+
+.dark-theme .pd__cta--buy {
+  background: #A7D96C;
+  color: #000000;
+}
+
+.dark-theme .pd__cta--owned {
+  background: #1E3A1E;
+  color: #A7D96C;
+}
+
+.dark-theme .pd__bio-text {
+  color: #EBEBF5;
+}
+
+.dark-theme .pd__learn-more {
+  color: #A7D96C;
+}
+
+.dark-theme .pd__section-title {
+  color: #FFFFFF;
+}
+
+.dark-theme .pd__period-label {
+  color: #636366;
+}
+
+.dark-theme .pd__habit {
+  background: #2C2C2E;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .pd__habit-name {
+  color: #FFFFFF;
+}
+
+.dark-theme .pd__habit-goal {
+  color: #636366;
+}
+
+.dark-theme .pd__ach-title {
+  color: #FFFFFF;
+}
+
+.dark-theme .pd__ach-count {
+  color: #8E8E93;
+}
+
+.dark-theme .pd__ach-desc {
+  color: #8E8E93;
+}
+
+.dark-theme .pd__error {
+  color: #FF453A;
+}
+
+.dark-theme .pd__attribution {
+  color: #636366;
+}

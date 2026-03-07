@@ -247,3 +247,88 @@
   color: #aaa;
   text-decoration: line-through;
 }
+
+/* ── Dark Theme ─────────────────────────────────────────────────────────────── */
+.dark-theme .shop {
+  background: #1C1C1E;
+}
+
+.dark-theme .shop__title {
+  color: #FFFFFF;
+}
+
+.dark-theme .shop__search-icon circle,
+.dark-theme .shop__search-icon path {
+  stroke: #636366;
+}
+
+.dark-theme .shop__search {
+  background: #2C2C2E;
+  color: #FFFFFF;
+}
+
+.dark-theme .shop__search::placeholder {
+  color: #636366;
+}
+
+.dark-theme .shop__search-clear {
+  color: #636366;
+}
+
+.dark-theme .shop__filter-pill {
+  background: #2C2C2E;
+  border-color: #38383A;
+  color: #8E8E93;
+}
+
+.dark-theme .shop__filter-pill--active {
+  background: #A7D96C;
+  border-color: #A7D96C;
+  color: #000000;
+}
+
+.dark-theme .shop__empty-text {
+  color: #636366;
+}
+
+.dark-theme .pack-card {
+  background: #2C2C2E;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .pack-card:active {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.dark-theme .pack-card--owned {
+  box-shadow: 0 0 0 2.5px #A7D96C, 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .pack-card__owned-badge {
+  background: rgba(44, 44, 46, 0.9);
+  color: #A7D96C;
+}
+
+.dark-theme .pack-card__info {
+  background: #2C2C2E;
+}
+
+.dark-theme .pack-card__name {
+  color: #FFFFFF;
+}
+
+.dark-theme .pack-card__desc {
+  color: #8E8E93;
+}
+
+.dark-theme .pack-card__price-free {
+  color: #A7D96C;
+}
+
+.dark-theme .pack-card__price-val {
+  color: #FFFFFF;
+}
+
+.dark-theme .pack-card__price-old {
+  color: #636366;
+}
