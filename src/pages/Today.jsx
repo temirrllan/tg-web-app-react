@@ -28,6 +28,7 @@ import SpecialHabitsShop from './SpecialHabitsShop';
 import SpecialHabitPackDetail from './SpecialHabitPackDetail';
 import SpecialHabitDetail from './SpecialHabitDetail';
 import AchievementUnlockedPopup from '../components/modals/AchievementUnlockedPopup';
+import BoredBear from "../components/habits/BoredBear";
 
 const Today = ({ shouldShowFabHint = false, shouldShowSwipeHint = false, shouldShowFriendHint = false }) => {
   const { t } = useTranslation();
@@ -1030,7 +1031,8 @@ useEffect(() => {
                 <HabitsSkeleton />
               </div>
             ) : displayHabits.length === 0 ? (
-              <EmptyState onCreateClick={() => handleFabClick()} />
+              // <EmptyState onCreateClick={() => handleFabClick()} />
+              <BoredBear onCreateClick={() => handleFabClick()}/>
             ) : (
               <div className="today__habits">
                 {(() => {
