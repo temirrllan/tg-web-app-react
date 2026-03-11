@@ -275,8 +275,8 @@
     }
   },
   "specialHabits": {
-    "tabSpecial": "✨ Арнайы",
-    "tabMy": "❤️ Менің",
+    "tabSpecial": "Арнайы",
+    "tabMy": "Менің",
     "emptyTitle": "Арнайы әдеттер жоқ",
     "emptyDesc": "Дүкеннен атақты адамдардың әдет жинағын сатып алыңыз",
     "browseStore": "Дүкенді ашу",

@@ -230,8 +230,8 @@
       }
     },
     "specialHabits": {
-    "tabSpecial": "✨ Особые",
-    "tabMy": "❤️ Мои",
+    "tabSpecial": "Особые",
+    "tabMy": "Мои",
     "emptyTitle": "Особых привычек пока нет",
     "emptyDesc": "Купите набор привычек знаменитостей в магазине",
     "browseStore": "Открыть магазин",

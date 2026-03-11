@@ -1008,13 +1008,13 @@ useEffect(() => {
                 loadSpecialHabitsForDate(selectedDate);
               }}
             >
-              {t('specialHabits.tabSpecial') || '✨ Special'}
+              {t('specialHabits.tabSpecial') || 'Special'}
             </button>
             <button
               className={`today__tab ${activeTab === 'my' ? 'today__tab--active' : ''}`}
               onClick={() => setActiveTab('my')}
             >
-              {t('specialHabits.tabMy') || '❤️ My'}
+              {t('specialHabits.tabMy') || 'My'}
             </button>
           </div>
 

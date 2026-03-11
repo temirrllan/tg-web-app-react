@@ -281,8 +281,8 @@
     }
   },
   "specialHabits": {
-    "tabSpecial": "✨ Special",
-    "tabMy": "❤️ My",
+    "tabSpecial": "Special",
+    "tabMy": "My",
     "emptyTitle": "No Special Habits Yet",
     "emptyDesc": "Purchase a Celebrity Habit Pack from the store",
     "browseStore": "Browse Store",
