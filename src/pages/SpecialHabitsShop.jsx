@@ -157,9 +157,9 @@ const PackCard = ({ pack, onClick }) => {
           ) : (
             <>
               {hasDiscount && (
-                <span className="pack-card__price-old">$ {pack.original_price_stars}</span>
+                <span className="pack-card__price-old">⭐ {pack.original_price_stars}</span>
               )}
-              <span className="pack-card__price-val">$ {pack.price_stars}</span>
+              <span className="pack-card__price-val">⭐ {pack.price_stars}</span>
             </>
           )}
         </div>

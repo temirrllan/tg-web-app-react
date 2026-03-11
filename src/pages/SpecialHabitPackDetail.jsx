@@ -99,7 +99,7 @@ const SpecialHabitPackDetail = ({ pack: initialPack, onClose, onGoToSpecialTab }
   const isPurchased  = pack?.is_purchased;
   const bgColor      = getPackBgColor(pack);
   const isFree       = pack.price_stars === 0;
-  const priceDisplay = isFree ? 'FREE' : `$ ${pack.price_stars}`;
+  const priceDisplay = isFree ? 'FREE' : `⭐ ${pack.price_stars}`;
 
   // Group templates by day_period
   const groupedHabits = {};
