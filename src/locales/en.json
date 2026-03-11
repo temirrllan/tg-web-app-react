@@ -204,11 +204,29 @@
     "edit": "Edit",
     "goal": "Goal",
     "sharedHabitNotice": "ℹ️ This is a shared habit. Only the creator can edit it.",
+    "tabs": {
+      "myStats": "My Statistics",
+      "friends": "Friends"
+    },
     "statistics": {
       "daysStreak": "Days Streak",
       "week": "Week",
       "month": "Month",
       "year": "Year"
+    },
+    "stats": {
+      "chartTitle": "Last 7 days",
+      "bestStreak": "Best Streak",
+      "totalCompleted": "Total Completed",
+      "daysUnit": "days",
+      "timesUnit": "times"
+    },
+    "motivations": {
+      "m30": "🔥 Incredible! A month without missing!",
+      "m14": "💪 Two weeks straight! You're awesome!",
+      "m7": "🌟 A week streak! Keep it up!",
+      "m3": "✨ Great start! Don't stop now!",
+      "m0": "🚀 Start your winning streak!"
     },
     "motivation": "Good Job My Friend! 🔥",
     "friends": {

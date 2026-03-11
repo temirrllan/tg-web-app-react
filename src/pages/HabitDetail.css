@@ -1,3 +1,8 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   HabitDetail — полный редизайн с вкладками и анимациями
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Layout */
 .habit-detail {
   min-height: 100vh;
   background: var(--bg-primary, #F5F5F7);
@@ -6,367 +11,433 @@
 }
 
 .habit-detail--loading {
-  display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Header */
-.habit-detail__header {
-  background: var(--card-bg, white);
-  padding: 16px 20px;
+/* ─── Habit header ──────────────────────────────────────────────────────────── */
+.hd-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  padding: 18px 20px 14px;
+  gap: 12px;
+  background: var(--card-bg, #fff);
   border-bottom: 1px solid var(--border-color, #E5E5EA);
 }
 
-.habit-detail__close {
-  background: none;
-  border: none;
-  color: var(--color-info, #007AFF);
-  font-size: 17px;
-  padding: 0;
-  cursor: pointer;
-}
-
-.habit-detail__title-wrapper {
-  text-align: center;
-  flex: 1;
-}
-
-.habit-detail__app-title {
-  font-size: 17px;
-  font-weight: 600;
-  margin: 0;
-  color: var(--text-primary, #000);
-}
-
-.habit-detail__app-subtitle {
-  font-size: 13px;
-  color: var(--text-tertiary, #8E8E93);
-  margin: 0;
-}
-
-.habit-detail__menu {
-  background: none;
-  border: none;
-  color: var(--color-info, #007AFF);
-  font-size: 22px;
-  padding: 0;
-  cursor: pointer;
-}
-
-/* Content */
-.habit-detail__content {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-}
-
-/* Habit Info */
-.habit-detail__habit-info {
-  border-radius: 16px;
-  margin-bottom: 16px;
-  overflow: hidden;
-}
-
-.habit-detail__habit-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 4px;
-  gap: 12px;
-}
-
-.habit-detail__habit-title-section {
+.hd-header-left {
   display: flex;
   align-items: flex-start;
-  align-content: center;
-  gap: 6px;
+  gap: 10px;
   flex: 1;
   min-width: 0;
+}
+
+.hd-emoji {
+  font-size: 26px;
+  flex-shrink: 0;
+  line-height: 1.1;
+}
+
+.hd-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.hd-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 2px;
+  color: var(--text-primary, #000);
+  word-break: break-word;
+  line-height: 1.25;
+}
+
+.hd-goal {
+  font-size: 14px;
+  color: var(--text-secondary, #6B7280);
+  margin: 0;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.hd-edit-btn {
+  flex-shrink: 0;
+  padding: 7px 18px;
+  border-radius: 20px;
+  border: 2px solid var(--color-success, #A7D96C);
+  background: transparent;
+  color: var(--color-success, #A7D96C);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.18s, color 0.18s;
+}
+.hd-edit-btn:hover {
+  background: var(--color-success, #A7D96C);
+  color: #fff;
+}
+
+/* ─── Tab bar ───────────────────────────────────────────────────────────────── */
+.hd-tabs {
+  display: flex;
+  position: relative;
+  background: var(--card-bg, #fff);
+  border-bottom: 1px solid var(--border-color, #E5E5EA);
+  padding: 0 4px;
+}
+
+.hd-tab {
+  flex: 1;
+  padding: 12px 8px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-tertiary, #8E8E93);
+  cursor: pointer;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  position: relative;
+  z-index: 1;
+}
+
+.hd-tab--active {
+  color: var(--text-primary, #111);
+}
+
+.hd-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--color-success, #A7D96C);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* Sliding indicator */
+.hd-tab-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 4px;
+  width: calc(50% - 4px);
+  height: 3px;
+  background: var(--color-success, #A7D96C);
+  border-radius: 3px 3px 0 0;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform: translateX(0);
+}
+
+.hd-tab-indicator--right {
+  transform: translateX(calc(100% + 4px));
+}
+
+/* ─── Content area ──────────────────────────────────────────────────────────── */
+.hd-content {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.hd-section {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Fade-in animation when tab changes */
+.hd-section--animated {
+  animation: hd-fade-in 0.28s ease;
+}
+
+@keyframes hd-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Particle canvas wrapper ───────────────────────────────────────────────── */
+.hd-particle-wrap {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999;
   overflow: hidden;
 }
 
-.habit-detail__emoji {
-  font-size: 24px;
-  flex-shrink: 0;
+/* ─── Progress rings ────────────────────────────────────────────────────────── */
+.hd-rings {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.hd-ring-card {
+  background: var(--card-bg, #fff);
+  border-radius: 18px;
+  padding: 18px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border-color, transparent);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.hd-ring-wrap {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hd-ring-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.hd-ring-val {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text-primary, #000);
   line-height: 1;
 }
 
-.habit-detail__habit-title {
-  font-size: 24px;
-  font-weight: 600;
-  margin: 0;
-  color: var(--text-primary, #000);
-  word-wrap: break-word;
-  word-break: break-word;
-  overflow-wrap: break-word;
-  hyphens: auto;
-  flex: 1;
-  min-width: 0;
-  line-height: 1.3;
-}
-
-.habit-detail__edit-btn {
-  background: none;
-  border: 2px solid var(--color-success, #A7D96C);
-  color: var(--color-success, #A7D96C);
-  font-size: 16px;
-  font-weight: 600;
-  padding: 8px 20px;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-
-.habit-detail__edit-btn:hover {
-  background: var(--color-success, #A7D96C);
-  color: var(--text-inverse, white);
-}
-
-.habit-detail__habit-goal {
-  font-size: 16px;
-  color: var(--text-secondary, #1D1D1F);
-  margin: 0;
-  margin-left: 5px;
-  word-wrap: break-word;
-  word-break: break-word;
-  overflow-wrap: break-word;
-  hyphens: auto;
-  line-height: 1.4;
-}
-
-.habit-detail__creator-notice {
-  font-size: 14px;
-  color: var(--color-info, #007AFF);
-  background: var(--bg-tertiary, #E8F4FD);
-  border-radius: 8px;
-  padding: 12px;
-  margin-top: 12px;
-  line-height: 1.4;
-  word-wrap: break-word;
-}
-
-/* Statistics */
-.habit-detail__statistics {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.habit-detail__stat-card {
-  background: var(--card-bg, white);
-  border-radius: 16px;
-  padding: 20px;
-  text-align: left;
-  border: 1px solid var(--border-color, transparent);
-}
-
-.habit-detail__stat-circle {
-  width: 100px;
-  height: 100px;
-  margin: 0 auto 12px;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  border-radius: 25px;
-}
-
-.habit-detail__stat-circle::before {
-  content: '';
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  border: 8px solid var(--bg-tertiary, #F2F2F7);
-  box-sizing: border-box;
-}
-
-.habit-detail__stat-circle::after {
-  content: '';
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  border: 8px solid var(--color, #A7D96C);
-  border-top-color: transparent;
-  border-right-color: transparent;
-  transform: rotate(calc(var(--progress, 0) * 3.6deg - 90deg));
-  box-sizing: border-box;
-  transition: transform 0.5s ease;
-  stroke-linecap: round;
-  -webkit-stroke-linecap: round;
-}
-
-.habit-detail__stat-value {
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--text-primary, #000);
-  z-index: 1;
-}
-
-.habit-detail__stat-total {
-  font-size: 14px;
+.hd-ring-total {
+  font-size: 12px;
   color: var(--text-tertiary, #8E8E93);
-  z-index: 1;
+  font-weight: 500;
 }
 
-.habit-detail__stat-title {
-  font-size: 16px;
+.hd-ring-label {
+  font-size: 13px;
   font-weight: 600;
-  margin: 0 0 4px;
   color: var(--text-primary, #000);
-}
-
-.habit-detail__stat-subtitle {
-  font-size: 14px;
-  color: var(--text-tertiary, #8E8E93);
-  margin: 0;
-}
-
-/* Motivation */
-.habit-detail__motivation {
-  background: var(--color-success, #A7D96C);
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 20px;
   text-align: center;
 }
 
-.habit-detail__motivation-text {
-  font-size: 24px;
-  font-weight: 600;
-  color: var(--text-inverse, #1D1D1F);
-  margin: 0;
-  font-style: italic;
+.hd-ring-sub {
+  font-size: 16px;
+  line-height: 1;
 }
 
-/* Friends Section */
-.habit-detail__friends {
-  display: flex;
-  flex-direction: column;
-  background: var( white);
+/* ─── Motivation banner ─────────────────────────────────────────────────────── */
+.hd-motive {
+  background: linear-gradient(135deg, #A7D96C, #7DD3C0);
   border-radius: 16px;
-  /* padding: 20px; */
-  margin-bottom: 20px;
-  text-align: left;
-  /* border: 1px solid var(--border-color, transparent); */
+  padding: 20px 24px;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(167, 217, 108, 0.35);
 }
 
-.habit-detail__friends-title {
-  font-size: 20px;
-  font-weight: 600;
-  margin: 0 0 8px;
-  color: var(--text-primary, #000);
+.hd-motive-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: rgba(0,0,0,0.75);
+  margin: 0;
+  line-height: 1.4;
 }
 
-.habit-detail__friends-subtitle {
-  font-size: 14px;
-  color: var(--text-tertiary, #8E8E93);
-  margin: 0 0 16px;
-}
-
-.habit-detail__share-buttons {
+/* ─── Quick stat pills ──────────────────────────────────────────────────────── */
+.hd-pills {
   display: flex;
   gap: 12px;
-  margin-bottom: 16px;
 }
 
-.habit-detail__btn--copy-link {
-  flex: 0 0 auto;
-  min-width: 120px;
-  background: var(--card-bg, white);
-  color: var(--color-success, #A7D96C);
-  border: 2px solid var(--color-success, #A7D96C);
-  padding: 16px 24px;
+.hd-pill {
+  flex: 1;
+  background: var(--card-bg, #fff);
+  border-radius: 14px;
+  padding: 14px 16px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-weight: 600;
+  gap: 10px;
+  border: 1px solid var(--border-color, transparent);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
-.habit-detail__btn--copy-link:hover {
-  background: var(--card-bg-hover, #F8FFF4);
+.hd-pill-icon {
+  font-size: 22px;
+  flex-shrink: 0;
 }
 
-.habit-detail__btn--copy-link svg {
-  width: 20px;
-  height: 20px;
+.hd-pill-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
-.habit-detail__btn--share {
+.hd-pill-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-tertiary, #8E8E93);
+  white-space: nowrap;
+}
+
+.hd-pill-val {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary, #000);
+  white-space: nowrap;
+}
+
+/* ─── Weekly chart ──────────────────────────────────────────────────────────── */
+.hd-chart-block {
+  background: var(--card-bg, #fff);
+  border-radius: 18px;
+  padding: 18px 16px 14px;
+  border: 1px solid var(--border-color, transparent);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.hd-section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary, #000);
+  margin: 0 0 12px;
+}
+
+.hd-chart {
+  width: 100%;
+}
+
+.hd-chart-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 72px;
+  gap: 6px;
+}
+
+.hd-chart-col {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
 }
 
-/* Buttons */
-.habit-detail__btn {
+.hd-chart-bar {
+  width: 100%;
+  border-radius: 6px 6px 3px 3px;
+  min-height: 4px;
+  transition: height 0.05s linear;
+  /* height is set dynamically */
+}
+
+.hd-chart-day {
+  font-size: 11px;
+  color: var(--text-tertiary, #8E8E93);
+  white-space: nowrap;
+}
+
+/* ─── Friends section ───────────────────────────────────────────────────────── */
+.hd-friends-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.hd-friends-limit {
+  font-size: 12px;
+  color: var(--text-tertiary, #8E8E93);
+  font-weight: 500;
+}
+
+.hd-members {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.hd-no-friends {
+  background: var(--card-bg, #fff);
+  border-radius: 18px;
+  padding: 32px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  border: 1px solid var(--border-color, transparent);
+}
+
+.hd-no-friends-icon {
+  font-size: 40px;
+  opacity: 0.45;
+}
+
+.hd-no-friends-text {
+  font-size: 14px;
+  color: var(--text-tertiary, #8E8E93);
+  margin: 0;
+  line-height: 1.5;
+  max-width: 240px;
+}
+
+.hd-invite-btn {
+  width: 100%;
   padding: 16px;
-  border-radius: 12px;
-  font-size: 17px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.habit-detail__btn--primary {
+  border-radius: 14px;
   background: var(--color-success, #A7D96C);
-  color: var(--text-inverse, #1D1D1F);
+  color: rgba(0,0,0,0.75);
+  border: none;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.18s, transform 0.1s;
+  box-shadow: 0 4px 14px rgba(167, 217, 108, 0.4);
 }
 
-.habit-detail__btn--primary:hover {
-  background: var(--color-success-dark, #95C55D);
-}
+.hd-invite-btn:hover  { filter: brightness(1.06); }
+.hd-invite-btn:active { transform: scale(0.98); }
 
-.habit-detail__btn--outline {
-  background: var(--card-bg, white);
-  color: var(--color-success, #A7D96C);
-  border: 2px solid var(--color-success, #A7D96C);
-}
-
-.habit-detail__btn--outline:hover {
-  background: var(--card-bg-hover, #F8FFF4);
-}
-
-.habit-detail__btn--danger {
-  background: var(--card-bg, white);
+/* ─── Danger / delete button ────────────────────────────────────────────────── */
+.hd-danger-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--card-bg, #fff);
   color: var(--text-primary, #000);
   border: 1px solid var(--border-color, #E5E5EA);
-  width: 100%;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
 }
 
-.habit-detail__btn--danger:hover {
-  background: var(--card-bg-failed, #FFE5E5);
-  color: var(--color-danger, #FF3B30);
-  border-color: var(--color-danger, #FF3B30);
+.hd-danger-btn:hover {
+  background: #FFF0F0;
+  color: #FF3B30;
+  border-color: #FF3B30;
 }
 
-/* Friends Section Updates */
-.habit-detail__members-list {
-  margin-bottom: 16px;
-}
-
-.habit-detail__btn--add-friend {
-  background: var(--color-success, #A7D96C);
-  color: var(--text-inverse, #1D1D1F);
-  width: 100%;
-  margin-bottom: 16px;
-}
-
-/* Friend Card */
+/* ─── Friend card (swipeable) ───────────────────────────────────────────────── */
 .friend-card-container {
   position: relative;
   display: flex;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   height: 64px;
   overflow: hidden;
   border-radius: 16px;
@@ -382,10 +453,11 @@
   gap: 12px;
   z-index: 2;
   cursor: grab;
-  transition: transform 0.3s ease-out;
   will-change: transform;
   border: 1px solid var(--border-color, transparent);
 }
+
+.friend-card:active { cursor: grabbing; }
 
 .friend-card__avatar {
   width: 40px;
@@ -395,6 +467,7 @@
   background: var(--border-color, #E5E5EA);
   flex-shrink: 0;
 }
+
 .friend-card__info {
   flex: 1;
   min-width: 0;
@@ -402,64 +475,33 @@
   flex-direction: column;
   gap: 2px;
 }
+
 .friend-card__name {
-  font-size: 17px;
-  font-weight: 500;
+  font-size: 16px;
+  font-weight: 600;
   color: var(--text-primary, #000);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.friend-card__status {
-  font-size: 14px;
-  font-weight: 500;
+
+.friend-card__status { font-size: 13px; font-weight: 500; white-space: nowrap; }
+.friend-card__status--done   { color: #34C759; }
+.friend-card__status--undone { color: #8E8E93; }
+.friend-card__status--failed { color: #FF3B30; }
+.friend-card__status--skipped { color: #FF9500; }
+
+.friend-card__streak {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #555);
   white-space: nowrap;
+  flex-shrink: 0;
 }
-
-.friend-card__status--done {
-  color: #34C759;
-}
-
-.friend-card__status--undone {
-  color: #8E8E93;
-}
-
-.friend-card__status--failed {
-  color: #FF3B30;
-}
-
-.friend-card__status--skipped {
-  color: #FF9500;
-}
-
-/* Dark theme для friend card */
-.dark-theme .friend-card {
-  background: #2C2C2E;
-}
-
-.dark-theme .friend-card__name {
-  color: #FFFFFF;
-}
-
-.dark-theme .friend-card__status--undone {
-  color: #98989D;
-}
-
-/* Disabled friend card (уже выполнено) */
-.friend-card--disabled {
-  cursor: default !important;
-  opacity: 0.7;
-}
-
-.friend-card--disabled:active {
-  cursor: default !important;
-}
-
 
 .friend-action {
   position: absolute;
-  top: 0;
-  bottom: 0;
+  top: 0; bottom: 0;
   width: 100px;
   display: flex;
   align-items: center;
@@ -468,98 +510,57 @@
   font-weight: 600;
   font-size: 15px;
   border-radius: 16px;
-  gap: 4px;
 }
 
-.friend-action--punch {
-  right: 0;
-  background: #FF6B6B;
+.friend-action--punch  { right: 0; background: #FF6B6B; }
+.friend-action--remove { left:  0; background: #FF3B30; }
+
+/* ─── Dark theme ────────────────────────────────────────────────────────────── */
+.dark-theme .hd-ring-card,
+.dark-theme .hd-pill,
+.dark-theme .hd-chart-block,
+.dark-theme .hd-no-friends {
+  background: #1C1C1E;
+  border-color: #2C2C2E;
+  box-shadow: none;
 }
 
-.friend-action--remove {
-  left: 0;
-  background: var(--color-danger, #FF3B30);
+.dark-theme .hd-motive-text {
+  color: rgba(0,0,0,0.85);
 }
 
-/* Responsive */
+.dark-theme .friend-card {
+  background: #2C2C2E;
+  border-color: #3A3A3C;
+}
+
+.dark-theme .friend-card__name  { color: #FFF; }
+.dark-theme .friend-card__streak { color: #AFAFAF; }
+.dark-theme .hd-danger-btn { background: #1C1C1E; border-color: #3A3A3C; }
+.dark-theme .hd-danger-btn:hover { background: #2C1010; color: #FF453A; border-color: #FF453A; }
+
+/* ─── Responsive ────────────────────────────────────────────────────────────── */
 @media (max-width: 375px) {
-  .habit-detail__statistics {
-    gap: 12px;
-  }
-  
-  .habit-detail__stat-circle {
-    width: 80px;
-    height: 80px;
-  }
-  
-  .habit-detail__stat-value {
-    font-size: 24px;
-  }
-  
-  .habit-detail__stat-title {
-    font-size: 15px;
-  }
-  
-  .habit-detail__habit-title {
-    font-size: 20px;
-  }
-  
-  .habit-detail__habit-goal {
-    font-size: 14px;
-    margin-left: 40px;
-  }
-  
-  .habit-detail__edit-btn {
-    font-size: 14px;
-    padding: 6px 16px;
-  }
+  .hd-ring-val  { font-size: 22px; }
+  .hd-title     { font-size: 18px; }
+  .hd-rings     { gap: 10px; }
+  .hd-ring-card { padding: 14px 8px 12px; }
+  .hd-pills     { gap: 8px; }
+  .hd-pill      { padding: 12px; }
+  .hd-pill-val  { font-size: 14px; }
+  .hd-tab       { font-size: 13px; }
 }
 
 @media (max-width: 320px) {
-  .habit-detail__habit-title {
-    font-size: 18px;
-  }
-  
-  .habit-detail__emoji {
-    font-size: 28px;
-  }
-  
-  .habit-detail__habit-goal {
-    font-size: 13px;
-    margin-left: 36px;
-  }
+  .hd-title  { font-size: 16px; }
+  .hd-tab    { font-size: 12px; padding: 10px 4px; }
 }
 
-/* Dark theme specific adjustments */
-.dark-theme .habit-detail__motivation-text {
-  color: #000000;
-}
-
-.dark-theme .habit-detail__btn--copy-link:hover {
-  background: var(--bg-tertiary);
-}
-
-.dark-theme .habit-detail__btn--outline:hover {
-  background: var(--bg-tertiary);
-}
-
-.dark-theme .habit-detail__creator-notice {
-  background: rgba(10, 132, 255, 0.15);
-}
-
-/* Добавить В КОНЕЦ файла src/pages/HabitDetail.css */
-
-/* Скрыть кнопку Edit для locked привычек */
-.habit-detail__edit-btn--locked {
-  opacity: 0.5;
-  cursor: not-allowed;
-  background: #C7C7CC;
-  border-color: #C7C7CC;
-  color: #8E8E93;
-}
-
-.dark-theme .habit-detail__edit-btn--locked {
-  background: #48484A;
-  border-color: #48484A;
-  color: #6E6E73;
-}
+/* Legacy classes (keep for backward compat) */
+.habit-detail__statistics,
+.habit-detail__stat-card,
+.habit-detail__stat-circle,
+.habit-detail__stat-value,
+.habit-detail__stat-total,
+.habit-detail__stat-title,
+.habit-detail__stat-subtitle { /* kept for any refs */ }
