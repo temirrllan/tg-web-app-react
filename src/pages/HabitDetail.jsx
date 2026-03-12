@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTelegram } from '../hooks/useTelegram';
 import { useNavigation } from '../hooks/useNavigation';
 import { habitService } from '../services/habits';
@@ -12,9 +12,26 @@ import FriendSwipeHint from '../components/habits/FriendSwipeHint';
 import { useTranslation } from "../hooks/useTranslation";
 import { useTelegramTheme } from '../hooks/useTelegramTheme';
 
-// SVG Circular Progress (used in stat cards)
+// ─────────────────────────────────────────────────────────────────────────────
+// Animated SVG Circular Progress
+// Animates from 0 → target on mount and on every value change
+// ─────────────────────────────────────────────────────────────────────────────
 const CircularProgress = ({ value, total, color, size = 100 }) => {
-  const percentage = total > 0 ? Math.min((value / total) * 100, 100) : 0;
+  const [displayValue, setDisplayValue] = useState(0);
+  const animFrameRef = useRef(null);
+
+  useEffect(() => {
+    // Double rAF ensures the first paint at offset=full before transition kicks in
+    animFrameRef.current = requestAnimationFrame(() => {
+      animFrameRef.current = requestAnimationFrame(() => {
+        setDisplayValue(value);
+      });
+    });
+    return () => cancelAnimationFrame(animFrameRef.current);
+  }, [value]);
+
+  const safeTotal = total > 0 ? total : Math.max(value, 1);
+  const percentage = Math.min((displayValue / safeTotal) * 100, 100);
   const radius = (size / 2) - 9;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (percentage / 100) * circumference;
@@ -36,17 +53,19 @@ const CircularProgress = ({ value, total, color, size = 100 }) => {
         strokeDasharray={circumference}
         strokeDashoffset={offset}
         strokeLinecap="round"
-        style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+        style={{ transition: 'stroke-dashoffset 0.9s cubic-bezier(0.4, 0, 0.2, 1)' }}
       />
     </svg>
   );
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
 // Stat Card with SVG circle + overlaid text
+// ─────────────────────────────────────────────────────────────────────────────
 const StatCard = ({ value, total, showTotal, color, title, subtitle }) => (
   <div className="hd-stat-card">
     <div className="hd-stat-circle-wrapper">
-      <CircularProgress value={value} total={total > 0 ? total : Math.max(value, 1)} color={color} size={100} />
+      <CircularProgress value={value} total={total} color={color} size={100} />
       <div className="hd-stat-circle-text">
         <span className="hd-stat-value">{value}</span>
         {showTotal && total > 0 && (
@@ -59,6 +78,56 @@ const StatCard = ({ value, total, showTotal, color, title, subtitle }) => (
   </div>
 );
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Animated weekly bar chart
+// ─────────────────────────────────────────────────────────────────────────────
+const WeeklyChart = ({ weeklyData, todayIdx, dayLabels, todayLabel }) => {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setVisible(true), 80);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className="hd-weekly-chart">
+      {dayLabels.map((label, idx) => {
+        const isDone = weeklyData[idx];
+        const isFuture = idx > todayIdx;
+        const isToday = idx === todayIdx;
+
+        let barClass = 'hd-weekly-chart__bar';
+        if (isDone)   barClass += ' hd-weekly-chart__bar--done';
+        if (isToday)  barClass += ' hd-weekly-chart__bar--today';
+        if (isFuture) barClass += ' hd-weekly-chart__bar--future';
+
+        return (
+          <div key={idx} className="hd-weekly-chart__col">
+            <div className="hd-weekly-chart__bar-wrap">
+              <div
+                className={barClass}
+                style={{
+                  // Delay each bar slightly for stagger effect
+                  transitionDelay: visible ? `${idx * 60}ms` : '0ms',
+                  height: visible
+                    ? (isDone || isToday ? '64px' : isFuture ? '12px' : '18px')
+                    : '0px'
+                }}
+              />
+            </div>
+            <span className={`hd-weekly-chart__label${isToday ? ' hd-weekly-chart__label--today' : ''}`}>
+              {isToday ? todayLabel : label}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main HabitDetail component
+// ─────────────────────────────────────────────────────────────────────────────
 const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = false }) => {
   const { tg, user: currentUser } = useTelegram();
   const { t } = useTranslation();
@@ -92,186 +161,139 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
 
   const [isCreator, setIsCreator] = useState(false);
 
+  // ── isCreator detection ────────────────────────────────────────────
   useEffect(() => {
-    console.group('🔍 CALCULATING isCreator');
-
-    if (!currentUser) {
-      console.warn('⚠️ No current user');
-      console.groupEnd();
-      setIsCreator(false);
-      return;
-    }
-
+    if (!currentUser) { setIsCreator(false); return; }
     const userDbId = localStorage.getItem('user_id');
-
-    if (!userDbId) {
-      console.error('❌ CRITICAL: No user_id in localStorage!');
-      console.groupEnd();
-      setIsCreator(false);
-      return;
-    }
-
-    console.log('📊 User identification:', {
-      localStorage_user_id: userDbId,
-      currentUser_telegram_id: currentUser.id
-    });
-
-    console.log('📋 Habit data:', {
-      habit_id: habit.id,
-      habit_user_id: habit.user_id,
-      habit_creator_id: habit.creator_id,
-      habit_parent_habit_id: habit.parent_habit_id
-    });
-
-    console.log('🌐 Owner info from API:', ownerInfo);
+    if (!userDbId) { setIsCreator(false); return; }
 
     let creatorStatus = false;
-
-    if (ownerInfo && ownerInfo.creator_id) {
-      const creatorDbId = String(ownerInfo.creator_id);
-      const match = String(userDbId) === creatorDbId;
-      console.log('✅ Method 1 (API ownerInfo):', { userDbId: String(userDbId), creatorDbId, match });
-      if (match) {
-        console.log('✅ USER IS CREATOR (via API ownerInfo)');
-        creatorStatus = true;
-      }
+    if (ownerInfo?.creator_id && String(userDbId) === String(ownerInfo.creator_id)) {
+      creatorStatus = true;
     }
-
-    if (!creatorStatus && habit.creator_id !== undefined && habit.creator_id !== null) {
-      const creatorDbId = String(habit.creator_id);
-      const match = String(userDbId) === creatorDbId;
-      console.log('✅ Method 2 (habit.creator_id):', { userDbId: String(userDbId), creatorDbId, match });
-      if (match) {
-        console.log('✅ USER IS CREATOR (via habit.creator_id)');
-        creatorStatus = true;
-      }
+    if (!creatorStatus && habit.creator_id != null && String(userDbId) === String(habit.creator_id)) {
+      creatorStatus = true;
     }
-
-    if (!creatorStatus && !habit.parent_habit_id && habit.user_id !== undefined && habit.user_id !== null) {
-      const habitUserId = String(habit.user_id);
-      const match = String(userDbId) === habitUserId;
-      console.log('✅ Method 3 (habit.user_id fallback):', { userDbId: String(userDbId), habitUserId, match, isSharedHabit: !!habit.parent_habit_id });
-      if (match) {
-        console.log('✅ USER IS CREATOR (via habit.user_id)');
-        creatorStatus = true;
-      }
+    if (!creatorStatus && !habit.parent_habit_id && habit.user_id != null && String(userDbId) === String(habit.user_id)) {
+      creatorStatus = true;
     }
-
-    console.log('🎯 FINAL isCreator:', creatorStatus);
-    console.groupEnd();
     setIsCreator(creatorStatus);
   }, [currentUser, ownerInfo, habit.id, habit.creator_id, habit.user_id, habit.parent_habit_id]);
 
-  useEffect(() => {
-    const loadOwnerInfo = async () => {
-      try {
-        setOwnerInfoLoading(true);
-        console.log('🔄 Loading owner info for habit:', habit.id);
-        const info = await habitService.getHabitOwner(habit.id);
-        console.log('📊 Habit owner info received:', info);
-        setOwnerInfo(info);
-      } catch (error) {
-        console.error('Failed to load owner info:', error);
-      } finally {
-        setOwnerInfoLoading(false);
-      }
-    };
+  // ── Data loaders ───────────────────────────────────────────────────
+  const applyStats = useCallback((stats) => {
+    if (!stats) return;
+    setStatistics({
+      currentStreak:  stats.currentStreak  || habit.streak_current || 0,
+      weekDays:       stats.weekCompleted  || 0,
+      weekTotal:      7,
+      monthDays:      stats.monthCompleted || 0,
+      monthTotal:     stats.monthTotal     || 30,
+      yearDays:       stats.yearCompleted  || 0,
+      yearTotal:      365,
+      bestStreak:     stats.bestStreak     || stats.longestStreak || stats.streak_best || 0,
+      totalCompleted: stats.totalCompleted || stats.total_completed || 0,
+      weeklyData:     stats.weeklyData     || stats.weekly_data   || []
+    });
+  }, [habit.streak_current]);
 
-    loadOwnerInfo();
-    loadStatistics();
-    loadMembers();
-    checkFriendLimit();
-  }, [habit.id]);
-
-  const loadStatistics = async () => {
+  const loadStatistics = useCallback(async (force = false) => {
     try {
-      setLoading(true);
-      const stats = await habitService.getHabitStatistics(habit.id);
-      if (stats) {
-        setStatistics({
-          currentStreak: stats.currentStreak || habit.streak_current || 0,
-          weekDays: stats.weekCompleted || 0,
-          weekTotal: 7,
-          monthDays: stats.monthCompleted || 0,
-          monthTotal: stats.monthTotal || 30,
-          yearDays: stats.yearCompleted || 0,
-          yearTotal: 365,
-          bestStreak: stats.bestStreak || stats.longestStreak || stats.streak_best || 0,
-          totalCompleted: stats.totalCompleted || stats.total_completed || 0,
-          weeklyData: stats.weeklyData || stats.weekly_data || []
-        });
-      }
-    } catch (error) {
-      console.error('Failed to load statistics:', error);
-    } finally {
-      setLoading(false);
+      const stats = await habitService.getHabitStatistics(habit.id, force);
+      applyStats(stats);
+    } catch (err) {
+      console.error('Failed to load statistics:', err);
     }
-  };
+  }, [habit.id, applyStats]);
 
-  const applyMembersData = (loaded) => {
+  const applyMembersData = useCallback((loaded) => {
     setMembers(loaded);
     const friendShown = localStorage.getItem('hint_friend_shown') === '1';
     if (shouldShowFriendHint && !friendShown && !friendHintClosedRef.current && loaded.length > 0) {
       setTimeout(() => setShowFriendHint(true), 900);
     }
-  };
+  }, [shouldShowFriendHint]);
 
-  const loadMembers = async () => {
+  const loadMembers = useCallback(async (force = false) => {
     try {
-      const data = await habitService.getHabitMembers(habit.id, false);
+      const data = await habitService.getHabitMembers(habit.id, force);
       applyMembersData(data.members || []);
-    } catch (error) {
-      console.error('Failed to load members:', error);
+    } catch (err) {
+      console.error('Failed to load members:', err);
     }
-  };
+  }, [habit.id, applyMembersData]);
 
-  const pollMembers = async () => {
-    try {
-      const data = await habitService.getHabitMembers(habit.id, true);
-      applyMembersData(data.members || []);
-    } catch (error) {
-      console.error('Failed to poll members:', error);
-    }
-  };
-
-  const checkFriendLimit = async () => {
+  const checkFriendLimit = useCallback(async () => {
     try {
       const limitData = await habitService.checkFriendLimit(habit.id);
       setFriendLimitData(limitData);
-      console.log('Friend limit data:', limitData);
-    } catch (error) {
-      console.error('Failed to check friend limit:', error);
+    } catch (err) {
+      console.error('Failed to check friend limit:', err);
     }
-  };
+  }, [habit.id]);
 
-  const pollMembersRef = useRef(pollMembers);
-  pollMembersRef.current = pollMembers;
-
+  // ── Initial parallel load (force-refresh to get fresh data) ───────
   useEffect(() => {
-    const interval = setInterval(() => {
-      pollMembersRef.current?.();
-    }, 3000);
+    let cancelled = false;
 
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        pollMembersRef.current?.();
+    const init = async () => {
+      setLoading(true);
+      try {
+        // All requests fire simultaneously for max speed
+        const [ownerData] = await Promise.all([
+          habitService.getHabitOwner(habit.id).catch(() => null),
+          loadStatistics(true),   // skip cache on entry
+          loadMembers(true),      // skip cache on entry
+          checkFriendLimit()
+        ]);
+        if (!cancelled && ownerData) setOwnerInfo(ownerData);
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+          setOwnerInfoLoading(false);
+        }
       }
     };
-    document.addEventListener('visibilitychange', handleVisibility);
+
+    init();
+    return () => { cancelled = true; };
+  }, [habit.id]);
+
+  // Re-check when habit prop changes (e.g. user just swiped it in Today)
+  useEffect(() => {
+    loadStatistics(true);
+  }, [habit.streak_current, habit.is_completed_today]);
+
+  // ── Polling: members every 3 s, statistics every 15 s ─────────────
+  const loadMembersRef  = useRef(loadMembers);
+  const loadStatsRef    = useRef(loadStatistics);
+  loadMembersRef.current = loadMembers;
+  loadStatsRef.current   = loadStatistics;
+
+  useEffect(() => {
+    const memberInterval = setInterval(() => loadMembersRef.current(true),  3_000);
+    const statsInterval  = setInterval(() => loadStatsRef.current(true),   15_000);
+
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        loadMembersRef.current(true);
+        loadStatsRef.current(true);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
 
     return () => {
-      clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibility);
+      clearInterval(memberInterval);
+      clearInterval(statsInterval);
+      document.removeEventListener('visibilitychange', onVisible);
     };
   }, [habit.id]);
 
+  // ── Actions ────────────────────────────────────────────────────────
   const handleAddFriend = async () => {
-    console.log('Add Friend clicked, checking limits...');
     const limitCheck = await habitService.checkFriendLimit(habit.id);
     setFriendLimitData(limitCheck);
-    console.log('Friend limit check result:', limitCheck);
     if (limitCheck.showPremiumModal && !limitCheck.isPremium) {
-      console.log('Friend limit reached, showing subscription modal');
       setShowSubscriptionModal(true);
       return;
     }
@@ -280,91 +302,66 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
 
   const handleShare = async () => {
     try {
-      const shareData = await habitService.createShareLink(habit.id);
-      const shareCode = shareData.shareCode;
-      console.log('📤 Creating share link:', { habitId: habit.id, shareCode, botUsername: 'CheckHabitlyBot' });
-      const shareText = `Join my "${habit.title}" habit!\n\n📝 ${t('habitDetail.goal')}: ${habit.goal}\n\nLet's build better habits together! 💪`;
-      const shareUrl = `https://t.me/CheckHabitlyBot?start=${shareCode}`;
-      console.log('🔗 Generated share URL:', shareUrl);
-      if (tg?.openTelegramLink) {
-        const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
-        tg.openTelegramLink(telegramShareUrl);
-      } else {
-        const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
-        window.open(telegramShareUrl, '_blank');
-      }
+      const shareData  = await habitService.createShareLink(habit.id);
+      const shareText  = `Join my "${habit.title}" habit!\n\n📝 ${t('habitDetail.goal')}: ${habit.goal}\n\nLet's build better habits together! 💪`;
+      const shareUrl   = `https://t.me/CheckHabitlyBot?start=${shareData.shareCode}`;
+      const fullUrl    = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+      if (tg?.openTelegramLink) tg.openTelegramLink(fullUrl);
+      else window.open(fullUrl, '_blank');
       setToast({ message: t('habitDetail.toasts.shareLinkCreated'), type: 'success' });
-    } catch (error) {
-      console.error('❌ Failed to create share link:', error);
+    } catch {
       setToast({ message: t('habitDetail.toasts.shareLinkFailed'), type: 'error' });
     }
   };
 
   const handleSubscriptionContinue = async (plan) => {
-    console.log('Selected subscription plan:', plan);
     try {
       const result = await habitService.activatePremium(plan);
       if (result.success) {
-        console.log('Premium activated successfully');
-        await checkFriendLimit();
-        await loadMembers();
+        await Promise.all([checkFriendLimit(), loadMembers(true)]);
         setShowSubscriptionModal(false);
-        if (window.Telegram?.WebApp?.showAlert) {
-          window.Telegram.WebApp.showAlert(t('habitDetail.toasts.premiumActivated'));
-        }
-        setTimeout(() => { handleShare(); }, 500);
+        if (window.Telegram?.WebApp?.showAlert) window.Telegram.WebApp.showAlert(t('habitDetail.toasts.premiumActivated'));
+        setTimeout(() => handleShare(), 500);
       }
-    } catch (error) {
-      console.error('Failed to activate premium:', error);
+    } catch {
       setShowSubscriptionModal(false);
-      if (window.Telegram?.WebApp?.showAlert) {
-        window.Telegram.WebApp.showAlert(t('habitDetail.toasts.premiumFailed'));
-      } else {
-        alert(t('habitDetail.toasts.premiumFailed'));
-      }
-    }
-  };
-
-  const handleCopyLink = async () => {
-    try {
-      console.log('📋 Creating share link for habit:', habit.id);
-      const shareData = await habitService.createShareLink(habit.id);
-      if (!shareData || !shareData.shareCode) throw new Error('No share code received');
-      const inviteLink = `https://t.me/CheckHabitlyBot?start=${shareData.shareCode}`;
-      const copySuccess = await copyToClipboard(inviteLink);
-      if (copySuccess) {
-        setShowCopyModal(true);
-        if (window.Telegram?.WebApp?.HapticFeedback) {
-          window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-        }
-      } else {
-        throw new Error('All copy methods failed');
-      }
-    } catch (err) {
-      console.error('❌ Failed to copy link:', err);
-      setToast({ message: t('habitDetail.toasts.linkCopyFailed'), type: 'error' });
+      if (window.Telegram?.WebApp?.showAlert) window.Telegram.WebApp.showAlert(t('habitDetail.toasts.premiumFailed'));
+      else alert(t('habitDetail.toasts.premiumFailed'));
     }
   };
 
   const copyToClipboard = async (text) => {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      try { await navigator.clipboard.writeText(text); return true; } catch (err) { console.warn('⚠️ Clipboard API failed:', err); }
+    if (navigator.clipboard?.writeText) {
+      try { await navigator.clipboard.writeText(text); return true; } catch {}
     }
     try {
-      const textArea = document.createElement('textarea');
-      textArea.value = text;
-      Object.assign(textArea.style, { position: 'fixed', top: '0', left: '0', width: '2em', height: '2em', padding: '0', border: 'none', outline: 'none', boxShadow: 'none', background: 'transparent' });
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-      textArea.setSelectionRange(0, 99999);
-      const successful = document.execCommand('copy');
-      document.body.removeChild(textArea);
-      if (successful) return true;
-    } catch (err) { console.warn('⚠️ execCommand failed:', err); }
+      const ta = Object.assign(document.createElement('textarea'), {
+        value: text,
+        style: 'position:fixed;top:0;left:0;width:2em;height:2em;padding:0;border:none;outline:none;background:transparent'
+      });
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      ta.setSelectionRange(0, 99999);
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      if (ok) return true;
+    } catch {}
     const tgWA = window.Telegram?.WebApp;
-    if (tgWA && tgWA.showAlert) { tgWA.showAlert(`Copy this link:\n\n${text}`); return true; }
+    if (tgWA?.showAlert) { tgWA.showAlert(`Copy this link:\n\n${text}`); return true; }
     return false;
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      const shareData = await habitService.createShareLink(habit.id);
+      if (!shareData?.shareCode) throw new Error('No share code');
+      const ok = await copyToClipboard(`https://t.me/CheckHabitlyBot?start=${shareData.shareCode}`);
+      if (ok) {
+        setShowCopyModal(true);
+        window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success');
+      } else throw new Error('copy failed');
+    } catch {
+      setToast({ message: t('habitDetail.toasts.linkCopyFailed'), type: 'error' });
+    }
   };
 
   const handlePunchFriend = async (memberId) => {
@@ -372,136 +369,96 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
       const result = await habitService.punchFriend(habit.id, memberId);
       if (result.showToast) {
         setToast({ message: result.toastMessage, type: result.toastType || 'info' });
-        if (window.Telegram?.WebApp?.HapticFeedback) {
-          if (result.alreadyCompleted) {
-            window.Telegram.WebApp.HapticFeedback.notificationOccurred('warning');
-          } else if (result.success) {
-            window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-          }
+        const hf = window.Telegram?.WebApp?.HapticFeedback;
+        if (hf) {
+          if (result.alreadyCompleted) hf.notificationOccurred('warning');
+          else if (result.success)     hf.impactOccurred('medium');
         }
       } else if (tg?.showAlert) {
-        if (result.alreadyCompleted) {
-          tg.showAlert(t('habitDetail.alerts.alreadyCompleted', { name: result.friendName }));
-        } else if (result.isSkipped) {
-          tg.showAlert(t('habitDetail.alerts.skipped', { name: result.friendName }));
-        } else if (result.success) {
-          tg.showAlert(t('habitDetail.alerts.reminderSent'));
-        }
+        if (result.alreadyCompleted) tg.showAlert(t('habitDetail.alerts.alreadyCompleted', { name: result.friendName }));
+        else if (result.isSkipped)   tg.showAlert(t('habitDetail.alerts.skipped', { name: result.friendName }));
+        else if (result.success)     tg.showAlert(t('habitDetail.alerts.reminderSent'));
       }
-    } catch (error) {
-      console.error('Failed to send punch:', error);
+    } catch {
       setToast({ message: t('habitDetail.toasts.punchFailed'), type: 'error' });
     }
   };
 
   const handleRemoveFriend = async (memberId) => {
+    const doRemove = async () => {
+      await habitService.removeMember(habit.id, memberId);
+      await Promise.all([loadMembers(true), checkFriendLimit()]);
+      setToast({ message: t('habitDetail.toasts.friendRemoved'), type: 'success' });
+    };
     try {
       if (tg?.showConfirm) {
-        tg.showConfirm(t('habitDetail.alerts.removeFriendConfirm'), async (confirmed) => {
-          if (confirmed) {
-            await habitService.removeMember(habit.id, memberId);
-            await loadMembers();
-            await checkFriendLimit();
-            setToast({ message: t('habitDetail.toasts.friendRemoved'), type: 'success' });
-          }
-        });
+        tg.showConfirm(t('habitDetail.alerts.removeFriendConfirm'), async (ok) => { if (ok) await doRemove(); });
       } else {
-        const confirmed = window.confirm(t('habitDetail.alerts.removeFriendConfirm'));
-        if (confirmed) {
-          await habitService.removeMember(habit.id, memberId);
-          await loadMembers();
-          await checkFriendLimit();
-          setToast({ message: t('habitDetail.toasts.friendRemoved'), type: 'success' });
-        }
+        if (window.confirm(t('habitDetail.alerts.removeFriendConfirm'))) await doRemove();
       }
-    } catch (error) {
-      console.error('Failed to remove friend:', error);
+    } catch {
       setToast({ message: t('habitDetail.toasts.friendRemoveFailed'), type: 'error' });
     }
   };
 
   const handlePunchLazyFriend = async () => {
-    const lazyFriend = members.find(m => m.today_status !== 'completed');
-    if (lazyFriend) {
-      await handlePunchFriend(lazyFriend.id);
-    } else {
-      setToast({ message: t('habitDetail.alerts.reminderSent'), type: 'success' });
-    }
+    const lazy = members.find(m => m.today_status !== 'completed');
+    if (lazy) await handlePunchFriend(lazy.id);
+    else setToast({ message: t('habitDetail.alerts.reminderSent'), type: 'success' });
   };
 
-  const handleEditClick = () => {
-    console.log('🖊️ Edit button clicked');
-    if (onEdit) onEdit(habit);
-  };
+  const handleEditClick = () => { if (onEdit) onEdit(habit); };
 
+  // ── Helpers ────────────────────────────────────────────────────────
   const getCategoryEmoji = () => habit.category_icon || habit.icon || '🎯';
 
-  const getProgressPercentage = (completed, total) => {
-    if (total === 0) return 0;
-    return Math.round((completed / total) * 100);
-  };
-
-  const getProgressColor = (type) => {
-    const colors = {
-      streak: '#A7D96C',
-      week: '#7DD3C0',
-      month: '#C084FC',
-      year: '#FBBF24'
-    };
-    return colors[type] || '#A7D96C';
-  };
+  const getProgressColor = (type) => ({
+    streak: '#A7D96C',
+    week:   '#7DD3C0',
+    month:  '#C084FC',
+    year:   '#FBBF24'
+  })[type] || '#A7D96C';
 
   const getMotivationText = () => {
-    const streak = statistics.currentStreak;
-    if (streak >= 30) return t('habitDetail.motivations.m30');
-    if (streak >= 14) return t('habitDetail.motivations.m14');
-    if (streak >= 7) return t('habitDetail.motivations.m7');
-    if (streak >= 3) return t('habitDetail.motivations.m3');
+    const s = statistics.currentStreak;
+    if (s >= 30) return t('habitDetail.motivations.m30');
+    if (s >= 14) return t('habitDetail.motivations.m14');
+    if (s >= 7)  return t('habitDetail.motivations.m7');
+    if (s >= 3)  return t('habitDetail.motivations.m3');
     return t('habitDetail.motivations.m0');
   };
 
-  // Build 7-day weekly chart data
   const getWeeklyDisplayData = () => {
-    if (statistics.weeklyData && statistics.weeklyData.length === 7) {
-      return statistics.weeklyData.map(v => !!v);
-    }
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const todayIdx = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    if (statistics.weeklyData?.length === 7) return statistics.weeklyData.map(v => !!v);
+    const dayOfWeek = new Date().getDay();
+    const todayI = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
     const data = new Array(7).fill(false);
-    let remaining = statistics.weekDays;
-    for (let i = 0; i <= todayIdx && remaining > 0; i++) {
-      data[i] = true;
-      remaining--;
-    }
+    let rem = statistics.weekDays;
+    for (let i = 0; i <= todayI && rem > 0; i++) { data[i] = true; rem--; }
     return data;
   };
 
-  const getTodayIdx = () => {
-    const dayOfWeek = new Date().getDay();
-    return dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-  };
+  const getTodayIdx = () => { const d = new Date().getDay(); return d === 0 ? 6 : d - 1; };
 
-  // Member helper: get streak
-  const getMemberStreak = (member) =>
-    member.streak || member.current_streak || member.streak_current || 0;
+  const getMemberStreak   = m => m.streak || m.current_streak || m.streak_current || 0;
+  const getMemberWeek     = m => ({ completed: m.week_completed || m.weekCompleted || 0, total: m.week_total || m.weekTotal || 28 });
+  const getMemberDaily    = m => ({ completed: m.completed_today || m.today_completed || 0, total: m.total_today || m.today_total || 0 });
+  const memberColors      = ['#7DD3C0', '#FF6B9D', '#FBBF24', '#C084FC', '#FF8C42', '#4ECDC4'];
+  const getMemberColor    = i => memberColors[i % memberColors.length];
 
-  // Member helper: get weekly completed/total
-  const getMemberWeek = (member) => ({
-    completed: member.week_completed || member.weekCompleted || 0,
-    total: member.week_total || member.weekTotal || 28
-  });
+  // ── Derived data ───────────────────────────────────────────────────
+  const weeklyData   = getWeeklyDisplayData();
+  const todayIdx     = getTodayIdx();
+  const rawDayLabels = t('habitDetail.weekDays');
+  const dayLabels    = Array.isArray(rawDayLabels) ? rawDayLabels : ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const todayLabel   = t('habitDetail.stats.today');
 
-  // Member helper: get daily progress "X/Y today"
-  const getMemberDailyProgress = (member) => ({
-    completed: member.completed_today || member.today_completed || 0,
-    total: member.total_today || member.today_total || 0
-  });
+  const sortedByStreak = [...members].sort((a, b) => getMemberStreak(b) - getMemberStreak(a));
+  const top3 = sortedByStreak.slice(0, 3);
+  const podiumOrder = top3.length >= 2 ? [top3[1], top3[0], top3[2]].filter(Boolean) : top3;
+  const hasLazyFriend = members.some(m => m.today_status !== 'completed');
 
-  // Leaderboard colors
-  const memberColors = ['#7DD3C0', '#FF6B9D', '#FBBF24', '#C084FC', '#FF8C42', '#4ECDC4'];
-  const getMemberColor = (idx) => memberColors[idx % memberColors.length];
-
+  // ── Render ─────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="habit-detail habit-detail--loading">
@@ -510,38 +467,18 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
     );
   }
 
-  const weeklyData = getWeeklyDisplayData();
-  const todayIdx = getTodayIdx();
-  const weekDayLabels = t('habitDetail.weekDays');
-  const dayLabels = Array.isArray(weekDayLabels)
-    ? weekDayLabels
-    : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-  // Sort members by streak for leaderboard
-  const sortedMembers = [...members].sort((a, b) => getMemberStreak(b) - getMemberStreak(a));
-  const top3 = sortedMembers.slice(0, 3);
-  // Podium order: 2nd, 1st, 3rd
-  const podiumOrder = top3.length >= 2
-    ? [top3[1], top3[0], top3[2]].filter(Boolean)
-    : top3;
-
-  // Lazy friend (one with non-completed status)
-  const hasLazyFriend = members.some(m => m.today_status !== 'completed');
-
   return (
     <>
       <div className="habit-detail">
         <div className="habit-detail__content">
 
-          {/* ── Header ─────────────────────────────────────────────────── */}
+          {/* Header */}
           <div className="hd-header">
             <div className="hd-header__title-section">
               <span className="hd-header__emoji">{getCategoryEmoji()}</span>
               <div className="hd-header__text">
                 <h2 className="hd-header__title">{habit.title}</h2>
-                {habit.goal && (
-                  <p className="hd-header__goal">{habit.goal}</p>
-                )}
+                {habit.goal && <p className="hd-header__goal">{habit.goal}</p>}
               </div>
             </div>
             {!ownerInfoLoading && isCreator && (
@@ -551,33 +488,31 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
             )}
           </div>
 
-          {/* ── Tabs ───────────────────────────────────────────────────── */}
+          {/* Tabs */}
           <div className="hd-tabs">
             <button
-              className={`hd-tabs__btn ${activeTab === 'myStats' ? 'hd-tabs__btn--active' : ''}`}
+              className={`hd-tabs__btn${activeTab === 'myStats' ? ' hd-tabs__btn--active' : ''}`}
               onClick={() => setActiveTab('myStats')}
             >
               {t('habitDetail.tabs.myStats')}
             </button>
             <button
-              className={`hd-tabs__btn ${activeTab === 'friends' ? 'hd-tabs__btn--active' : ''}`}
+              className={`hd-tabs__btn${activeTab === 'friends' ? ' hd-tabs__btn--active' : ''}`}
               onClick={() => setActiveTab('friends')}
             >
               {t('habitDetail.tabs.friends')}
             </button>
           </div>
 
-          {/* ══════════════════════════════════════════════════════════════ */}
-          {/* MY STATS TAB                                                   */}
-          {/* ══════════════════════════════════════════════════════════════ */}
+          {/* ═══════ MY STATS TAB ═══════ */}
           {activeTab === 'myStats' && (
             <>
-              {/* Stat cards grid */}
+              {/* 4 stat cards with animated SVG circles */}
               <div className="hd-stats-grid">
                 <StatCard
                   value={statistics.currentStreak}
-                  total={statistics.bestStreak > 0 ? statistics.bestStreak : statistics.currentStreak || 1}
-                  showTotal={statistics.bestStreak > 0}
+                  total={statistics.bestStreak > statistics.currentStreak ? statistics.bestStreak : statistics.currentStreak || 1}
+                  showTotal={statistics.bestStreak > statistics.currentStreak}
                   color={getProgressColor('streak')}
                   title={t('habitDetail.statistics.daysStreak')}
                   subtitle="Days Strike"
@@ -585,7 +520,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
                 <StatCard
                   value={statistics.weekDays}
                   total={statistics.weekTotal}
-                  showTotal={true}
+                  showTotal
                   color={getProgressColor('week')}
                   title={t('habitDetail.statistics.week')}
                   subtitle="Days Strike"
@@ -593,7 +528,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
                 <StatCard
                   value={statistics.monthDays}
                   total={statistics.monthTotal}
-                  showTotal={true}
+                  showTotal
                   color={getProgressColor('month')}
                   title={t('habitDetail.statistics.month')}
                   subtitle="Days Strike"
@@ -601,7 +536,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
                 <StatCard
                   value={statistics.yearDays}
                   total={statistics.yearTotal}
-                  showTotal={true}
+                  showTotal
                   color={getProgressColor('year')}
                   title={t('habitDetail.statistics.year')}
                   subtitle="Days Strike"
@@ -613,7 +548,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
                 <p className="hd-motivation__text">{getMotivationText()}</p>
               </div>
 
-              {/* Best streak & Total */}
+              {/* Best streak + Total */}
               <div className="hd-extra-stats">
                 <div className="hd-extra-stat">
                   <span className="hd-extra-stat__icon">🔥</span>
@@ -627,26 +562,15 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
                 </div>
               </div>
 
-              {/* Weekly bar chart */}
+              {/* Weekly bar chart with stagger animation */}
               <div className="hd-weekly-card">
                 <h3 className="hd-weekly-card__title">{t('habitDetail.stats.thisWeek')}</h3>
-                <div className="hd-weekly-chart">
-                  {dayLabels.map((label, idx) => (
-                    <div key={idx} className="hd-weekly-chart__col">
-                      <div className="hd-weekly-chart__bar-wrap">
-                        <div className={[
-                          'hd-weekly-chart__bar',
-                          weeklyData[idx] ? 'hd-weekly-chart__bar--done' : '',
-                          idx > todayIdx ? 'hd-weekly-chart__bar--future' : '',
-                          idx === todayIdx ? 'hd-weekly-chart__bar--today' : ''
-                        ].filter(Boolean).join(' ')} />
-                      </div>
-                      <span className={`hd-weekly-chart__label ${idx === todayIdx ? 'hd-weekly-chart__label--today' : ''}`}>
-                        {idx === todayIdx ? t('habitDetail.stats.today') : label}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                <WeeklyChart
+                  weeklyData={weeklyData}
+                  todayIdx={todayIdx}
+                  dayLabels={dayLabels}
+                  todayLabel={todayLabel}
+                />
               </div>
 
               {/* Friends in habit (simplified) */}
@@ -674,34 +598,24 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
                     ))}
                   </div>
                 ) : (
-                  <p className="hd-friends-section__empty">
-                    {t('habitDetail.friends.subtitle')}
-                  </p>
+                  <p className="hd-friends-section__empty">{t('habitDetail.friends.subtitle')}</p>
                 )}
 
-                <button
-                  className="hd-btn hd-btn--primary hd-btn--full"
-                  onClick={handleAddFriend}
-                >
+                <button className="hd-btn hd-btn--primary hd-btn--full" onClick={handleAddFriend}>
                   + {t('habitDetail.friends.addFriend')}
                 </button>
               </div>
 
-              {/* Delete button (creator only) */}
+              {/* Delete (creator only) */}
               {isCreator && (
-                <button
-                  className="hd-btn hd-btn--danger hd-btn--full"
-                  onClick={() => setShowDeleteModal(true)}
-                >
+                <button className="hd-btn hd-btn--danger hd-btn--full" onClick={() => setShowDeleteModal(true)}>
                   {t('habitDetail.buttons.removeHabit')}
                 </button>
               )}
             </>
           )}
 
-          {/* ══════════════════════════════════════════════════════════════ */}
-          {/* FRIENDS TAB                                                    */}
-          {/* ══════════════════════════════════════════════════════════════ */}
+          {/* ═══════ FRIENDS TAB ═══════ */}
           {activeTab === 'friends' && (
             <>
               {members.length === 0 ? (
@@ -713,21 +627,19 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
                 </div>
               ) : (
                 <>
-                  {/* Leaderboard podium */}
+                  {/* Podium */}
                   {top3.length >= 2 && (
                     <div className="hd-leaderboard-card">
                       <h3 className="hd-leaderboard-card__title">{t('habitDetail.friends.leaderboard')}</h3>
                       <div className="hd-podium">
-                        {podiumOrder.map((member, podiumIdx) => {
-                          const place = podiumOrder.indexOf(member) === 1 ? 1 : podiumOrder.indexOf(member) === 0 ? 2 : 3;
-                          const realIdx = sortedMembers.indexOf(member);
+                        {podiumOrder.map((member) => {
+                          const podiumPos = podiumOrder.indexOf(member);
+                          const place = podiumPos === 1 ? 1 : podiumPos === 0 ? 2 : 3;
+                          const realIdx = sortedByStreak.indexOf(member);
                           return (
                             <div key={member.id} className={`hd-podium__item hd-podium__item--place${place}`}>
-                              {place === 1 && <span className="hd-podium__crown">⚡</span>}
-                              <div
-                                className="hd-podium__avatar"
-                                style={{ background: getMemberColor(realIdx) }}
-                              >
+                              <span className="hd-podium__crown">⚡</span>
+                              <div className="hd-podium__avatar" style={{ background: getMemberColor(realIdx) }}>
                                 {member.photo_url
                                   ? <img src={member.photo_url} alt={member.first_name} className="hd-podium__avatar-img" />
                                   : <span>{member.first_name?.[0]?.toUpperCase() || '?'}</span>
@@ -735,9 +647,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
                               </div>
                               <span className="hd-podium__name">{member.first_name}</span>
                               <div className={`hd-podium__platform hd-podium__platform--place${place}`} />
-                              <span className="hd-podium__score">
-                                {getMemberStreak(member)} 🔥
-                              </span>
+                              <span className="hd-podium__score">{getMemberStreak(member)} 🔥</span>
                             </div>
                           );
                         })}
@@ -749,23 +659,18 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
                   <div className="hd-friends-card">
                     <h3 className="hd-friends-card__title">{t('habitDetail.friends.title')}</h3>
                     {members.map((member, idx) => {
-                      const daily = getMemberDailyProgress(member);
+                      const daily  = getMemberDaily(member);
                       const streak = getMemberStreak(member);
                       return (
                         <div key={member.id} className="hd-friend-row">
-                          <div
-                            className="hd-friend-row__avatar"
-                            style={{ background: getMemberColor(idx) }}
-                          >
+                          <div className="hd-friend-row__avatar" style={{ background: getMemberColor(idx) }}>
                             {member.photo_url
                               ? <img src={member.photo_url} alt={member.first_name} className="hd-friend-row__avatar-img" />
                               : <span>{member.first_name?.[0]?.toUpperCase() || '?'}</span>
                             }
                           </div>
                           <div className="hd-friend-row__info">
-                            <span className="hd-friend-row__name">
-                              {member.first_name} {member.last_name}
-                            </span>
+                            <span className="hd-friend-row__name">{member.first_name} {member.last_name}</span>
                             {daily.total > 0 && (
                               <span className="hd-friend-row__progress">
                                 {daily.completed}/{daily.total} {t('habitDetail.friends.today')}
@@ -773,9 +678,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
                             )}
                           </div>
                           {streak > 0 && (
-                            <span className="hd-friend-row__streak">
-                              🔥 {streak}
-                            </span>
+                            <span className="hd-friend-row__streak">🔥 {streak}</span>
                           )}
                         </div>
                       );
@@ -800,22 +703,17 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
                           <div className="hd-comparison-row__content">
                             <span className="hd-comparison-row__name">{member.first_name}</span>
                             <div className="hd-comparison-row__bar-track">
-                              <div
-                                className="hd-comparison-row__bar"
-                                style={{ width: `${pct}%`, background: getMemberColor(idx) }}
-                              />
+                              <div className="hd-comparison-row__bar" style={{ width: `${pct}%`, background: getMemberColor(idx) }} />
                             </div>
                           </div>
-                          <span className="hd-comparison-row__score">
-                            {week.completed}/{maxTotal}
-                          </span>
+                          <span className="hd-comparison-row__score">{week.completed}/{maxTotal}</span>
                         </div>
                       );
                     })}
-                    {/* Current user row */}
+                    {/* Me */}
                     {(() => {
                       const myTotal = Math.max(statistics.weekTotal, 28);
-                      const myPct = myTotal > 0 ? Math.min((statistics.weekDays / myTotal) * 100, 100) : 0;
+                      const myPct   = myTotal > 0 ? Math.min((statistics.weekDays / myTotal) * 100, 100) : 0;
                       return (
                         <div className="hd-comparison-row hd-comparison-row--me">
                           <div className="hd-comparison-row__avatar hd-comparison-row__avatar--me">
@@ -824,26 +722,18 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
                           <div className="hd-comparison-row__content">
                             <span className="hd-comparison-row__name">{t('habitDetail.friends.you')}</span>
                             <div className="hd-comparison-row__bar-track">
-                              <div
-                                className="hd-comparison-row__bar hd-comparison-row__bar--me"
-                                style={{ width: `${myPct}%` }}
-                              />
+                              <div className="hd-comparison-row__bar hd-comparison-row__bar--me" style={{ width: `${myPct}%` }} />
                             </div>
                           </div>
-                          <span className="hd-comparison-row__score">
-                            {statistics.weekDays}/{myTotal}
-                          </span>
+                          <span className="hd-comparison-row__score">{statistics.weekDays}/{myTotal}</span>
                         </div>
                       );
                     })()}
                   </div>
 
-                  {/* Punch lazy friend button */}
+                  {/* Punch lazy friend */}
                   {hasLazyFriend && (
-                    <button
-                      className="hd-btn hd-btn--primary hd-btn--full hd-btn--punch"
-                      onClick={handlePunchLazyFriend}
-                    >
+                    <button className="hd-btn hd-btn--primary hd-btn--full hd-btn--punch" onClick={handlePunchLazyFriend}>
                       {t('habitDetail.friends.punchLazy')}
                     </button>
                   )}
@@ -855,18 +745,14 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
         </div>
       </div>
 
+      {/* Modals */}
       <DeleteConfirmModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={() => onDelete(habit.id)}
         habitTitle={habit.title}
       />
-
-      <CopyLinkModal
-        isOpen={showCopyModal}
-        onClose={() => setShowCopyModal(false)}
-      />
-
+      <CopyLinkModal isOpen={showCopyModal} onClose={() => setShowCopyModal(false)} />
       <FriendSwipeHint
         show={showFriendHint}
         onClose={() => {
@@ -875,94 +761,68 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
           setShowFriendHint(false);
         }}
       />
-
       <SubscriptionModal
         isOpen={showSubscriptionModal}
         onClose={() => setShowSubscriptionModal(false)}
         onContinue={handleSubscriptionContinue}
       />
-
       {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          duration={3000}
-          onClose={() => setToast(null)}
-        />
+        <Toast message={toast.message} type={toast.type} duration={3000} onClose={() => setToast(null)} />
       )}
     </>
   );
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Swipeable Friend Card (unchanged logic, cleaned up)
+// ─────────────────────────────────────────────────────────────────────────────
 const FriendCard = ({ member, onPunch, onRemove, removeText, punchText }) => {
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [startX, setStartX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
-
   const SWIPE_THRESHOLD = 60;
   const MAX_SWIPE = 100;
-
   const canPunch = member.today_status !== 'completed';
 
-  console.log(`👤 Friend ${member.first_name}: status=${member.today_status}, canPunch=${canPunch}`);
-
-  const handleTouchStart = (e) => { setStartX(e.touches[0].clientX); setIsSwiping(true); };
-  const handleTouchMove = (e) => {
+  const onStart  = (x) => { setStartX(x); setIsSwiping(true); };
+  const onMove   = (x) => {
     if (!isSwiping) return;
-    const diff = e.touches[0].clientX - startX;
+    const diff = x - startX;
     if (diff < 0 && !canPunch) return;
     setSwipeOffset(Math.max(-MAX_SWIPE, Math.min(MAX_SWIPE, diff)));
   };
-  const handleTouchEnd = () => {
+  const onEnd    = () => {
     if (Math.abs(swipeOffset) >= SWIPE_THRESHOLD) {
       if (swipeOffset < 0 && canPunch) onPunch();
       else if (swipeOffset > 0) onRemove();
     }
     setSwipeOffset(0); setIsSwiping(false);
   };
-
-  const handleMouseDown = (e) => { e.preventDefault(); setStartX(e.clientX); setIsSwiping(true); };
-  const handleMouseMove = (e) => {
-    if (!isSwiping) return;
-    const diff = e.clientX - startX;
-    if (diff < 0 && !canPunch) return;
-    setSwipeOffset(Math.max(-MAX_SWIPE, Math.min(MAX_SWIPE, diff)));
-  };
-  const handleMouseUp = () => {
-    if (Math.abs(swipeOffset) >= SWIPE_THRESHOLD) {
-      if (swipeOffset < 0 && canPunch) onPunch();
-      else if (swipeOffset > 0) onRemove();
-    }
-    setSwipeOffset(0); setIsSwiping(false);
-  };
-  const handleMouseLeave = () => { if (isSwiping) { setSwipeOffset(0); setIsSwiping(false); } };
+  const onCancel = () => { setSwipeOffset(0); setIsSwiping(false); };
 
   const getStatusInfo = () => {
     switch (member.today_status) {
-      case 'completed': return { text: 'Done Today', className: 'friend-card__status--done' };
+      case 'completed': return { text: 'Done Today',   className: 'friend-card__status--done' };
       case 'failed':    return { text: 'Failed Today', className: 'friend-card__status--failed' };
-      case 'skipped':   return { text: 'Skipped', className: 'friend-card__status--skipped' };
-      default:          return { text: 'Undone Yet', className: 'friend-card__status--undone' };
+      case 'skipped':   return { text: 'Skipped',      className: 'friend-card__status--skipped' };
+      default:          return { text: 'Undone Yet',   className: 'friend-card__status--undone' };
     }
   };
-
   const statusInfo = getStatusInfo();
 
   return (
     <div className="friend-card-container">
-      {swipeOffset > 20 && (
-        <div className="friend-action friend-action--remove"><span>{removeText}</span></div>
-      )}
+      {swipeOffset > 20  && <div className="friend-action friend-action--remove"><span>{removeText}</span></div>}
       <div
         className="friend-card"
         style={{ transform: `translateX(${swipeOffset}px)`, transition: isSwiping ? 'none' : 'transform 0.3s ease-out', cursor: 'grab' }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
+        onTouchStart={e => onStart(e.touches[0].clientX)}
+        onTouchMove={e => onMove(e.touches[0].clientX)}
+        onTouchEnd={onEnd}
+        onMouseDown={e => { e.preventDefault(); onStart(e.clientX); }}
+        onMouseMove={e => onMove(e.clientX)}
+        onMouseUp={onEnd}
+        onMouseLeave={onCancel}
       >
         <img
           src={member.photo_url || `https://ui-avatars.com/api/?name=${member.first_name}`}
@@ -974,9 +834,7 @@ const FriendCard = ({ member, onPunch, onRemove, removeText, punchText }) => {
           <span className={`friend-card__status ${statusInfo.className}`}>{statusInfo.text}</span>
         </div>
       </div>
-      {swipeOffset < -20 && canPunch && (
-        <div className="friend-action friend-action--punch"><span>{punchText}</span></div>
-      )}
+      {swipeOffset < -20 && canPunch && <div className="friend-action friend-action--punch"><span>{punchText}</span></div>}
     </div>
   );
 };

@@ -33,9 +33,10 @@ export const habitService = {
 
   /**
    * Получить статистику привычки (кэшируется на 5 минут)
+   * forceRefresh=true — обойти кэш (используется при открытии страницы)
    */
-  async getHabitStatistics(habitId) {
-    return await habitServiceOptimized.getHabitStatistics(habitId);
+  async getHabitStatistics(habitId, forceRefresh = false) {
+    return await habitServiceOptimized.getHabitStatistics(habitId, forceRefresh);
   },
 
   /**
