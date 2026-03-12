@@ -365,17 +365,17 @@
     "achievement": {
       "congratulations": "Congratulations! You have won an award!",
       "thanks": "Thanks! 🙏"
-    },
-    "specialHabitDetail": {
-      "achievements": "Achievements",
-      "performHabit": "Perform the habit {{count}} times",
-      "motivations": {
-        "m30": "🔥 Incredible! A whole month streak!",
-        "m14": "💪 Two weeks in a row! You rock!",
-        "m7": "🌟 One week streak! Keep it up!",
-        "m3": "✨ Great start! Don't stop now!",
-        "m0": "🚀 Start your winning streak!"
-      }
+    }
+  },
+  "specialHabitDetail": {
+    "achievements": "Achievements",
+    "performHabit": "Perform the habit {{count}} times",
+    "motivations": {
+      "m30": "🔥 Incredible! A whole month streak!",
+      "m14": "💪 Two weeks in a row! You rock!",
+      "m7": "🌟 One week streak! Keep it up!",
+      "m3": "✨ Great start! Don't stop now!",
+      "m0": "🚀 Start your winning streak!"
     }
   },
   "subscriptionNew": {
