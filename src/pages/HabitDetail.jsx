@@ -83,14 +83,32 @@ const StatCard = ({ value, total, showTotal, color, title, subtitle }) => (
 // ─────────────────────────────────────────────────────────────────────────────
 const WeeklyChart = ({ weeklyData, todayIdx, dayLabels, todayLabel }) => {
   const [visible, setVisible] = useState(false);
+  const containerRef = useRef(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => setVisible(true), 80);
-    return () => clearTimeout(timer);
+    const el = containerRef.current;
+    if (!el) return;
+
+    // Trigger animation only when the chart scrolls into view
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          // Small rAF delay so the browser paints height:0 first, then transitions up
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => setVisible(true));
+          });
+          observer.disconnect(); // fire only once
+        }
+      },
+      { threshold: 0.25 } // at least 25% visible before triggering
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   return (
-    <div className="hd-weekly-chart">
+    <div className="hd-weekly-chart" ref={containerRef}>
       {dayLabels.map((label, idx) => {
         const isDone = weeklyData[idx];
         const isFuture = idx > todayIdx;
