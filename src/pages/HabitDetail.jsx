@@ -428,17 +428,31 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
     return t('habitDetail.motivations.m0');
   };
 
+  // Returns bool[7] where index 0=Mon … 6=Sun
   const getWeeklyDisplayData = () => {
-    if (statistics.weeklyData?.length === 7) return statistics.weeklyData.map(v => !!v);
-    const dayOfWeek = new Date().getDay();
-    const todayI = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-    const data = new Array(7).fill(false);
-    let rem = statistics.weekDays;
-    for (let i = 0; i <= todayI && rem > 0; i++) { data[i] = true; rem--; }
+    // ① Backend returned per-day data → use it directly
+    if (statistics.weeklyData?.length === 7) {
+      return statistics.weeklyData.map(v => !!v);
+    }
+
+    // ② Fallback: we only know a count (weekDays) — mark the most recent N days
+    //    as done, counting back from today, so at least today shows correctly.
+    const dow   = new Date().getDay();          // 0=Sun…6=Sat
+    const todayI = dow === 0 ? 6 : dow - 1;    // 0=Mon…6=Sun
+    const data  = new Array(7).fill(false);
+    let rem = Math.min(statistics.weekDays, todayI + 1);
+    // Fill backwards from today
+    for (let i = todayI; i >= 0 && rem > 0; i--, rem--) {
+      data[i] = true;
+    }
     return data;
   };
 
-  const getTodayIdx = () => { const d = new Date().getDay(); return d === 0 ? 6 : d - 1; };
+  // today's 0-based index in Mon-Sun array
+  const getTodayIdx = () => {
+    const d = new Date().getDay(); // 0=Sun … 6=Sat
+    return d === 0 ? 6 : d - 1;   // 0=Mon … 6=Sun
+  };
 
   const getMemberStreak   = m => m.streak || m.current_streak || m.streak_current || 0;
   const getMemberWeek     = m => ({ completed: m.week_completed || m.weekCompleted || 0, total: m.week_total || m.weekTotal || 28 });
