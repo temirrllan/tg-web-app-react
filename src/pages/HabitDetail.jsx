@@ -96,10 +96,18 @@ const WeeklyChart = ({ weeklyData, todayIdx, dayLabels, todayLabel }) => {
         const isFuture = idx > todayIdx;
         const isToday = idx === todayIdx;
 
+        // Height is driven ONLY by isDone — isToday no longer forces full height
+        const barHeight = visible
+          ? (isDone ? '64px' : isFuture ? '12px' : '18px')
+          : '0px';
+
+        // Classes: --done for green fill, --today-ring for the outline glow,
+        // --today-pending when today is not yet done (subtle highlight)
         let barClass = 'hd-weekly-chart__bar';
-        if (isDone)   barClass += ' hd-weekly-chart__bar--done';
-        if (isToday)  barClass += ' hd-weekly-chart__bar--today';
-        if (isFuture) barClass += ' hd-weekly-chart__bar--future';
+        if (isDone)                barClass += ' hd-weekly-chart__bar--done';
+        if (isToday && isDone)     barClass += ' hd-weekly-chart__bar--today-done';
+        if (isToday && !isDone)    barClass += ' hd-weekly-chart__bar--today-pending';
+        if (isFuture)              barClass += ' hd-weekly-chart__bar--future';
 
         return (
           <div key={idx} className="hd-weekly-chart__col">
@@ -107,11 +115,8 @@ const WeeklyChart = ({ weeklyData, todayIdx, dayLabels, todayLabel }) => {
               <div
                 className={barClass}
                 style={{
-                  // Delay each bar slightly for stagger effect
                   transitionDelay: visible ? `${idx * 60}ms` : '0ms',
-                  height: visible
-                    ? (isDone || isToday ? '64px' : isFuture ? '12px' : '18px')
-                    : '0px'
+                  height: barHeight
                 }}
               />
             </div>

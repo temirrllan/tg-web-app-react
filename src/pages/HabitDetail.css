@@ -835,9 +835,25 @@
   background: var(--color-success, #A7D96C);
 }
 
-.hd-weekly-chart__bar--today {
-  background: var(--color-success, #A7D96C);
-  box-shadow: 0 -2px 10px rgba(167, 217, 108, 0.55);
+/* Today + done: зелёный + зелёное свечение сверху */
+.hd-weekly-chart__bar--today-done {
+  box-shadow: 0 -4px 12px rgba(167, 217, 108, 0.65);
+}
+
+/* Today + не done: маленький бар (18px из JS) + пульсирующее кольцо */
+.hd-weekly-chart__bar--today-pending {
+  background: transparent;
+  border: 2px solid var(--color-success, #A7D96C);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  box-sizing: border-box;
+  /* Мягкая пульсация — намекает что день ещё не закрыт */
+  animation: today-pulse 2s ease-in-out infinite;
+}
+
+@keyframes today-pulse {
+  0%, 100% { border-color: rgba(167, 217, 108, 0.5); }
+  50%       { border-color: rgba(167, 217, 108, 1);   }
 }
 
 .hd-weekly-chart__bar--future {
