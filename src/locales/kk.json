@@ -210,11 +210,14 @@
     },
     "stats": {
       "chartTitle": "Соңғы 7 күн",
+      "thisWeek": "Осы апта",
       "bestStreak": "Үздік серия",
-      "totalCompleted": "Барлық орындалды",
+      "totalCompleted": "Барлығы",
       "daysUnit": "күн",
-      "timesUnit": "рет"
+      "timesUnit": "рет",
+      "today": "Бүг"
     },
+    "weekDays": ["Дс", "Сс", "Ср", "Бс", "Жм", "Сб", "Жк"],
     "motivations": {
       "m30": "🔥 Ғажайып! Бір ай үзіліссіз!",
       "m14": "💪 Екі апта қатарынан! Сен керемет!",
@@ -224,15 +227,21 @@
     },
     "motivation": "Керемет, пэпэ! 🔥",
     "friends": {
-      "title": "Әдет достары",
+      "title": "Habit Friends",
+      "inHabit": "Әдеттегі достар",
       "friendsAdded": "дос қосылды",
       "friendsAddedPlural": "дос қосылды",
-      "freePlan": "Тегін жоспар",
+      "freePlan": "Free",
       "subtitle": "Достарыңызбен сілтемені бөлісіңіз және оларды бірге әдеттерді қадағалауға шақырыңыз.",
-      "addFriend": "Досыңды шақыр",
+      "addFriend": "Досты қосу",
       "remove": "Жою",
       "punch": "👊 Еске салу",
-      "copyLink": "Сілтеме"
+      "copyLink": "Сілтеме",
+      "leaderboard": "Достар рейтингі",
+      "weeklyComparison": "Апта салыстырмасы",
+      "punchLazy": "Жалқау досты итер! 👊🔥",
+      "you": "Сіз",
+      "today": "бүгін"
     },
     "buttons": {
       "removeHabit": "Әдетті жою"

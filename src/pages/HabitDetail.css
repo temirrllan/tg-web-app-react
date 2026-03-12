@@ -547,8 +547,6 @@
   background: rgba(10, 132, 255, 0.15);
 }
 
-/* Добавить В КОНЕЦ файла src/pages/HabitDetail.css */
-
 /* Скрыть кнопку Edit для locked привычек */
 .habit-detail__edit-btn--locked {
   opacity: 0.5;
@@ -562,4 +560,740 @@
   background: #48484A;
   border-color: #48484A;
   color: #6E6E73;
+}
+
+/* ================================================================
+   NEW HabitDetail redesign styles (hd- prefix)
+   These do NOT affect SpecialHabitDetail which uses habit-detail__* classes
+   ================================================================ */
+
+/* ── Header ──────────────────────────────────────────────────────── */
+.hd-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.hd-header__title-section {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.hd-header__emoji {
+  font-size: 26px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.hd-header__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.hd-header__title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary, #000);
+  word-break: break-word;
+  line-height: 1.3;
+}
+
+.hd-header__goal {
+  font-size: 14px;
+  color: var(--text-secondary, #8E8E93);
+  margin: 2px 0 0;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.hd-header__edit-btn {
+  background: none;
+  border: 2px solid var(--color-success, #A7D96C);
+  color: var(--color-success, #A7D96C);
+  font-size: 15px;
+  font-weight: 600;
+  padding: 7px 18px;
+  border-radius: 20px;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+.hd-header__edit-btn:hover {
+  background: var(--color-success, #A7D96C);
+  color: #fff;
+}
+
+/* ── Tabs ────────────────────────────────────────────────────────── */
+.hd-tabs {
+  display: flex;
+  background: var(--card-bg, #fff);
+  border-radius: 14px;
+  padding: 4px;
+  margin-bottom: 16px;
+  gap: 4px;
+}
+
+.hd-tabs__btn {
+  flex: 1;
+  padding: 10px 8px;
+  border: none;
+  background: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-tertiary, #8E8E93);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.hd-tabs__btn--active {
+  background: var(--bg-primary, #F5F5F7);
+  color: var(--text-primary, #000);
+  font-weight: 600;
+}
+
+.dark-theme .hd-tabs {
+  background: var(--card-bg, #1C1C1E);
+}
+.dark-theme .hd-tabs__btn--active {
+  background: var(--bg-tertiary, #2C2C2E);
+}
+
+/* ── Stat cards (SVG circles) ────────────────────────────────────── */
+.hd-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.hd-stat-card {
+  background: var(--card-bg, #fff);
+  border-radius: 16px;
+  padding: 16px 12px 14px;
+  text-align: left;
+}
+
+.hd-stat-circle-wrapper {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 10px;
+}
+
+.hd-stat-circle-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.hd-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary, #000);
+  line-height: 1;
+}
+
+.hd-stat-total {
+  font-size: 14px;
+  color: var(--text-tertiary, #8E8E93);
+  margin-top: 2px;
+  line-height: 1;
+}
+
+.hd-stat-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 2px;
+  color: var(--text-primary, #000);
+}
+
+.hd-stat-subtitle {
+  font-size: 12px;
+  color: var(--text-tertiary, #8E8E93);
+  margin: 0;
+}
+
+/* ── Motivation banner ───────────────────────────────────────────── */
+.hd-motivation {
+  background: var(--color-success, #A7D96C);
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.hd-motivation__text {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1D1D1F;
+  margin: 0;
+}
+
+.dark-theme .hd-motivation__text {
+  color: #000;
+}
+
+/* ── Extra stats (best streak / total) ───────────────────────────── */
+.hd-extra-stats {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.hd-extra-stat {
+  flex: 1;
+  background: var(--card-bg, #fff);
+  border-radius: 16px;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.hd-extra-stat__icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.hd-extra-stat__value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary, #000);
+  line-height: 1;
+}
+
+.hd-extra-stat__label {
+  font-size: 12px;
+  color: var(--text-tertiary, #8E8E93);
+  text-align: center;
+}
+
+/* ── Weekly bar chart ────────────────────────────────────────────── */
+.hd-weekly-card {
+  background: var(--card-bg, #fff);
+  border-radius: 16px;
+  padding: 16px 16px 14px;
+  margin-bottom: 16px;
+}
+
+.hd-weekly-card__title {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0 0 16px;
+  color: var(--text-primary, #000);
+}
+
+.hd-weekly-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.hd-weekly-chart__col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.hd-weekly-chart__bar-wrap {
+  width: 100%;
+  height: 64px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.hd-weekly-chart__bar {
+  width: 100%;
+  height: 20px;
+  border-radius: 6px 6px 0 0;
+  background: var(--bg-tertiary, #E5E5EA);
+  transition: height 0.3s ease;
+}
+
+.hd-weekly-chart__bar--done {
+  height: 64px;
+  background: var(--color-success, #A7D96C);
+}
+
+.hd-weekly-chart__bar--today {
+  height: 64px;
+  background: var(--color-success, #A7D96C);
+  box-shadow: 0 2px 8px rgba(167, 217, 108, 0.4);
+}
+
+.hd-weekly-chart__bar--future {
+  height: 20px;
+  background: var(--bg-tertiary, #E5E5EA);
+  opacity: 0.5;
+}
+
+.hd-weekly-chart__label {
+  font-size: 12px;
+  color: var(--text-tertiary, #8E8E93);
+}
+
+.hd-weekly-chart__label--today {
+  font-weight: 700;
+  color: var(--text-primary, #000);
+}
+
+/* ── Friends section (My Stats tab) ─────────────────────────────── */
+.hd-friends-section {
+  margin-bottom: 16px;
+}
+
+.hd-friends-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.hd-friends-section__title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary, #000);
+}
+
+.hd-friends-section__count {
+  font-size: 13px;
+  color: var(--text-tertiary, #8E8E93);
+}
+
+.hd-friends-section__empty {
+  font-size: 14px;
+  color: var(--text-tertiary, #8E8E93);
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+.hd-members-list {
+  margin-bottom: 12px;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────── */
+.hd-btn {
+  padding: 15px 20px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.hd-btn--full {
+  width: 100%;
+  display: block;
+}
+
+.hd-btn--primary {
+  background: var(--color-success, #A7D96C);
+  color: #1D1D1F;
+}
+.hd-btn--primary:hover {
+  background: #95C55D;
+}
+
+.hd-btn--danger {
+  background: var(--card-bg, #fff);
+  color: var(--text-primary, #000);
+  border: 1px solid var(--border-color, #E5E5EA);
+  margin-bottom: 16px;
+}
+.hd-btn--danger:hover {
+  background: #FFE5E5;
+  color: #FF3B30;
+  border-color: #FF3B30;
+}
+
+.hd-btn--punch {
+  font-size: 17px;
+  margin-top: 4px;
+}
+
+/* ── Friends tab empty state ─────────────────────────────────────── */
+.hd-friends-empty {
+  text-align: center;
+  padding: 40px 20px;
+}
+.hd-friends-empty__text {
+  font-size: 15px;
+  color: var(--text-tertiary, #8E8E93);
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+
+/* ── Leaderboard podium ──────────────────────────────────────────── */
+.hd-leaderboard-card {
+  background: var(--card-bg, #fff);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.hd-leaderboard-card__title {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0 0 20px;
+  color: var(--text-primary, #000);
+}
+
+.hd-podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+  padding-bottom: 8px;
+}
+
+.hd-podium__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  max-width: 100px;
+}
+
+.hd-podium__crown {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.hd-podium__item--place1 .hd-podium__crown {
+  visibility: visible;
+}
+.hd-podium__item--place2 .hd-podium__crown,
+.hd-podium__item--place3 .hd-podium__crown {
+  visibility: hidden;
+  height: 20px;
+}
+
+.hd-podium__avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.hd-podium__item--place1 .hd-podium__avatar {
+  width: 60px;
+  height: 60px;
+  font-size: 22px;
+}
+
+.hd-podium__avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.hd-podium__name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary, #000);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90px;
+}
+
+.hd-podium__platform {
+  width: 100%;
+  border-radius: 8px 8px 0 0;
+  background: var(--bg-tertiary, #E5E5EA);
+}
+
+.hd-podium__platform--place1 {
+  height: 64px;
+  background: #C0B6F2;
+}
+.hd-podium__platform--place2 {
+  height: 44px;
+  background: #D4D4E4;
+}
+.hd-podium__platform--place3 {
+  height: 32px;
+  background: #E8C999;
+}
+
+.hd-podium__score {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #000);
+  margin-top: 4px;
+}
+
+/* ── Habit Friends list (Friends tab) ────────────────────────────── */
+.hd-friends-card {
+  background: var(--card-bg, #fff);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.hd-friends-card__title {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0 0 14px;
+  color: var(--text-primary, #000);
+}
+
+.hd-friend-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-color, #F2F2F7);
+}
+.hd-friend-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.hd-friend-row__avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.hd-friend-row__avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.hd-friend-row__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hd-friend-row__name {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary, #000);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hd-friend-row__progress {
+  font-size: 13px;
+  color: var(--text-tertiary, #8E8E93);
+}
+
+.hd-friend-row__streak {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-secondary, #FF9500);
+  flex-shrink: 0;
+}
+
+/* ── Weekly comparison bars ──────────────────────────────────────── */
+.hd-comparison-card {
+  background: var(--card-bg, #fff);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.hd-comparison-card__title {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0 0 14px;
+  color: var(--text-primary, #000);
+}
+
+.hd-comparison-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.hd-comparison-row:last-child {
+  margin-bottom: 0;
+}
+
+.hd-comparison-row__avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.hd-comparison-row__avatar--me {
+  background: var(--bg-tertiary, #E5E5EA);
+  font-size: 16px;
+}
+
+.hd-comparison-row__avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.hd-comparison-row__content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hd-comparison-row__name {
+  font-size: 13px;
+  color: var(--text-secondary, #1D1D1F);
+  font-weight: 500;
+}
+
+.hd-comparison-row__bar-track {
+  height: 8px;
+  background: var(--bg-tertiary, #F2F2F7);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.hd-comparison-row__bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+  min-width: 4px;
+}
+
+.hd-comparison-row__bar--me {
+  background: var(--color-success, #A7D96C);
+}
+
+.hd-comparison-row__score {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-tertiary, #8E8E93);
+  flex-shrink: 0;
+  min-width: 40px;
+  text-align: right;
+}
+
+/* ── Dark theme adjustments for new classes ──────────────────────── */
+.dark-theme .hd-stat-card,
+.dark-theme .hd-extra-stat,
+.dark-theme .hd-weekly-card,
+.dark-theme .hd-leaderboard-card,
+.dark-theme .hd-friends-card,
+.dark-theme .hd-comparison-card {
+  background: var(--card-bg, #1C1C1E);
+}
+
+.dark-theme .hd-stat-value,
+.dark-theme .hd-stat-title,
+.dark-theme .hd-extra-stat__value,
+.dark-theme .hd-weekly-card__title,
+.dark-theme .hd-leaderboard-card__title,
+.dark-theme .hd-friends-card__title,
+.dark-theme .hd-comparison-card__title,
+.dark-theme .hd-friends-section__title,
+.dark-theme .hd-header__title,
+.dark-theme .hd-podium__name,
+.dark-theme .hd-podium__score,
+.dark-theme .hd-friend-row__name,
+.dark-theme .hd-comparison-row__name {
+  color: #FFFFFF;
+}
+
+.dark-theme .hd-weekly-chart__bar {
+  background: #3A3A3C;
+}
+
+.dark-theme .hd-comparison-row__bar-track {
+  background: #3A3A3C;
+}
+
+.dark-theme .hd-friend-row {
+  border-bottom-color: #2C2C2E;
+}
+
+.dark-theme .hd-podium__platform--place2 {
+  background: #3A3A3C;
+}
+
+.dark-theme .hd-btn--danger {
+  background: #1C1C1E;
+  color: #FFFFFF;
+  border-color: #3A3A3C;
+}
+.dark-theme .hd-btn--danger:hover {
+  background: rgba(255, 59, 48, 0.15);
+  color: #FF453A;
+  border-color: #FF453A;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────── */
+@media (max-width: 375px) {
+  .hd-stats-grid {
+    gap: 8px;
+  }
+  .hd-stat-circle-wrapper {
+    width: 84px;
+    height: 84px;
+  }
+  .hd-stat-value {
+    font-size: 22px;
+  }
+  .hd-stat-title {
+    font-size: 13px;
+  }
+  .hd-header__title {
+    font-size: 19px;
+  }
+  .hd-weekly-chart {
+    gap: 4px;
+  }
 }

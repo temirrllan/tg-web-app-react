@@ -216,11 +216,14 @@
     },
     "stats": {
       "chartTitle": "Last 7 days",
+      "thisWeek": "This Week",
       "bestStreak": "Best Streak",
-      "totalCompleted": "Total Completed",
+      "totalCompleted": "Total",
       "daysUnit": "days",
-      "timesUnit": "times"
+      "timesUnit": "times",
+      "today": "Today"
     },
+    "weekDays": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
     "motivations": {
       "m30": "🔥 Incredible! A month without missing!",
       "m14": "💪 Two weeks straight! You're awesome!",
@@ -231,14 +234,20 @@
     "motivation": "Good Job My Friend! 🔥",
     "friends": {
       "title": "Habit Friends",
+      "inHabit": "Friends in Habit",
       "friendsAdded": "friend added",
       "friendsAddedPlural": "friends added",
-      "freePlan": "Free plan",
+      "freePlan": "Free",
       "subtitle": "Share the link with friends and invite them to track habits together.",
       "addFriend": "Add Friend",
       "remove": "Remove",
       "punch": "👊 Punch",
-      "copyLink": "Link"
+      "copyLink": "Link",
+      "leaderboard": "Friends Leaderboard",
+      "weeklyComparison": "Weekly Comparison",
+      "punchLazy": "Punch the lazy friend! 👊🔥",
+      "you": "You",
+      "today": "today"
     },
     "buttons": {
       "removeHabit": "Remove Habit"

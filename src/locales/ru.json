@@ -203,11 +203,14 @@
       },
       "stats": {
         "chartTitle": "Последние 7 дней",
+        "thisWeek": "Эта неделя",
         "bestStreak": "Лучший стрик",
-        "totalCompleted": "Всего выполнено",
+        "totalCompleted": "Всего",
         "daysUnit": "дн.",
-        "timesUnit": "раз"
+        "timesUnit": "раз",
+        "today": "Сег"
       },
+      "weekDays": ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"],
       "motivations": {
         "m30": "🔥 Невероятно! Месяц без пропусков!",
         "m14": "💪 Две недели подряд! Ты крут!",
@@ -217,15 +220,21 @@
       },
       "motivation": "Круто, пэпэ! 🔥",
       "friends": {
-        "title": "Друзья по привычке",
+        "title": "Habit Friends",
+        "inHabit": "Друзья в привычке",
         "friendsAdded": "друг добавлен",
         "friendsAddedPlural": "друзей добавлено",
-        "freePlan": "Бесплатный план",
+        "freePlan": "Free",
         "subtitle": "Поделитесь ссылкой с друзьями и пригласите их отслеживать привычки вместе.",
-        "addFriend": "Пригласи друга",
+        "addFriend": "Добавить друга",
         "remove": "Удалить",
         "punch": "👊 Напомнить",
-        "copyLink": "Ссылка"
+        "copyLink": "Ссылка",
+        "leaderboard": "Рейтинг друзей",
+        "weeklyComparison": "Сравнение за неделю",
+        "punchLazy": "Панчни ленивого друга! 👊🔥",
+        "you": "Вы",
+        "today": "сегодня"
       },
       "buttons": {
         "removeHabit": "Удалить привычку"
