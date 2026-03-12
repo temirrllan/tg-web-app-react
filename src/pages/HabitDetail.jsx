@@ -876,4 +876,7 @@ const FriendCard = ({ member, onPunch, onRemove, removeText, punchText }) => {
   );
 };
 
+// Named exports so SpecialHabitDetail can reuse the same animated components
+export { CircularProgress, StatCard, WeeklyChart };
+
 export default HabitDetail;
