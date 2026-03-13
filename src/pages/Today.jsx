@@ -695,152 +695,110 @@ useEffect(() => {
     setShowSwipeHint(false);
   };
 
-  // 🆕 КРИТИЧНО: Изолированная обработка свайпа с защитой от перекрёстных обновлений
+  // Оптимистично обновляет привычку в кэше без перезагрузки с сервера
+  const applyOptimisticUpdate = useCallback((habitId, status, currentData) => {
+    const updatedHabits = currentData.habits.map(h => {
+      if (h.id !== habitId) return h;
+      const wasCompleted  = h.today_status === 'completed';
+      const isNowComplete = status === 'completed';
+      // Оптимистично корректируем стрик (+1 если новый done, -1 если снимаем done)
+      const streakDelta = (isNowComplete ? 1 : 0) - (wasCompleted ? 1 : 0);
+      return {
+        ...h,
+        today_status:       status,
+        is_completed_today: isNowComplete,
+        streak_current:     Math.max(0, (h.streak_current || 0) + streakDelta),
+      };
+    });
+    const newCompleted = updatedHabits.filter(h => h.today_status === 'completed').length;
+    updateDateCache(selectedDate, {
+      ...currentData,
+      habits: updatedHabits,
+      stats: { ...currentData.stats, completed: newCompleted },
+    });
+    return { updatedHabits, newCompleted };
+  }, [selectedDate, updateDateCache]);
+
+  // Тихая фоновая синхронизация — не показывает loader, обновляет кэш без мерцания
+  const silentSync = useCallback((date, operationId) => {
+    setTimeout(async () => {
+      if (currentSwipeOperation.current && currentSwipeOperation.current !== operationId) return;
+      const freshData = await loadHabitsForDate(date).catch(() => null);
+      if (freshData && currentSwipeOperation.current === operationId) {
+        updateDateCache(date, freshData);
+      }
+    }, 1500);
+  }, [loadHabitsForDate, updateDateCache]);
+
+  // Обработка свайпа — оптимистичное обновление + серверный запрос без перезагрузки
   const handleMark = useCallback(async (habitId, status) => {
     if (!isEditableDate) return;
-    
-    // Защита от одновременных операций
-    if (currentSwipeOperation.current) {
-      console.log('⚠️ Another swipe operation in progress, skipping...');
-      return;
-    }
-    
+    if (currentSwipeOperation.current) return;
+
     const operationId = `${selectedDate}-${habitId}-${status}-${Date.now()}`;
     currentSwipeOperation.current = operationId;
-    
+
+    const currentData = dateDataCache[selectedDate];
+    if (!currentData) { currentSwipeOperation.current = null; return; }
+
+    // 1️⃣ Мгновенное оптимистичное обновление UI — без ожидания сервера
+    const { newCompleted } = applyOptimisticUpdate(habitId, status, currentData);
+
     try {
-      console.log(`🎯 [${operationId}] Marking habit ${habitId} as ${status} for date: ${selectedDate}`);
-      
-      // 1️⃣ Оптимистичное обновление ТОЛЬКО для текущей даты
-      const currentData = dateDataCache[selectedDate];
-      if (!currentData) {
-        console.error('No data for current date');
-        return;
-      }
-      
-      const updatedHabits = currentData.habits.map(h => 
-        h.id === habitId ? { ...h, today_status: status } : h
-      );
-      
-      const newCompleted = updatedHabits.filter(h => h.today_status === 'completed').length;
-      
-      updateDateCache(selectedDate, {
-        ...currentData,
-        habits: updatedHabits,
-        stats: { ...currentData.stats, completed: newCompleted }
-      });
-      
-      // 2️⃣ Отправляем на сервер с ЯВНОЙ датой
+      // 2️⃣ Запрос на сервер (в фоне, UI уже обновлён)
       await markHabit(habitId, status, selectedDate);
       habitService.invalidateHabitsCache();
 
-      // 3️⃣ Перезагружаем данные ТОЛЬКО для текущей даты
-      console.log(`🔄 [${operationId}] Reloading habits for selected date: ${selectedDate}`);
-      const freshData = await loadHabitsForDate(selectedDate);
-      
-      if (freshData && currentSwipeOperation.current === operationId) {
-        updateDateCache(selectedDate, freshData);
-      }
-      
-      // 4️⃣ Если это сегодня - также обновляем today cache в фоне
-      const today = getTodayDate();
-      if (selectedDate === today) {
-        refresh();
-      }
-      
+      // 3️⃣ Тихая синхронизация через 1.5с — исправляет streak с сервера без мерцания
+      silentSync(selectedDate, operationId);
+
       window.TelegramAnalytics?.track('habit_marked', {
-        habit_id: habitId,
-        status: status,
-        date: selectedDate,
-        total_completed: newCompleted,
-        total_habits: currentData.stats.total,
+        habit_id: habitId, status, date: selectedDate,
+        total_completed: newCompleted, total_habits: currentData.stats.total,
       });
-      
     } catch (error) {
-      console.error(`❌ [${operationId}] Error marking habit:`, error);
-      
-      // Откатываем к данным с сервера
-      const freshData = await loadHabitsForDate(selectedDate);
-      if (freshData) {
-        updateDateCache(selectedDate, freshData);
-      }
+      console.error(`❌ Error marking habit ${habitId}:`, error);
+      // Откат: восстанавливаем оригинальный статус
+      updateDateCache(selectedDate, currentData);
     } finally {
       if (currentSwipeOperation.current === operationId) {
         currentSwipeOperation.current = null;
       }
     }
-  }, [isEditableDate, selectedDate, markHabit, dateDataCache, loadHabitsForDate, refresh, updateDateCache]);
+  }, [isEditableDate, selectedDate, markHabit, dateDataCache, applyOptimisticUpdate, silentSync, updateDateCache]);
 
   const handleUnmark = useCallback(async (habitId) => {
     if (!isEditableDate) return;
-    
-    // Защита от одновременных операций
-    if (currentSwipeOperation.current) {
-      console.log('⚠️ Another swipe operation in progress, skipping...');
-      return;
-    }
-    
+    if (currentSwipeOperation.current) return;
+
     const operationId = `${selectedDate}-${habitId}-unmark-${Date.now()}`;
     currentSwipeOperation.current = operationId;
-    
+
+    const currentData = dateDataCache[selectedDate];
+    if (!currentData) { currentSwipeOperation.current = null; return; }
+
+    // 1️⃣ Мгновенное оптимистичное обновление
+    applyOptimisticUpdate(habitId, 'pending', currentData);
+
     try {
-      console.log(`🎯 [${operationId}] Unmarking habit ${habitId} for date: ${selectedDate}`);
-      
-      // 1️⃣ Оптимистичное обновление
-      const currentData = dateDataCache[selectedDate];
-      if (!currentData) {
-        console.error('No data for current date');
-        return;
-      }
-      
-      const updatedHabits = currentData.habits.map(h => 
-        h.id === habitId ? { ...h, today_status: 'pending' } : h
-      );
-      
-      const newCompleted = updatedHabits.filter(h => h.today_status === 'completed').length;
-      
-      updateDateCache(selectedDate, {
-        ...currentData,
-        habits: updatedHabits,
-        stats: { ...currentData.stats, completed: newCompleted }
-      });
-      
-      // 2️⃣ Отправляем на сервер
+      // 2️⃣ Запрос на сервер
       await unmarkHabit(habitId, selectedDate);
       habitService.invalidateHabitsCache();
 
-      // 3️⃣ Перезагружаем данные
-      console.log(`🔄 [${operationId}] Reloading habits for selected date: ${selectedDate}`);
-      const freshData = await loadHabitsForDate(selectedDate);
-      
-      if (freshData && currentSwipeOperation.current === operationId) {
-        updateDateCache(selectedDate, freshData);
-      }
-      
-      // 4️⃣ Обновляем today cache если нужно
-      const today = getTodayDate();
-      if (selectedDate === today) {
-        refresh();
-      }
-      
-      window.TelegramAnalytics?.track('habit_unmarked', {
-        habit_id: habitId,
-        date: selectedDate,
-      });
-      
+      // 3️⃣ Тихая синхронизация через 1.5с
+      silentSync(selectedDate, operationId);
+
+      window.TelegramAnalytics?.track('habit_unmarked', { habit_id: habitId, date: selectedDate });
     } catch (error) {
-      console.error(`❌ [${operationId}] Error unmarking habit:`, error);
-      
-      const freshData = await loadHabitsForDate(selectedDate);
-      if (freshData) {
-        updateDateCache(selectedDate, freshData);
-      }
+      console.error(`❌ Error unmarking habit ${habitId}:`, error);
+      // Откат
+      updateDateCache(selectedDate, currentData);
     } finally {
       if (currentSwipeOperation.current === operationId) {
         currentSwipeOperation.current = null;
       }
     }
-  }, [isEditableDate, selectedDate, unmarkHabit, dateDataCache, loadHabitsForDate, refresh, updateDateCache]);
+  }, [isEditableDate, selectedDate, unmarkHabit, dateDataCache, applyOptimisticUpdate, silentSync, updateDateCache]);
 
   const getMotivationalBackgroundColor = () => {
     const currentData = dateDataCache[selectedDate];
