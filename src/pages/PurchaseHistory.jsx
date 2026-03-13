@@ -6,262 +6,149 @@ import Loader from '../components/common/Loader';
 import './PurchaseHistory.css';
 import { useTelegramTheme } from '../hooks/useTelegramTheme';
 
+// ── helpers ────────────────────────────────────────────────────────────────
+const pad = (n, len = 5) => String(n).padStart(len, '0');
+
+const formatDateKey = (isoStr) => isoStr.slice(0, 10);
+
+const formatDisplayDate = (isoStr, locale = 'en-US') =>
+  new Date(isoStr)
+    .toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
+    .toUpperCase();
+
+// ── SubscriptionCard ───────────────────────────────────────────────────────
+const SubscriptionCard = ({ item, t, language }) => {
+  const isInactive =
+    !item.is_active || item.action === 'cancelled' || item.action === 'expired';
+
+  const validityText = () => {
+    if (isInactive) {
+      return language === 'ru' ? 'Отменена' : language === 'kk' ? 'Болдырмау' : 'Cancelled';
+    }
+    if (!item.expires_at) return 'Lifetime ∞';
+    const d = new Date(item.expires_at);
+    return `${t('purchaseHistory.item.until')} ${d.getDate()} ${d.toLocaleDateString('en-US', { month: 'long' })} ${d.getFullYear()}`;
+  };
+
+  return (
+    <div className={`ph-card ph-card--sub${isInactive ? ' ph-card--inactive' : ''}`}>
+      <div className="ph-card__icon-wrap ph-card__icon-wrap--sub">
+        <span className="ph-card__emoji">👑</span>
+      </div>
+      <div className="ph-card__body">
+        <div className="ph-card__row ph-card__row--top">
+          <span className="ph-card__title">{item.title || t('purchaseHistory.item.subscription')}</span>
+          <span className="ph-card__price">{item.price_stars} <span className="ph-card__star">⭐</span></span>
+        </div>
+        <div className="ph-card__row ph-card__row--bottom">
+          <span className={`ph-badge${isInactive ? ' ph-badge--grey' : ' ph-badge--green'}`}>
+            {validityText()}
+          </span>
+          <span className="ph-card__order">#{pad(item.purchase_id)}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── PackCard ───────────────────────────────────────────────────────────────
+const PackCard = ({ item, t }) => (
+  <div className="ph-card ph-card--pack">
+    <div className="ph-card__icon-wrap ph-card__icon-wrap--pack">
+      {item.pack_photo_url
+        ? <img src={item.pack_photo_url} alt={item.title} className="ph-card__pack-img" />
+        : <span className="ph-card__emoji">📦</span>}
+    </div>
+    <div className="ph-card__body">
+      <div className="ph-card__row ph-card__row--top">
+        <span className="ph-card__title">{item.title}</span>
+        <span className="ph-card__price">{item.price_stars} <span className="ph-card__star">⭐</span></span>
+      </div>
+      <div className="ph-card__row ph-card__row--bottom">
+        <span className="ph-badge ph-badge--blue">{t('purchaseHistory.pack.purchased')}</span>
+        {item.pack_short_description && (
+          <span className="ph-card__desc">{item.pack_short_description}</span>
+        )}
+        <span className="ph-card__order">#{pad(item.purchase_id)}</span>
+      </div>
+    </div>
+  </div>
+);
+
+// ── Main ──────────────────────────────────────────────────────────────────
 const PurchaseHistory = ({ onClose }) => {
   const { t, language } = useTranslation();
   useNavigation(onClose);
-    useTelegramTheme();
+  useTelegramTheme();
 
   const [loading, setLoading] = useState(true);
-  const [purchases, setPurchases] = useState([]);
-  
-  useEffect(() => {
-    loadPurchaseHistory();
-  }, []);
-  
-  const loadPurchaseHistory = async () => {
+  const [groups, setGroups]   = useState([]);
+
+  useEffect(() => { load(); }, []);
+
+  const load = async () => {
     try {
       setLoading(true);
       const result = await habitService.getSubscriptionHistory();
-      
-      console.log('📥 Purchase history received:', result);
-      
-      if (result.success && result.history) {
-        const grouped = groupPurchasesByDate(result.history);
-        setPurchases(grouped);
-        
-        console.log('📊 Grouped purchases:', grouped);
+      if (result.success && result.history?.length) {
+        setGroups(groupByDate(result.history));
       }
-    } catch (error) {
-      console.error('Failed to load purchase history:', error);
+    } catch (e) {
+      console.error('PurchaseHistory load error:', e);
     } finally {
       setLoading(false);
     }
   };
-  
-  const groupPurchasesByDate = (history) => {
-    const groups = {};
-    
-    history.forEach(item => {
-      const date = new Date(item.created_at);
-      const dateKey = formatDateKey(date);
-      
-      if (!groups[dateKey]) {
-        groups[dateKey] = {
-          date: dateKey,
-          displayDate: formatDisplayDate(date),
+
+  const localeForLang = () =>
+    language === 'ru' ? 'ru-RU' : language === 'kk' ? 'kk-KZ' : 'en-US';
+
+  const groupByDate = (items) => {
+    const map = {};
+    items.forEach(item => {
+      const key = formatDateKey(item.created_at);
+      if (!map[key]) {
+        map[key] = {
+          key,
+          display: formatDisplayDate(item.created_at, localeForLang()),
           items: []
         };
       }
-      
-      groups[dateKey].items.push({
-        ...item,
-        formattedDate: date.toLocaleDateString('en-US', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric'
-        })
-      });
+      map[key].items.push(item);
     });
-    
-    return Object.values(groups).sort((a, b) => 
-      new Date(b.date) - new Date(a.date)
-    );
+    return Object.values(map).sort((a, b) => b.key.localeCompare(a.key));
   };
-  
-  const formatDateKey = (date) => {
-    return date.toISOString().split('T')[0];
-  };
-  
-  const formatDisplayDate = (date) => {
-    return date.toLocaleDateString('en-US', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    }).toUpperCase();
-  };
-  
-  const formatOrderId = (id) => {
-    if (!id) return 'MANUNYA2HEHE';
-    return `MANUNYA${id.toString().padStart(5, '0')}`;
-  };
-  
-  const formatValidityDate = (item) => {
-    console.log('🔍 Formatting validity for:', {
-      subscription_id: item.subscription_id,
-      expires_at: item.expires_at,
-      is_active: item.is_active,
-      action: item.action
-    });
-    
-    // 🔥 Если подписка отменена или истекла - показываем статус
-    if (!item.is_active || item.action === 'cancelled' || item.action === 'expired') {
-      if (language === 'ru') return 'Отменена';
-      if (language === 'kk') return 'Болдырмау';
-      return 'Cancelled';
-    }
-    
-    // Если нет даты истечения - Lifetime
-    if (!item.expires_at) {
-      return 'Lifetime';
-    }
-    
-    const date = new Date(item.expires_at);
-    const day = date.getDate();
-    const month = date.toLocaleDateString('en-US', { month: 'long' });
-    const year = date.getFullYear();
-    
-    return `${t('purchaseHistory.item.until')} ${day} ${month} ${year}`;
-  };
-  
-  const getPlanDetails = (item) => {
-    console.log('🔍 Getting plan details for item:', {
-      subscription_id: item.subscription_id,
-      plan_type: item.plan_type,
-      plan_name: item.plan_name,
-      price_stars: item.price_stars
-    });
-    
-    // 🔥 ПРИОРИТЕТ 1: Используем реальную цену из истории
-    const actualPrice = parseInt(item.price_stars) || 0;
-    
-    // Если цена есть в записи - используем её
-    if (actualPrice > 0) {
-      console.log(`✅ Using actual price from history: ${actualPrice} XTR`);
-      return {
-        name: item.plan_name || t('purchaseHistory.item.subscription'),
-        price: actualPrice
-      };
-    }
-    
-    // 🔥 FALLBACK: Если почему-то цена не записалась, берём из плана
-    console.warn(`⚠️ Price not found in history for subscription ${item.subscription_id}, using plan defaults`);
-    
-    const plans = {
-      'test': { name: 'Test Plan (1 Star)', price: 1 },
-      'month': { name: 'Premium for 1 Month', price: 59 },
-      '6_months': { name: 'Premium for 6 Months', price: 299 },
-      '1_year': { name: 'Premium for 1 Year', price: 500 }
-    };
-    
-    const fallbackPlan = plans[item.plan_type];
-    
-    if (fallbackPlan) {
-      console.log(`📦 Using fallback price for ${item.plan_type}: ${fallbackPlan.price} XTR`);
-      return {
-        name: item.plan_name || fallbackPlan.name,
-        price: fallbackPlan.price
-      };
-    }
-    
-    // Последний fallback
-    console.error(`❌ No plan found for ${item.plan_type}`);
-    return { 
-      name: item.plan_name || t('purchaseHistory.item.subscription'), 
-      price: 0 
-    };
-  };
-  
+
   if (loading) {
     return (
-      <div className="purchase-history">
-        <div className="purchase-history__content" style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center' 
-        }}>
-          <Loader size="large" />
-        </div>
+      <div className="ph-page">
+        <div className="ph-page__loader"><Loader size="large" /></div>
       </div>
     );
   }
-  
+
   return (
-    <div className="purchase-history">
-      <div className="purchase-history__content">
-        {purchases.length === 0 ? (
-          <div className="purchase-history__empty">
-            <div className="purchase-history__empty-icon">
-              {t('purchaseHistory.empty.icon')}
-            </div>
-            <p className="purchase-history__empty-text">
-              {t('purchaseHistory.empty.text')}
-            </p>
+    <div className="ph-page">
+      <div className="ph-page__content">
+        {groups.length === 0 ? (
+          <div className="ph-empty">
+            <span className="ph-empty__icon">🛍️</span>
+            <p className="ph-empty__title">{t('purchaseHistory.empty.text')}</p>
+            <p className="ph-empty__sub">{t('purchaseHistory.empty.subtitle')}</p>
           </div>
         ) : (
-          <div className="purchase-history__list">
-            {purchases.map((group, groupIndex) => (
-              <div key={groupIndex} className="purchase-history__date-group">
-                <p className="purchase-history__date">{group.displayDate}</p>
-                <div className="purchase-history__items">
-                  {group.items.map((item, index) => {
-                    const plan = getPlanDetails(item);
-                    const validTo = formatValidityDate(item);
-                    const orderId = formatOrderId(item.subscription_id);
-                    
-                    // 🔥 Определяем стиль в зависимости от статуса
-                    const isInactive = !item.is_active || item.action === 'cancelled' || item.action === 'expired';
-                    const validityStyle = isInactive ? { 
-                      color: '#999',
-                      textDecoration: 'line-through'
-                    } : {};
-                    
-                    console.log('📋 Rendering history item:', {
-                      subscription_id: item.subscription_id,
-                      plan_name: plan.name,
-                      price: plan.price,
-                      is_active: item.is_active,
-                      action: item.action,
-                      validity: validTo
-                    });
-                    
-                    return (
-                      <div key={index}>
-                        <div className="purchase-history__item">
-                          <div className="purchase-history__item-icon">
-                            📋
-                          </div>
-                          <div className="purchase-history__item-info">
-                            <h3 className="purchase-history__item-title">
-                              {plan.name}
-                            </h3>
-                            <p className="purchase-history__item-subscription">
-                              {t('purchaseHistory.item.subscription')}
-                            </p>
-                          </div>
-                          <div className="purchase-history__item-details">
-                            <div className="purchase-history__item-price">
-                              <span>{plan.price}</span>
-                              <span className="purchase-history__item-star">⭐</span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="purchase-history__item-validity">
-                          <span className="purchase-history__validity-label">
-                            {t('purchaseHistory.item.validTo')}
-                          </span>
-                          <span 
-                            className="purchase-history__validity-value"
-                            style={validityStyle}
-                          >
-                            {validTo}
-                          </span>
-                          <div className="purchase-history__validity-order">
-                            <span className="purchase-history__validity-label">
-                              {t('purchaseHistory.item.orderId')}
-                            </span>
-                            <span className="purchase-history__validity-value">
-                              {orderId}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+          groups.map(group => (
+            <div key={group.key} className="ph-group">
+              <p className="ph-group__date">{group.display}</p>
+              <div className="ph-group__items">
+                {group.items.map((item, idx) =>
+                  item.purchase_type === 'pack'
+                    ? <PackCard        key={idx} item={item} t={t} />
+                    : <SubscriptionCard key={idx} item={item} t={t} language={language} />
+                )}
               </div>
-            ))}
-          </div>
+            </div>
+          ))
         )}
       </div>
     </div>

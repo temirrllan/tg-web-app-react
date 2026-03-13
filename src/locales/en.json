@@ -271,16 +271,20 @@
   },
   "purchaseHistory": {
     "title": "Purchase History",
-    "subtitle": "Your subscriptions",
+    "subtitle": "Your subscriptions and packs",
     "empty": {
-      "icon": "📋",
-      "text": "No purchases yet"
+      "icon": "🛍️",
+      "text": "No purchases yet",
+      "subtitle": "Your subscriptions and habit packs will appear here"
     },
     "item": {
       "subscription": "Subscription",
       "validTo": "Valid to",
       "orderId": "Order ID",
       "until": "until"
+    },
+    "pack": {
+      "purchased": "Purchased"
     }
   },
   "subscriptionPage": {
