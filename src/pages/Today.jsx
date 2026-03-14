@@ -488,6 +488,49 @@ useEffect(() => {
   }
 }, []);
 
+// ── Member-count polling ──────────────────────────────────────────────────
+// Updates ONLY members_count in cached habits every 10 s — no full reload,
+// no flicker, no swipe interruptions.
+useEffect(() => {
+  const poll = async () => {
+    try {
+      const res = await habitService.getMemberCounts();
+      if (!res?.counts?.length) return;
+      // Build a lookup map: habitId → members_count
+      const map = {};
+      res.counts.forEach(({ id, members_count }) => {
+        map[id] = Number(members_count) || 0;
+      });
+      // Patch only changed habits inside every cached date
+      setDateDataCache(prev => {
+        let changed = false;
+        const next = {};
+        Object.entries(prev).forEach(([date, entry]) => {
+          const nextHabits = entry.habits.map(h => {
+            const fresh = map[h.id];
+            if (fresh === undefined || fresh === h.members_count) return h;
+            changed = true;
+            return { ...h, members_count: fresh };
+          });
+          next[date] = changed ? { ...entry, habits: nextHabits } : entry;
+        });
+        return changed ? next : prev;
+      });
+    } catch { /* silent — polling shouldn't crash the UI */ }
+  };
+
+  const id = setInterval(poll, 10_000);
+  // Also fire immediately on visibility restore
+  const onVisible = () => {
+    if (document.visibilityState === 'visible') poll();
+  };
+  document.addEventListener('visibilitychange', onVisible);
+  return () => {
+    clearInterval(id);
+    document.removeEventListener('visibilitychange', onVisible);
+  };
+}, []);
+
   const handleRefresh = useCallback(async () => {
     try {
       if (window.Telegram?.WebApp?.HapticFeedback) {

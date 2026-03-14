@@ -48,6 +48,15 @@ export const habitService = {
   },
 
   /**
+   * Лёгкий поллинг — возвращает только {id, members_count} для всех привычек.
+   * Не кэшируется (всегда свежие данные).
+   */
+  async getMemberCounts() {
+    const { data } = await api.get('/habits/member-counts');
+    return data; // { success, counts: [{id, members_count}] }
+  },
+
+  /**
    * Получить профиль пользователя (кэшируется на 10 минут)
    */
    async getUserProfile() {
