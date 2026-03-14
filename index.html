@@ -12,85 +12,40 @@
     </script> -->
     
     <script>
+      // ── Earliest-possible theme application ─────────────────────────────
+      // Runs synchronously right after telegram-web-app.js (sync <script>
+      // above), so window.Telegram.WebApp is already initialised.
+      // Sets header/bg/bottom-bar colors BEFORE React mounts to avoid the
+      // white-header flash when reloading in dark mode.
       (function initThemeImmediately() {
         try {
-          // Получаем сохраненную тему
-          const savedTheme = localStorage.getItem("app-theme");
+          var tg         = window.Telegram && window.Telegram.WebApp;
+          var saved      = localStorage.getItem("app-theme");
+          var tgScheme   = tg && tg.colorScheme; // 'dark' | 'light' from Telegram
+          var osDark     = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
 
-          // Определяем активную тему
-          let activeTheme = savedTheme;
+          // Priority: user-saved → Telegram colorScheme → OS preference
+          var theme  = saved || (tgScheme || (osDark ? "dark" : "light"));
+          var isDark = theme === "dark";
 
-          if (!activeTheme) {
-            // Проверяем системные настройки
-            if (
-              window.matchMedia &&
-              window.matchMedia("(prefers-color-scheme: dark)").matches
-            ) {
-              activeTheme = "dark";
+          // 1. CSS class on <html> so page body has correct bg instantly
+          document.documentElement.classList.remove("light-theme", "dark-theme");
+          document.documentElement.classList.add(theme + "-theme");
+
+          // 2. Telegram header / bg / bottom bar — tg is already available
+          if (tg) {
+            if (isDark) {
+              tg.setBackgroundColor && tg.setBackgroundColor("#000000");
+              tg.setHeaderColor    && tg.setHeaderColor("#1C1C1E");
+              tg.setBottomBarColor && tg.setBottomBarColor("#1C1C1E");
             } else {
-              activeTheme = "light";
+              tg.setBackgroundColor && tg.setBackgroundColor("#F2F2F7");
+              tg.setHeaderColor    && tg.setHeaderColor("#FFFFFF");
+              tg.setBottomBarColor && tg.setBottomBarColor("#FFFFFF");
             }
           }
-
-          const isDark = activeTheme === "dark";
-
-          // Применяем CSS класс НЕМЕДЛЕННО
-          document.documentElement.classList.remove(
-            "light-theme",
-            "dark-theme"
-          );
-          document.documentElement.classList.add(activeTheme + "-theme");
-
-          // Применяем к Telegram WebApp
-          const applyTelegramTheme = function () {
-            const tg = window.Telegram?.WebApp;
-            if (!tg) return;
-
-            try {
-              if (isDark) {
-                if (typeof tg.setBackgroundColor === "function") {
-                  tg.setBackgroundColor("#000000");
-                }
-                if (typeof tg.setHeaderColor === "function") {
-                  tg.setHeaderColor("#1C1C1E");
-                }
-                if (typeof tg.setBottomBarColor === "function") {
-                  tg.setBottomBarColor("#1C1C1E");
-                }
-              } else {
-                if (typeof tg.setBackgroundColor === "function") {
-                  tg.setBackgroundColor("#F2F2F7");
-                }
-                if (typeof tg.setHeaderColor === "function") {
-                  tg.setHeaderColor("#FFFFFF");
-                }
-                if (typeof tg.setBottomBarColor === "function") {
-                  tg.setBottomBarColor("#FFFFFF");
-                }
-              }
-            } catch (error) {
-              console.error("Failed to apply Telegram theme early:", error);
-            }
-          };
-
-          // Применяем Telegram тему
-          if (window.Telegram?.WebApp) {
-            applyTelegramTheme();
-          } else {
-            // Ждем загрузки
-            let attempts = 0;
-            const checkTelegram = setInterval(function () {
-              attempts++;
-              if (window.Telegram?.WebApp) {
-                clearInterval(checkTelegram);
-                applyTelegramTheme();
-              } else if (attempts > 50) {
-                clearInterval(checkTelegram);
-              }
-            }, 100);
-          }
-        } catch (error) {
-          console.error("Early theme init failed:", error);
+        } catch (e) {
+          console.error("Early theme init failed:", e);
         }
       })();
     </script>

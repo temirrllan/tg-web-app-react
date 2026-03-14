@@ -6,6 +6,7 @@ import { habitService } from './services/habits';
 import { useTelegram } from './hooks/useTelegram';
 import { LanguageProvider, LanguageContext } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { applyTelegramTheme } from './hooks/useTelegramTheme';
 import Onboarding from './components/Onboarding';
 import Today from './pages/Today';
 import Profile from './pages/Profile';
@@ -42,14 +43,26 @@ function AppContent() {
     if (tg) {
       try {
         tg.expand();
+
+        // ─── Apply theme BEFORE tg.ready() ───────────────────────────
+        // tg.ready() tells Telegram to show the webview. If we set the
+        // header color AFTER ready(), the Telegram client briefly shows
+        // its default (white) header — causing the flash. Setting it
+        // synchronously here prevents that gap entirely.
+        const savedTheme = localStorage.getItem('app-theme');
+        const tgScheme   = tg.colorScheme; // 'dark' | 'light' from Telegram
+        const isDarkNow  = savedTheme === 'dark' || (!savedTheme && tgScheme === 'dark');
+        applyTelegramTheme(isDarkNow, tg);
+        // ─────────────────────────────────────────────────────────────
+
         tg.ready();
-        
+
         // 📊 Трекинг инициализации
         analytics.track('app_initialized', {
           platform: tg.platform,
           version: tg.version,
         });
-        
+
         // BackButton управляется компонентами через useNavigation — не трогаем здесь
       } catch (e) {
         console.error('Error initializing Telegram WebApp:', e);
