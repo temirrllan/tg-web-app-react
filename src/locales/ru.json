@@ -234,7 +234,11 @@
         "weeklyComparison": "Сравнение за неделю",
         "punchLazy": "Панчни ленивого друга! 👊🔥",
         "you": "Вы",
-        "today": "сегодня"
+        "today": "сегодня",
+        "statusDone": "Выполнено",
+        "statusFailed": "Не выполнено",
+        "statusSkipped": "Пропущено",
+        "statusPending": "Ещё не выполнено"
       },
       "buttons": {
         "removeHabit": "Удалить привычку"

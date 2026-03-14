@@ -477,9 +477,12 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
     return d === 0 ? 6 : d - 1;   // 0=Mon … 6=Sun
   };
 
-  const getMemberStreak   = m => m.streak || m.current_streak || m.streak_current || 0;
-  const getMemberWeek     = m => ({ completed: m.week_completed || m.weekCompleted || 0, total: m.week_total || m.weekTotal || 28 });
-  const getMemberDaily    = m => ({ completed: m.completed_today || m.today_completed || 0, total: m.total_today || m.today_total || 0 });
+  const getMemberStreak  = m => m.streak_current || m.streak || m.current_streak || 0;
+  const getMemberBest    = m => m.streak_best    || m.best_streak || 0;
+  const getMemberWeek    = m => ({ completed: m.week_completed  || m.weekCompleted  || 0, total: 7 });
+  const getMemberMonth   = m => ({ completed: m.month_completed || m.monthCompleted || 0, total: new Date(new Date().getFullYear(), new Date().getMonth()+1, 0).getDate() });
+  const getMemberDaily   = m => ({ completed: m.completed_today || m.today_completed || 0, total: m.total_today || m.today_total || 0 });
+  const getMemberStatus  = m => m.today_status || 'pending';
   const memberColors      = ['#7DD3C0', '#FF6B9D', '#FBBF24', '#C084FC', '#FF8C42', '#4ECDC4'];
   const getMemberColor    = i => memberColors[i % memberColors.length];
 
@@ -664,7 +667,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
                 </div>
               ) : (
                 <>
-                  {/* Podium */}
+                  {/* ── Podium ── */}
                   {top3.length >= 2 && (
                     <div className="hd-leaderboard-card">
                       <h3 className="hd-leaderboard-card__title">{t('habitDetail.friends.leaderboard')}</h3>
@@ -692,77 +695,103 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
                     </div>
                   )}
 
-                  {/* Habit Friends list */}
+                  {/* ── Habit Friends — full stats per member ── */}
                   <div className="hd-friends-card">
                     <h3 className="hd-friends-card__title">{t('habitDetail.friends.title')}</h3>
                     {members.map((member, idx) => {
-                      const daily  = getMemberDaily(member);
-                      const streak = getMemberStreak(member);
+                      const streak  = getMemberStreak(member);
+                      const best    = getMemberBest(member);
+                      const week    = getMemberWeek(member);
+                      const month   = getMemberMonth(member);
+                      const status  = getMemberStatus(member);
+
+                      const statusLabel = {
+                        completed: { text: t('habitDetail.friends.statusDone'),    cls: 'hf-status--done'    },
+                        failed:    { text: t('habitDetail.friends.statusFailed'),  cls: 'hf-status--failed'  },
+                        skipped:   { text: t('habitDetail.friends.statusSkipped'), cls: 'hf-status--skipped' },
+                        pending:   { text: t('habitDetail.friends.statusPending'), cls: 'hf-status--pending' },
+                      }[status] || { text: status, cls: '' };
+
                       return (
-                        <div key={member.id} className="hd-friend-row">
-                          <div className="hd-friend-row__avatar" style={{ background: getMemberColor(idx) }}>
-                            {member.photo_url
-                              ? <img src={member.photo_url} alt={member.first_name} className="hd-friend-row__avatar-img" />
-                              : <span>{member.first_name?.[0]?.toUpperCase() || '?'}</span>
-                            }
+                        <div key={member.id} className="hf-member">
+                          {/* Avatar + name + today status */}
+                          <div className="hf-member__header">
+                            <div className="hf-member__avatar" style={{ background: getMemberColor(idx) }}>
+                              {member.photo_url
+                                ? <img src={member.photo_url} alt={member.first_name} className="hf-member__avatar-img" />
+                                : <span>{member.first_name?.[0]?.toUpperCase() || '?'}</span>
+                              }
+                            </div>
+                            <div className="hf-member__name-wrap">
+                              <span className="hf-member__name">{member.first_name} {member.last_name}</span>
+                              <span className={`hf-status ${statusLabel.cls}`}>{statusLabel.text}</span>
+                            </div>
+                            <span className="hf-member__streak">🔥 {streak}</span>
                           </div>
-                          <div className="hd-friend-row__info">
-                            <span className="hd-friend-row__name">{member.first_name} {member.last_name}</span>
-                            {daily.total > 0 && (
-                              <span className="hd-friend-row__progress">
-                                {daily.completed}/{daily.total} {t('habitDetail.friends.today')}
-                              </span>
-                            )}
+
+                          {/* 4 mini-stat chips */}
+                          <div className="hf-member__stats">
+                            <div className="hf-chip">
+                              <span className="hf-chip__label">{t('habitDetail.statistics.week')}</span>
+                              <span className="hf-chip__value">{week.completed}<span className="hf-chip__total">/{week.total}</span></span>
+                            </div>
+                            <div className="hf-chip">
+                              <span className="hf-chip__label">{t('habitDetail.statistics.month')}</span>
+                              <span className="hf-chip__value">{month.completed}<span className="hf-chip__total">/{month.total}</span></span>
+                            </div>
+                            <div className="hf-chip">
+                              <span className="hf-chip__label">{t('habitDetail.stats.bestStreak')}</span>
+                              <span className="hf-chip__value">🏆 {best}</span>
+                            </div>
+                            <div className="hf-chip">
+                              <span className="hf-chip__label">{t('habitDetail.statistics.daysStreak')}</span>
+                              <span className="hf-chip__value">🔥 {streak}</span>
+                            </div>
                           </div>
-                          {streak > 0 && (
-                            <span className="hd-friend-row__streak">🔥 {streak}</span>
-                          )}
                         </div>
                       );
                     })}
                   </div>
 
-                  {/* Weekly comparison */}
+                  {/* ── Weekly comparison bars ── */}
                   <div className="hd-comparison-card">
                     <h3 className="hd-comparison-card__title">{t('habitDetail.friends.weeklyComparison')}</h3>
-                    {members.map((member, idx) => {
-                      const week = getMemberWeek(member);
-                      const maxTotal = Math.max(week.total, statistics.weekTotal, 28);
-                      const pct = maxTotal > 0 ? Math.min((week.completed / maxTotal) * 100, 100) : 0;
-                      return (
-                        <div key={member.id} className="hd-comparison-row">
-                          <div className="hd-comparison-row__avatar" style={{ background: getMemberColor(idx) }}>
-                            {member.photo_url
-                              ? <img src={member.photo_url} alt={member.first_name} className="hd-comparison-row__avatar-img" />
-                              : <span>{member.first_name?.[0]?.toUpperCase() || '?'}</span>
-                            }
-                          </div>
-                          <div className="hd-comparison-row__content">
-                            <span className="hd-comparison-row__name">{member.first_name}</span>
-                            <div className="hd-comparison-row__bar-track">
-                              <div className="hd-comparison-row__bar" style={{ width: `${pct}%`, background: getMemberColor(idx) }} />
+                    {[...members].sort((a, b) => getMemberWeek(b).completed - getMemberWeek(a).completed)
+                      .map((member, idx) => {
+                        const week = getMemberWeek(member);
+                        const pct  = Math.min((week.completed / week.total) * 100, 100);
+                        return (
+                          <div key={member.id} className="hd-comparison-row">
+                            <div className="hd-comparison-row__avatar" style={{ background: getMemberColor(members.indexOf(member)) }}>
+                              {member.photo_url
+                                ? <img src={member.photo_url} alt={member.first_name} className="hd-comparison-row__avatar-img" />
+                                : <span>{member.first_name?.[0]?.toUpperCase() || '?'}</span>
+                              }
                             </div>
+                            <div className="hd-comparison-row__content">
+                              <span className="hd-comparison-row__name">{member.first_name}</span>
+                              <div className="hd-comparison-row__bar-track">
+                                <div className="hd-comparison-row__bar"
+                                  style={{ width: `${pct}%`, background: getMemberColor(members.indexOf(member)) }} />
+                              </div>
+                            </div>
+                            <span className="hd-comparison-row__score">{week.completed}/{week.total}</span>
                           </div>
-                          <span className="hd-comparison-row__score">{week.completed}/{maxTotal}</span>
-                        </div>
-                      );
+                        );
                     })}
-                    {/* Me */}
+                    {/* Me row */}
                     {(() => {
-                      const myTotal = Math.max(statistics.weekTotal, 28);
-                      const myPct   = myTotal > 0 ? Math.min((statistics.weekDays / myTotal) * 100, 100) : 0;
+                      const myPct = Math.min((statistics.weekDays / statistics.weekTotal) * 100, 100);
                       return (
                         <div className="hd-comparison-row hd-comparison-row--me">
-                          <div className="hd-comparison-row__avatar hd-comparison-row__avatar--me">
-                            <span>😊</span>
-                          </div>
+                          <div className="hd-comparison-row__avatar hd-comparison-row__avatar--me"><span>😊</span></div>
                           <div className="hd-comparison-row__content">
                             <span className="hd-comparison-row__name">{t('habitDetail.friends.you')}</span>
                             <div className="hd-comparison-row__bar-track">
                               <div className="hd-comparison-row__bar hd-comparison-row__bar--me" style={{ width: `${myPct}%` }} />
                             </div>
                           </div>
-                          <span className="hd-comparison-row__score">{statistics.weekDays}/{myTotal}</span>
+                          <span className="hd-comparison-row__score">{statistics.weekDays}/{statistics.weekTotal}</span>
                         </div>
                       );
                     })()}

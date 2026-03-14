@@ -241,7 +241,11 @@
       "weeklyComparison": "Апта салыстырмасы",
       "punchLazy": "Жалқау досты итер! 👊🔥",
       "you": "Сіз",
-      "today": "бүгін"
+      "today": "бүгін",
+      "statusDone": "Бүгін орындалды",
+      "statusFailed": "Орындалмады",
+      "statusSkipped": "Өткізіп жіберілді",
+      "statusPending": "Әлі орындалмады"
     },
     "buttons": {
       "removeHabit": "Әдетті жою"

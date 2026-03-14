@@ -247,7 +247,11 @@
       "weeklyComparison": "Weekly Comparison",
       "punchLazy": "Punch the lazy friend! 👊🔥",
       "you": "You",
-      "today": "today"
+      "today": "today",
+      "statusDone": "Done Today",
+      "statusFailed": "Failed Today",
+      "statusSkipped": "Skipped",
+      "statusPending": "Not Done Yet"
     },
     "buttons": {
       "removeHabit": "Remove Habit"
