@@ -276,6 +276,19 @@
   margin-bottom: 6px;
 }
 
+/* ── Removal animation ─────────────────────────────────────────── */
+.habit-card-wrapper.habit-card--leaving {
+  animation: habitLeaveSlide 0.55s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+@keyframes habitLeaveSlide {
+  0%   { opacity: 1; transform: translateX(0);       max-height: 200px; margin-bottom: 6px; }
+  40%  { opacity: 0; transform: translateX(-90px);   max-height: 200px; margin-bottom: 6px; }
+  100% { opacity: 0; transform: translateX(-90px);   max-height: 0;     margin-bottom: 0;   }
+}
+
 .habit-card-wrapper.has-members {
   margin-bottom: 10px; /* Дополнительный отступ для badge */
 }

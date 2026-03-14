@@ -151,7 +151,7 @@ const WeeklyChart = ({ weeklyData, todayIdx, dayLabels, todayLabel }) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // Main HabitDetail component
 // ─────────────────────────────────────────────────────────────────────────────
-const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = false }) => {
+const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = false, onMembersChanged }) => {
   const { tg, user: currentUser } = useTelegram();
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('myStats');
@@ -342,6 +342,7 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
       const result = await habitService.activatePremium(plan);
       if (result.success) {
         await Promise.all([checkFriendLimit(), loadMembers(true)]);
+        onMembersChanged?.();
         setShowSubscriptionModal(false);
         if (window.Telegram?.WebApp?.showAlert) window.Telegram.WebApp.showAlert(t('habitDetail.toasts.premiumActivated'));
         setTimeout(() => handleShare(), 500);
@@ -412,6 +413,8 @@ const HabitDetail = ({ habit, onClose, onEdit, onDelete, shouldShowFriendHint = 
       await habitService.removeMember(habit.id, memberId);
       await Promise.all([loadMembers(true), checkFriendLimit()]);
       setToast({ message: t('habitDetail.toasts.friendRemoved'), type: 'success' });
+      // Immediately refresh member-count badge in Today.jsx
+      onMembersChanged?.();
     };
     try {
       if (tg?.showConfirm) {

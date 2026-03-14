@@ -156,6 +156,14 @@ useEffect(() => {
   // 🆕 Реф для отслеживания текущей операции свайпа
   const currentSwipeOperation = useRef(null);
 
+  // ── Removal tracking ─────────────────────────────────────────────────────
+  // Set of habit IDs (strings) currently playing their "leave" animation
+  const [leavingHabitIds, setLeavingHabitIds] = useState(new Set());
+  // IDs returned by the last member-counts poll; null = not yet initialized
+  const knownHabitIdsRef = useRef(null);
+  // Stable ref so the interval callback always sees the latest poll function
+  const pollMemberCountsRef = useRef(null);
+
   useEffect(() => {
     console.log('🔍 FAB Hint check:', {
       shouldShowFabHint,
@@ -488,41 +496,91 @@ useEffect(() => {
   }
 }, []);
 
-// ── Member-count polling ──────────────────────────────────────────────────
-// Updates ONLY members_count in cached habits every 10 s — no full reload,
-// no flicker, no swipe interruptions.
-useEffect(() => {
-  const poll = async () => {
-    try {
-      const res = await habitService.getMemberCounts();
-      if (!res?.counts?.length) return;
-      // Build a lookup map: habitId → members_count
-      const map = {};
-      res.counts.forEach(({ id, members_count }) => {
-        map[id] = Number(members_count) || 0;
-      });
-      // Patch only changed habits inside every cached date
-      setDateDataCache(prev => {
-        let changed = false;
-        const next = {};
-        Object.entries(prev).forEach(([date, entry]) => {
-          const nextHabits = entry.habits.map(h => {
-            const fresh = map[h.id];
-            if (fresh === undefined || fresh === h.members_count) return h;
-            changed = true;
-            return { ...h, members_count: fresh };
-          });
-          next[date] = changed ? { ...entry, habits: nextHabits } : entry;
-        });
-        return changed ? next : prev;
-      });
-    } catch { /* silent — polling shouldn't crash the UI */ }
-  };
+// ── Member-count polling + removal detection ──────────────────────────────
+// • Updates members_count badge in real-time (every 10 s or on-demand)
+// • Detects if the current user was removed from a shared habit and
+//   animates the card out immediately — no page reload needed.
+const pollMemberCounts = useCallback(async () => {
+  try {
+    const res = await habitService.getMemberCounts();
+    if (!res?.counts) return;
 
-  const id = setInterval(poll, 10_000);
-  // Also fire immediately on visibility restore
+    // Build lookup: habitId(string) → members_count
+    const map = {};
+    const responseIds = new Set();
+    res.counts.forEach(({ id, members_count }) => {
+      const sid = String(id);
+      map[sid] = Number(members_count) || 0;
+      responseIds.add(sid);
+    });
+
+    // ── Removal detection ────────────────────────────────────────────
+    // On first poll just record which IDs we know about.
+    // On subsequent polls: any ID that vanished = user was removed.
+    if (knownHabitIdsRef.current === null) {
+      knownHabitIdsRef.current = responseIds;
+    } else {
+      const removedIds = [];
+      knownHabitIdsRef.current.forEach(id => {
+        if (!responseIds.has(id)) removedIds.push(id);
+      });
+
+      if (removedIds.length > 0) {
+        // Start leave animation
+        setLeavingHabitIds(prev => {
+          const next = new Set(prev);
+          removedIds.forEach(id => next.add(id));
+          return next;
+        });
+        // After animation completes, purge from cache and clear leaving set
+        setTimeout(() => {
+          setDateDataCache(prev => {
+            const next = {};
+            Object.entries(prev).forEach(([date, entry]) => {
+              next[date] = {
+                ...entry,
+                habits: entry.habits.filter(h => !removedIds.includes(String(h.id)))
+              };
+            });
+            return next;
+          });
+          setLeavingHabitIds(prev => {
+            const next = new Set(prev);
+            removedIds.forEach(id => next.delete(id));
+            return next;
+          });
+        }, 600); // matches animation duration
+      }
+
+      knownHabitIdsRef.current = responseIds;
+    }
+
+    // ── Patch members_count for all cached dates ─────────────────────
+    setDateDataCache(prev => {
+      let changed = false;
+      const next = {};
+      Object.entries(prev).forEach(([date, entry]) => {
+        const nextHabits = entry.habits.map(h => {
+          const fresh = map[String(h.id)];
+          if (fresh === undefined || fresh === h.members_count) return h;
+          changed = true;
+          return { ...h, members_count: fresh };
+        });
+        next[date] = changed ? { ...entry, habits: nextHabits } : entry;
+      });
+      return changed ? next : prev;
+    });
+  } catch { /* silent — polling must never crash the UI */ }
+}, []);
+
+// Keep the ref in sync so the interval always calls the latest closure
+pollMemberCountsRef.current = pollMemberCounts;
+
+useEffect(() => {
+  const tick = () => pollMemberCountsRef.current();
+  const id = setInterval(tick, 10_000);
   const onVisible = () => {
-    if (document.visibilityState === 'visible') poll();
+    if (document.visibilityState === 'visible') tick();
   };
   document.addEventListener('visibilitychange', onVisible);
   return () => {
@@ -899,6 +957,7 @@ useEffect(() => {
         onEdit={handleEditHabit}
         onDelete={handleDeleteHabit}
         shouldShowFriendHint={shouldShowFriendHint}
+        onMembersChanged={() => pollMemberCountsRef.current?.()}
       />
     );
   }
@@ -1060,6 +1119,7 @@ useEffect(() => {
                               onUnmark={isEditableDate ? handleUnmark : undefined}
                               onClick={handleHabitClick}
                               readOnly={!isEditableDate}
+                              isLeaving={leavingHabitIds.has(String(habit.id))}
                             />
                           ))}
                         </div>
@@ -1116,6 +1176,7 @@ useEffect(() => {
                                 setShowSpecialHabitDetail(true);
                               }}
                               readOnly={!isEditableDate}
+                              isLeaving={leavingHabitIds.has(String(habit.id))}
                             />
                           ))}
                         </div>

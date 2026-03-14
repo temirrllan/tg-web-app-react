@@ -4,7 +4,7 @@ import "./HabitCard.css";
 import { useTranslation } from "../../hooks/useTranslation";
 
 const HabitCard = React.memo(
-  ({ habit, onMark, onUnmark, readOnly = false, onClick }) => {
+  ({ habit, onMark, onUnmark, readOnly = false, onClick, isLeaving = false }) => {
     const [loading, setLoading] = useState(false);
     const [swipeOffset, setSwipeOffset] = useState(0);
     const [isAnimating, setIsAnimating] = useState(false);
@@ -365,7 +365,7 @@ const HabitCard = React.memo(
     const hasMembers = habit.members_count && habit.members_count > 0;
 
     return (
-      <div className={`habit-card-wrapper ${hasMembers ? "has-members" : ""}`}>
+      <div className={`habit-card-wrapper ${hasMembers ? "has-members" : ""} ${isLeaving ? "habit-card--leaving" : ""}`}>
         <div className="habit-card-container">
           {rightButton && (
             <div
@@ -466,7 +466,8 @@ const HabitCard = React.memo(
       prevProps.habit.id === nextProps.habit.id &&
       prevProps.habit.today_status === nextProps.habit.today_status &&
       prevProps.habit.members_count === nextProps.habit.members_count &&
-      prevProps.readOnly === nextProps.readOnly
+      prevProps.readOnly === nextProps.readOnly &&
+      prevProps.isLeaving === nextProps.isLeaving
     );
   }
 );
