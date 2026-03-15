@@ -159,10 +159,17 @@ useEffect(() => {
   // ── Removal tracking ─────────────────────────────────────────────────────
   // Set of habit IDs (strings) currently playing their "leave" animation
   const [leavingHabitIds, setLeavingHabitIds] = useState(new Set());
-  // IDs returned by the last member-counts poll; null = not yet initialized
-  const knownHabitIdsRef = useRef(null);
+  // Mirror of today's habits — updated on every dateDataCache change so the
+  // poll callback can compare against it without a stale closure.
+  const todayHabitsRef = useRef([]);
   // Stable ref so the interval callback always sees the latest poll function
   const pollMemberCountsRef = useRef(null);
+
+  // Keep todayHabitsRef in sync so pollMemberCounts always sees fresh IDs
+  useEffect(() => {
+    const today = getTodayDate();
+    todayHabitsRef.current = dateDataCache[today]?.habits || [];
+  }, [dateDataCache]);
 
   useEffect(() => {
     console.log('🔍 FAB Hint check:', {
@@ -515,44 +522,39 @@ const pollMemberCounts = useCallback(async () => {
     });
 
     // ── Removal detection ────────────────────────────────────────────
-    // On first poll just record which IDs we know about.
-    // On subsequent polls: any ID that vanished = user was removed.
-    if (knownHabitIdsRef.current === null) {
-      knownHabitIdsRef.current = responseIds;
-    } else {
-      const removedIds = [];
-      knownHabitIdsRef.current.forEach(id => {
-        if (!responseIds.has(id)) removedIds.push(id);
-      });
+    // Compare what's currently shown in today's list vs what the server
+    // returned.  Any habit that's in the UI but missing from member-counts
+    // means the user was removed (or the habit was deleted).
+    // todayHabitsRef is kept in sync by a separate useEffect above.
+    const removedIds = todayHabitsRef.current
+      .map(h => String(h.id))
+      .filter(id => !responseIds.has(id));
 
-      if (removedIds.length > 0) {
-        // Start leave animation
-        setLeavingHabitIds(prev => {
-          const next = new Set(prev);
-          removedIds.forEach(id => next.add(id));
+    if (removedIds.length > 0) {
+      // Start leave animation on all removed cards
+      setLeavingHabitIds(prev => {
+        const next = new Set(prev);
+        removedIds.forEach(id => next.add(id));
+        return next;
+      });
+      // After animation completes, purge from cache and clear the leaving set
+      setTimeout(() => {
+        setDateDataCache(prev => {
+          const next = {};
+          Object.entries(prev).forEach(([date, entry]) => {
+            next[date] = {
+              ...entry,
+              habits: entry.habits.filter(h => !removedIds.includes(String(h.id)))
+            };
+          });
           return next;
         });
-        // After animation completes, purge from cache and clear leaving set
-        setTimeout(() => {
-          setDateDataCache(prev => {
-            const next = {};
-            Object.entries(prev).forEach(([date, entry]) => {
-              next[date] = {
-                ...entry,
-                habits: entry.habits.filter(h => !removedIds.includes(String(h.id)))
-              };
-            });
-            return next;
-          });
-          setLeavingHabitIds(prev => {
-            const next = new Set(prev);
-            removedIds.forEach(id => next.delete(id));
-            return next;
-          });
-        }, 600); // matches animation duration
-      }
-
-      knownHabitIdsRef.current = responseIds;
+        setLeavingHabitIds(prev => {
+          const next = new Set(prev);
+          removedIds.forEach(id => next.delete(id));
+          return next;
+        });
+      }, 600); // matches CSS animation duration
     }
 
     // ── Patch members_count for all cached dates ─────────────────────
