@@ -580,12 +580,20 @@ pollMemberCountsRef.current = pollMemberCounts;
 
 useEffect(() => {
   const tick = () => pollMemberCountsRef.current();
-  const id = setInterval(tick, 10_000);
+
+  // First poll fires after habits have had a moment to load into dateDataCache.
+  // 2 s delay avoids comparing against an empty ref on the very first render.
+  const initialTimer = setTimeout(tick, 2_000);
+
+  // Then poll every 4 s — fast enough to feel instant to the removed friend.
+  const id = setInterval(tick, 4_000);
+
   const onVisible = () => {
     if (document.visibilityState === 'visible') tick();
   };
   document.addEventListener('visibilitychange', onVisible);
   return () => {
+    clearTimeout(initialTimer);
     clearInterval(id);
     document.removeEventListener('visibilitychange', onVisible);
   };
