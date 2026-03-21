@@ -4,6 +4,7 @@ import { specialHabitsService } from '../services/specialHabits';
 import { useNavigation } from '../hooks/useNavigation';
 import { useTelegramTheme } from '../hooks/useTelegramTheme';
 import Loader from '../components/common/Loader';
+import { getPackBackground } from '../constants/gradientPresets';
 import './SpecialHabitPackDetail.css';
 
 const DAY_PERIOD_ORDER  = ['morning', 'afternoon', 'evening', 'night'];
@@ -13,14 +14,6 @@ const DAY_PERIOD_LABELS = {
   evening:   'Evening',
   night:     'Night',
 };
-
-// Fallback bg palette (same as shop)
-const FALLBACK_COLORS = [
-  '#c8e6c9', '#ffccbc', '#b2ebf2', '#d1c4e9',
-  '#fff9c4', '#f8bbd0', '#dcedc8', '#ffe0b2',
-];
-const getPackBgColor = (pack) =>
-  pack?.bg_color || FALLBACK_COLORS[(pack?.id - 1) % FALLBACK_COLORS.length] || '#e8eaf6';
 
 // Per-achievement tint palette
 const ACH_COLORS = [
@@ -97,7 +90,7 @@ const SpecialHabitPackDetail = ({ pack: initialPack, onClose, onGoToSpecialTab }
   }
 
   const isPurchased  = pack?.is_purchased;
-  const bgColor      = getPackBgColor(pack);
+  const bgColor      = getPackBackground(pack);
   const isFree       = pack.price_stars === 0;
   const priceDisplay = isFree ? 'FREE' : `⭐ ${pack.price_stars}`;
 

@@ -4,28 +4,10 @@ import { specialHabitsService } from '../services/specialHabits';
 import { useNavigation } from '../hooks/useNavigation';
 import { useTelegramTheme } from '../hooks/useTelegramTheme';
 import Loader from '../components/common/Loader';
+import { getPackBackground } from '../constants/gradientPresets';
 import './SpecialHabitsShop.css';
 
 const FILTERS = ['all', 'paid', 'free'];
-
-// Fallback pastel palette — same order as the color swatches in admin
-const FALLBACK_COLORS = [
-  '#c8e6c9', // soft green
-  '#ffccbc', // salmon
-  '#b2ebf2', // teal
-  '#d1c4e9', // lavender
-  '#fff9c4', // yellow
-  '#f8bbd0', // pink
-  '#dcedc8', // lime
-  '#ffe0b2', // orange
-  '#e1f5fe', // light blue
-  '#fce4ec', // rose
-];
-
-const getPackBgColor = (pack) => {
-  if (pack.bg_color) return pack.bg_color;
-  return FALLBACK_COLORS[(pack.id - 1) % FALLBACK_COLORS.length];
-};
 
 const SpecialHabitsShop = ({ onClose, onPackSelect }) => {
   useTelegramTheme();
@@ -127,7 +109,7 @@ const SpecialHabitsShop = ({ onClose, onPackSelect }) => {
 const PackCard = ({ pack, onClick }) => {
   const isFree      = pack.price_stars === 0;
   const hasDiscount = pack.original_price_stars && pack.original_price_stars > pack.price_stars;
-  const bgColor     = getPackBgColor(pack);
+  const bgColor     = getPackBackground(pack);
 
   return (
     <button
