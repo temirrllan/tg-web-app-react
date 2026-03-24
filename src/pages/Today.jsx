@@ -153,8 +153,9 @@ useEffect(() => {
   
   const [dateLoading, setDateLoading] = useState(false);
 
-  // 🆕 Реф для отслеживания текущей операции свайпа
-  const currentSwipeOperation = useRef(null);
+  // 🆕 Реф для отслеживания текущих операций свайпа (per-habit)
+  const pendingSwipes = useRef(new Set());
+  const silentSyncTimer = useRef(null);
 
   // ── Removal tracking ─────────────────────────────────────────────────────
   // Set of habit IDs (strings) currently playing their "leave" animation
@@ -807,35 +808,51 @@ useEffect(() => {
   };
 
   // Оптимистично обновляет привычку в кэше без перезагрузки с сервера
-  const applyOptimisticUpdate = useCallback((habitId, status, currentData) => {
-    const updatedHabits = currentData.habits.map(h => {
-      if (h.id !== habitId) return h;
-      const wasCompleted  = h.today_status === 'completed';
-      const isNowComplete = status === 'completed';
-      // Оптимистично корректируем стрик (+1 если новый done, -1 если снимаем done)
-      const streakDelta = (isNowComplete ? 1 : 0) - (wasCompleted ? 1 : 0);
+  // ✅ КРИТИЧНО: Использует functional state update (prev =>) чтобы ВСЕГДА читать
+  // актуальное состояние, даже если вызвано из stale closure (React.memo)
+  const applyOptimisticUpdate = useCallback((habitId, status) => {
+    let newCompleted = 0;
+    setDateDataCache(prev => {
+      const currentData = prev[selectedDate];
+      if (!currentData) return prev;
+
+      const updatedHabits = currentData.habits.map(h => {
+        if (h.id !== habitId) return h;
+        const wasCompleted  = h.today_status === 'completed';
+        const isNowComplete = status === 'completed';
+        const streakDelta = (isNowComplete ? 1 : 0) - (wasCompleted ? 1 : 0);
+        return {
+          ...h,
+          today_status:       status,
+          is_completed_today: isNowComplete,
+          streak_current:     Math.max(0, (h.streak_current || 0) + streakDelta),
+        };
+      });
+      newCompleted = updatedHabits.filter(h => h.today_status === 'completed').length;
+
       return {
-        ...h,
-        today_status:       status,
-        is_completed_today: isNowComplete,
-        streak_current:     Math.max(0, (h.streak_current || 0) + streakDelta),
+        ...prev,
+        [selectedDate]: {
+          ...currentData,
+          habits: updatedHabits,
+          stats: { ...currentData.stats, completed: newCompleted },
+          timestamp: Date.now()
+        }
       };
     });
-    const newCompleted = updatedHabits.filter(h => h.today_status === 'completed').length;
-    updateDateCache(selectedDate, {
-      ...currentData,
-      habits: updatedHabits,
-      stats: { ...currentData.stats, completed: newCompleted },
-    });
-    return { updatedHabits, newCompleted };
-  }, [selectedDate, updateDateCache]);
+    return { newCompleted };
+  }, [selectedDate]);
 
-  // Тихая фоновая синхронизация — не показывает loader, обновляет кэш без мерцания
-  const silentSync = useCallback((date, operationId) => {
-    setTimeout(async () => {
-      if (currentSwipeOperation.current && currentSwipeOperation.current !== operationId) return;
+  // Тихая фоновая синхронизация — дебаунсированная, ждёт пока ВСЕ свайпы завершатся
+  const silentSync = useCallback((date) => {
+    // Сбрасываем предыдущий таймер — синхронизируем только после последней операции
+    if (silentSyncTimer.current) clearTimeout(silentSyncTimer.current);
+    silentSyncTimer.current = setTimeout(async () => {
+      // Не синхронизируем если есть in-flight операции
+      if (pendingSwipes.current.size > 0) return;
       const freshData = await loadHabitsForDate(date).catch(() => null);
-      if (freshData && currentSwipeOperation.current === operationId) {
+      // Повторная проверка после await — вдруг за это время начался новый свайп
+      if (freshData && pendingSwipes.current.size === 0) {
         updateDateCache(date, freshData);
       }
     }, 1500);
@@ -844,72 +861,66 @@ useEffect(() => {
   // Обработка свайпа — оптимистичное обновление + серверный запрос без перезагрузки
   const handleMark = useCallback(async (habitId, status) => {
     if (!isEditableDate) return;
-    if (currentSwipeOperation.current) return;
-
-    const operationId = `${selectedDate}-${habitId}-${status}-${Date.now()}`;
-    currentSwipeOperation.current = operationId;
-
-    const currentData = dateDataCache[selectedDate];
-    if (!currentData) { currentSwipeOperation.current = null; return; }
+    // Блокируем только повторный свайп на ТУ ЖЕ привычку, другие — не трогаем
+    if (pendingSwipes.current.has(habitId)) return;
+    pendingSwipes.current.add(habitId);
 
     // 1️⃣ Мгновенное оптимистичное обновление UI — без ожидания сервера
-    const { newCompleted } = applyOptimisticUpdate(habitId, status, currentData);
+    // ✅ Использует functional state update — читает АКТУАЛЬНЫЙ стейт, не closure
+    const { newCompleted } = applyOptimisticUpdate(habitId, status);
 
     try {
       // 2️⃣ Запрос на сервер (в фоне, UI уже обновлён)
       await markHabit(habitId, status, selectedDate);
-      habitService.invalidateHabitsCache();
 
-      // 3️⃣ Тихая синхронизация через 1.5с — исправляет streak с сервера без мерцания
-      silentSync(selectedDate, operationId);
+      // 3️⃣ Тихая синхронизация — дебаунсированная, подождёт окончания всех свайпов
+      silentSync(selectedDate);
 
       window.TelegramAnalytics?.track('habit_marked', {
         habit_id: habitId, status, date: selectedDate,
-        total_completed: newCompleted, total_habits: currentData.stats.total,
+        total_completed: newCompleted,
       });
     } catch (error) {
       console.error(`❌ Error marking habit ${habitId}:`, error);
-      // Откат: восстанавливаем оригинальный статус
-      updateDateCache(selectedDate, currentData);
+      // Откат: возвращаем привычку в pending
+      applyOptimisticUpdate(habitId, 'pending');
     } finally {
-      if (currentSwipeOperation.current === operationId) {
-        currentSwipeOperation.current = null;
-      }
+      pendingSwipes.current.delete(habitId);
     }
-  }, [isEditableDate, selectedDate, markHabit, dateDataCache, applyOptimisticUpdate, silentSync, updateDateCache]);
+  }, [isEditableDate, selectedDate, markHabit, applyOptimisticUpdate, silentSync]);
 
   const handleUnmark = useCallback(async (habitId) => {
     if (!isEditableDate) return;
-    if (currentSwipeOperation.current) return;
+    if (pendingSwipes.current.has(habitId)) return;
+    pendingSwipes.current.add(habitId);
 
-    const operationId = `${selectedDate}-${habitId}-unmark-${Date.now()}`;
-    currentSwipeOperation.current = operationId;
-
-    const currentData = dateDataCache[selectedDate];
-    if (!currentData) { currentSwipeOperation.current = null; return; }
+    // Сохраняем предыдущий статус для отката через functional read
+    let prevStatus = 'completed';
+    setDateDataCache(prev => {
+      const h = prev[selectedDate]?.habits?.find(h => h.id === habitId);
+      if (h) prevStatus = h.today_status;
+      return prev; // не меняем стейт, только читаем
+    });
 
     // 1️⃣ Мгновенное оптимистичное обновление
-    applyOptimisticUpdate(habitId, 'pending', currentData);
+    applyOptimisticUpdate(habitId, 'pending');
 
     try {
       // 2️⃣ Запрос на сервер
       await unmarkHabit(habitId, selectedDate);
-      habitService.invalidateHabitsCache();
 
-      // 3️⃣ Тихая синхронизация через 1.5с
-      silentSync(selectedDate, operationId);
+      // 3️⃣ Тихая синхронизация
+      silentSync(selectedDate);
 
       window.TelegramAnalytics?.track('habit_unmarked', { habit_id: habitId, date: selectedDate });
     } catch (error) {
       console.error(`❌ Error unmarking habit ${habitId}:`, error);
-      // Откат
-      updateDateCache(selectedDate, currentData);
+      // Откат к предыдущему статусу
+      applyOptimisticUpdate(habitId, prevStatus);
     } finally {
-      if (currentSwipeOperation.current === operationId) {
-        currentSwipeOperation.current = null;
-      }
+      pendingSwipes.current.delete(habitId);
     }
-  }, [isEditableDate, selectedDate, unmarkHabit, dateDataCache, applyOptimisticUpdate, silentSync, updateDateCache]);
+  }, [isEditableDate, selectedDate, unmarkHabit, applyOptimisticUpdate, silentSync]);
 
   const getMotivationalBackgroundColor = () => {
     const currentData = dateDataCache[selectedDate];
