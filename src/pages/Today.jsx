@@ -157,6 +157,10 @@ useEffect(() => {
   const pendingSwipes = useRef(new Set());
   const silentSyncTimer = useRef(null);
 
+  // ✅ Stable refs для callbacks — чтобы HabitCard (React.memo) всегда вызывал актуальный код
+  const handleMarkRef = useRef(null);
+  const handleUnmarkRef = useRef(null);
+
   // ── Removal tracking ─────────────────────────────────────────────────────
   // Set of habit IDs (strings) currently playing their "leave" animation
   const [leavingHabitIds, setLeavingHabitIds] = useState(new Set());
@@ -405,12 +409,14 @@ useEffect(() => {
 
   // 🆕 КРИТИЧНО: Обновление данных СТРОГО для конкретной даты
   const updateDateCache = useCallback((date, data) => {
-    console.log(`📦 Updating cache for date ${date}:`, {
+    console.log(`📦 updateDateCache for ${date}:`, {
       habits: data.habits?.length,
+      statuses: data.habits?.map(h => `${h.id}:${h.today_status}`).join(', '),
       completed: data.stats?.completed,
-      total: data.stats?.total
+      total: data.stats?.total,
+      caller: new Error().stack?.split('\n')[2]?.trim()
     });
-    
+
     setDateDataCache(prev => ({
       ...prev,
       [date]: {
@@ -816,6 +822,10 @@ useEffect(() => {
       const currentData = prev[selectedDate];
       if (!currentData) return prev;
 
+      // 🔍 DEBUG: Логируем состояние ПЕРЕД обновлением
+      console.log(`🔄 applyOptimisticUpdate: habit=${habitId} → ${status}`);
+      console.log(`   BEFORE:`, currentData.habits.map(h => `${h.id}:${h.today_status}`).join(', '));
+
       const updatedHabits = currentData.habits.map(h => {
         if (h.id !== habitId) return h;
         const wasCompleted  = h.today_status === 'completed';
@@ -829,6 +839,9 @@ useEffect(() => {
         };
       });
       newCompleted = updatedHabits.filter(h => h.today_status === 'completed').length;
+
+      // 🔍 DEBUG: Логируем состояние ПОСЛЕ обновления
+      console.log(`   AFTER:`, updatedHabits.map(h => `${h.id}:${h.today_status}`).join(', '));
 
       return {
         ...prev,
@@ -921,6 +934,21 @@ useEffect(() => {
       pendingSwipes.current.delete(habitId);
     }
   }, [isEditableDate, selectedDate, unmarkHabit, applyOptimisticUpdate, silentSync]);
+
+  // ✅ КРИТИЧНО: Stable callback wrappers через ref
+  // HabitCard с React.memo может держать stale onMark/onUnmark.
+  // Ref всегда указывает на актуальную функцию, а wrapper — стабильная ссылка.
+  handleMarkRef.current = handleMark;
+  handleUnmarkRef.current = handleUnmark;
+
+  const stableHandleMark = useCallback(
+    (habitId, status) => handleMarkRef.current(habitId, status),
+    []
+  );
+  const stableHandleUnmark = useCallback(
+    (habitId) => handleUnmarkRef.current(habitId),
+    []
+  );
 
   const getMotivationalBackgroundColor = () => {
     const currentData = dateDataCache[selectedDate];
@@ -1134,10 +1162,10 @@ useEffect(() => {
                         <div className="day-period-habits">
                           {habitsInPeriod.map((habit) => (
                             <HabitCard
-                              key={`${habit.id}-${selectedDate}-${habit.today_status}`}
+                              key={`${habit.id}-${selectedDate}`}
                               habit={habit}
-                              onMark={isEditableDate ? handleMark : undefined}
-                              onUnmark={isEditableDate ? handleUnmark : undefined}
+                              onMark={isEditableDate ? stableHandleMark : undefined}
+                              onUnmark={isEditableDate ? stableHandleUnmark : undefined}
                               onClick={handleHabitClick}
                               readOnly={!isEditableDate}
                               isLeaving={leavingHabitIds.has(String(habit.id))}
