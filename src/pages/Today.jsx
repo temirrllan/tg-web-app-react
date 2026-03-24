@@ -569,13 +569,16 @@ const pollMemberCounts = useCallback(async () => {
       let changed = false;
       const next = {};
       Object.entries(prev).forEach(([date, entry]) => {
+        let dateChanged = false;
         const nextHabits = entry.habits.map(h => {
           const fresh = map[String(h.id)];
-          if (fresh === undefined || fresh === h.members_count) return h;
+          // ✅ FIX: Сравниваем как строки, т.к. API возвращает строки, а map — числа
+          if (fresh === undefined || String(fresh) === String(h.members_count)) return h;
+          dateChanged = true;
           changed = true;
           return { ...h, members_count: fresh };
         });
-        next[date] = changed ? { ...entry, habits: nextHabits } : entry;
+        next[date] = dateChanged ? { ...entry, habits: nextHabits } : entry;
       });
       return changed ? next : prev;
     });
