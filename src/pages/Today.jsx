@@ -156,6 +156,10 @@ useEffect(() => {
   // 🆕 Реф для отслеживания текущих операций свайпа (per-habit)
   const pendingSwipes = useRef(new Set());
   const silentSyncTimer = useRef(null);
+  // 🆕 Version counter — инкрементируется при каждом оптимистичном обновлении
+  // Если версия изменилась пока silentSync загружал данные — значит были новые свайпы,
+  // и стейл данные с сервера НЕ должны перезаписывать оптимистичные обновления
+  const optimisticVersion = useRef(0);
 
   // ✅ Stable refs для callbacks — чтобы HabitCard (React.memo) всегда вызывал актуальный код
   const handleMarkRef = useRef(null);
@@ -821,6 +825,8 @@ useEffect(() => {
   // актуальное состояние, даже если вызвано из stale closure (React.memo)
   const applyOptimisticUpdate = useCallback((habitId, status) => {
     let newCompleted = 0;
+    // 🆕 Инкрементируем версию — silentSync проверит, не изменилась ли она
+    optimisticVersion.current += 1;
     setDateDataCache(prev => {
       const currentData = prev[selectedDate];
       if (!currentData) return prev;
@@ -866,10 +872,15 @@ useEffect(() => {
     silentSyncTimer.current = setTimeout(async () => {
       // Не синхронизируем если есть in-flight операции
       if (pendingSwipes.current.size > 0) return;
+      // 🆕 Запоминаем версию ПЕРЕД загрузкой — если она изменится пока GET летит,
+      // значит были новые свайпы и стейл данные нельзя применять
+      const versionBefore = optimisticVersion.current;
       const freshData = await loadHabitsForDate(date).catch(() => null);
       // Повторная проверка после await — вдруг за это время начался новый свайп
-      if (freshData && pendingSwipes.current.size === 0) {
+      if (freshData && pendingSwipes.current.size === 0 && optimisticVersion.current === versionBefore) {
         updateDateCache(date, freshData);
+      } else if (freshData && optimisticVersion.current !== versionBefore) {
+        console.log('⚠️ silentSync: skipped stale data — optimistic updates happened during fetch');
       }
     }, 1500);
   }, [loadHabitsForDate, updateDateCache]);
