@@ -38,7 +38,7 @@ const CircularProgress = ({ value, total, color, size = 100 }) => {
   const center = size / 2;
 
   return (
-    <svg width={size} height={size} style={{ transform: 'rotate(-90deg)', display: 'block' }}>
+    <svg viewBox={`0 0 ${size} ${size}`} width="100%" height="100%" style={{ transform: 'rotate(-90deg)', display: 'block' }}>
       <circle
         cx={center} cy={center} r={radius}
         fill="none"
