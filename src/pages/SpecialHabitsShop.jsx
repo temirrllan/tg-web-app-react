@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { specialHabitsService } from '../services/specialHabits';
 import { useNavigation } from '../hooks/useNavigation';
 import { useTelegramTheme } from '../hooks/useTelegramTheme';
+import { useTranslation } from '../hooks/useTranslation';
 import Loader from '../components/common/Loader';
 import { getPackBackground } from '../constants/gradientPresets';
 import './SpecialHabitsShop.css';
@@ -12,6 +13,7 @@ const FILTERS = ['all', 'paid', 'free'];
 const SpecialHabitsShop = ({ onClose, onPackSelect }) => {
   useTelegramTheme();
   useNavigation(onClose);
+  const { t } = useTranslation();
 
   const [packs, setPacks]     = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,8 +41,8 @@ const SpecialHabitsShop = ({ onClose, onPackSelect }) => {
     const val = e.target.value;
     setSearch(val);
     clearTimeout(searchTimer);
-    const t = setTimeout(() => fetchPacks(filter, val), 350);
-    setSearchTimer(t);
+    const timer = setTimeout(() => fetchPacks(filter, val), 350);
+    setSearchTimer(timer);
   };
 
   const handleClearSearch = () => {
@@ -53,7 +55,7 @@ const SpecialHabitsShop = ({ onClose, onPackSelect }) => {
 
       {/* Page title */}
       <div className="shop__header">
-        <h1 className="shop__title">Special Habits</h1>
+        <h1 className="shop__title">{t('specialHabits.shop.title')}</h1>
       </div>
 
       {/* Search bar */}
@@ -65,7 +67,7 @@ const SpecialHabitsShop = ({ onClose, onPackSelect }) => {
         <input
           className="shop__search"
           type="text"
-          placeholder="Search"
+          placeholder={t('specialHabits.shop.searchPlaceholder')}
           value={search}
           onChange={handleSearchChange}
         />
@@ -82,7 +84,7 @@ const SpecialHabitsShop = ({ onClose, onPackSelect }) => {
             className={`shop__filter-pill ${filter === f ? 'shop__filter-pill--active' : ''}`}
             onClick={() => setFilter(f)}
           >
-            {f === 'all' ? 'All' : f === 'paid' ? 'Paid' : 'Free'}
+            {f === 'all' ? t('specialHabits.shop.filterAll') : f === 'paid' ? t('specialHabits.shop.filterPaid') : t('specialHabits.shop.filterFree')}
           </button>
         ))}
       </div>
@@ -93,12 +95,12 @@ const SpecialHabitsShop = ({ onClose, onPackSelect }) => {
       ) : packs.length === 0 ? (
         <div className="shop__empty">
           <p className="shop__empty-icon">📦</p>
-          <p className="shop__empty-text">No packs found</p>
+          <p className="shop__empty-text">{t('specialHabits.shop.noPacks')}</p>
         </div>
       ) : (
         <div className="shop__grid">
           {packs.map(pack => (
-            <PackCard key={pack.id} pack={pack} onClick={() => onPackSelect(pack)} />
+            <PackCard key={pack.id} pack={pack} onClick={() => onPackSelect(pack)} t={t} />
           ))}
         </div>
       )}
@@ -106,7 +108,7 @@ const SpecialHabitsShop = ({ onClose, onPackSelect }) => {
   );
 };
 
-const PackCard = ({ pack, onClick }) => {
+const PackCard = ({ pack, onClick, t }) => {
   const isFree      = pack.price_stars === 0;
   const hasDiscount = pack.original_price_stars && pack.original_price_stars > pack.price_stars;
   const bgColor     = getPackBackground(pack);
@@ -124,7 +126,7 @@ const PackCard = ({ pack, onClick }) => {
           <div className="pack-card__img-placeholder">✨</div>
         )}
         {pack.is_purchased && (
-          <span className="pack-card__owned-badge">✓</span>
+          <span className="pack-card__owned-badge">{t('specialHabits.shop.ownedBadge')}</span>
         )}
       </div>
 
@@ -135,7 +137,7 @@ const PackCard = ({ pack, onClick }) => {
 
         <div className="pack-card__price-row">
           {isFree ? (
-            <span className="pack-card__price-free">FREE</span>
+            <span className="pack-card__price-free">{t('specialHabits.shop.freeBadge')}</span>
           ) : (
             <>
               {hasDiscount && (

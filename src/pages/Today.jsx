@@ -739,10 +739,10 @@ useEffect(() => {
     }
     
     const percentage = (currentStats.completed / currentStats.total) * 100;
-    if (percentage >= 70) return t("habits.almostThere");
-    if (percentage >= 50) return t("habits.greatProgress");
-    
-    return t("habits.keepGoing");
+    if (percentage >= 70) return t("todays.almostThere");
+    if (percentage >= 50) return t("todays.greatProgress");
+
+    return t("todays.keepGoing");
   };
 
   const getMotivationalEmoji = () => {

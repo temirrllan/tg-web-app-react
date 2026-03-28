@@ -3,6 +3,7 @@ import en from '../locales/en.json';
 import ru from '../locales/ru.json';
 import kk from '../locales/kk.json';
 import { habitService } from '../services/habits';
+import cacheService from '../services/cacheService';
 
 const translations = {
   en,
@@ -115,6 +116,10 @@ export const LanguageProvider = ({ children }) => {
           window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
         }
         
+        // Сбрасываем кэш данных, зависящих от языка (категории, привычки)
+        cacheService.invalidate('categories');
+        cacheService.invalidate('habits_');
+
         // Затем обновляем в БД
         try {
           await habitService.updateUserLanguage(newLanguage);

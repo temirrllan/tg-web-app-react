@@ -1,5 +1,56 @@
 {
   
+  "weekNav": {
+    "today": "Сегодня",
+    "yesterday": "Вчера",
+    "tomorrow": "Завтра",
+    "days": ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
+  },
+  "addMenu": {
+    "customHabit": "Своя привычка",
+    "specialHabits": "Особые привычки"
+  },
+  "categories": {
+    "health": "Здоровье",
+    "sport": "Спорт",
+    "study": "Учёба",
+    "work": "Работа",
+    "creativity": "Творчество",
+    "finance": "Финансы",
+    "relationships": "Отношения",
+    "hobby": "Хобби",
+    "mindfulness": "Осознанность"
+  },
+  "friendStatus": {
+    "doneToday": "Выполнено",
+    "undoneYet": "Ещё не выполнено",
+    "failedToday": "Не выполнено",
+    "skipped": "Пропущено"
+  },
+  "subscriptionPage": {
+    "title": "Подписка",
+    "subtitle": "Ваш план Premium",
+    "free": {
+      "title": "Бесплатный план",
+      "description": "Ограничение: 3 привычки"
+    },
+    "premium": {
+      "expires": "Истекает",
+      "daysRemaining": "{{days}} дн. осталось",
+      "lifetimeAccess": "Доступ навсегда",
+      "habitsCreated": "{{count}} привычек создано (безлимит)"
+    },
+    "trial": {
+      "badge": "ПРОБНЫЙ"
+    },
+    "buttons": {
+      "cancelSubscription": "Отменить подписку",
+      "cancelling": "Отмена..."
+    },
+    "history": {
+      "title": "История"
+    }
+  },
   "todays": {
     "completed": "Выполнено",
     "outof": "из",

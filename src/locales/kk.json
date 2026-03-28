@@ -1,4 +1,20 @@
 {
+  "weekNav": {
+    "today": "Бүгін",
+    "yesterday": "Кеше",
+    "tomorrow": "Ертең",
+    "days": ["Дс", "Сс", "Ср", "Бс", "Жм", "Сб", "Жк"]
+  },
+  "addMenu": {
+    "customHabit": "Өз әдетіңіз",
+    "specialHabits": "Арнайы әдеттер"
+  },
+  "friendStatus": {
+    "doneToday": "Бүгін орындалды",
+    "undoneYet": "Әлі орындалмады",
+    "failedToday": "Орындалмады",
+    "skipped": "Өткізіп жіберілді"
+  },
   "todays": {
     "completed": "Орындалған",
     "outof": "ішінен",

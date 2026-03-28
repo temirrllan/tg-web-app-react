@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from '../../hooks/useTranslation';
 import './WeekNavigation.css';
 
 const WeekNavigation = ({ selectedDate, onDateSelect }) => {
+  const { t } = useTranslation();
   const [weekDates, setWeekDates] = useState([]);
   const scrollContainerRef = useRef(null);
   
@@ -60,13 +62,18 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
     const yesterdayStr = formatDateString(yesterday);
     const tomorrowStr = formatDateString(tomorrow);
     
-    if (dateStr === todayStr) return 'Today';
-    if (dateStr === yesterdayStr) return 'Yesterday';
-    if (dateStr === tomorrowStr) return 'Tomorrow';
-    
-    // Для остальных дней показываем ТОЛЬКО день недели без числа
-    const dayName = compareDate.toLocaleDateString('en-US', { weekday: 'short' });
-    return dayName;
+    if (dateStr === todayStr) return t('weekNav.today');
+    if (dateStr === yesterdayStr) return t('weekNav.yesterday');
+    if (dateStr === tomorrowStr) return t('weekNav.tomorrow');
+
+    // Для остальных дней показываем день недели из локализации
+    // getDay(): 0=Sun, 1=Mon, ..., 6=Sat → days массив: [Mon, Tue, Wed, Thu, Fri, Sat, Sun]
+    const dayIndex = compareDate.getDay();
+    const daysArray = t('weekNav.days');
+    if (Array.isArray(daysArray)) {
+      return daysArray[dayIndex === 0 ? 6 : dayIndex - 1];
+    }
+    return compareDate.toLocaleDateString('en-US', { weekday: 'short' });
   };
   
   // Проверка, можно ли редактировать день (только сегодня и вчера)

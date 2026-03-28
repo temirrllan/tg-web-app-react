@@ -1,4 +1,14 @@
 {
+  "weekNav": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "tomorrow": "Tomorrow",
+    "days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+  },
+  "addMenu": {
+    "customHabit": "Custom Habit",
+    "specialHabits": "Special Habits"
+  },
   "todays": {
     "completed": "Completed",
     "outof": "out of",

@@ -1,8 +1,10 @@
 // src/components/modals/AddHabitMenu.jsx
 import React, { useEffect } from 'react';
+import { useTranslation } from '../../hooks/useTranslation';
 import './AddHabitMenu.css';
 
 const AddHabitMenu = ({ isOpen, onClose, onCustomHabit, onSpecialHabits }) => {
+  const { t } = useTranslation();
   useEffect(() => {
     if (!isOpen) return;
     const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -23,7 +25,7 @@ const AddHabitMenu = ({ isOpen, onClose, onCustomHabit, onSpecialHabits }) => {
 
         {/* Custom Habit — slides up second (delay 0ms) */}
         <div className={`ahm-row ahm-row--custom ${isOpen ? 'ahm-row--visible' : ''}`}>
-          <span className="ahm-label">Custom Habit</span>
+          <span className="ahm-label">{t('addMenu.customHabit')}</span>
           <button className="ahm-btn ahm-btn--custom" onClick={onCustomHabit}>
             <span>🩷</span>
           </button>
@@ -31,7 +33,7 @@ const AddHabitMenu = ({ isOpen, onClose, onCustomHabit, onSpecialHabits }) => {
 
         {/* Special Habits — slides up first (delay 60ms) */}
         <div className={`ahm-row ahm-row--special ${isOpen ? 'ahm-row--visible' : ''}`}>
-          <span className="ahm-label">Special Habits</span>
+          <span className="ahm-label">{t('addMenu.specialHabits')}</span>
           <button className="ahm-btn ahm-btn--special" onClick={onSpecialHabits}>
             <span className="ahm-sparkle">✦</span>
           </button>
