@@ -1067,6 +1067,7 @@ useEffect(() => {
         onGoToSpecialTab={() => {
           setShowPackDetail(false);
           setSelectedPack(null);
+          setShowSpecialShop(false);
           setActiveTab('special');
           loadSpecialHabitsForDate(selectedDate);
         }}
@@ -1081,7 +1082,6 @@ useEffect(() => {
         onPackSelect={(pack) => {
           setSelectedPack(pack);
           setShowPackDetail(true);
-          setShowSpecialShop(false);
         }}
       />
     );
