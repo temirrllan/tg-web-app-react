@@ -27,6 +27,8 @@ function AppContent() {
   const [shouldShowSwipeHint, setShouldShowSwipeHint] = useState(false);
   // Флаг для показа подсказки по друзьям (берётся из БД)
   const [shouldShowFriendHint, setShouldShowFriendHint] = useState(false);
+  // Deep link: packId для открытия пакета привычек
+  const [pendingPackId, setPendingPackId] = useState(null);
   
   const { initializeLanguage, language } = useContext(LanguageContext);
 
@@ -109,6 +111,13 @@ function AppContent() {
           const startParam = webApp?.initDataUnsafe?.start_param;
           console.log('🔗 Deep link start_param:', startParam);
           
+          // Deep link: открытие пакета привычек
+          if (startParam && startParam.startsWith('pack_')) {
+            const packId = startParam.replace('pack_', '');
+            console.log('📦 Pack deep link detected, packId:', packId);
+            setPendingPackId(packId);
+          }
+
           if (startParam && startParam.startsWith('join_')) {
             const shareCode = startParam.replace('join_', '');
             console.log('📨 Processing invitation with code:', shareCode);
@@ -139,6 +148,13 @@ function AppContent() {
           const action = urlParams.get('action');
           const code = urlParams.get('code');
           
+          if (action === 'viewpack' && urlParams.get('packId') && !startParam) {
+            const packId = urlParams.get('packId');
+            console.log('📦 Pack deep link from URL params, packId:', packId);
+            setPendingPackId(packId);
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+
           if (action === 'join' && code && !startParam) {
             console.log('📨 Processing invitation from URL params:', code);
             
@@ -322,7 +338,7 @@ function AppContent() {
   return (
     <>
       {/* 🆕 Передаем флаг подсказки */}
-      <Today shouldShowFabHint={shouldShowFabHint} shouldShowSwipeHint={shouldShowSwipeHint} shouldShowFriendHint={shouldShowFriendHint} />
+      <Today shouldShowFabHint={shouldShowFabHint} shouldShowSwipeHint={shouldShowSwipeHint} shouldShowFriendHint={shouldShowFriendHint} pendingPackId={pendingPackId} onPendingPackHandled={() => setPendingPackId(null)} />
       {showProfile && (
         <Profile onClose={() => setShowProfile(false)} />
       )}

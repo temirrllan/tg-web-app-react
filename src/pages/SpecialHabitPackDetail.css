@@ -67,6 +67,28 @@
   margin: 0;
 }
 
+.pd__share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: none;
+  background: rgba(255, 255, 255, 0.35);
+  color: #1c1c1e;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s, transform 0.12s;
+}
+
+.pd__share-btn:active {
+  transform: scale(0.95);
+  opacity: 0.8;
+}
+
 /* ── Body — 16px side padding keeps content away from edges ─────────────── */
 .pd__body {
   padding: 16px 16px 0;
@@ -332,6 +354,11 @@
 
 .dark-theme .pd__profession {
   color: #8E8E93;
+}
+
+.dark-theme .pd__share-btn {
+  background: rgba(255, 255, 255, 0.15);
+  color: #FFFFFF;
 }
 
 .dark-theme .pd__avatar-wrap {

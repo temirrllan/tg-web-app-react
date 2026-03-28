@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { specialHabitsService } from '../services/specialHabits';
 import { useNavigation } from '../hooks/useNavigation';
 import { useTelegramTheme } from '../hooks/useTelegramTheme';
+import { useTranslation } from '../hooks/useTranslation';
 import Loader from '../components/common/Loader';
 import { getPackBackground } from '../constants/gradientPresets';
 import './SpecialHabitPackDetail.css';
@@ -29,6 +30,7 @@ const getAchColor = (idx) => ACH_COLORS[idx % ACH_COLORS.length];
 const SpecialHabitPackDetail = ({ pack: initialPack, onClose, onGoToSpecialTab }) => {
   useTelegramTheme();
   useNavigation(onClose);
+  const { t } = useTranslation();
 
   const [pack, setPack]             = useState(null);
   const [loading, setLoading]       = useState(true);
@@ -81,6 +83,20 @@ const SpecialHabitPackDetail = ({ pack: initialPack, onClose, onGoToSpecialTab }
     }
   };
 
+  const handleShare = () => {
+    if (!pack) return;
+    const tg = window.Telegram?.WebApp;
+    const shareUrl = `https://t.me/CheckHabitlyBot?start=pack_${pack.id}`;
+    const shareText = t('specialHabits.packDetail.shareText', { name: pack.name });
+    const fullUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+
+    if (tg?.openTelegramLink) {
+      tg.openTelegramLink(fullUrl);
+    } else {
+      window.open(fullUrl, '_blank');
+    }
+  };
+
   /* ─── Loading / error states ─────────────────────────────────────────── */
   if (loading) {
     return <div className="pd pd--loading"><Loader size="large" /></div>;
@@ -118,6 +134,14 @@ const SpecialHabitPackDetail = ({ pack: initialPack, onClose, onGoToSpecialTab }
         </div>
         <h1 className="pd__name">{pack.name}</h1>
         <p className="pd__profession">{pack.short_description}</p>
+        <button className="pd__share-btn" onClick={handleShare}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+            <polyline points="16 6 12 2 8 6"/>
+            <line x1="12" y1="2" x2="12" y2="15"/>
+          </svg>
+          {t('specialHabits.packDetail.shareButton')}
+        </button>
       </div>
 
       <div className="pd__body">

@@ -30,7 +30,7 @@ import SpecialHabitDetail from './SpecialHabitDetail';
 import AchievementUnlockedPopup from '../components/modals/AchievementUnlockedPopup';
 import BoredBear from "../components/habits/BoredBear";
 
-const Today = ({ shouldShowFabHint = false, shouldShowSwipeHint = false, shouldShowFriendHint = false }) => {
+const Today = ({ shouldShowFabHint = false, shouldShowSwipeHint = false, shouldShowFriendHint = false, pendingPackId = null, onPendingPackHandled = null }) => {
   const { t } = useTranslation();
   const { user } = useTelegram();
   useTelegramTheme();
@@ -90,6 +90,15 @@ const Today = ({ shouldShowFabHint = false, shouldShowSwipeHint = false, shouldS
 
 
 
+
+  // ── Deep link: auto-open pack by ID ──────────────────────────────────────
+  useEffect(() => {
+    if (!pendingPackId) return;
+    console.log('📦 Auto-opening pack from deep link, id:', pendingPackId);
+    setSelectedPack({ id: Number(pendingPackId) });
+    setShowPackDetail(true);
+    if (onPendingPackHandled) onPendingPackHandled();
+  }, [pendingPackId, onPendingPackHandled]);
 
     const groupHabitsByDayPeriod = (habits) => {
   const periods = {

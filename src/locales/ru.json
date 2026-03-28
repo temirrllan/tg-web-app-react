@@ -303,7 +303,9 @@
         "night": "Ночь"
       },
       "purchasing": "Покупаем...",
-      "purchaseError": "Ошибка покупки. Попробуйте ещё раз."
+      "purchaseError": "Ошибка покупки. Попробуйте ещё раз.",
+      "shareButton": "Поделиться",
+      "shareText": "Посмотри этот набор привычек: «{{name}}»!\n\nПопробуй в Checkhabitly!"
     },
     "detail": {
       "motivation": "Молодец, друг! 🔥",

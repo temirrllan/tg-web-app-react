@@ -358,7 +358,9 @@
         "night": "Night"
       },
       "purchasing": "Purchasing...",
-      "purchaseError": "Purchase failed. Please try again."
+      "purchaseError": "Purchase failed. Please try again.",
+      "shareButton": "Share",
+      "shareText": "Check out this habit pack: \"{{name}}\"!\n\nTry it in Checkhabitly!"
     },
     "detail": {
       "motivation": "Good Job My Friend! 🔥",
