@@ -8,13 +8,7 @@ import Loader from '../components/common/Loader';
 import { getPackBackground } from '../constants/gradientPresets';
 import './SpecialHabitPackDetail.css';
 
-const DAY_PERIOD_ORDER  = ['morning', 'afternoon', 'evening', 'night'];
-const DAY_PERIOD_LABELS = {
-  morning:   'Morning',
-  afternoon: 'Afternoon',
-  evening:   'Evening',
-  night:     'Night',
-};
+const DAY_PERIOD_ORDER = ['morning', 'afternoon', 'evening', 'night'];
 
 // Per-achievement tint palette
 const ACH_COLORS = [
@@ -44,7 +38,7 @@ const SpecialHabitPackDetail = ({ pack: initialPack, onClose, onGoToSpecialTab }
       setPack(data.pack);
     } catch (err) {
       console.error('Failed to load pack:', err);
-      setError('Failed to load pack details');
+      setError(t('specialHabits.packDetail.loadError'));
     } finally {
       setLoading(false);
     }
@@ -77,7 +71,7 @@ const SpecialHabitPackDetail = ({ pack: initialPack, onClose, onGoToSpecialTab }
       }
     } catch (err) {
       console.error('Purchase error:', err);
-      setError('Purchase failed. Please try again.');
+      setError(t('specialHabits.packDetail.purchaseError'));
     } finally {
       if (!pack || pack.price_stars === 0) setPurchasing(false);
     }
@@ -108,7 +102,7 @@ const SpecialHabitPackDetail = ({ pack: initialPack, onClose, onGoToSpecialTab }
   const isPurchased  = pack?.is_purchased;
   const bgColor      = getPackBackground(pack);
   const isFree       = pack.price_stars === 0;
-  const priceDisplay = isFree ? 'FREE' : `⭐ ${pack.price_stars}`;
+  const priceDisplay = isFree ? t('specialHabits.packDetail.freeBadge') : `⭐ ${pack.price_stars}`;
 
   // Group templates by day_period
   const groupedHabits = {};
@@ -149,19 +143,19 @@ const SpecialHabitPackDetail = ({ pack: initialPack, onClose, onGoToSpecialTab }
         {/* ── Stats row ─────────────────────────────────────────────── */}
         <div className="pd__stats">
           <div className="pd__stat">
-            <span className="pd__stat-label">Habits</span>
+            <span className="pd__stat-label">{t('specialHabits.packDetail.statsHabits')}</span>
             <span className="pd__stat-val">
               {isPurchased ? (pack.habits_owned || 0) : 0} / {habitsTotal}
             </span>
           </div>
           <div className="pd__stat">
-            <span className="pd__stat-label">Achievement</span>
+            <span className="pd__stat-label">{t('specialHabits.packDetail.statsAchievement')}</span>
             <span className="pd__stat-val">
               {isPurchased ? (pack.achievements_unlocked || 0) : 0} / {achTotal}
             </span>
           </div>
           <div className="pd__stat">
-            <span className="pd__stat-label">Price</span>
+            <span className="pd__stat-label">{t('specialHabits.packDetail.statsPrice')}</span>
             <span className="pd__stat-val">{priceDisplay}</span>
           </div>
         </div>
@@ -169,7 +163,7 @@ const SpecialHabitPackDetail = ({ pack: initialPack, onClose, onGoToSpecialTab }
         {/* ── CTA button ────────────────────────────────────────────── */}
         {isPurchased ? (
           <button className="pd__cta pd__cta--owned" onClick={onGoToSpecialTab}>
-            I Have This Habits
+            {t('specialHabits.packDetail.ownedButton')}
           </button>
         ) : (
           <button
@@ -177,7 +171,7 @@ const SpecialHabitPackDetail = ({ pack: initialPack, onClose, onGoToSpecialTab }
             onClick={handlePurchase}
             disabled={purchasing}
           >
-            {purchasing ? 'Processing…' : isFree ? 'Unlock for Free' : 'Unlock the Habit'}
+            {purchasing ? t('specialHabits.packDetail.processing') : isFree ? t('specialHabits.packDetail.unlockForFree') : t('specialHabits.packDetail.unlockButton')}
           </button>
         )}
 
@@ -196,7 +190,7 @@ const SpecialHabitPackDetail = ({ pack: initialPack, onClose, onGoToSpecialTab }
                   window.Telegram?.WebApp?.openLink?.(pack.learn_more_url);
                 }}
               >
-                Learn More
+                {t('specialHabits.packDetail.learnMore')}
               </a>
             )}
           </div>
@@ -205,13 +199,13 @@ const SpecialHabitPackDetail = ({ pack: initialPack, onClose, onGoToSpecialTab }
         {/* ── Habits ────────────────────────────────────────────────── */}
         {(pack.habits || []).length > 0 && (
           <div className="pd__section">
-            <h3 className="pd__section-title">Habits</h3>
+            <h3 className="pd__section-title">{t('specialHabits.packDetail.statsHabits')}</h3>
             {DAY_PERIOD_ORDER.map(period => {
               const habits = groupedHabits[period];
               if (!habits?.length) return null;
               return (
                 <div key={period} className="pd__period">
-                  <p className="pd__period-label">{DAY_PERIOD_LABELS[period]}</p>
+                  <p className="pd__period-label">{t(`specialHabits.packDetail.dayPeriod.${period}`)}</p>
                   <div className="pd__habit-list">
                     {habits.map(habit => (
                       <div
@@ -231,7 +225,7 @@ const SpecialHabitPackDetail = ({ pack: initialPack, onClose, onGoToSpecialTab }
                         <div className="pd__habit-info">
                           <span className="pd__habit-name">{habit.title}</span>
                           {habit.goal && (
-                            <span className="pd__habit-goal">Goal: {habit.goal}</span>
+                            <span className="pd__habit-goal">{t('specialHabits.packDetail.goal')}: {habit.goal}</span>
                           )}
                         </div>
                       </div>
@@ -246,7 +240,7 @@ const SpecialHabitPackDetail = ({ pack: initialPack, onClose, onGoToSpecialTab }
         {/* ── Achievements ──────────────────────────────────────────── */}
         {(pack.achievements || []).length > 0 && (
           <div className="pd__section pd__section--last">
-            <h3 className="pd__section-title">Achievement</h3>
+            <h3 className="pd__section-title">{t('specialHabits.packDetail.achievements')}</h3>
             <div className="pd__ach-list">
               {pack.achievements.map((a, idx) => {
                 const { bg, icon: iconBg } = getAchColor(idx);
@@ -270,7 +264,7 @@ const SpecialHabitPackDetail = ({ pack: initialPack, onClose, onGoToSpecialTab }
                         {count && <span className="pd__ach-count">{count}</span>}
                       </span>
                       <span className="pd__ach-desc">
-                        Perform the habit: {a.required_count} times
+                        {t('specialHabitDetail.performHabit', { count: a.required_count })}
                       </span>
                     </div>
                   </div>

@@ -354,6 +354,10 @@
         "night": "Ночь"
       },
       "purchasing": "Покупаем...",
+      "unlockForFree": "Получить бесплатно",
+      "processing": "Обработка…",
+      "loadError": "Не удалось загрузить пакет",
+      "goal": "Цель",
       "purchaseError": "Ошибка покупки. Попробуйте ещё раз.",
       "shareButton": "Поделиться",
       "shareText": "Посмотри этот набор привычек: «{{name}}»!\n\nПопробуй в Checkhabitly!"

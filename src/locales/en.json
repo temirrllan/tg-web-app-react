@@ -368,6 +368,10 @@
         "night": "Night"
       },
       "purchasing": "Purchasing...",
+      "unlockForFree": "Unlock for Free",
+      "processing": "Processing…",
+      "loadError": "Failed to load pack details",
+      "goal": "Goal",
       "purchaseError": "Purchase failed. Please try again.",
       "shareButton": "Share",
       "shareText": "Check out this habit pack: \"{{name}}\"!\n\nTry it in Checkhabitly!"
