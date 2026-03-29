@@ -46,7 +46,7 @@ const CreateHabitForm = ({ onClose, onSuccess }) => {
   const [repeatMode, setRepeatMode] = useState("everyday");
 
   const TITLE_MAX_LENGTH = 25;
-  const GOAL_MAX_LENGTH = 35;
+  const GOAL_MAX_LENGTH = 100;
 
   // ❌ УДАЛИТЬ весь блок DAY_PERIODS
   // const DAY_PERIODS = [
