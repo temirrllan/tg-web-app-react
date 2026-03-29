@@ -22,6 +22,11 @@ export const specialHabitsService = {
     return data;
   },
 
+  async confirmPayment(packId) {
+    const { data } = await api.post(`/special-habits/packs/${packId}/confirm-payment`);
+    return data;
+  },
+
   async getMyPacks() {
     const { data } = await api.get('/special-habits/my-packs');
     return data;

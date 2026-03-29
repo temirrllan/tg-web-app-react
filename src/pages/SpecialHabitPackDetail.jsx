@@ -46,23 +46,6 @@ const SpecialHabitPackDetail = ({ pack: initialPack, onClose, onGoToSpecialTab }
 
   useEffect(() => { loadPack(); }, [loadPack]);
 
-  // After payment, poll until the webhook marks the purchase as completed
-  const waitForPurchase = useCallback(async (packId, maxAttempts = 10, delayMs = 1500) => {
-    for (let i = 0; i < maxAttempts; i++) {
-      await new Promise(r => setTimeout(r, delayMs));
-      try {
-        const data = await specialHabitsService.getPackDetails(packId);
-        if (data.pack?.is_purchased) {
-          setPack(data.pack);
-          return true;
-        }
-      } catch (err) {
-        console.warn('Poll attempt failed:', err);
-      }
-    }
-    return false;
-  }, []);
-
   const handlePurchase = async () => {
     if (!pack || purchasing) return;
     setPurchasing(true);
@@ -78,12 +61,13 @@ const SpecialHabitPackDetail = ({ pack: initialPack, onClose, onGoToSpecialTab }
         if (tg?.openInvoice) {
           tg.openInvoice(result.invoice_link, async (status) => {
             if (status === 'paid') {
-              // Webhook may not have arrived yet — poll until purchase is confirmed
-              const confirmed = await waitForPurchase(pack.id);
-              if (!confirmed) {
-                // Fallback: reload once more, pack should be ready by now
-                await loadPack();
+              try {
+                // Server-side: waits for webhook, then creates habits as fallback
+                await specialHabitsService.confirmPayment(pack.id);
+              } catch (err) {
+                console.error('Confirm payment error:', err);
               }
+              await loadPack();
             }
             setPurchasing(false);
           });
