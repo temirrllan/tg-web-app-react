@@ -282,6 +282,19 @@ export const useHabits = () => {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [loadTodayHabits]);
 
+  // Перезагрузка при смене языка
+  useEffect(() => {
+    const handleLanguageChanged = () => {
+      console.log('🌍 Language changed, reloading habits...');
+      habitService.invalidateHabitsCache();
+      lastFetchRef.current = null;
+      loadTodayHabits(false, true);
+    };
+
+    window.addEventListener('language-changed', handleLanguageChanged);
+    return () => window.removeEventListener('language-changed', handleLanguageChanged);
+  }, [loadTodayHabits]);
+
   return {
     habits,
     todayHabits,

@@ -120,6 +120,9 @@ export const LanguageProvider = ({ children }) => {
         cacheService.invalidate('categories');
         cacheService.invalidate('habits_');
 
+        // Уведомляем компоненты о смене языка для перезагрузки данных
+        window.dispatchEvent(new CustomEvent('language-changed', { detail: { language: newLanguage } }));
+
         // Затем обновляем в БД
         try {
           await habitService.updateUserLanguage(newLanguage);

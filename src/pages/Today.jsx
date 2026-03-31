@@ -137,6 +137,16 @@ useEffect(() => {
   console.log('🧹 Clearing date cache on mount to ensure fresh data');
   setDateDataCache({});
 }, []);
+
+// Очистка кэша дат при смене языка
+useEffect(() => {
+  const handleLanguageChanged = () => {
+    console.log('🌍 Language changed, clearing date cache...');
+    setDateDataCache({});
+  };
+  window.addEventListener('language-changed', handleLanguageChanged);
+  return () => window.removeEventListener('language-changed', handleLanguageChanged);
+}, []);
   const getTodayDate = () => {
     const today = new Date();
     const year = today.getFullYear();
