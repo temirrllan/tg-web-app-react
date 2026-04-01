@@ -294,6 +294,7 @@
 }
 
 .subscription-new__promo-wrapper {
+  margin-bottom: 20px;
   position: relative;
   background: white;
   border-radius: 12px;
@@ -566,6 +567,7 @@
 
 .dark-theme .subscription-new__promo-wrapper {
   background: #2C2C2E;
+  margin-bottom: 20px;
 }
 
 .dark-theme .subscription-new__promo-field {
