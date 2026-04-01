@@ -294,7 +294,6 @@
 }
 
 .subscription-new__promo-wrapper {
-  margin-bottom: 20px;
   position: relative;
   background: white;
   border-radius: 12px;
@@ -343,10 +342,13 @@
 
 .subscription-new__promo-message--success {
   color: #34C759;
+  margin-bottom: 20px;
 }
 
 .subscription-new__promo-message--error {
   color: #FF3B30;
+    margin-bottom: 20px;
+
 }
 
 .subscription-new__benefits {
@@ -566,7 +568,6 @@
 
 .dark-theme .subscription-new__promo-wrapper {
   background: #2C2C2E;
-  margin-bottom: 20px;
 }
 
 .dark-theme .subscription-new__promo-field {
