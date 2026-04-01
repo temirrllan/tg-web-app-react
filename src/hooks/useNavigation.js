@@ -2,41 +2,64 @@ import { useEffect, useRef, useCallback } from 'react';
 
 /**
  * useNavigation — управляет Telegram BackButton.
- * Пока компонент активен (isVisible=true) — перехватывает backButton.hide(),
- * чтобы никакой внешний код (темы, аналитика, интервалы) не мог скрыть кнопку.
+ * Пока компонент активен (isVisible=true) — показывает кнопку «Назад».
+ * При размонтировании — надёжно скрывает кнопку, даже при быстрых переходах.
  */
+
+// Глобальный счётчик активных навигаций — если 0, кнопку надо скрыть
+let activeNavigationCount = 0;
+
 export const useNavigation = (onBack = null, options = {}) => {
   const { isVisible = true } = options;
   const onBackRef = useRef(onBack);
+  const registeredRef = useRef(false);
+  const handleBackRef = useRef(null);
   onBackRef.current = onBack;
 
   useEffect(() => {
     const backButton = window.Telegram?.WebApp?.BackButton;
     if (!backButton) return;
 
+    if (!isVisible) {
+      return;
+    }
+
     const handleBack = () => {
       if (onBackRef.current) onBackRef.current();
       else window.history.back();
     };
 
-    if (isVisible) {
-      // Сохраняем оригинальный hide и заменяем на no-op,
-      // чтобы никакой внешний код не мог скрыть кнопку пока страница активна
-      const originalHide = backButton.hide;
-      backButton.hide = () => {};
+    handleBackRef.current = handleBack;
+    registeredRef.current = true;
+    activeNavigationCount++;
 
-      backButton.show();
-      backButton.onClick(handleBack);
+    backButton.show();
+    backButton.onClick(handleBack);
 
-      return () => {
-        // Восстанавливаем hide и скрываем кнопку при размонтировании
-        backButton.hide = originalHide;
-        backButton.offClick?.(handleBack);
-        backButton.hide();
-      };
-    } else {
-      backButton.hide();
-    }
+    return () => {
+      registeredRef.current = false;
+      activeNavigationCount--;
+
+      backButton.offClick?.(handleBack);
+
+      // Скрываем кнопку только если нет других активных навигаций
+      // Используем микротаск чтобы дать следующей странице зарегистрироваться
+      Promise.resolve().then(() => {
+        if (activeNavigationCount <= 0) {
+          activeNavigationCount = 0;
+          // Вызываем hide напрямую на прототипе, минуя любые перехваты
+          const btn = window.Telegram?.WebApp?.BackButton;
+          if (btn) {
+            // Принудительно скрываем — обходим возможные no-op перехваты
+            try {
+              Object.getPrototypeOf(btn)?.hide?.call(btn);
+            } catch {
+              btn.hide();
+            }
+          }
+        }
+      });
+    };
   }, [isVisible]);
 
   const goBack = useCallback(() => {
