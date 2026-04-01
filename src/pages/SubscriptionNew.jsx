@@ -1,4 +1,4 @@
-// src/pages/SubscriptionNew.jsx - ИСПРАВЛЕННАЯ ОБРАБОТКА ОПЛАТЫ
+// src/pages/SubscriptionNew.jsx - С ПОДДЕРЖКОЙ ПРОМОКОДОВ
 
 import React, { useState, useEffect } from 'react';
 import { useNavigation } from '../hooks/useNavigation';
@@ -11,11 +11,13 @@ import { useTelegramTheme } from '../hooks/useTelegramTheme';
 const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
   const { t } = useTranslation();
   useNavigation(onClose);
-  
+
   const [selectedPlan, setSelectedPlan] = useState('6_months');
   const [quantity, setQuantity] = useState(1);
   const [buyAsGift, setBuyAsGift] = useState(false);
   const [promoCode, setPromoCode] = useState('');
+  const [promoValidation, setPromoValidation] = useState(null); // { valid, discount_stars, bonus_days, final_price, error }
+  const [isValidatingPromo, setIsValidatingPromo] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   useTelegramTheme();
@@ -32,53 +34,48 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
     }
   }, [preselectedPlan]);
 
-  // 🔥 НОВЫЙ: Слушатель события payment_success
+  // Сбрасываем промо-валидацию при смене плана
+  useEffect(() => {
+    if (promoValidation?.valid) {
+      // Перевалидируем для нового плана
+      handleApplyPromo(true);
+    }
+  }, [selectedPlan]);
+
+  // Слушатель события payment_success
   useEffect(() => {
     const handlePaymentSuccess = async (event) => {
       console.log('🎉 Payment success event received:', event.detail);
-      
-      // Небольшая задержка для визуального эффекта
       setTimeout(() => {
-        // Закрываем страницу подписки
         onClose();
       }, 500);
     };
 
     window.addEventListener('payment_success', handlePaymentSuccess);
-    
     return () => {
       window.removeEventListener('payment_success', handlePaymentSuccess);
     };
   }, [onClose]);
 
   const plans = [
-    // { 
-    //   id: 'test',
-    //   name: t('subscriptionNew.plans.test.name'), 
-    //   total: 1,
-    //   perMonth: 1,
-    //   badge: t('subscriptionNew.plans.test.badge'),
-    //   testMode: true,
-    //   description: t('subscriptionNew.plans.test.description')
-    // },
-    { 
+    {
       id: 'month',
-      name: t('subscriptionNew.plans.month.name'), 
-      total: 59, // тута 59
+      name: t('subscriptionNew.plans.month.name'),
+      total: 59,
       perMonth: 59,
       badge: null
     },
-    { 
-      id: '6_months', 
-      name: t('subscriptionNew.plans.sixMonths.name'), 
+    {
+      id: '6_months',
+      name: t('subscriptionNew.plans.sixMonths.name'),
       total: 299,
       perMonth: 49,
       badge: null,
-      selected: true 
+      selected: true
     },
-    { 
-      id: '1_year', 
-      name: t('subscriptionNew.plans.oneYear.name'), 
+    {
+      id: '1_year',
+      name: t('subscriptionNew.plans.oneYear.name'),
       total: 500,
       perMonth: 41,
       badge: t('subscriptionNew.plans.oneYear.badge')
@@ -97,6 +94,14 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
     return plan ? plan.total * quantity : 0;
   };
 
+  const getDiscountedPrice = () => {
+    if (promoValidation?.valid && promoValidation.discount_stars > 0) {
+      const originalPrice = getSelectedPlanPrice();
+      return Math.max(0, originalPrice - promoValidation.discount_stars);
+    }
+    return getSelectedPlanPrice();
+  };
+
   const handleQuantityChange = (delta) => {
     const newQuantity = quantity + delta;
     if (newQuantity >= 1 && newQuantity <= 10) {
@@ -104,83 +109,124 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
     }
   };
 
+  const handleApplyPromo = async (silent = false) => {
+    const code = promoCode.trim();
+    if (!code) {
+      if (!silent) setPromoValidation({ valid: false, error: 'empty_code' });
+      return;
+    }
+
+    setIsValidatingPromo(true);
+    try {
+      const result = await telegramStarsService.validatePromoCode(code, selectedPlan);
+
+      if (result.success && result.valid) {
+        setPromoValidation({
+          valid: true,
+          discount_stars: result.discount_stars,
+          bonus_days: result.bonus_days,
+          final_price: result.final_price,
+          original_price: result.original_price,
+          promo_id: result.promo_id
+        });
+      } else {
+        setPromoValidation({
+          valid: false,
+          error: result.error || 'not_found'
+        });
+      }
+    } catch (error) {
+      console.error('Promo validation error:', error);
+      setPromoValidation({ valid: false, error: 'server_error' });
+    } finally {
+      setIsValidatingPromo(false);
+    }
+  };
+
+  const handleClearPromo = () => {
+    setPromoCode('');
+    setPromoValidation(null);
+  };
+
+  const getPromoErrorMessage = (error) => {
+    const messages = {
+      not_found: t('subscriptionNew.promo.invalid'),
+      expired: t('subscriptionNew.promo.expired'),
+      already_used: t('subscriptionNew.promo.used'),
+      max_used: t('subscriptionNew.promo.maxUsed'),
+      inactive: t('subscriptionNew.promo.invalid'),
+      not_started: t('subscriptionNew.promo.invalid'),
+      empty_code: '',
+      server_error: t('subscriptionNew.promo.error')
+    };
+    return messages[error] || t('subscriptionNew.promo.invalid');
+  };
+
   const handleSubscribe = async () => {
     if (!agreedToTerms || isProcessing) {
       console.log('⚠️ Cannot subscribe: terms not agreed or already processing');
       return;
     }
-    
+
     console.log('🔄 Starting subscription process...');
     setIsProcessing(true);
-    
+
     try {
       const tg = window.Telegram?.WebApp;
-      
-      // 🔥 ВАЖНО: Показываем индикатор загрузки
+
       if (tg?.MainButton) {
         tg.MainButton.showProgress();
       }
-      
-      // Показываем предупреждение для тестового плана
-      if (selectedPlan === 'test') {
-        if (tg?.showPopup) {
-          const shouldContinue = await new Promise((resolve) => {
-            tg.showPopup({
-              title: t('subscriptionNew.testMode.popup.title'),
-              message: t('subscriptionNew.testMode.popup.message'),
-              buttons: [
-                { id: 'continue', type: 'default', text: t('subscriptionNew.testMode.popup.continue') },
-                { id: 'cancel', type: 'cancel', text: t('subscriptionNew.testMode.popup.cancel') }
-              ]
-            }, (button_id) => {
-              resolve(button_id === 'continue');
-            });
-          });
-          
-          if (!shouldContinue) {
-            setIsProcessing(false);
-            return;
-          }
-        }
-      }
-      
-      console.log('💳 Opening payment form for plan:', selectedPlan);
 
-      // 🔥 КРИТИЧНО: Ждём завершения оплаты
-      const result = await telegramStarsService.purchaseSubscription(selectedPlan);
-      
+      const discountedPrice = getDiscountedPrice();
+      const appliedPromoCode = promoValidation?.valid ? promoCode.trim() : null;
+
+      // Если цена = 0 (100% скидка) — бесплатная активация
+      if (discountedPrice === 0 && appliedPromoCode) {
+        console.log('🎁 Free activation with promo code');
+        const result = await telegramStarsService.activateFreeSubscription(selectedPlan, appliedPromoCode);
+        console.log('✅ Free activation completed:', result);
+
+        if (tg?.showAlert) {
+          tg.showAlert(t('subscriptionNew.promo.activatedFree'));
+        }
+        return;
+      }
+
+      // Обычная оплата (возможно со скидкой)
+      console.log('💳 Opening payment form for plan:', selectedPlan);
+      const result = await telegramStarsService.purchaseSubscription(selectedPlan, appliedPromoCode);
       console.log('✅ Payment completed:', result);
-      
-      // 🔥 Успех! UI обновится автоматически через event listener
-      
+
     } catch (error) {
       console.error('💥 Payment error:', error);
-      
-      // Сбрасываем состояние только при ошибке
+
       setIsProcessing(false);
-      
-      // Скрываем прогресс
+
       const tg = window.Telegram?.WebApp;
       if (tg?.MainButton) {
         tg.MainButton.hideProgress();
       }
-      
+
       if (error.message === 'Payment cancelled') {
         console.log('User cancelled payment');
         return;
       }
-      
+
       let errorMessage = t('subscriptionNew.errors.failed');
-      
+
       if (error.message === 'bot_blocked') {
         errorMessage = t('subscriptionNew.errors.botBlocked.message');
       } else if (error.message.includes('not available')) {
         errorMessage = t('subscriptionNew.errors.notAvailable');
       } else if (error.message.includes('insufficient')) {
-        const price = getSelectedPlanPrice();
+        const price = getDiscountedPrice();
         errorMessage = t('subscriptionNew.errors.insufficientStars.message', { price });
+      } else if (error.message.includes('promo_')) {
+        // Ошибка промокода при оплате
+        errorMessage = t('subscriptionNew.promo.invalidOnPayment');
       }
-      
+
       if (tg?.showPopup) {
         if (error.message === 'bot_blocked') {
           tg.showPopup({
@@ -218,6 +264,8 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
   };
 
   const selectedPrice = getSelectedPlanPrice();
+  const discountedPrice = getDiscountedPrice();
+  const hasDiscount = promoValidation?.valid && discountedPrice < selectedPrice;
   const selectedPlanData = plans.find(p => p.id === selectedPlan);
 
   return (
@@ -227,23 +275,6 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
           <h2 className="subscription-new__title">{t('subscriptionNew.title')}</h2>
           <p className="subscription-new__subtitle">{t('subscriptionNew.subtitle')}</p>
         </div>
-
-        {/* Test Mode Warning */}
-        {selectedPlanData?.testMode && (
-          <div 
-            style={{
-              background: '#FFE4B5',
-              border: '1px solid #FFA500',
-              borderRadius: '12px',
-              padding: '12px',
-              marginBottom: '16px',
-              fontSize: '14px',
-              color: '#8B4513',
-              textAlign: 'center'
-            }}
-            dangerouslySetInnerHTML={{ __html: t('subscriptionNew.testMode.warning') }}
-          />
-        )}
 
         {/* Payment Method */}
         <div className="subscription-new__section">
@@ -262,10 +293,10 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
         {/* Subscription Plans */}
         <div className="subscription-new__section">
           <h3 className="subscription-new__section-title">{t('subscriptionNew.sections.subscriptionPlans')}</h3>
-          
+
           {plans.map((plan) => (
-            <label 
-              key={plan.id} 
+            <label
+              key={plan.id}
               className={`subscription-new__plan ${selectedPlan === plan.id ? 'subscription-new__plan--selected' : ''}`}
             >
               <input
@@ -283,11 +314,11 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
                 <div>
                   <span className="subscription-new__plan-name">{plan.name}</span>
                   {plan.badge && (
-                    <span style={{ 
-                      marginLeft: '8px', 
-                      padding: '2px 6px', 
-                      background: '#FF9500', 
-                      borderRadius: '4px', 
+                    <span style={{
+                      marginLeft: '8px',
+                      padding: '2px 6px',
+                      background: '#FF9500',
+                      borderRadius: '4px',
                       fontSize: '12px',
                       color: 'white',
                       fontWeight: 'bold'
@@ -301,12 +332,71 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
                 </span>
               </div>
               <span className="subscription-new__plan-price">
-                {t('subscriptionNew.plans.perMonth', { 
-                  stars: plan.perMonth < 1 ? '<1' : Math.round(plan.perMonth) 
+                {t('subscriptionNew.plans.perMonth', {
+                  stars: plan.perMonth < 1 ? '<1' : Math.round(plan.perMonth)
                 })}
               </span>
             </label>
           ))}
+        </div>
+
+        {/* Promo Code */}
+        <div className="subscription-new__section">
+          <h3 className="subscription-new__section-title">{t('subscriptionNew.promo.title')}</h3>
+          <div className="subscription-new__promo">
+            <div className="subscription-new__promo-input-row">
+              <input
+                type="text"
+                className="subscription-new__promo-input"
+                placeholder={t('subscriptionNew.promo.placeholder')}
+                value={promoCode}
+                onChange={(e) => {
+                  setPromoCode(e.target.value.toUpperCase());
+                  if (promoValidation) setPromoValidation(null);
+                }}
+                disabled={isProcessing}
+                maxLength={50}
+              />
+              {promoValidation?.valid ? (
+                <button
+                  className="subscription-new__promo-btn subscription-new__promo-btn--clear"
+                  onClick={handleClearPromo}
+                  disabled={isProcessing}
+                >
+                  ✕
+                </button>
+              ) : (
+                <button
+                  className="subscription-new__promo-btn"
+                  onClick={() => handleApplyPromo(false)}
+                  disabled={isProcessing || isValidatingPromo || !promoCode.trim()}
+                >
+                  {isValidatingPromo ? '...' : t('subscriptionNew.promo.apply')}
+                </button>
+              )}
+            </div>
+
+            {/* Promo result message */}
+            {promoValidation && (
+              <div className={`subscription-new__promo-result ${promoValidation.valid ? 'subscription-new__promo-result--success' : 'subscription-new__promo-result--error'}`}>
+                {promoValidation.valid ? (
+                  <>
+                    {promoValidation.bonus_days > 0
+                      ? t('subscriptionNew.promo.validWithBonus', {
+                          stars: promoValidation.discount_stars,
+                          days: promoValidation.bonus_days
+                        })
+                      : t('subscriptionNew.promo.valid', {
+                          stars: promoValidation.discount_stars
+                        })
+                    }
+                  </>
+                ) : (
+                  promoValidation.error !== 'empty_code' && getPromoErrorMessage(promoValidation.error)
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Plan Benefits */}
@@ -339,14 +429,24 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
         </label>
 
         {/* Subscribe Button */}
-        <button 
+        <button
           className={`subscription-new__subscribe ${!agreedToTerms || isProcessing ? 'subscription-new__subscribe--disabled' : ''}`}
           onClick={handleSubscribe}
           disabled={!agreedToTerms || isProcessing}
         >
-          {isProcessing 
+          {isProcessing
             ? '⏳ ' + t('subscriptionNew.processing')
-            : t('subscriptionNew.subscribe', { price: selectedPrice })
+            : hasDiscount
+              ? (discountedPrice === 0
+                  ? t('subscriptionNew.promo.free')
+                  : <>
+                      <span style={{ textDecoration: 'line-through', opacity: 0.6, marginRight: '6px', fontSize: '14px' }}>
+                        {selectedPrice} ⭐
+                      </span>
+                      {t('subscriptionNew.subscribe', { price: discountedPrice })}
+                    </>
+                )
+              : t('subscriptionNew.subscribe', { price: selectedPrice })
           }
         </button>
       </div>

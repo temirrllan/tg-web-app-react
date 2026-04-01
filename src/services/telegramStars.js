@@ -5,23 +5,76 @@ import habitServiceOptimized from './habitsOptimized';
 
 export const telegramStarsService = {
   /**
-   * 🔥 Купить подписку через Telegram Stars с автоматическим обновлением
+   * Валидация промокода
    */
-  async purchaseSubscription(planType) {
+  async validatePromoCode(code, planType) {
     try {
-      console.log('💳 Starting purchase for plan:', planType);
+      const { data } = await api.post('/payment/validate-promo', { code, planType });
+      return data;
+    } catch (error) {
+      console.error('Validate promo error:', error);
+      return { success: false, valid: false, error: 'server_error' };
+    }
+  },
+
+  /**
+   * Активация бесплатной подписки через промокод
+   */
+  async activateFreeSubscription(planType, promoCode) {
+    try {
+      console.log('🎁 Activating free subscription with promo:', promoCode);
+      const { data } = await api.post('/payment/activate-promo', { planType, promoCode });
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to activate');
+      }
+
+      // Инвалидируем кэши
+      habitServiceOptimized.invalidateSubscriptionCache();
+      habitServiceOptimized.invalidateHabitsCache();
+      habitServiceOptimized.clearCache();
+      localStorage.removeItem('cache_subscription_limits');
+      localStorage.removeItem('cache_user_profile');
+
+      // Принудительно обновляем статус
+      const freshStatus = await habitServiceOptimized.checkSubscriptionLimits(true);
+
+      // Уведомляем UI
+      window.dispatchEvent(new CustomEvent('payment_success', {
+        detail: { subscription: freshStatus, planType, promoApplied: true }
+      }));
 
       const tg = window.Telegram?.WebApp;
-      
+      if (tg?.HapticFeedback) {
+        tg.HapticFeedback.notificationOccurred('success');
+      }
+
+      return { success: true, subscription: freshStatus, free: true };
+    } catch (error) {
+      console.error('❌ Free activation error:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * 🔥 Купить подписку через Telegram Stars с автоматическим обновлением
+   */
+  async purchaseSubscription(planType, promoCode = null) {
+    try {
+      console.log('💳 Starting purchase for plan:', planType, 'promo:', promoCode || 'none');
+
+      const tg = window.Telegram?.WebApp;
+
       if (!tg) {
         throw new Error('Telegram WebApp not available');
       }
 
       console.log('📞 Requesting invoice from backend...');
 
-      // Создаём invoice на бэкенде
-      const { data } = await api.post('/payment/create-invoice', { 
-        planType 
+      // Создаём invoice на бэкенде (с промокодом если есть)
+      const { data } = await api.post('/payment/create-invoice', {
+        planType,
+        promoCode: promoCode || undefined
       });
 
       if (!data.success) {

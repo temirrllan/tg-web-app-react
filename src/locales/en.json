@@ -452,6 +452,21 @@
       "perMonth": "{{stars}} ⭐/month"
     },
     "promoCode": "Promo code (optional)",
+    "promo": {
+      "title": "Promo Code",
+      "placeholder": "Enter promo code",
+      "apply": "OK",
+      "valid": "Discount {{stars}} ⭐ applied!",
+      "validWithBonus": "Discount {{stars}} ⭐ + {{days}} bonus days!",
+      "invalid": "Promo code not found",
+      "expired": "Promo code expired",
+      "used": "You already used this promo code",
+      "maxUsed": "Promo code is no longer valid",
+      "error": "Failed to validate promo code",
+      "free": "Activate for free ✨",
+      "activatedFree": "Subscription activated for free!",
+      "invalidOnPayment": "Promo code is invalid. Try without promo code."
+    },
     "benefits": {
       "unlimited": "Unlimited habits",
       "friends": "Unlimited friends to habit",

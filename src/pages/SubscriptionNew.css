@@ -294,19 +294,79 @@
 }
 
 .subscription-new__promo {
-  width: 100%;
-  padding: 14px 16px;
   background: white;
-  border: none;
   border-radius: 12px;
-  font-size: 17px;
-  color: #000;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  padding: 8px;
+  transition: background-color 0.3s ease;
 }
 
-.subscription-new__promo::placeholder {
+.subscription-new__promo-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.subscription-new__promo-input {
+  flex: 1;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  color: #000;
+  outline: none;
+  transition: color 0.3s ease;
+}
+
+.subscription-new__promo-input::placeholder {
   color: #C7C7CC;
   transition: color 0.3s ease;
+}
+
+.subscription-new__promo-btn {
+  padding: 8px 16px;
+  background: #007AFF;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+
+.subscription-new__promo-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.subscription-new__promo-btn--clear {
+  background: #FF3B30;
+  padding: 8px 12px;
+  font-size: 13px;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.subscription-new__promo-result {
+  padding: 8px 12px;
+  font-size: 13px;
+  border-radius: 8px;
+  margin-top: 6px;
+}
+
+.subscription-new__promo-result--success {
+  background: rgba(52, 199, 89, 0.12);
+  color: #34C759;
+}
+
+.subscription-new__promo-result--error {
+  background: rgba(255, 59, 48, 0.12);
+  color: #FF3B30;
 }
 
 .subscription-new__benefits {
@@ -526,10 +586,13 @@
 
 .dark-theme .subscription-new__promo {
   background: #2C2C2E;
+}
+
+.dark-theme .subscription-new__promo-input {
   color: #FFFFFF;
 }
 
-.dark-theme .subscription-new__promo::placeholder {
+.dark-theme .subscription-new__promo-input::placeholder {
   color: #636366;
 }
 
