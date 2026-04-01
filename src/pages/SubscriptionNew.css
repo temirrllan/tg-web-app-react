@@ -293,79 +293,58 @@
   transition: color 0.3s ease;
 }
 
-.subscription-new__promo {
+.subscription-new__promo-wrapper {
+  position: relative;
   background: white;
   border-radius: 12px;
-  padding: 8px;
   transition: background-color 0.3s ease;
 }
 
-.subscription-new__promo-input-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.subscription-new__promo-input {
-  flex: 1;
-  padding: 10px 12px;
+.subscription-new__promo-field {
+  width: 100%;
+  padding: 14px 16px;
+  padding-right: 44px;
   background: transparent;
   border: none;
-  font-size: 16px;
+  border-radius: 12px;
+  font-size: 17px;
   color: #000;
   outline: none;
+  box-sizing: border-box;
   transition: color 0.3s ease;
 }
 
-.subscription-new__promo-input::placeholder {
+.subscription-new__promo-field::placeholder {
   color: #C7C7CC;
   transition: color 0.3s ease;
 }
 
-.subscription-new__promo-btn {
-  padding: 8px 16px;
-  background: #007AFF;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: opacity 0.2s ease;
+.subscription-new__promo-spinner,
+.subscription-new__promo-check {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  pointer-events: none;
 }
 
-.subscription-new__promo-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.subscription-new__promo-check {
+  color: #34C759;
+  font-weight: 700;
+  font-size: 20px;
 }
 
-.subscription-new__promo-btn--clear {
-  background: #FF3B30;
-  padding: 8px 12px;
+.subscription-new__promo-message {
+  padding: 6px 16px 0;
   font-size: 13px;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-.subscription-new__promo-result {
-  padding: 8px 12px;
-  font-size: 13px;
-  border-radius: 8px;
-  margin-top: 6px;
-}
-
-.subscription-new__promo-result--success {
-  background: rgba(52, 199, 89, 0.12);
+.subscription-new__promo-message--success {
   color: #34C759;
 }
 
-.subscription-new__promo-result--error {
-  background: rgba(255, 59, 48, 0.12);
+.subscription-new__promo-message--error {
   color: #FF3B30;
 }
 
@@ -584,15 +563,15 @@
   color: #FFFFFF;
 }
 
-.dark-theme .subscription-new__promo {
+.dark-theme .subscription-new__promo-wrapper {
   background: #2C2C2E;
 }
 
-.dark-theme .subscription-new__promo-input {
+.dark-theme .subscription-new__promo-field {
   color: #FFFFFF;
 }
 
-.dark-theme .subscription-new__promo-input::placeholder {
+.dark-theme .subscription-new__promo-field::placeholder {
   color: #636366;
 }
 

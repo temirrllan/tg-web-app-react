@@ -340,64 +340,54 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
           ))}
         </div>
 
-        {/* Promo Code */}
-        <div className="subscription-new__section">
-          <h3 className="subscription-new__section-title">{t('subscriptionNew.promo.title')}</h3>
-          <div className="subscription-new__promo">
-            <div className="subscription-new__promo-input-row">
-              <input
-                type="text"
-                className="subscription-new__promo-input"
-                placeholder={t('subscriptionNew.promo.placeholder')}
-                value={promoCode}
-                onChange={(e) => {
-                  setPromoCode(e.target.value.toUpperCase());
-                  if (promoValidation) setPromoValidation(null);
-                }}
-                disabled={isProcessing}
-                maxLength={50}
-              />
-              {promoValidation?.valid ? (
-                <button
-                  className="subscription-new__promo-btn subscription-new__promo-btn--clear"
-                  onClick={handleClearPromo}
-                  disabled={isProcessing}
-                >
-                  ✕
-                </button>
-              ) : (
-                <button
-                  className="subscription-new__promo-btn"
-                  onClick={() => handleApplyPromo(false)}
-                  disabled={isProcessing || isValidatingPromo || !promoCode.trim()}
-                >
-                  {isValidatingPromo ? '...' : t('subscriptionNew.promo.apply')}
-                </button>
-              )}
-            </div>
-
-            {/* Promo result message */}
-            {promoValidation && (
-              <div className={`subscription-new__promo-result ${promoValidation.valid ? 'subscription-new__promo-result--success' : 'subscription-new__promo-result--error'}`}>
-                {promoValidation.valid ? (
-                  <>
-                    {promoValidation.bonus_days > 0
-                      ? t('subscriptionNew.promo.validWithBonus', {
-                          stars: promoValidation.discount_stars,
-                          days: promoValidation.bonus_days
-                        })
-                      : t('subscriptionNew.promo.valid', {
-                          stars: promoValidation.discount_stars
-                        })
-                    }
-                  </>
-                ) : (
-                  promoValidation.error !== 'empty_code' && getPromoErrorMessage(promoValidation.error)
-                )}
-              </div>
+        {/* Promo Code — простой input как на макете */}
+        <div className="subscription-new__promo-wrapper">
+          <input
+            type="text"
+            className="subscription-new__promo-field"
+            placeholder={t('subscriptionNew.promo.placeholder')}
+            value={promoCode}
+            onChange={(e) => {
+              setPromoCode(e.target.value.toUpperCase());
+              if (promoValidation) setPromoValidation(null);
+            }}
+            onBlur={() => {
+              if (promoCode.trim() && !promoValidation) {
+                handleApplyPromo(false);
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && promoCode.trim()) {
+                e.preventDefault();
+                handleApplyPromo(false);
+              }
+            }}
+            disabled={isProcessing}
+            maxLength={50}
+          />
+          {isValidatingPromo && (
+            <span className="subscription-new__promo-spinner">⏳</span>
+          )}
+          {promoValidation?.valid && (
+            <span className="subscription-new__promo-check">✓</span>
+          )}
+        </div>
+        {promoValidation && (
+          <div className={`subscription-new__promo-message ${promoValidation.valid ? 'subscription-new__promo-message--success' : 'subscription-new__promo-message--error'}`}>
+            {promoValidation.valid ? (
+              promoValidation.bonus_days > 0
+                ? t('subscriptionNew.promo.validWithBonus', {
+                    stars: promoValidation.discount_stars,
+                    days: promoValidation.bonus_days
+                  })
+                : t('subscriptionNew.promo.valid', {
+                    stars: promoValidation.discount_stars
+                  })
+            ) : (
+              promoValidation.error !== 'empty_code' && getPromoErrorMessage(promoValidation.error)
             )}
           </div>
-        </div>
+        )}
 
         {/* Plan Benefits */}
         <div className="subscription-new__section">
