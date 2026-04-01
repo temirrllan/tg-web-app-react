@@ -363,6 +363,11 @@ const HabitCard = React.memo(
     };
 
     const hasMembers = habit.members_count && habit.members_count > 0;
+    const packName = habit.pack_name || null;
+
+    // Стабильный цвет для пакета по pack_id
+    const PACK_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#FF9FF3', '#54A0FF', '#5F27CD', '#01A3A4'];
+    const packColor = habit.pack_id ? PACK_COLORS[(habit.pack_id - 1) % PACK_COLORS.length] : null;
 
     return (
       <div className={`habit-card-wrapper ${hasMembers ? "has-members" : ""} ${isLeaving ? "habit-card--leaving" : ""}`}>
@@ -407,6 +412,9 @@ const HabitCard = React.memo(
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseLeave}
           >
+            {packColor && (
+              <div className="habit-card-pack-stripe" style={{ backgroundColor: packColor }} />
+            )}
             <div className="habit-card-content">
               <div className={`habit-icon ${getCardState()}`}>
                 <span className="habit-emoji">{getCategoryEmoji()}</span>
@@ -420,6 +428,11 @@ const HabitCard = React.memo(
                 <p className="habit-goal">
                   {t("habit.goal")}: {habit.goal}
                 </p>
+                {packName && (
+                  <p className="habit-pack-label" style={{ color: packColor }}>
+                    {packName}
+                  </p>
+                )}
               </div>
 
               {!isPending && (
@@ -466,6 +479,7 @@ const HabitCard = React.memo(
       prevProps.habit.id === nextProps.habit.id &&
       prevProps.habit.today_status === nextProps.habit.today_status &&
       prevProps.habit.members_count === nextProps.habit.members_count &&
+      prevProps.habit.pack_name === nextProps.habit.pack_name &&
       prevProps.readOnly === nextProps.readOnly &&
       prevProps.isLeaving === nextProps.isLeaving
     );
