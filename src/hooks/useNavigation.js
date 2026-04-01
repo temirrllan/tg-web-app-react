@@ -2,18 +2,44 @@ import { useEffect, useRef, useCallback } from 'react';
 
 /**
  * useNavigation — управляет Telegram BackButton.
- * Пока компонент активен (isVisible=true) — показывает кнопку «Назад».
- * При размонтировании — надёжно скрывает кнопку, даже при быстрых переходах.
+ *
+ * Стратегия: глобальный стек хэндлеров. Когда стек пуст — кнопка скрывается.
+ * При быстрых переходах setTimeout(50ms) даёт React время на mount/unmount.
  */
 
-// Глобальный счётчик активных навигаций — если 0, кнопку надо скрыть
-let activeNavigationCount = 0;
+// Глобальный стек — содержит id каждого активного useNavigation
+const navStack = new Set();
+let hideTimer = null;
+
+function ensureBackButtonState() {
+  // Отменяем предыдущий таймер
+  if (hideTimer) {
+    clearTimeout(hideTimer);
+    hideTimer = null;
+  }
+
+  const backButton = window.Telegram?.WebApp?.BackButton;
+  if (!backButton) return;
+
+  if (navStack.size > 0) {
+    backButton.show();
+  } else {
+    // Задержка чтобы дать следующей странице зарегистрироваться при быстрых переходах
+    hideTimer = setTimeout(() => {
+      if (navStack.size === 0) {
+        backButton.hide();
+      }
+      hideTimer = null;
+    }, 50);
+  }
+}
+
+let idCounter = 0;
 
 export const useNavigation = (onBack = null, options = {}) => {
   const { isVisible = true } = options;
   const onBackRef = useRef(onBack);
-  const registeredRef = useRef(false);
-  const handleBackRef = useRef(null);
+  const idRef = useRef(null);
   onBackRef.current = onBack;
 
   useEffect(() => {
@@ -21,46 +47,46 @@ export const useNavigation = (onBack = null, options = {}) => {
     if (!backButton) return;
 
     if (!isVisible) {
+      // Если этот экземпляр был в стеке — убираем
+      if (idRef.current !== null) {
+        navStack.delete(idRef.current);
+        idRef.current = null;
+        ensureBackButtonState();
+      }
       return;
     }
+
+    // Регистрируем в стеке
+    const id = ++idCounter;
+    idRef.current = id;
+    navStack.add(id);
 
     const handleBack = () => {
       if (onBackRef.current) onBackRef.current();
       else window.history.back();
     };
 
-    handleBackRef.current = handleBack;
-    registeredRef.current = true;
-    activeNavigationCount++;
-
-    backButton.show();
     backButton.onClick(handleBack);
+    ensureBackButtonState();
 
     return () => {
-      registeredRef.current = false;
-      activeNavigationCount--;
-
+      navStack.delete(id);
+      idRef.current = null;
       backButton.offClick?.(handleBack);
-
-      // Скрываем кнопку только если нет других активных навигаций
-      // Используем микротаск чтобы дать следующей странице зарегистрироваться
-      Promise.resolve().then(() => {
-        if (activeNavigationCount <= 0) {
-          activeNavigationCount = 0;
-          // Вызываем hide напрямую на прототипе, минуя любые перехваты
-          const btn = window.Telegram?.WebApp?.BackButton;
-          if (btn) {
-            // Принудительно скрываем — обходим возможные no-op перехваты
-            try {
-              Object.getPrototypeOf(btn)?.hide?.call(btn);
-            } catch {
-              btn.hide();
-            }
-          }
-        }
-      });
+      ensureBackButtonState();
     };
   }, [isVisible]);
+
+  // Cleanup при unmount если isVisible менялся
+  useEffect(() => {
+    return () => {
+      if (idRef.current !== null) {
+        navStack.delete(idRef.current);
+        idRef.current = null;
+        ensureBackButtonState();
+      }
+    };
+  }, []);
 
   const goBack = useCallback(() => {
     if (onBackRef.current) onBackRef.current();
