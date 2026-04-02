@@ -6,7 +6,7 @@ import { useNavigation } from '../../hooks/useNavigation';
 import { useTranslation } from '../../hooks/useTranslation';
 
 const EditHabitForm = ({ habit, onClose, onSuccess }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -50,7 +50,7 @@ const EditHabitForm = ({ habit, onClose, onSuccess }) => {
 
   useEffect(() => {
     loadCategories();
-  }, []);
+  }, [language]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -77,7 +77,7 @@ const EditHabitForm = ({ habit, onClose, onSuccess }) => {
   const loadCategories = async () => {
     try {
       setCategoriesLoading(true);
-      const data = await habitService.getCategories();
+      const data = await habitService.getCategories(language);
       if (data.success && data.categories) {
         const uniqueCategories = Array.from(
           new Map(data.categories.map(cat => [cat.id, cat])).values()

@@ -117,7 +117,9 @@ export const LanguageProvider = ({ children }) => {
         }
         
         // Сбрасываем кэш данных, зависящих от языка (категории, привычки)
-        cacheService.invalidate('categories');
+        cacheService.invalidate('categories_en');
+        cacheService.invalidate('categories_ru');
+        cacheService.invalidate('categories_kk');
         cacheService.invalidate('habits_');
 
         // Уведомляем компоненты о смене языка для перезагрузки данных

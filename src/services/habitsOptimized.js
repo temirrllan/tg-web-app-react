@@ -14,7 +14,7 @@ const CACHE_KEYS = {
   habitMembers: (id) => `habit_members_${id}`,
   userProfile: () => 'user_profile',
   subscriptionLimits: () => 'subscription_limits',
-  categories: () => 'categories'
+  categories: (lang) => `categories_${lang || 'en'}`
 };
 
 /**
@@ -111,9 +111,9 @@ export const habitService = {
   /**
    * Получить категории
    */
-  async getCategories(forceRefresh = false) {
-    const key = CACHE_KEYS.categories();
-    
+  async getCategories(forceRefresh = false, language) {
+    const key = CACHE_KEYS.categories(language);
+
     return cacheService.fetch(
       key,
       async () => {

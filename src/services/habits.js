@@ -7,8 +7,8 @@ export const habitService = {
   /**
    * Получить категории (кэшируется на 30 минут)
    */
-  async getCategories() {
-    return await habitServiceOptimized.getCategories();
+  async getCategories(language) {
+    return await habitServiceOptimized.getCategories(false, language);
   },
 
   /**
