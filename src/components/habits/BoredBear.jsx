@@ -1,8 +1,11 @@
 import React from 'react';
 import bearImg from '../../../public/images/bear.png';
 import './BoredBear.css';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const BoredBear = () => {
+  const { t } = useTranslation();
+
   return (
     <div className="bored-bear">
       <div className="bored-bear__container">
@@ -18,10 +21,14 @@ const BoredBear = () => {
           <span className="bored-bear__z bored-bear__z--3">z</span>
         </div>
       </div>
-      <h2 className="bored-bear__title">Пока здесь пусто...</h2>
+      <h2 className="bored-bear__title">{t('boredBear.title')}</h2>
       <p className="bored-bear__text">
-        Мишке скучно без привычек!<br />
-        Добавьте первую, чтобы его подбодрить 🐻
+        {t('boredBear.text').split('\n').map((line, i) => (
+          <React.Fragment key={i}>
+            {i > 0 && <br />}
+            {line}
+          </React.Fragment>
+        ))}
       </p>
     </div>
   );

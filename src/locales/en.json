@@ -104,6 +104,10 @@
   "failedToday": "Failed Today",
   "skipped": "Skipped"
 },
+  "boredBear": {
+    "title": "Nothing here yet...",
+    "text": "The bear is bored without habits!\nAdd your first one to cheer him up 🐻"
+  },
   "createHabit": {
     "dayPeriod": {
       "title": "Day Period",
