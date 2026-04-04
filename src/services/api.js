@@ -96,6 +96,12 @@ api.interceptors.response.use(
       }
     }
     
+    // Maintenance mode
+    if (error.response?.status === 503 && error.response?.data?.maintenance) {
+      window.dispatchEvent(new CustomEvent('maintenance-mode'));
+      return Promise.reject(error);
+    }
+
     // Network error
     if (!error.response) {
       console.error('🌐 Network error - no response from server');

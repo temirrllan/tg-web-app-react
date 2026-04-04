@@ -11,6 +11,7 @@ import Onboarding from './components/Onboarding';
 import Today from './pages/Today';
 import Profile from './pages/Profile';
 import Loader from './components/common/Loader';
+import MaintenanceScreen from './components/common/MaintenanceScreen';
 import './App.css';
 
 function AppContent() {
@@ -29,6 +30,8 @@ function AppContent() {
   const [shouldShowFriendHint, setShouldShowFriendHint] = useState(false);
   // Deep link: packId для открытия пакета привычек
   const [pendingPackId, setPendingPackId] = useState(null);
+  // Maintenance mode
+  const [isMaintenance, setIsMaintenance] = useState(false);
   
   const { initializeLanguage, language } = useContext(LanguageContext);
 
@@ -72,6 +75,12 @@ function AppContent() {
     }
   }, [tg]);
 
+  // Listen for maintenance mode from API interceptor
+  useEffect(() => {
+    const handleMaintenance = () => setIsMaintenance(true);
+    window.addEventListener('maintenance-mode', handleMaintenance);
+    return () => window.removeEventListener('maintenance-mode', handleMaintenance);
+  }, []);
 
   useEffect(() => {
     const initAuth = async () => {
@@ -293,6 +302,10 @@ function AppContent() {
         </p>
       </div>
     );
+  }
+
+  if (isMaintenance) {
+    return <MaintenanceScreen />;
   }
 
   if (error) {
