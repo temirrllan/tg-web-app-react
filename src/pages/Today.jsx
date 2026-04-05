@@ -15,6 +15,7 @@ import { habitService } from '../services/habits';
 import { specialHabitsService } from '../services/specialHabits';
 import "./Today.css";
 import SwipeHint from '../components/habits/SwipeHint';
+import SwipeGuide from '../components/hints/SwipeGuide';
 import EditHabitForm from '../components/habits/EditHabitForm';
 import SubscriptionModal from '../components/modals/SubscriptionModal';
 import Subscription from './Subscription';
@@ -63,6 +64,7 @@ const Today = ({ shouldShowFabHint = false, shouldShowSwipeHint = false, shouldS
   const [showSubscriptionPage, setShowSubscriptionPage] = useState(false);
   const [selectedSubscriptionPlan, setSelectedSubscriptionPlan] = useState(null);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
+  const [showSwipeGuide, setShowSwipeGuide] = useState(false);
   // Флаг «хинт уже закрыт в этой сессии» — блокирует повторный показ
   // даже если shouldShowSwipeHint prop всё ещё true (App.jsx не знает об этом)
   const swipeHintClosedRef = useRef(false);
@@ -817,22 +819,28 @@ useEffect(() => {
   useEffect(() => {
     const currentHabits = dateDataCache[selectedDate]?.habits || [];
 
-    // Показываем swipe hint: только новым пользователям (shouldShowSwipeHint=true),
+    // Показываем SwipeGuide: только новым пользователям (shouldShowSwipeHint=true),
     // один раз за всё время (hint_swipe_shown), и не повторяем в рамках сессии (ref)
     const swipeShown = localStorage.getItem('hint_swipe_shown') === '1';
     if (shouldShowSwipeHint && !swipeShown && !swipeHintClosedRef.current && currentHabits.length > 0 && isEditableDate) {
       const timer = setTimeout(() => {
-        setShowSwipeHint(true);
-        window.TelegramAnalytics?.track('swipe_hint_shown', {
+        setShowSwipeGuide(true);
+        window.TelegramAnalytics?.track('swipe_guide_shown', {
           habits_count: currentHabits.length,
         });
-        console.log('📊 Analytics: swipe_hint_shown');
-      }, 1000);
+      }, 1200);
       return () => clearTimeout(timer);
     }
   }, [dateDataCache, selectedDate, isEditableDate, shouldShowSwipeHint]);
 
-  // SwipeHint закрывается — запоминаем в localStorage (на всё время) + ref (в рамках сессии)
+  // SwipeGuide завершён — запоминаем
+  const handleSwipeGuideComplete = () => {
+    swipeHintClosedRef.current = true;
+    localStorage.setItem('hint_swipe_shown', '1');
+    setShowSwipeGuide(false);
+  };
+
+  // Legacy SwipeHint close (если где-то ещё используется)
   const handleSwipeHintClose = () => {
     swipeHintClosedRef.current = true;
     localStorage.setItem('hint_swipe_shown', '1');
@@ -1273,6 +1281,11 @@ useEffect(() => {
 
         <FabHint show={showFabHint} onClose={handleFabHintClose} />
         <WeekHint show={showWeekHint} onClose={handleWeekHintClose} />
+
+        <SwipeGuide
+          show={showSwipeGuide}
+          onComplete={handleSwipeGuideComplete}
+        />
 
         <SwipeHint
           show={showSwipeHint}

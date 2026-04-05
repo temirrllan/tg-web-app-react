@@ -1,0 +1,179 @@
+/* ─── SwipeGuide — interactive swipe tutorial overlay ─────────────────────── */
+
+.swipe-guide {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: all;
+  animation: sgFadeIn 0.3s ease-out;
+}
+
+.swipe-guide--hiding {
+  animation: sgFadeOut 0.4s ease-in forwards;
+}
+
+/* ─── Dark overlay with spotlight cutout ──────────────────────────────────── */
+.swipe-guide__spotlight {
+  position: fixed;
+  border-radius: 16px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+  z-index: 9998;
+  pointer-events: none;
+}
+
+/* ─── Touch-through zone — lets user interact with the card ──────────────── */
+.swipe-guide__touch-zone {
+  position: fixed;
+  z-index: 10002;
+  pointer-events: none;
+  border-radius: 14px;
+}
+
+/* ─── Wiggle border frame ────────────────────────────────────────────────── */
+.swipe-guide__wiggle-frame {
+  position: fixed;
+  border-radius: 18px;
+  border: 2.5px dashed rgba(255, 255, 255, 0.6);
+  z-index: 9999;
+  pointer-events: none;
+  animation: sgWiggle 1.5s ease-in-out infinite;
+}
+
+/* ─── Animated hand ──────────────────────────────────────────────────────── */
+.swipe-guide__hand-container {
+  position: fixed;
+  z-index: 10000;
+  pointer-events: none;
+  animation: sgHandSwipe 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.swipe-guide__hand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
+}
+
+.swipe-guide__hand-emoji {
+  font-size: 40px;
+  display: block;
+  transform: rotate(-20deg);
+}
+
+/* ─── Label below card ───────────────────────────────────────────────────── */
+.swipe-guide__label {
+  position: fixed;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  pointer-events: none;
+  animation: sgLabelPulse 2s ease-in-out infinite;
+}
+
+.swipe-guide__label-arrow {
+  display: flex;
+  align-items: center;
+  animation: sgArrowSlide 2s ease-in-out infinite;
+}
+
+.swipe-guide__label-arrow span {
+  font-size: 22px;
+  font-weight: 800;
+  color: #10B981;
+  text-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+}
+
+.swipe-guide__label-text {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+}
+
+/* ─── Skip button ────────────────────────────────────────────────────────── */
+.swipe-guide__skip {
+  position: fixed;
+  bottom: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10001;
+  pointer-events: all;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 12px 36px;
+  border-radius: 24px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.swipe-guide__skip:active {
+  transform: translateX(-50%) scale(0.95);
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ─── Animations ─────────────────────────────────────────────────────────── */
+
+@keyframes sgFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sgFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Card wiggle — subtle left nudge to hint swipe direction */
+@keyframes sgWiggle {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(2px); }
+}
+
+/* Hand swipes left and returns */
+@keyframes sgHandSwipe {
+  0% {
+    transform: translateX(0);
+    opacity: 0.7;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(-100px);
+    opacity: 1;
+  }
+  60% {
+    opacity: 0.5;
+  }
+  70% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 0.7;
+  }
+}
+
+/* Arrow slides left */
+@keyframes sgArrowSlide {
+  0%, 100% { transform: translateX(0); opacity: 0.6; }
+  50% { transform: translateX(-10px); opacity: 1; }
+}
+
+/* Label subtle pulse */
+@keyframes sgLabelPulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
