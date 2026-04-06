@@ -4,7 +4,8 @@
   position: fixed;
   inset: 0;
   z-index: 9998;
-  pointer-events: all;
+  /* Container itself doesn't block touches — only the panels do */
+  pointer-events: none;
   animation: sgFadeIn 0.3s ease-out;
 }
 
@@ -12,21 +13,36 @@
   animation: sgFadeOut 0.4s ease-in forwards;
 }
 
-/* ─── Dark overlay with spotlight cutout ──────────────────────────────────── */
-.swipe-guide__spotlight {
+/* ─── 4 dark panels around the card (block taps on the rest of the screen) ─ */
+.sg-panel {
   position: fixed;
-  border-radius: 16px;
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.6);
+  pointer-events: all;
   z-index: 9998;
-  pointer-events: none;
 }
 
-/* ─── Touch-through zone — lets user interact with the card ──────────────── */
-.swipe-guide__touch-zone {
-  position: fixed;
-  z-index: 10002;
-  pointer-events: none;
-  border-radius: 14px;
+.sg-panel--top {
+  top: 0;
+  left: 0;
+  right: 0;
+  /* height set inline */
+}
+
+.sg-panel--bottom {
+  /* top set inline */
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.sg-panel--left {
+  left: 0;
+  /* top, height, width set inline */
+}
+
+.sg-panel--right {
+  /* top, height, left set inline */
+  right: 0;
 }
 
 /* ─── Wiggle border frame ────────────────────────────────────────────────── */

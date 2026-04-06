@@ -1,6 +1,8 @@
 // src/components/hints/SwipeGuide.jsx
 // Interactive swipe tutorial — shows animated hand over the first habit card.
-// User must actually swipe the card to dismiss (not just tap).
+// The card area is NOT covered by any overlay element, so the user can swipe it
+// directly while the guide is visible. Uses 4 dark panels around the card
+// instead of a box-shadow cutout to avoid stacking-context / pointer-events issues.
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -21,6 +23,8 @@ const translations = {
   },
 };
 
+const PADDING = 6; // gap around card for the "cutout"
+
 const SwipeGuide = ({ show, onComplete, targetSelector = '.habit-card-wrapper' }) => {
   const { language } = useTranslation();
   const texts = translations[language] || translations.ru;
@@ -29,17 +33,16 @@ const SwipeGuide = ({ show, onComplete, targetSelector = '.habit-card-wrapper' }
   const [hiding, setHiding] = useState(false);
   const [cardRect, setCardRect] = useState(null);
   const rafRef = useRef(null);
+  const closedRef = useRef(false);
 
-  // Find the first habit card position and elevate it above overlay
+  // Find the first habit card position
   useEffect(() => {
     if (!show) return;
-
-    let cardEl = null;
+    closedRef.current = false;
 
     const findCard = () => {
       const card = document.querySelector(targetSelector);
       if (card) {
-        cardEl = card;
         const rect = card.getBoundingClientRect();
         setCardRect({
           top: rect.top,
@@ -47,11 +50,6 @@ const SwipeGuide = ({ show, onComplete, targetSelector = '.habit-card-wrapper' }
           width: rect.width,
           height: rect.height,
         });
-
-        // Elevate the card above the overlay so user can swipe it
-        card.style.position = 'relative';
-        card.style.zIndex = '10003';
-
         setVisible(true);
 
         if (window.Telegram?.WebApp?.HapticFeedback) {
@@ -66,24 +64,13 @@ const SwipeGuide = ({ show, onComplete, targetSelector = '.habit-card-wrapper' }
     return () => {
       clearTimeout(timer);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      // Restore card z-index on unmount
-      if (cardEl) {
-        cardEl.style.position = '';
-        cardEl.style.zIndex = '';
-      }
     };
   }, [show, targetSelector]);
 
-  // Listen for first successful swipe mark
+  // Listen for first successful swipe via MutationObserver
   useEffect(() => {
     if (!show || !visible) return;
 
-    const handleMark = () => {
-      triggerClose();
-    };
-
-    // HabitCard dispatches haptic on mark — we listen for status changes
-    // We use a MutationObserver on the first card to detect status change
     const card = document.querySelector(targetSelector);
     if (!card) return;
 
@@ -108,12 +95,8 @@ const SwipeGuide = ({ show, onComplete, targetSelector = '.habit-card-wrapper' }
   }, [show, visible, targetSelector]);
 
   const triggerClose = () => {
-    // Restore the elevated card
-    const card = document.querySelector(targetSelector);
-    if (card) {
-      card.style.position = '';
-      card.style.zIndex = '';
-    }
+    if (closedRef.current) return;
+    closedRef.current = true;
     setHiding(true);
     setTimeout(() => {
       setVisible(false);
@@ -123,39 +106,24 @@ const SwipeGuide = ({ show, onComplete, targetSelector = '.habit-card-wrapper' }
 
   if (!show || !visible || !cardRect) return null;
 
+  // Cutout boundaries
+  const ct = cardRect.top - PADDING;
+  const cl = cardRect.left - PADDING;
+  const cw = cardRect.width + PADDING * 2;
+  const ch = cardRect.height + PADDING * 2;
+
   return (
     <div className={`swipe-guide ${hiding ? 'swipe-guide--hiding' : ''}`}>
-      {/* Dark overlay with cutout for the card */}
-      <div
-        className="swipe-guide__spotlight"
-        style={{
-          top: cardRect.top - 6,
-          left: cardRect.left - 6,
-          width: cardRect.width + 12,
-          height: cardRect.height + 12,
-        }}
-      />
+      {/* 4 dark panels around the card — they block taps on the rest of the screen */}
+      <div className="sg-panel sg-panel--top" style={{ height: ct }} />
+      <div className="sg-panel sg-panel--bottom" style={{ top: ct + ch }} />
+      <div className="sg-panel sg-panel--left" style={{ top: ct, height: ch, width: cl }} />
+      <div className="sg-panel sg-panel--right" style={{ top: ct, height: ch, left: cl + cw }} />
 
-      {/* Transparent touch-through zone over the card */}
-      <div
-        className="swipe-guide__touch-zone"
-        style={{
-          top: cardRect.top,
-          left: cardRect.left,
-          width: cardRect.width,
-          height: cardRect.height,
-        }}
-      />
-
-      {/* Wiggle indicator on the card */}
+      {/* Wiggle border around the card */}
       <div
         className="swipe-guide__wiggle-frame"
-        style={{
-          top: cardRect.top - 4,
-          left: cardRect.left - 4,
-          width: cardRect.width + 8,
-          height: cardRect.height + 8,
-        }}
+        style={{ top: ct, left: cl, width: cw, height: ch }}
       />
 
       {/* Animated hand */}
@@ -175,7 +143,7 @@ const SwipeGuide = ({ show, onComplete, targetSelector = '.habit-card-wrapper' }
       <div
         className="swipe-guide__label"
         style={{
-          top: cardRect.top + cardRect.height + 16,
+          top: ct + ch + 12,
           left: cardRect.left,
           width: cardRect.width,
         }}
