@@ -33,6 +33,7 @@ const Settings = ({ onClose }) => {
   };
   
   const getLanguageDisplayName = () => t(`languages.${language}`);
+
   
   // Если открыт LanguageSelector - показываем только его
   if (showLanguageSelector) {
