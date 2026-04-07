@@ -194,6 +194,14 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
     yesterday.setDate(yesterday.getDate() - 1);
     return formatDateString(date) === formatDateString(yesterday);
   };
+
+  const isTomorrow = (date) => {
+    const today = new Date();
+    today.setHours(12, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return formatDateString(date) === formatDateString(tomorrow);
+  };
   
   // Получение классов для стилизации
   const getDayClasses = (date) => {
@@ -210,7 +218,11 @@ const WeekNavigation = ({ selectedDate, onDateSelect }) => {
     if (isYesterday(date)) {
       classes.push('week-navigation__day--yesterday');
     }
-    
+
+    if (isTomorrow(date)) {
+      classes.push('week-navigation__day--tomorrow');
+    }
+
     if (isPastDate(date)) {
       classes.push('week-navigation__day--past');
     }

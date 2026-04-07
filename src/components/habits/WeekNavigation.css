@@ -1,52 +1,36 @@
 .week-navigation {
-  /* ✅ Убираем отрицательные margins */
   margin: 0 0 9px 0;
   padding: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
   position: relative;
-  overscroll-behavior-x: contain;
-  overscroll-behavior-y: none;
   height: 60px;
   display: flex;
   align-items: center;
-  /* ✅ КРИТИЧНО - ограничиваем ширину */
-  max-width: 100%;
   width: 100%;
-}
-
-.week-navigation::-webkit-scrollbar {
-  display: none;
 }
 
 .week-navigation__scroll {
   display: flex;
-  gap: 6px;
-  /* ✅ Убираем padding с боков */
+  gap: 4px;
   padding: 4px 0;
-  min-width: min-content;
   align-items: center;
   height: 100%;
-  -webkit-overflow-scrolling: touch;
-  position: relative;
-  /* ✅ НЕ добавляем width - пусть растягивается естественно */
+  width: 100%;
 }
 
 .week-navigation__day {
-  padding: 10px 24px;
+  padding: 10px 2px;
   border-radius: 24px;
   font-weight: 500;
-  font-size: 15px;
+  font-size: 13px;
   color: #8E8E93;
   background: transparent;
   border: none;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.2s, color 0.2s;
   white-space: nowrap;
-  flex-shrink: 0;
+  flex: 1 1 0;
+  min-width: 0;
   height: 44px;
   display: flex;
   align-items: center;
@@ -56,6 +40,13 @@
   -ms-user-select: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Today/Yesterday/Tomorrow get more room for longer labels */
+.week-navigation__day--today,
+.week-navigation__day--yesterday,
+.week-navigation__day--tomorrow {
+  flex: 1.6 1 0;
 }
 
 .week-navigation__day:hover:not(.week-navigation__day--active) {
@@ -94,6 +85,9 @@
   display: block;
   color: inherit;
   pointer-events: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .week-navigation__day-badge {
@@ -110,22 +104,11 @@
   justify-content: center;
 }
 
-/* ✅ Дополнительные стили для мобильных устройств */
-@supports (-webkit-touch-callout: none) {
-  .week-navigation {
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-  }
-}
-
-@media (hover: none) and (pointer: coarse) {
-  .week-navigation {
-    touch-action: pan-x;
-    overscroll-behavior: contain;
-  }
-  
-  .week-navigation__scroll {
-    touch-action: pan-x;
+/* Мобильные устройства */
+@media (max-width: 350px) {
+  .week-navigation__day {
+    font-size: 12px;
+    padding: 8px 0;
   }
 }
 
