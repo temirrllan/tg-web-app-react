@@ -23,6 +23,7 @@ import { useTranslation } from '../hooks/useTranslation';
 import PullToRefresh from '../components/common/PullToRefresh';
 import { useTelegramTheme } from '../hooks/useTelegramTheme';
 import FabHint from '../components/hints/FabHint';
+import OnboardingGuide from '../components/hints/OnboardingGuide';
 import WeekHint from '../components/hints/WeekHint';
 import AddHabitMenu from '../components/modals/AddHabitMenu';
 import SpecialHabitsShop from './SpecialHabitsShop';
@@ -76,6 +77,7 @@ const Today = ({ shouldShowFabHint = false, shouldShowSwipeHint = false, shouldS
   const [habitToEdit, setHabitToEdit] = useState(null);
   const [userSubscription, setUserSubscription] = useState(null);
   const [showFabHint, setShowFabHint] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [showWeekHint, setShowWeekHint] = useState(false);
 
   // ── Special Habits state ────────────────────────────────────────────────────
@@ -208,25 +210,32 @@ useEffect(() => {
       dateLoading,
       habitsCount: dateDataCache[selectedDate]?.habits?.length || 0
     });
-    
-    if (shouldShowFabHint && 
-        !loading && 
+
+    if (shouldShowFabHint &&
+        !loading &&
         !dateLoading &&
         (!dateDataCache[selectedDate]?.habits || dateDataCache[selectedDate].habits.length === 0)) {
-      
-      console.log('🎯 Showing FAB hint for new user (ignoring localStorage)');
-      
+
+      const onboardingDone = localStorage.getItem('onboarding_done') === '1';
+
+      if (!onboardingDone) {
+        // New interactive onboarding
+        const timer = setTimeout(() => {
+          setShowOnboarding(true);
+          window.TelegramAnalytics?.track('onboarding_shown', { trigger: 'new_user' });
+        }, 500);
+        return () => clearTimeout(timer);
+      }
+
+      // Fallback: old FabHint if onboarding already completed but no habits yet
       const timer = setTimeout(() => {
         setShowFabHint(true);
-        
         window.TelegramAnalytics?.track('fab_hint_shown', {
           is_new_user: true,
           habits_count: 0,
           trigger: 'after_onboarding'
         });
-        console.log('📊 Analytics: fab_hint_shown (after onboarding)');
       }, 500);
-      
       return () => clearTimeout(timer);
     }
   }, [shouldShowFabHint, loading, dateLoading, dateDataCache, selectedDate]);
@@ -236,6 +245,14 @@ useEffect(() => {
 
 
   
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+    localStorage.setItem('onboarding_done', '1');
+    localStorage.setItem('hasSeenFabHint', 'true');
+    localStorage.setItem('hasSeenWeekHint', 'true');
+    window.TelegramAnalytics?.track('onboarding_completed');
+  };
+
   const handleFabHintClose = () => {
     setShowFabHint(false);
     localStorage.setItem('hasSeenFabHint', 'true');
@@ -1279,6 +1296,7 @@ useEffect(() => {
           )}
         </div>
 
+        <OnboardingGuide show={showOnboarding} onComplete={handleOnboardingComplete} />
         <FabHint show={showFabHint} onClose={handleFabHintClose} />
         <WeekHint show={showWeekHint} onClose={handleWeekHintClose} />
 

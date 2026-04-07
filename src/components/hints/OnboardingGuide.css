@@ -1,0 +1,214 @@
+/* ─── OnboardingGuide — step-by-step interactive tutorial ────────────────── */
+
+.ob-guide {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  animation: obFadeIn 0.3s ease-out;
+}
+
+.ob-guide--hiding {
+  animation: obFadeOut 0.35s ease-in forwards;
+}
+
+/* ─── 4 dark panels (block taps everywhere except the target) ────────────── */
+.ob-panel {
+  position: fixed;
+  background: rgba(0, 0, 0, 0.62);
+  pointer-events: all;
+  z-index: 9998;
+}
+
+.ob-panel--top    { top: 0; left: 0; right: 0; }
+.ob-panel--bottom { left: 0; right: 0; bottom: 0; }
+.ob-panel--left   { left: 0; }
+.ob-panel--right  { right: 0; }
+
+/* ─── Pulse ring around the target ───────────────────────────────────────── */
+.ob-pulse-ring {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  border: 2.5px solid rgba(167, 217, 108, 0.7);
+  animation: obPulse 1.6s ease-in-out infinite;
+}
+
+/* ─── Week swipe animation (hand + arrows inside the week strip) ─────────── */
+.ob-week-swipe {
+  position: fixed;
+  z-index: 10000;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.ob-week-swipe__hand {
+  font-size: 28px;
+  animation: obHandSlide 2.2s ease-in-out infinite;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+}
+
+.ob-week-swipe__arrow {
+  font-size: 26px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.7);
+  animation: obArrowFade 2.2s ease-in-out infinite;
+}
+
+.ob-week-swipe__arrow--left  { animation-delay: 0s; }
+.ob-week-swipe__arrow--right { animation-delay: 1.1s; }
+
+/* ─── Bubble with hint text ──────────────────────────────────────────────── */
+.ob-bubble {
+  position: fixed;
+  z-index: 10001;
+  pointer-events: none;
+  max-width: 280px;
+  padding: 12px 18px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+  animation: obBubbleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: 0.15s;
+}
+
+/* Tail arrows for different positions */
+.ob-bubble--above-left::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  right: 22px;
+  width: 0; height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid #fff;
+}
+
+.ob-bubble--left::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -10px;
+  transform: translateY(-50%);
+  width: 0; height: 0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-left: 10px solid #fff;
+}
+
+.ob-bubble--below::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0; height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 10px solid #fff;
+}
+
+.ob-bubble__text {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1D1D1F;
+  line-height: 1.4;
+}
+
+/* ─── Dark-mode bubble ───────────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .ob-bubble                    { background: #2C2C2E; box-shadow: 0 6px 24px rgba(0,0,0,0.5); }
+  .ob-bubble__text              { color: #F5F5F7; }
+  .ob-bubble--above-left::after { border-top-color: #2C2C2E; }
+  .ob-bubble--left::after       { border-left-color: #2C2C2E; }
+  .ob-bubble--below::before     { border-bottom-color: #2C2C2E; }
+}
+
+[data-theme="dark"] .ob-bubble                    { background: #2C2C2E; box-shadow: 0 6px 24px rgba(0,0,0,0.5); }
+[data-theme="dark"] .ob-bubble__text              { color: #F5F5F7; }
+[data-theme="dark"] .ob-bubble--above-left::after { border-top-color: #2C2C2E; }
+[data-theme="dark"] .ob-bubble--left::after       { border-left-color: #2C2C2E; }
+[data-theme="dark"] .ob-bubble--below::before     { border-bottom-color: #2C2C2E; }
+
+/* ─── Bottom actions row ─────────────────────────────────────────────────── */
+.ob-actions {
+  position: fixed;
+  bottom: 48px;
+  left: 0;
+  right: 0;
+  z-index: 10001;
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.ob-skip,
+.ob-next {
+  pointer-events: all;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 12px 32px;
+  border-radius: 24px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.ob-skip {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+
+.ob-next {
+  background: #A7D96C;
+  color: #1D1D1F;
+  box-shadow: 0 4px 16px rgba(167, 217, 108, 0.4);
+}
+
+.ob-skip:active { transform: scale(0.95); background: rgba(255,255,255,0.25); }
+.ob-next:active { transform: scale(0.95); background: #96cc5a; }
+
+/* ─── Animations ─────────────────────────────────────────────────────────── */
+
+@keyframes obFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes obFadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes obPulse {
+  0%, 100% { transform: scale(1);    opacity: 0.7; border-color: rgba(167,217,108,0.7); }
+  50%      { transform: scale(1.04); opacity: 1;   border-color: rgba(167,217,108,1);   }
+}
+
+@keyframes obBubbleIn {
+  from { opacity: 0; transform: scale(0.8) translateY(8px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0);   }
+}
+
+/* Hand slides left, then right, then centers */
+@keyframes obHandSlide {
+  0%   { transform: translateX(0);     opacity: 0.8; }
+  25%  { transform: translateX(-40px); opacity: 1;   }
+  50%  { transform: translateX(0);     opacity: 0.6; }
+  75%  { transform: translateX(40px);  opacity: 1;   }
+  100% { transform: translateX(0);     opacity: 0.8; }
+}
+
+/* Arrow fade sync with hand direction */
+@keyframes obArrowFade {
+  0%, 40%  { opacity: 0.3; }
+  20%      { opacity: 1;   }
+  60%, 100%{ opacity: 0.3; }
+}
