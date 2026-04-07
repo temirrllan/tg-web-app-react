@@ -204,37 +204,15 @@ useEffect(() => {
   }, [dateDataCache]);
 
   useEffect(() => {
-    console.log('🔍 FAB Hint check:', {
-      shouldShowFabHint,
-      loading,
-      dateLoading,
-      habitsCount: dateDataCache[selectedDate]?.habits?.length || 0
-    });
-
     if (shouldShowFabHint &&
         !loading &&
         !dateLoading &&
         (!dateDataCache[selectedDate]?.habits || dateDataCache[selectedDate].habits.length === 0)) {
 
-      const onboardingDone = localStorage.getItem('onboarding_done') === '1';
-
-      if (!onboardingDone) {
-        // New interactive onboarding
-        const timer = setTimeout(() => {
-          setShowOnboarding(true);
-          window.TelegramAnalytics?.track('onboarding_shown', { trigger: 'new_user' });
-        }, 500);
-        return () => clearTimeout(timer);
-      }
-
-      // Fallback: old FabHint if onboarding already completed but no habits yet
+      // Always show the interactive OnboardingGuide for new users
       const timer = setTimeout(() => {
-        setShowFabHint(true);
-        window.TelegramAnalytics?.track('fab_hint_shown', {
-          is_new_user: true,
-          habits_count: 0,
-          trigger: 'after_onboarding'
-        });
+        setShowOnboarding(true);
+        window.TelegramAnalytics?.track('onboarding_shown', { trigger: 'new_user' });
       }, 500);
       return () => clearTimeout(timer);
     }
