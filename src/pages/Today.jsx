@@ -1152,8 +1152,9 @@ useEffect(() => {
 
             <div className="today__container2">
               <p className="today__subtitle">{getDateLabel()}</p>
-              <div className="today__motivation" style={{ 
-                backgroundColor: getMotivationalBackgroundColor() 
+              <div className="today__motivation" style={{
+                backgroundColor: getMotivationalBackgroundColor(),
+                fontSize: `${getMotivationalMessage().length > 30 ? 13 : getMotivationalMessage().length > 22 ? 14 : 16}px`
               }}>
                 {getMotivationalMessage()} {getMotivationalEmoji()}
               </div>
