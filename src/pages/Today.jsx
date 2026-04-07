@@ -835,6 +835,17 @@ useEffect(() => {
     setShowSwipeGuide(false);
   };
 
+  // Reset first habit to pending (called by SwipeGuide after tutorial)
+  const handleResetFirstHabit = useCallback(() => {
+    const habits = dateDataCache[selectedDate]?.habits;
+    if (habits && habits.length > 0) {
+      const firstHabit = habits[0];
+      if (firstHabit.today_status !== 'pending') {
+        handleUnmarkRef.current?.(firstHabit.id);
+      }
+    }
+  }, [dateDataCache, selectedDate]);
+
   // Legacy SwipeHint close (если где-то ещё используется)
   const handleSwipeHintClose = () => {
     swipeHintClosedRef.current = true;
@@ -925,6 +936,11 @@ useEffect(() => {
       // 3️⃣ Тихая синхронизация — дебаунсированная, подождёт окончания всех свайпов
       silentSync(selectedDate);
 
+      // Notify SwipeGuide about status change
+      window.dispatchEvent(new CustomEvent('habit-status-change', {
+        detail: { habitId, status }
+      }));
+
       window.TelegramAnalytics?.track('habit_marked', {
         habit_id: habitId, status, date: selectedDate,
         total_completed: newCompleted,
@@ -960,6 +976,11 @@ useEffect(() => {
 
       // 3️⃣ Тихая синхронизация
       silentSync(selectedDate);
+
+      // Notify SwipeGuide about status change
+      window.dispatchEvent(new CustomEvent('habit-status-change', {
+        detail: { habitId, status: 'pending' }
+      }));
 
       window.TelegramAnalytics?.track('habit_unmarked', { habit_id: habitId, date: selectedDate });
     } catch (error) {
@@ -1281,6 +1302,7 @@ useEffect(() => {
         <SwipeGuide
           show={showSwipeGuide}
           onComplete={handleSwipeGuideComplete}
+          onResetHabit={handleResetFirstHabit}
         />
 
         <SwipeHint
