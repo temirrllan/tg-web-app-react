@@ -212,6 +212,22 @@ function AppContent() {
             setShouldShowFabHint(true);
             setShouldShowSwipeHint(true);  // только новым пользователям
             setShouldShowFriendHint(true); // только новым пользователям
+          } else if (response.resetHints) {
+            // Admin вызвал /reset_hints в боте — сбрасываем все подсказки
+            console.log('🔄 ADMIN RESET HINTS — clearing localStorage flags');
+            localStorage.removeItem('onboarding_done');
+            localStorage.removeItem('hasSeenFabHint');
+            localStorage.removeItem('hasSeenWeekHint');
+            localStorage.removeItem('hint_swipe_shown');
+            localStorage.removeItem('hint_friend_shown');
+            for (let i = localStorage.length - 1; i >= 0; i--) {
+              const key = localStorage.key(i);
+              if (key && key.startsWith('cache_habits')) {
+                localStorage.removeItem(key);
+              }
+            }
+            setShouldShowFabHint(true);
+            setShouldShowSwipeHint(true);
           } else {
             console.log('👤 EXISTING USER - SKIPPING ONBOARDING');
             // Очищаем кэш привычек при входе
