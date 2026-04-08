@@ -133,26 +133,28 @@
 }
 
 .today__container {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
   font-weight: 700;
   font-size: 24px;
   color: #1D1D1F;
   margin-bottom: 4px;
   transition: color 0.3s ease;
+  contain: layout;
 }
 
 .today__container2 {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
   font-weight: 700;
   color: #1D1D1F;
   transition: color 0.3s ease;
   overflow: hidden;
-  gap: 8px;
-  min-height: 44px;
+  contain: layout;
 }
 
 .today__title {
@@ -160,6 +162,7 @@
   font-weight: 700;
   color: #1D1D1F;
   line-height: 1.3;
+  margin: 0;
   transition: color 0.3s ease;
 }
 
@@ -168,6 +171,8 @@
   font-weight: 700;
   color: #1D1D1F;
   transition: color 0.3s ease;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .today__subtitle {

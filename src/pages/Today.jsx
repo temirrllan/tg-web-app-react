@@ -727,14 +727,15 @@ useEffect(() => {
   };
 
   const getMotivationalMessage = () => {
+    // Используем стабильные данные — при загрузке показываем предыдущие значения
     const currentData = dateDataCache[selectedDate];
-    const currentPhrase = currentData?.phrase;
-    const currentStats = currentData?.stats || { completed: 0, total: 0 };
-    
+    const currentPhrase = currentData ? currentData.phrase : prevPhraseRef.current;
+    const currentStats = currentData ? currentData.stats : prevStatsRef.current;
+
     if (currentPhrase && currentPhrase.text) {
       return currentPhrase.text;
     }
-    
+
     if (currentStats.total === 0) {
       return t('todays.createYourFirstHabit');
     }
@@ -744,7 +745,7 @@ useEffect(() => {
     if (currentStats.completed === currentStats.total) {
       return t("todays.allDoneAmazing");
     }
-    
+
     const percentage = (currentStats.completed / currentStats.total) * 100;
     if (percentage >= 70) return t("todays.almostThere");
     if (percentage >= 50) return t("todays.greatProgress");
@@ -754,13 +755,13 @@ useEffect(() => {
 
   const getMotivationalEmoji = () => {
     const currentData = dateDataCache[selectedDate];
-    const currentPhrase = currentData?.phrase;
-    const currentStats = currentData?.stats || { completed: 0, total: 0 };
-    
+    const currentPhrase = currentData ? currentData.phrase : prevPhraseRef.current;
+    const currentStats = currentData ? currentData.stats : prevStatsRef.current;
+
     if (currentPhrase && currentPhrase.emoji) {
       return currentPhrase.emoji;
     }
-    
+
     if (currentStats.total === 0) return "🚀";
     if (currentStats.completed === 0) return "💪";
     if (currentStats.completed === currentStats.total) return "🎉";
@@ -1014,8 +1015,8 @@ useEffect(() => {
 
   const getMotivationalBackgroundColor = () => {
     const currentData = dateDataCache[selectedDate];
-    const currentPhrase = currentData?.phrase;
-    const currentStats = currentData?.stats || { completed: 0, total: 0 };
+    const currentPhrase = currentData ? currentData.phrase : prevPhraseRef.current;
+    const currentStats = currentData ? currentData.stats : prevStatsRef.current;
     
     if (currentPhrase && currentPhrase.backgroundColor) {
       return currentPhrase.backgroundColor;
@@ -1127,14 +1128,21 @@ useEffect(() => {
   }
 
   // Получаем данные для текущей выбранной даты
-  const currentDateData = dateDataCache[selectedDate] || { 
-    habits: [], 
+  const currentDateData = dateDataCache[selectedDate] || {
+    habits: [],
     stats: { completed: 0, total: 0 },
     phrase: null
   };
-  
+
   const displayHabits = dateLoading ? [] : currentDateData.habits;
-  const displayStats = currentDateData.stats;
+  // Стабильные данные: при загрузке показываем предыдущие значения, чтобы не было скачка "0 из 0"
+  const prevStatsRef = useRef(currentDateData.stats);
+  const prevPhraseRef = useRef(currentDateData.phrase);
+  if (!dateLoading && dateDataCache[selectedDate]) {
+    prevStatsRef.current = currentDateData.stats;
+    prevPhraseRef.current = currentDateData.phrase;
+  }
+  const displayStats = dateDataCache[selectedDate] ? currentDateData.stats : prevStatsRef.current;
   const showReadOnlyNotice = !isEditableDate && isCurrentWeekDate(selectedDate);
 
 
