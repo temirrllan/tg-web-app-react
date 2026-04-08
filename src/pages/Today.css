@@ -150,6 +150,9 @@
   font-weight: 700;
   color: #1D1D1F;
   transition: color 0.3s ease;
+  overflow: hidden;
+  gap: 8px;
+  min-height: 44px;
 }
 
 .today__title {
@@ -170,10 +173,11 @@
 .today__subtitle {
   font-size: 24px;
   color: #C3C3C3;
-  margin-top: 4px;
+  margin: 0;
   transition: color 0.3s ease;
   white-space: nowrap;
   flex-shrink: 0;
+  line-height: 1.2;
 }
 
 .today__motivation {
@@ -185,11 +189,12 @@
   color: #1D1D1F;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: background-color 0.3s ease, color 0.3s ease;
-  flex-shrink: 1;
+  flex: 1 1 0;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  line-height: 1.2;
 }
 
 .today__motivation--updating {
