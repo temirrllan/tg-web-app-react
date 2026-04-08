@@ -69,6 +69,8 @@ const Today = ({ shouldShowFabHint = false, shouldShowSwipeHint = false, shouldS
   // Флаг «хинт уже закрыт в этой сессии» — блокирует повторный показ
   // даже если shouldShowSwipeHint prop всё ещё true (App.jsx не знает об этом)
   const swipeHintClosedRef = useRef(false);
+  const prevStatsRef = useRef({ completed: 0, total: 0 });
+  const prevPhraseRef = useRef(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [selectedHabit, setSelectedHabit] = useState(null);
@@ -1136,8 +1138,6 @@ useEffect(() => {
 
   const displayHabits = dateLoading ? [] : currentDateData.habits;
   // Стабильные данные: при загрузке показываем предыдущие значения, чтобы не было скачка "0 из 0"
-  const prevStatsRef = useRef(currentDateData.stats);
-  const prevPhraseRef = useRef(currentDateData.phrase);
   if (!dateLoading && dateDataCache[selectedDate]) {
     prevStatsRef.current = currentDateData.stats;
     prevPhraseRef.current = currentDateData.phrase;
