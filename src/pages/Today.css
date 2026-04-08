@@ -175,7 +175,7 @@
 }
 
 .today__motivation {
-  max-width: calc(100vw - 32px);
+  max-width: calc(100vw - 50px);
   background: white;
   border-radius: 16px;
   padding: 10px 16px;
