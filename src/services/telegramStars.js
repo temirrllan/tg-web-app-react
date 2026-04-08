@@ -5,6 +5,22 @@ import habitServiceOptimized from './habitsOptimized';
 
 export const telegramStarsService = {
   /**
+   * Получить планы подписок из БД
+   */
+  async getPlans() {
+    try {
+      const { data } = await api.get('/payment/plans');
+      if (data.success && data.plans) {
+        return data.plans;
+      }
+      return null;
+    } catch (error) {
+      console.error('Failed to fetch subscription plans:', error);
+      return null;
+    }
+  },
+
+  /**
    * Валидация промокода
    */
   async validatePromoCode(code, planType) {

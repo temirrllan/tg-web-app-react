@@ -4,21 +4,44 @@ import sub from "../../../public/images/sub.png";
 import { useNavigation } from '../../hooks/useNavigation';
 import { habitService } from '../../services/habits';
 import { useTranslation } from '../../hooks/useTranslation';
+import { telegramStarsService } from '../../services/telegramStars';
 
 const SubscriptionModal = ({ isOpen, onClose, onSelectPlan }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [currentSubscription, setCurrentSubscription] = useState(null);
-  
+  const [plans, setPlans] = useState([]);
+
   useNavigation(onClose, { isVisible: isOpen });
 
   useEffect(() => {
     if (isOpen) {
       loadSubscriptionInfo();
+      loadPlans();
       setSelectedPlan(null);
     }
   }, [isOpen]);
+
+  const loadPlans = async () => {
+    const apiPlans = await telegramStarsService.getPlans();
+    if (apiPlans && apiPlans.length > 0) {
+      setPlans(apiPlans.map(p => ({
+        id: p.id,
+        name: p.displayName?.[language] || p.displayName?.en || p.name,
+        total: p.priceStars,
+        perMonth: p.perMonth,
+        durationMonths: p.durationMonths,
+      })));
+    } else {
+      // Fallback
+      setPlans([
+        { id: 'month', name: t('subscriptionModal.plans.month.name'), total: 59, perMonth: 59, durationMonths: 1 },
+        { id: '6_months', name: t('subscriptionModal.plans.sixMonths.name'), total: 299, perMonth: 49, durationMonths: 6 },
+        { id: '1_year', name: t('subscriptionModal.plans.oneYear.name'), total: 500, perMonth: 41, durationMonths: 12 },
+      ]);
+    }
+  };
 
   const loadSubscriptionInfo = async () => {
     try {
@@ -144,96 +167,38 @@ const SubscriptionModal = ({ isOpen, onClose, onSelectPlan }) => {
 
             {/* Plans */}
             <div className="subscription-modal__plans">
-<div 
-                className={`subscription-modal__plan ${selectedPlan === 'month' ? 'subscription-modal__plan--selected' : ''}`}
-                onClick={() => handlePlanSelect('month')}
-              >
-                <div className="subscription-modal__plan-radio">
-                  {selectedPlan === 'month' && (
-                    <div className="subscription-modal__plan-radio-inner">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                        <path d="M5 12l5 5L19 7" 
-                          stroke="white" strokeWidth="3" 
-                          strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
+              {plans.map(plan => (
+                <div
+                  key={plan.id}
+                  className={`subscription-modal__plan ${selectedPlan === plan.id ? 'subscription-modal__plan--selected' : ''}`}
+                  onClick={() => handlePlanSelect(plan.id)}
+                >
+                  <div className="subscription-modal__plan-radio">
+                    {selectedPlan === plan.id && (
+                      <div className="subscription-modal__plan-radio-inner">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                          <path d="M5 12l5 5L19 7"
+                            stroke="white" strokeWidth="3"
+                            strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="subscription-modal__plan-details">
+                    <div className="subscription-modal__plan-name">
+                      {plan.name}
                     </div>
-                  )}
-                </div>
-
-                <div className="subscription-modal__plan-details">
-                  <div className="subscription-modal__plan-name">
-                    {t('subscriptionModal.plans.month.name')}
-                  </div>
-                  <div className="subscription-modal__plan-total">
-                    {t('subscriptionModal.plans.month.total', { stars: 59 })}
-                  </div>
-                </div>
-
-                <div className="subscription-modal__plan-price">
-                  {t('subscriptionModal.plans.month.perMonth', { stars: 59 })}
-                </div>
-              </div>
-              {/* 6 months */}
-              <div 
-                className={`subscription-modal__plan ${selectedPlan === '6_months' ? 'subscription-modal__plan--selected' : ''}`}
-                onClick={() => handlePlanSelect('6_months')}
-              >
-                <div className="subscription-modal__plan-radio">
-                  {selectedPlan === '6_months' && (
-                    <div className="subscription-modal__plan-radio-inner">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                        <path d="M5 12l5 5L19 7" 
-                          stroke="white" strokeWidth="3" 
-                          strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
+                    <div className="subscription-modal__plan-total">
+                      {plan.total} {t('subscriptionModal.stars') || 'Stars'}
                     </div>
-                  )}
-                </div>
-
-                <div className="subscription-modal__plan-details">
-                  <div className="subscription-modal__plan-name">
-                    {t('subscriptionModal.plans.sixMonths.name')}
                   </div>
-                  <div className="subscription-modal__plan-total">
-                    {t('subscriptionModal.plans.sixMonths.total', { stars: 299 })}
+
+                  <div className="subscription-modal__plan-price">
+                    {plan.perMonth} ⭐/{t('subscriptionModal.month') || 'mo'}
                   </div>
                 </div>
-
-                <div className="subscription-modal__plan-price">
-                  {t('subscriptionModal.plans.sixMonths.perMonth', { stars: 49 })}
-                </div>
-              </div>
-
-              {/* 1 year */}
-              <div 
-                className={`subscription-modal__plan ${selectedPlan === '1_year' ? 'subscription-modal__plan--selected' : ''}`}
-                onClick={() => handlePlanSelect('1_year')}
-              >
-                <div className="subscription-modal__plan-radio">
-                  {selectedPlan === '1_year' && (
-                    <div className="subscription-modal__plan-radio-inner">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                        <path d="M5 12l5 5L19 7" 
-                          stroke="white" strokeWidth="3" 
-                          strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-                  )}
-                </div>
-
-                <div className="subscription-modal__plan-details">
-                  <div className="subscription-modal__plan-name">
-                    {t('subscriptionModal.plans.oneYear.name')}
-                  </div>
-                  <div className="subscription-modal__plan-total">
-                    {t('subscriptionModal.plans.oneYear.total', { stars: 500 })}
-                  </div>
-                </div>
-
-                <div className="subscription-modal__plan-price">
-                  {t('subscriptionModal.plans.oneYear.perMonth', { stars: 41 })}
-                </div>
-              </div>
+              ))}
             </div>
 
             {/* Links */}

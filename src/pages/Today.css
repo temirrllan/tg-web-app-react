@@ -142,7 +142,7 @@
   color: #1D1D1F;
   margin-bottom: 4px;
   transition: color 0.3s ease;
-  contain: layout;
+
 }
 
 .today__container2 {
@@ -154,7 +154,7 @@
   color: #1D1D1F;
   transition: color 0.3s ease;
   overflow: hidden;
-  contain: layout;
+
 }
 
 .today__title {

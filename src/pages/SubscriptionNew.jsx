@@ -8,19 +8,52 @@ import { telegramStarsService } from '../services/telegramStars';
 import { useTranslation } from '../hooks/useTranslation';
 import { useTelegramTheme } from '../hooks/useTelegramTheme';
 
+// Fallback планы — используются если API недоступен
+const FALLBACK_PLANS = [
+  { id: 'month', name: 'For 1 Month', total: 59, perMonth: 59, durationMonths: 1, badge: null },
+  { id: '6_months', name: 'For 6 Months', total: 299, perMonth: 49, durationMonths: 6, badge: null, isDefault: true },
+  { id: '1_year', name: 'For 1 Year', total: 500, perMonth: 41, durationMonths: 12, badge: '-30%' },
+];
+
 const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   useNavigation(onClose);
 
   const [selectedPlan, setSelectedPlan] = useState('6_months');
   const [quantity, setQuantity] = useState(1);
   const [buyAsGift, setBuyAsGift] = useState(false);
   const [promoCode, setPromoCode] = useState('');
-  const [promoValidation, setPromoValidation] = useState(null); // { valid, discount_stars, bonus_days, final_price, error }
+  const [promoValidation, setPromoValidation] = useState(null);
   const [isValidatingPromo, setIsValidatingPromo] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [plans, setPlans] = useState(FALLBACK_PLANS);
   useTelegramTheme();
+
+  // Загружаем планы из API
+  useEffect(() => {
+    const fetchPlans = async () => {
+      const apiPlans = await telegramStarsService.getPlans();
+      if (apiPlans && apiPlans.length > 0) {
+        const mapped = apiPlans.map(p => ({
+          id: p.id,
+          name: p.displayName?.[language] || p.displayName?.en || p.name,
+          total: p.priceStars,
+          perMonth: p.perMonth,
+          durationMonths: p.durationMonths,
+          badge: p.badge?.[language] || p.badge?.en || null,
+          isDefault: p.isDefault,
+        }));
+        setPlans(mapped);
+        // Установить план по умолчанию
+        const defaultPlan = mapped.find(p => p.isDefault);
+        if (defaultPlan && !preselectedPlan) {
+          setSelectedPlan(defaultPlan.id);
+        }
+      }
+    };
+    fetchPlans();
+  }, [language]);
 
   useEffect(() => {
     if (preselectedPlan === '1_year' || preselectedPlan === 'year') {
@@ -37,7 +70,6 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
   // Сбрасываем промо-валидацию при смене плана
   useEffect(() => {
     if (promoValidation?.valid) {
-      // Перевалидируем для нового плана
       handleApplyPromo(true);
     }
   }, [selectedPlan]);
@@ -45,7 +77,7 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
   // Слушатель события payment_success
   useEffect(() => {
     const handlePaymentSuccess = async (event) => {
-      console.log('🎉 Payment success event received:', event.detail);
+      console.log('Payment success event received:', event.detail);
       setTimeout(() => {
         onClose();
       }, 500);
@@ -56,31 +88,6 @@ const SubscriptionNew = ({ onClose, preselectedPlan = null }) => {
       window.removeEventListener('payment_success', handlePaymentSuccess);
     };
   }, [onClose]);
-
-  const plans = [
-    {
-      id: 'month',
-      name: t('subscriptionNew.plans.month.name'),
-      total: 59,
-      perMonth: 59,
-      badge: null
-    },
-    {
-      id: '6_months',
-      name: t('subscriptionNew.plans.sixMonths.name'),
-      total: 299,
-      perMonth: 49,
-      badge: null,
-      selected: true
-    },
-    {
-      id: '1_year',
-      name: t('subscriptionNew.plans.oneYear.name'),
-      total: 500,
-      perMonth: 41,
-      badge: t('subscriptionNew.plans.oneYear.badge')
-    }
-  ];
 
   const benefits = [
     t('subscriptionNew.benefits.unlimited'),
