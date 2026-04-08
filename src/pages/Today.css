@@ -172,10 +172,11 @@
   color: #C3C3C3;
   margin-top: 4px;
   transition: color 0.3s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .today__motivation {
-  max-width: calc(100vw - 50px);
   background: white;
   border-radius: 16px;
   padding: 10px 16px;
@@ -184,9 +185,11 @@
   color: #1D1D1F;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: background-color 0.3s ease, color 0.3s ease;
-  white-space: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .today__motivation--updating {

@@ -770,16 +770,21 @@ useEffect(() => {
   const getDateLabel = () => {
     const todayStr = getTodayDate();
     const yesterdayStr = getYesterdayDate();
-    
+
     if (selectedDate === todayStr) return t('todays.forToday');
     if (selectedDate === yesterdayStr) return t('todays.forYesterday');
-    
+
     const [year, month, day] = selectedDate.split('-');
     const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-    
-    const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
+
+    // Use translated day names from weekNav.days [Mon, Tue, ...]
+    const dayIndex = date.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+    const daysArray = t('weekNav.days');
+    const weekday = Array.isArray(daysArray)
+      ? daysArray[dayIndex === 0 ? 6 : dayIndex - 1]
+      : date.toLocaleDateString('en-US', { weekday: 'short' });
     const dayNumber = date.getDate();
-    
+
     return `${t('todays.for')} ${weekday} ${dayNumber}`;
   };
 
@@ -1153,8 +1158,7 @@ useEffect(() => {
             <div className="today__container2">
               <p className="today__subtitle">{getDateLabel()}</p>
               <div className="today__motivation" style={{
-                backgroundColor: getMotivationalBackgroundColor(),
-                fontSize: `${getMotivationalMessage().length > 30 ? 13 : getMotivationalMessage().length > 22 ? 14 : 16}px`
+                backgroundColor: getMotivationalBackgroundColor()
               }}>
                 {getMotivationalMessage()} {getMotivationalEmoji()}
               </div>
