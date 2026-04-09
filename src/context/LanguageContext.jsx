@@ -24,14 +24,18 @@ function detectTelegramLanguage() {
   try {
     const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
     const langCode = tgUser?.language_code?.toLowerCase()?.trim();
+    console.log('🌍 detectTelegramLanguage: raw language_code =', JSON.stringify(tgUser?.language_code), '→ normalized =', JSON.stringify(langCode));
     if (!langCode) return 'en';
 
     if (langCode === 'kk' || langCode === 'kz' || langCode.startsWith('kk-') || langCode.startsWith('kk_') || langCode.startsWith('kz-') || langCode.startsWith('kz_')) {
+      console.log('🌍 detectTelegramLanguage: → kk');
       return 'kk';
     }
     if (langCode === 'ru' || langCode.startsWith('ru-') || langCode.startsWith('ru_')) {
+      console.log('🌍 detectTelegramLanguage: → ru');
       return 'ru';
     }
+    console.log('🌍 detectTelegramLanguage: → en (default)');
     return 'en';
   } catch {
     return 'en';
