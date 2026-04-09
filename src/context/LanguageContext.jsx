@@ -19,49 +19,47 @@ export const LanguageContext = createContext({
   initializeLanguage: () => {}
 });
 
+// Определяем язык из Telegram ДО первого рендера
+function detectTelegramLanguage() {
+  try {
+    const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+    const langCode = tgUser?.language_code?.toLowerCase()?.trim();
+    if (!langCode) return 'en';
+
+    if (langCode === 'kk' || langCode === 'kz' || langCode.startsWith('kk-') || langCode.startsWith('kk_') || langCode.startsWith('kz-') || langCode.startsWith('kz_')) {
+      return 'kk';
+    }
+    if (langCode === 'ru' || langCode.startsWith('ru-') || langCode.startsWith('ru_')) {
+      return 'ru';
+    }
+    return 'en';
+  } catch {
+    return 'en';
+  }
+}
+
+function normalizeLanguage(lang) {
+  if (!lang) return 'en';
+  const l = lang.toLowerCase().trim();
+  if (l === 'kk' || l === 'kz') return 'kk';
+  if (l === 'ru') return 'ru';
+  if (l === 'en') return 'en';
+  return 'en';
+}
+
 export const LanguageProvider = ({ children }) => {
-  const [language, setLanguageState] = useState('en');
+  const [language, setLanguageState] = useState(() => detectTelegramLanguage());
   const [isChanging, setIsChanging] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Функция инициализации языка из данных пользователя (вызывается из App.jsx после авторизации)
   const initializeLanguage = useCallback((userLanguage) => {
     console.log('🌍 Initializing language from user data:', userLanguage);
-    
-    // Проверяем и нормализуем язык
-    let normalizedLanguage = 'en'; // По умолчанию английский
-    
-    if (userLanguage) {
-      const langLower = userLanguage.toLowerCase();
-      
-      if (langLower === 'kk' || langLower === 'kz') {
-        // Казахский язык всегда сохраняем как 'kk'
-        normalizedLanguage = 'kk';
-      } else if (langLower === 'ru') {
-        normalizedLanguage = 'ru';
-      } else if (langLower === 'en') {
-        normalizedLanguage = 'en';
-      } else {
-        // Любой неизвестный язык = английский
-        normalizedLanguage = 'en';
-        console.log(`⚠️ Unknown language "${userLanguage}", using English`);
-      }
-    }
-    
+    const normalizedLanguage = normalizeLanguage(userLanguage);
     setLanguageState(normalizedLanguage);
     setIsInitialized(true);
     console.log('✅ Language initialized to:', normalizedLanguage);
   }, []);
-
-  // При монтировании компонента НЕ загружаем язык автоматически
-  // Ждём, пока App.jsx вызовет initializeLanguage после получения данных пользователя
-  useEffect(() => {
-    console.log('🌍 LanguageProvider mounted, waiting for user data...');
-    // Устанавливаем дефолтный язык, пока не получим данные пользователя
-    if (!isInitialized) {
-      setLanguageState('en'); // Временно ставим английский
-    }
-  }, [isInitialized]);
 
   // Функция для получения перевода
   const t = useCallback((key, params = {}) => {
