@@ -503,5 +503,11 @@
       "notAvailable": "Please open the app through Telegram to make a purchase.",
       "failed": "Failed to open payment form. Please try again."
     }
+  },
+  "onboarding": {
+    "title1": "Welcome to the",
+    "title2": "Habit Tracker!",
+    "desc": "Create healthy habits and achieve your goals with our easy-to-use tracker.",
+    "button": "Create a New Habit"
   }
 }

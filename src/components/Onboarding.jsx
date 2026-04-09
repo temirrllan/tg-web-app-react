@@ -2,10 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import './Onboarding.css';
 import illustration from '../../public/images/onboarding.png';
 import { useTelegramTheme } from '../hooks/useTelegramTheme';
+import { useTranslation } from '../hooks/useTranslation';
 
 const Onboarding = ({ onComplete }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const imgRef = useRef(null);
+  const { t } = useTranslation();
   useTelegramTheme();
 
   useEffect(() => {
@@ -29,16 +31,14 @@ const Onboarding = ({ onComplete }) => {
       </div>
       <div className="onboarding__card ob-card-enter">
         <h2 className="onboarding__title">
-          Welcome to the<br />
-          Habit Tracker!
+          {t('onboarding.title1')}<br />
+          {t('onboarding.title2')}
         </h2>
         <p className="onboarding__desc">
-          Create healthy habits and achieve<br />
-          your goals with our easy-to-use<br />
-          tracker.
+          {t('onboarding.desc')}
         </p>
         <button className="onboarding__btn ob-btn-enter" onClick={onComplete}>
-          Create a New Habit
+          {t('onboarding.button')}
         </button>
       </div>
     </div>
