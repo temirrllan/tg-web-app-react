@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import './Onboarding.css';
 import illustration from '../../public/images/onboarding.png';
 import { useTelegramTheme } from '../hooks/useTelegramTheme';
@@ -6,28 +6,15 @@ import en from '../locales/en.json';
 import ru from '../locales/ru.json';
 import kk from '../locales/kk.json';
 
-// Определяем язык напрямую из Telegram — не зависим от LanguageContext,
-// который может ещё не обновиться к моменту первого рендера Onboarding
-function detectLanguage() {
-  try {
-    const tgLang = window.Telegram?.WebApp?.initDataUnsafe?.user?.language_code;
-    if (tgLang) {
-      const code = tgLang.toLowerCase();
-      if (code === 'ru' || code.startsWith('ru')) return 'ru';
-      if (code === 'kk' || code === 'kz' || code.startsWith('kk') || code.startsWith('kz')) return 'kk';
-    }
-  } catch {}
-  return 'en';
-}
-
 const locales = { en, ru, kk };
 
-const Onboarding = ({ onComplete }) => {
+const Onboarding = ({ user, onComplete }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const imgRef = useRef(null);
   useTelegramTheme();
 
-  const lang = useMemo(() => detectLanguage(), []);
+  // Берём язык напрямую из user prop (приходит из auth response)
+  const lang = ['ru', 'kk', 'en'].includes(user?.language) ? user.language : 'en';
   const t = (key) => {
     const keys = key.split('.');
     let val = locales[lang];
