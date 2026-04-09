@@ -1,17 +1,43 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import './Onboarding.css';
 import illustration from '../../public/images/onboarding.png';
 import { useTelegramTheme } from '../hooks/useTelegramTheme';
-import { useTranslation } from '../hooks/useTranslation';
+import en from '../locales/en.json';
+import ru from '../locales/ru.json';
+import kk from '../locales/kk.json';
+
+// Определяем язык напрямую из Telegram — не зависим от LanguageContext,
+// который может ещё не обновиться к моменту первого рендера Onboarding
+function detectLanguage() {
+  try {
+    const tgLang = window.Telegram?.WebApp?.initDataUnsafe?.user?.language_code;
+    if (tgLang) {
+      const code = tgLang.toLowerCase();
+      if (code === 'ru' || code.startsWith('ru')) return 'ru';
+      if (code === 'kk' || code === 'kz' || code.startsWith('kk') || code.startsWith('kz')) return 'kk';
+    }
+  } catch {}
+  return 'en';
+}
+
+const locales = { en, ru, kk };
 
 const Onboarding = ({ onComplete }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const imgRef = useRef(null);
-  const { t } = useTranslation();
   useTelegramTheme();
 
+  const lang = useMemo(() => detectLanguage(), []);
+  const t = (key) => {
+    const keys = key.split('.');
+    let val = locales[lang];
+    for (const k of keys) {
+      val = val?.[k];
+    }
+    return val || key;
+  };
+
   useEffect(() => {
-    // If image is already cached it won't fire onLoad, handle it here
     if (imgRef.current?.complete) {
       setImageLoaded(true);
     }
