@@ -19,24 +19,39 @@ export const LanguageContext = createContext({
   initializeLanguage: () => {}
 });
 
-// Определяем язык из Telegram ДО первого рендера
+// Нормализация любого language code в наш формат (en/ru/kk)
+function mapLangCode(code) {
+  if (!code) return null;
+  const l = code.toLowerCase().trim();
+  if (l === 'kk' || l === 'kz' || l.startsWith('kk-') || l.startsWith('kk_') || l.startsWith('kz-') || l.startsWith('kz_')) return 'kk';
+  if (l === 'ru' || l.startsWith('ru-') || l.startsWith('ru_')) return 'ru';
+  if (l === 'en' || l.startsWith('en-') || l.startsWith('en_')) return 'en';
+  return null;
+}
+
+// Определяем язык из Telegram + navigator.language как fallback
 function detectTelegramLanguage() {
   try {
-    const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-    const langCode = tgUser?.language_code?.toLowerCase()?.trim();
-    console.log('🌍 detectTelegramLanguage: raw language_code =', JSON.stringify(tgUser?.language_code), '→ normalized =', JSON.stringify(langCode));
-    if (!langCode) return 'en';
+    // 1) Приоритет: language_code из Telegram initData
+    const tgLang = window.Telegram?.WebApp?.initDataUnsafe?.user?.language_code;
+    // 2) Fallback: язык браузера/системы (в WebView Telegram может отражать язык интерфейса)
+    const navLang = navigator.language || navigator.userLanguage;
 
-    if (langCode === 'kk' || langCode === 'kz' || langCode.startsWith('kk-') || langCode.startsWith('kk_') || langCode.startsWith('kz-') || langCode.startsWith('kz_')) {
-      console.log('🌍 detectTelegramLanguage: → kk');
-      return 'kk';
+    console.log('🌍 detectTelegramLanguage: tg language_code =', JSON.stringify(tgLang), ', navigator.language =', JSON.stringify(navLang));
+
+    const fromTg = mapLangCode(tgLang);
+    const fromNav = mapLangCode(navLang);
+
+    // Если Telegram и navigator дают разный язык — предпочитаем navigator
+    // (потому что language_code может отставать из-за sync lag)
+    if (fromTg && fromNav && fromTg !== fromNav) {
+      console.log('🌍 detectTelegramLanguage: tg=' + fromTg + ' vs nav=' + fromNav + ' → using navigator: ' + fromNav);
+      return fromNav;
     }
-    if (langCode === 'ru' || langCode.startsWith('ru-') || langCode.startsWith('ru_')) {
-      console.log('🌍 detectTelegramLanguage: → ru');
-      return 'ru';
-    }
-    console.log('🌍 detectTelegramLanguage: → en (default)');
-    return 'en';
+
+    const result = fromTg || fromNav || 'en';
+    console.log('🌍 detectTelegramLanguage: → ' + result);
+    return result;
   } catch {
     return 'en';
   }
