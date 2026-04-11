@@ -28,19 +28,34 @@ const SubscriptionModal = ({ isOpen, onClose, onSelectPlan }) => {
     if (apiPlans && apiPlans.length > 0) {
       setPlans(apiPlans.map(p => ({
         id: p.id,
-        name: p.displayName?.[language] || p.displayName?.en || p.name,
+        displayName: p.displayName,
+        fallbackName: p.name,
         total: p.priceStars,
         perMonth: p.perMonth,
         durationMonths: p.durationMonths,
       })));
     } else {
-      // Fallback
+      // Fallback — name будет определяться через t() при рендере
       setPlans([
-        { id: 'month', name: t('subscriptionModal.plans.month.name'), total: 59, perMonth: 59, durationMonths: 1 },
-        { id: '6_months', name: t('subscriptionModal.plans.sixMonths.name'), total: 299, perMonth: 49, durationMonths: 6 },
-        { id: '1_year', name: t('subscriptionModal.plans.oneYear.name'), total: 500, perMonth: 41, durationMonths: 12 },
+        { id: 'month', total: 59, perMonth: 59, durationMonths: 1 },
+        { id: '6_months', total: 299, perMonth: 49, durationMonths: 6 },
+        { id: '1_year', total: 500, perMonth: 41, durationMonths: 12 },
       ]);
     }
+  };
+
+  // Получаем локализованное имя плана
+  const getPlanName = (plan) => {
+    if (plan.displayName) {
+      return plan.displayName[language] || plan.displayName.en || plan.fallbackName || plan.id;
+    }
+    // Fallback планы — используем ключи переводов
+    const nameKeys = {
+      'month': 'subscriptionModal.plans.month.name',
+      '6_months': 'subscriptionModal.plans.sixMonths.name',
+      '1_year': 'subscriptionModal.plans.oneYear.name',
+    };
+    return t(nameKeys[plan.id] || plan.id);
   };
 
   const loadSubscriptionInfo = async () => {
@@ -187,7 +202,7 @@ const SubscriptionModal = ({ isOpen, onClose, onSelectPlan }) => {
 
                   <div className="subscription-modal__plan-details">
                     <div className="subscription-modal__plan-name">
-                      {plan.name}
+                      {getPlanName(plan)}
                     </div>
                     <div className="subscription-modal__plan-total">
                       {plan.total} {t('subscriptionModal.stars') || 'Stars'}
