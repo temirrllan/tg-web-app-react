@@ -1,8 +1,10 @@
 import React from 'react';
 import Modal from '../common/Modal';
+import { useTranslation } from '../../hooks/useTranslation';
 import './DeleteConfirmModal.css';
 
 const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, habitTitle }) => {
+  const { t } = useTranslation();
   const handleYes = () => {
     onConfirm();
     onClose();
@@ -15,20 +17,20 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, habitTitle }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="delete-modal">
       <h2 className="delete-modal__title">
-        Are You Sure You Want<br />to Remove the Habit?
+        {t('common.deleteHabitConfirm')}
       </h2>
       <div className="delete-modal__buttons">
-        <button 
+        <button
           className="delete-modal__button delete-modal__button--yes"
           onClick={handleYes}
         >
-          Yes
+          {t('common.yes')}
         </button>
-        <button 
+        <button
           className="delete-modal__button delete-modal__button--no"
           onClick={handleNo}
         >
-          No
+          {t('common.no')}
         </button>
       </div>
     </Modal>

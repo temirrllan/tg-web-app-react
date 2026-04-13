@@ -53,7 +53,8 @@
     "yes": "Yes",
     "no": "No",
     "done": "Done",
-    "back": "Back"
+    "back": "Back",
+    "deleteHabitConfirm": "Are You Sure You Want to Remove the Habit?"
   },
   "profile": {
     "appVersion": "App Version",
