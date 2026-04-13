@@ -186,6 +186,11 @@ useEffect(() => {
   // и стейл данные с сервера НЕ должны перезаписывать оптимистичные обновления
   const optimisticVersion = useRef(0);
 
+  // Silent sync refs for special habits (same pattern as regular habits)
+  const specialPendingSwipes = useRef(new Set());
+  const specialSilentSyncTimer = useRef(null);
+  const specialOptimisticVersion = useRef(0);
+
   // ✅ Stable refs для callbacks — чтобы HabitCard (React.memo) всегда вызывал актуальный код
   const handleMarkRef = useRef(null);
   const handleUnmarkRef = useRef(null);
@@ -297,11 +302,31 @@ useEffect(() => {
     }
   }, [activeTab, selectedDate, loadSpecialHabitsForDate]);
 
+  // ── Silent sync for special habits (same pattern as regular habits) ─────────
+  const silentSyncSpecial = useCallback((date) => {
+    if (specialSilentSyncTimer.current) clearTimeout(specialSilentSyncTimer.current);
+    specialSilentSyncTimer.current = setTimeout(async () => {
+      if (specialPendingSwipes.current.size > 0) return;
+      const versionBefore = specialOptimisticVersion.current;
+      try {
+        const data = await specialHabitsService.getSpecialHabitsForDate(date);
+        if (specialPendingSwipes.current.size === 0 && specialOptimisticVersion.current === versionBefore) {
+          setSpecialHabits(data.habits || []);
+        }
+      } catch (err) {
+        console.error('Silent sync special habits failed:', err);
+      }
+    }, 1500);
+  }, []);
+
   // ── Special habit mark / unmark ─────────────────────────────────────────────
   const handleSpecialMark = useCallback(async (habitId, status) => {
     if (!isEditableDate) return;
+    if (specialPendingSwipes.current.has(habitId)) return;
+    specialPendingSwipes.current.add(habitId);
 
     // Optimistic update
+    specialOptimisticVersion.current += 1;
     setSpecialHabits(prev => prev.map(h =>
       h.id === habitId ? { ...h, today_status: status } : h
     ));
@@ -312,19 +337,27 @@ useEffect(() => {
       if (result.newly_unlocked && result.newly_unlocked.length > 0) {
         setAchievementQueue(prev => [...prev, ...result.newly_unlocked]);
       }
+
+      // Debounced silent sync — same as regular habits
+      silentSyncSpecial(selectedDate);
     } catch (err) {
       console.error('Failed to mark special habit:', err);
       // Roll back on error
-      await loadSpecialHabitsForDate(selectedDate);
+      setSpecialHabits(prev => prev.map(h =>
+        h.id === habitId ? { ...h, today_status: 'pending' } : h
+      ));
+    } finally {
+      specialPendingSwipes.current.delete(habitId);
     }
-
-    // Re-fetch to get server truth
-    await loadSpecialHabitsForDate(selectedDate);
-  }, [isEditableDate, selectedDate, loadSpecialHabitsForDate]);
+  }, [isEditableDate, selectedDate, silentSyncSpecial]);
 
   const handleSpecialUnmark = useCallback(async (habitId) => {
     if (!isEditableDate) return;
+    if (specialPendingSwipes.current.has(habitId)) return;
+    specialPendingSwipes.current.add(habitId);
 
+    // Optimistic update
+    specialOptimisticVersion.current += 1;
     setSpecialHabits(prev => prev.map(h =>
       h.id === habitId ? { ...h, today_status: 'pending' } : h
     ));
@@ -334,12 +367,17 @@ useEffect(() => {
       if (result.newly_unlocked && result.newly_unlocked.length > 0) {
         setAchievementQueue(prev => [...prev, ...result.newly_unlocked]);
       }
+
+      // Debounced silent sync
+      silentSyncSpecial(selectedDate);
     } catch (err) {
       console.error('Failed to unmark special habit:', err);
+      // Rollback — refetch from server
+      silentSyncSpecial(selectedDate);
+    } finally {
+      specialPendingSwipes.current.delete(habitId);
     }
-
-    await loadSpecialHabitsForDate(selectedDate);
-  }, [isEditableDate, selectedDate, loadSpecialHabitsForDate]);
+  }, [isEditableDate, selectedDate, silentSyncSpecial]);
 
   // ── FAB click: show AddHabitMenu instead of direct CreateForm ───────────────
   const handleFabClick = async () => {
