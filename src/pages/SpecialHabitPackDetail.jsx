@@ -29,6 +29,7 @@ const SpecialHabitPackDetail = ({ pack: initialPack, onClose, onGoToSpecialTab }
   const [pack, setPack]             = useState(null);
   const [loading, setLoading]       = useState(true);
   const [purchasing, setPurchasing] = useState(false);
+  const [toggling, setToggling]     = useState(false);
   const [error, setError]           = useState(null);
 
   const loadPack = useCallback(async () => {
@@ -99,6 +100,19 @@ const SpecialHabitPackDetail = ({ pack: initialPack, onClose, onGoToSpecialTab }
     }
   };
 
+  const handleToggleVisibility = async () => {
+    if (!pack || toggling) return;
+    setToggling(true);
+    try {
+      await specialHabitsService.togglePackVisibility(pack.id);
+      await loadPack();
+    } catch (err) {
+      console.error('Toggle visibility error:', err);
+    } finally {
+      setToggling(false);
+    }
+  };
+
   /* ─── Loading / error states ─────────────────────────────────────────── */
   if (loading) {
     return <div className="pd pd--loading"><Loader size="large" /></div>;
@@ -108,6 +122,7 @@ const SpecialHabitPackDetail = ({ pack: initialPack, onClose, onGoToSpecialTab }
   }
 
   const isPurchased  = pack?.is_purchased;
+  const isHidden     = pack?.is_hidden || false;
   const bgColor      = getPackBackground(pack);
   const isFree       = pack.price_stars === 0;
   const priceDisplay = isFree ? t('specialHabits.packDetail.freeBadge') : `⭐ ${pack.price_stars}`;
@@ -169,9 +184,21 @@ const SpecialHabitPackDetail = ({ pack: initialPack, onClose, onGoToSpecialTab }
         </div>
 
         {/* ── CTA button ────────────────────────────────────────────── */}
-        {isPurchased ? (
-          <button className="pd__cta pd__cta--owned" onClick={onGoToSpecialTab}>
-            {t('specialHabits.packDetail.ownedButton')}
+        {isPurchased && !isHidden ? (
+          <button
+            className="pd__cta pd__cta--remove"
+            onClick={handleToggleVisibility}
+            disabled={toggling}
+          >
+            {toggling ? t('specialHabits.packDetail.processing') : t('specialHabits.packDetail.removeButton')}
+          </button>
+        ) : isPurchased && isHidden ? (
+          <button
+            className="pd__cta pd__cta--restore"
+            onClick={handleToggleVisibility}
+            disabled={toggling}
+          >
+            {toggling ? t('specialHabits.packDetail.processing') : t('specialHabits.packDetail.restoreButton')}
           </button>
         ) : (
           <button

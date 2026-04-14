@@ -365,6 +365,8 @@
     "packDetail": {
       "unlockButton": "Әдеттерді алу",
       "ownedButton": "Әдеттер қосылды",
+      "removeButton": "Пакті алып тастау",
+      "restoreButton": "Пакті қалпына келтіру",
       "biography": "Өмірбаяны",
       "learnMore": "Толығырақ",
       "achievements": "Жетістіктер",

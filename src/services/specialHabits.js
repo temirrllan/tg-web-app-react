@@ -32,6 +32,11 @@ export const specialHabitsService = {
     return data;
   },
 
+  async togglePackVisibility(packId) {
+    const { data } = await api.post(`/special-habits/packs/${packId}/toggle-visibility`);
+    return data;
+  },
+
   // ─── Achievements ────────────────────────────────────────────────────────────
 
   async getPackProgress(packId) {

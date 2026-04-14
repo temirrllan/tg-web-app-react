@@ -365,6 +365,8 @@
     "packDetail": {
       "unlockButton": "Unlock the Habit",
       "ownedButton": "I Have This Habits",
+      "removeButton": "Remove Pack",
+      "restoreButton": "Restore Pack",
       "biography": "Biography",
       "learnMore": "Learn more",
       "achievements": "Achievements",

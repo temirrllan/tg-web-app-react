@@ -159,6 +159,28 @@
   cursor: default;
 }
 
+/* Remove: soft red */
+.pd__cta--remove {
+  background: #ffcdd2;
+  color: #c62828;
+}
+
+.pd__cta--remove:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Restore: soft blue */
+.pd__cta--restore {
+  background: #bbdefb;
+  color: #1565c0;
+}
+
+.pd__cta--restore:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .pd__error {
   color: #ef4444;
   font-size: 14px;
@@ -387,6 +409,16 @@
 .dark-theme .pd__cta--owned {
   background: #1E3A1E;
   color: #A7D96C;
+}
+
+.dark-theme .pd__cta--remove {
+  background: #3A1E1E;
+  color: #EF9A9A;
+}
+
+.dark-theme .pd__cta--restore {
+  background: #1E2A3A;
+  color: #90CAF9;
 }
 
 .dark-theme .pd__bio-text {

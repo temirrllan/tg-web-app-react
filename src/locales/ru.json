@@ -351,6 +351,8 @@
     "packDetail": {
       "unlockButton": "Получить привычки",
       "ownedButton": "Привычки уже добавлены",
+      "removeButton": "Убрать пак",
+      "restoreButton": "Восстановить пак",
       "biography": "Биография",
       "learnMore": "Подробнее",
       "achievements": "Достижения",
