@@ -38,6 +38,14 @@
   border-color: #d4caef;
 }
 
+.shd-achievement--unlocked .shd-achievement__title {
+  color: #1c1c1e;
+}
+
+.shd-achievement--unlocked .shd-achievement__desc {
+  color: #636366;
+}
+
 /* Icon circle */
 .shd-achievement__icon {
   width: 46px;
