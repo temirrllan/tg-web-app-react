@@ -110,7 +110,7 @@ const SpecialHabitsShop = ({ onClose, onPackSelect }) => {
 
 const PackCard = ({ pack, onClick, t }) => {
   const isFree      = pack.price_stars === 0;
-  const hasDiscount = pack.original_price_stars && pack.original_price_stars > pack.price_stars;
+  const hasDiscount = pack.original_price_stars > pack.price_stars;
   const bgColor     = getPackBackground(pack);
 
   return (
