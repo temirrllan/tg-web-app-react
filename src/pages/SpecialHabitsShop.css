@@ -332,3 +332,24 @@
 .dark-theme .pack-card__price-old {
   color: #636366;
 }
+
+/* AI Pack Generator entry banner */
+.shop__ai-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: calc(100% - 40px);
+  margin: 0 20px 16px;
+  padding: 14px 16px;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  cursor: pointer;
+  text-align: left;
+}
+.shop__ai-banner-spark { font-size: 22px; }
+.shop__ai-banner-text { display: flex; flex-direction: column; flex: 1; }
+.shop__ai-banner-text b { font-size: 15px; font-weight: 700; }
+.shop__ai-banner-text small { font-size: 12px; opacity: 0.9; margin-top: 2px; }
+.shop__ai-banner-arrow { font-size: 24px; opacity: 0.8; }

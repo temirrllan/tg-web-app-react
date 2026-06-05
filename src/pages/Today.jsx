@@ -27,6 +27,7 @@ import OnboardingGuide from '../components/hints/OnboardingGuide';
 import WeekHint from '../components/hints/WeekHint';
 import AddHabitMenu from '../components/modals/AddHabitMenu';
 import SpecialHabitsShop from './SpecialHabitsShop';
+import AIPackGenerator from './AIPackGenerator';
 import SpecialHabitPackDetail from './SpecialHabitPackDetail';
 import SpecialHabitDetail from './SpecialHabitDetail';
 import AchievementUnlockedPopup from '../components/modals/AchievementUnlockedPopup';
@@ -86,6 +87,7 @@ const Today = ({ shouldShowFabHint = false, shouldShowSwipeHint = false, shouldS
   const [activeTab, setActiveTab] = useState('my'); // 'my' | 'special'
   const [showAddHabitMenu, setShowAddHabitMenu] = useState(false);
   const [showSpecialShop, setShowSpecialShop] = useState(false);
+  const [showAIPackGen, setShowAIPackGen] = useState(false);
   const [selectedPack, setSelectedPack] = useState(null);
   const [showPackDetail, setShowPackDetail] = useState(false);
   const [specialHabits, setSpecialHabits] = useState([]);
@@ -1155,6 +1157,10 @@ useEffect(() => {
     );
   }
 
+  if (showAIPackGen) {
+    return <AIPackGenerator onClose={() => setShowAIPackGen(false)} />;
+  }
+
   if (showSpecialShop) {
     return (
       <SpecialHabitsShop
@@ -1163,6 +1169,7 @@ useEffect(() => {
           setSelectedPack(pack);
           setShowPackDetail(true);
         }}
+        onOpenAIGenerator={() => { setShowSpecialShop(false); setShowAIPackGen(true); }}
       />
     );
   }
@@ -1302,6 +1309,13 @@ useEffect(() => {
                   onClick={() => setShowSpecialShop(true)}
                 >
                   {t('specialHabits.browseStore') || 'Browse Store'}
+                </button>
+                <button
+                  className="today__special-empty-btn"
+                  onClick={() => setShowAIPackGen(true)}
+                  style={{ marginTop: 10, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff' }}
+                >
+                  ✨ {t('aiPack.entry') || 'Create a pack with AI'}
                 </button>
               </div>
             ) : (

@@ -10,7 +10,7 @@ import './SpecialHabitsShop.css';
 
 const FILTERS = ['all', 'paid', 'free'];
 
-const SpecialHabitsShop = ({ onClose, onPackSelect }) => {
+const SpecialHabitsShop = ({ onClose, onPackSelect, onOpenAIGenerator }) => {
   useTelegramTheme();
   useNavigation(onClose);
   const { t } = useTranslation();
@@ -57,6 +57,18 @@ const SpecialHabitsShop = ({ onClose, onPackSelect }) => {
       <div className="shop__header">
         <h1 className="shop__title">{t('specialHabits.shop.title')}</h1>
       </div>
+
+      {/* AI Pack Generator entry */}
+      {onOpenAIGenerator && (
+        <button className="shop__ai-banner" onClick={onOpenAIGenerator} type="button">
+          <span className="shop__ai-banner-spark">✨</span>
+          <span className="shop__ai-banner-text">
+            <b>{t('aiPack.title') || 'AI Pack Generator'}</b>
+            <small>{t('aiPack.subtitle') || 'Describe your goal — AI builds a personal habit pack'}</small>
+          </span>
+          <span className="shop__ai-banner-arrow">›</span>
+        </button>
+      )}
 
       {/* Search bar */}
       <div className="shop__search-wrap">

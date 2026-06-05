@@ -1,0 +1,188 @@
+/* AIPackGenerator.css */
+
+.aigen {
+  min-height: 100vh;
+  background: #f2f2f7;
+  color: #1c1c1e;
+  padding: 20px 18px 40px;
+  box-sizing: border-box;
+}
+.dark-theme .aigen { background: #1c1c1e; color: #fff; }
+
+.aigen__loader,
+.aigen__gen,
+.aigen__done {
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 10px;
+}
+
+/* ── Input ─────────────────────────────────────────────────────────────── */
+.aigen__title { font-size: 26px; font-weight: 800; margin: 6px 0 4px; }
+.aigen__subtitle { font-size: 15px; color: #8e8e93; margin: 0 0 18px; }
+
+.aigen__textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: none;
+  border-radius: 16px;
+  padding: 16px;
+  font-size: 16px;
+  background: #fff;
+  color: #1c1c1e;
+  resize: none;
+  outline: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.dark-theme .aigen__textarea { background: #2c2c2e; color: #fff; }
+
+.aigen__survey { margin-top: 18px; display: flex; flex-direction: column; gap: 14px; }
+.aigen__survey-label { font-size: 13px; font-weight: 600; color: #8e8e93; margin-bottom: 8px; }
+.aigen__chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.aigen__chip {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 14px;
+  background: #fff;
+  color: #1c1c1e;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  transition: all .15s ease;
+}
+.dark-theme .aigen__chip { background: #2c2c2e; color: #fff; }
+.aigen__chip--active { background: #4caf50; color: #fff; }
+.dark-theme .aigen__chip--active { background: #a7d96c; color: #1c1c1e; }
+
+.aigen__cta {
+  width: 100%;
+  margin-top: 24px;
+  border: none;
+  border-radius: 16px;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  cursor: pointer;
+  transition: opacity .15s ease;
+}
+.aigen__cta:disabled { opacity: .5; cursor: default; }
+
+.aigen__secondary {
+  width: 100%;
+  margin-top: 10px;
+  border: none;
+  border-radius: 16px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  background: transparent;
+  color: #667eea;
+  cursor: pointer;
+}
+.dark-theme .aigen__secondary { color: #a7d96c; }
+
+.aigen__hint { font-size: 12px; color: #8e8e93; text-align: center; margin-top: 10px; }
+.aigen__error {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255, 59, 48, 0.12);
+  color: #ff3b30;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* ── Generating animation (как мини-видео) ─────────────────────────────── */
+.aigen__orb { position: relative; width: 120px; height: 120px; }
+.aigen__orb-core {
+  position: absolute; inset: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  animation: aigen-pulse 1.6s ease-in-out infinite;
+  box-shadow: 0 0 40px rgba(118, 75, 162, 0.55);
+}
+.aigen__orb-ring {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  border: 3px solid rgba(118, 75, 162, 0.35);
+  animation: aigen-ring 2s ease-out infinite;
+}
+.aigen__orb-ring--2 { animation-delay: 1s; }
+.aigen__orb--static .aigen__orb-core { animation: none; }
+
+@keyframes aigen-pulse {
+  0%, 100% { transform: scale(0.9); opacity: .9; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+@keyframes aigen-ring {
+  0% { transform: scale(0.5); opacity: .8; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+.aigen__gen-text { font-size: 18px; font-weight: 700; margin-top: 8px; }
+.aigen__gen-sub { font-size: 14px; color: #8e8e93; }
+
+/* ── Preview ───────────────────────────────────────────────────────────── */
+.aigen__preview-hero {
+  border-radius: 20px;
+  padding: 28px 20px;
+  color: #fff;
+  text-align: center;
+  margin-bottom: 16px;
+}
+.aigen__preview-spark { font-size: 30px; }
+.aigen__preview-name { font-size: 22px; font-weight: 800; margin: 8px 0 4px; }
+.aigen__preview-desc { font-size: 14px; opacity: .92; margin: 0; }
+
+.aigen__preview-count { font-size: 13px; font-weight: 600; color: #8e8e93; margin-bottom: 10px; }
+
+.aigen__habits { display: flex; flex-direction: column; gap: 10px; }
+.aigen__habit {
+  background: #fff;
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.dark-theme .aigen__habit { background: #2c2c2e; }
+.aigen__habit-title { font-size: 16px; font-weight: 600; }
+.aigen__habit-goal { font-size: 13px; color: #8e8e93; margin-top: 2px; }
+.aigen__habit-meta {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  font-size: 12px; color: #8e8e93; margin-top: 8px;
+}
+
+.aigen__surprise {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+  font-size: 14px;
+  text-align: center;
+}
+.dark-theme .aigen__surprise { color: #a7d96c; background: rgba(167, 217, 108, 0.12); }
+
+/* ── Done / Activated ──────────────────────────────────────────────────── */
+.aigen__done-check {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: #4caf50;
+  color: #fff;
+  font-size: 38px;
+  display: flex; align-items: center; justify-content: center;
+  animation: aigen-pop .4s ease;
+}
+@keyframes aigen-pop {
+  0% { transform: scale(0); }
+  70% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+.aigen__done-title { font-size: 22px; font-weight: 800; margin: 6px 0 0; }
+.aigen__done-sub { font-size: 15px; color: #8e8e93; max-width: 280px; }
+.aigen__done .aigen__cta { max-width: 320px; }

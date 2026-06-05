@@ -1,4 +1,31 @@
 {
+  "aiPack": {
+    "title": "AI Pack Generator",
+    "subtitle": "Describe your goal — AI builds a personal habit pack",
+    "placeholder": "E.g. I want to be more productive in the mornings",
+    "generate": "Generate",
+    "freeBadge": "Free",
+    "preparing": "Preparing…",
+    "payHint": "Payment before generation. 1 free redo included.",
+    "generating": "AI is building your pack…",
+    "generatingSub": "This takes a few seconds",
+    "habitsCount": "{n} habits",
+    "surprise": "Achievements unlock as you go — surprise!",
+    "activate": "Activate pack",
+    "activating": "Activating…",
+    "redo": "Regenerate (free)",
+    "activatedTitle": "Pack activated!",
+    "activatedSub": "Habits are now in Today. Good luck!",
+    "toToday": "Go to habits",
+    "soonTitle": "Coming soon",
+    "soonSub": "The AI pack generator will be available soon. Check back ✨",
+    "back": "Back",
+    "errorGeneric": "Something went wrong. Try again.",
+    "errorPay": "Payment failed.",
+    "entry": "Create a pack with AI",
+    "survey": { "age": "Age", "occupation": "Occupation", "level": "Level", "time": "Time per day" }
+  },
+
   "weekNav": {
     "today": "Today",
     "yesterday": "Yesterday",
